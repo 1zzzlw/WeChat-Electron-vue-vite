@@ -1,0 +1,18 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Electron</title>
+  <meta
+    http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: file:;"
+  />
+</head>
+
+<body>
+<!-- 页面中唯一的“容器”，Vue 会把组件渲染到这个 div 里 -->
+<div id="app"></div>
+<!-- 引入 Vue 入口脚本（TypeScript/JavaScript 模块） -->
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
