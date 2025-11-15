@@ -31,7 +31,7 @@ function createMainWindow() {
     // 窗口创建后默认不显示
     show: false,
     // 固定窗口大小
-    resizable: false,
+    // resizable: false,
     // 隐藏窗口默认的标题栏和边框
     frame: false,
     // 自动隐藏菜单栏
@@ -39,7 +39,7 @@ function createMainWindow() {
     //始终置顶
     alwaysOnTop: true,
     // 使窗口背景透明（窗口区域会显示桌面或下层窗口的内容）
-    transparent: true,
+    // transparent: true,
 
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {

@@ -104,9 +104,9 @@ const sendApply = () => {
   applyInfo.applyMsg = applyMessage.value
   sendApplyApi(applyInfo).then((res) => {
     if (res.code === 1) {
-      ElMessage.success('添加好友成功')
+      ElMessage.success('发送好友申请成功')
     } else {
-      ElMessage.error('添加好友失败')
+      ElMessage.error('发送好友申请失败')
     }
   })
 }

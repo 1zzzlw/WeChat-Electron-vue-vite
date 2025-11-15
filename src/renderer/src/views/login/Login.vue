@@ -93,8 +93,8 @@ const Login = async (formEl: FormInstance | undefined) => {
     const status = result.code
     console.log(status)
     if (status === 1) {
-      // 存储令牌信息
-      localStorage.setItem('token', result.data.token)
+      // 存储令牌信息，由于token存储到了本地store，这里可以不需要了
+      // localStorage.setItem('token', result.data.token)
       window.api.storeSetToken(result.data.token)
       window.api.storeSetAvatar(result.data.avatar)
       await router.push('/main')

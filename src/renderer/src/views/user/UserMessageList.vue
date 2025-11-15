@@ -77,7 +77,6 @@ onMounted(() => {
     friendList.arr = res.data
   })
 })
-
 </script>
 
 <style scoped>

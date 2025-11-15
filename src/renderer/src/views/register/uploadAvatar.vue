@@ -34,7 +34,7 @@ const userInfo = reactive({
   password: '',
   gender: '',
   // 缓存选中的文件对象（用于后续上传）
-  avatar: '',
+  avatar: ''
 })
 
 const handleClick = async () => {
@@ -58,9 +58,11 @@ const submitForm = () => {
   // 调用注册接口
   registerApi(userInfo).then((res) => {
     if (res.code === 1) {
+      console.info('注册成功:', res)
       ElMessage.success('注册成功')
       // 登录成功后，将token存储到本地
       window.api.storeSetAvatar(userInfo.avatar)
+      window.api.storeSetToken(res.data)
       router.push('/main')
       window.api.resizeWindow('main')
     } else {
@@ -70,7 +72,10 @@ const submitForm = () => {
 }
 
 const returnStep = () => {
-  router.push({ path: '/registerUserInfo', query: { username: userInfo.username, phone: userInfo.phone } })
+  router.push({
+    path: '/registerUserInfo',
+    query: { username: userInfo.username, phone: userInfo.phone }
+  })
 }
 
 onMounted(() => {

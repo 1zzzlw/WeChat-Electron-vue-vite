@@ -15,9 +15,9 @@
               <el-collapse-item title="好友申请列表" name="1">
                 <div
                   class="left-list"
-                  v-for="(apply, index) in friendApplyList.arr"
+                  v-for="(apply, index) in friendApplyListArr"
                   :key="index"
-                  :class="{ 'left-list-bg': active == apply.fromUserId }"
+                  :class="{ 'left-list-bg': active == apply.applyId }"
                   @click="startApply(apply)"
                 >
                   <div class="left-image">
@@ -30,7 +30,7 @@
               <el-collapse-item title="联系人" name="3">
                 <div
                   class="left-list"
-                  v-for="(user, index) in friendList.arr"
+                  v-for="(user, index) in friendListArr"
                   :key="index"
                   :class="{ 'left-list-bg': active == user.id }"
                   @click="starCall(user)"
@@ -38,7 +38,8 @@
                   <div class="left-image">
                     <img :src="user.avatar" alt="头像" class="left-list-img" />
                   </div>
-                  <h1 class="friend-name">{{ user.username }}</h1>
+                  <h1 class="friend-name" v-if="user.remark === ''">{{ user.username }}</h1>
+                  <h1 class="friend-name" v-else>{{ user.remark }}</h1>
                 </div>
               </el-collapse-item>
             </el-collapse>
@@ -54,32 +55,35 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { Search } from '@element-plus/icons-vue'
 import { getFriendListApi } from '../../api/Friend'
 import { getApplyListApi } from '../../api/Apply'
-import type { CollapseModelValue } from 'element-plus'
+import { CollapseModelValue } from 'element-plus'
+import { userApplyListInfo } from '../../stores/UserApplyListStore'
+import { userListInfo } from '../../stores/UserListStore'
 
+const userApplyStore = userApplyListInfo()
+const userListStore = userListInfo()
+// 联系人列表默认展开
 const activeNames = ref(['3'])
 const handleChange = (val: CollapseModelValue) => {
   console.info(val)
+  // 学习了computed之后感觉可以替代下方的代码了
+  // const cache = Object.keys(userApplyStore.userApplyMap).length > 0
+  // if (cache) {
+  //   console.info('pinia的缓存好友申请列表:', userApplyStore.getAllUserApplyMap())
+  //   friendApplyList.arr = userApplyStore.getAllUserApplyMap()
+  // }
 }
 
 const router = useRouter()
-const friendList = reactive({ arr: [] })
-const friendApplyList = reactive({ arr: [] })
 const active = ref('')
 
 const startApply = (apply) => {
-  if (active.value === apply.fromUserId) {
-    active.value = null
-  } else {
-    active.value = apply.fromUserId // 选中当前用户
-  }
-  if (active.value !== null) {
-    router.push({ path: '/friendApply', query: { username: apply.username } })
-  }
+  console.info(apply.applyId)
+  router.push({ path: '/friendApply', query: { applyId: apply.applyId } })
 }
 
 const starCall = (user) => {
@@ -87,15 +91,60 @@ const starCall = (user) => {
   router.push({ path: '/friendInfo', query: { friendId: user.id } })
 }
 
-onMounted(() => {
-  getFriendListApi().then((res) => {
-    console.info('好友列表:', res.data)
-    friendList.arr = res.data
-  })
+const fetchApplyList = () => {
+  const cache = Object.keys(userApplyStore.userApplyMap).length > 0
+  if (cache) {
+    // 有缓存时，停止钩子函数的查询，防止接口的频繁发送
+    console.info('好友申请表缓存非空:', cache)
+    return
+  }
+
+  // 没有缓存时，从后端获取好友申请列表
   getApplyListApi().then((res) => {
     console.info('好友申请列表:', res.data)
-    friendApplyList.arr = res.data
+    res.data.forEach((applyItem) => {
+      userApplyStore.setUserApplyMap(applyItem.applyId, {
+        applyId: applyItem.applyId,
+        fromUserId: applyItem.fromUserId,
+        username: applyItem.username,
+        avatar: applyItem.avatar,
+        applyMsg: applyItem.applyMsg,
+        isDealt: applyItem.isDealt,
+        dealResult: applyItem.dealResult
+      })
+    })
   })
+}
+
+const fetchUserList = () => {
+  const cache = Object.keys(userListStore.userMap).length > 0
+  if (cache) {
+    console.info('好友列表缓存非空:', cache)
+    return
+  }
+
+  getFriendListApi().then((res) => {
+    console.info('好友列表:', res.data)
+    res.data.forEach((userItem) => {
+      userListStore.setUserMap(userItem.id, {
+        id: userItem.id,
+        username: userItem.username,
+        avatar: userItem.avatar,
+        remark: userItem.remark
+      })
+    })
+  })
+}
+
+const friendListArr = computed(() => Object.values(userListStore.userMap))
+
+const friendApplyListArr = computed(() => {
+  return userApplyStore.getAllUserApplyMap()
+})
+
+onMounted(() => {
+  fetchUserList()
+  fetchApplyList()
 })
 </script>
 

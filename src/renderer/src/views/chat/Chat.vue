@@ -1,6 +1,6 @@
 <template>
   <div class="chat-count">
-    <div class="chat-title">聊天窗口: {{ friendId }}</div>
+    <div class="chat-title">聊天窗口: {{ route.query.friendId }}</div>
     <div class="chat-content">
       <el-scrollbar>
         <div class="chat-message" v-for="item in 100" :key="item">
