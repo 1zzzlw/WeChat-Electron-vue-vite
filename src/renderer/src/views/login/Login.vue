@@ -6,7 +6,12 @@
     <div class="login-mid">
       <el-form class="login-form" :model="loginForm" ref="ruleFormRef" :rules="rules">
         <el-form-item prop="username">
-          <el-input placeholder="请输入账号" v-model="loginForm.account" clearable>
+          <el-input
+            placeholder="请输入账号"
+            v-model="loginForm.account"
+            spellcheck="false"
+            clearable
+          >
             <template #prepend>
               <el-icon><User /></el-icon>
             </template>
@@ -14,7 +19,13 @@
         </el-form-item>
 
         <el-form-item prop="password">
-          <el-input placeholder="请输入密码" type="password" v-model="loginForm.password" clearable>
+          <el-input
+            placeholder="请输入密码"
+            type="password"
+            v-model="loginForm.password"
+            spellcheck="false"
+            clearable
+          >
             <template #prepend>
               <el-icon><Lock /></el-icon>
             </template>
@@ -22,7 +33,12 @@
         </el-form-item>
 
         <el-form-item prop="verifyCode" class="login-verify">
-          <el-input placeholder="请输入验证码" v-model="loginForm.verifyCode" clearable />
+          <el-input
+            placeholder="请输入验证码"
+            v-model="loginForm.verifyCode"
+            spellcheck="false"
+            clearable
+          />
           <img
             :src="verifyCodeImg"
             alt="验证码"
@@ -95,8 +111,9 @@ const Login = async (formEl: FormInstance | undefined) => {
     if (status === 1) {
       // 存储令牌信息，由于token存储到了本地store，这里可以不需要了
       // localStorage.setItem('token', result.data.token)
-      window.api.storeSetToken(result.data.token)
+      window.api.storeSetUserId(result.data.id)
       window.api.storeSetAvatar(result.data.avatar)
+      window.api.storeSetToken(result.data.token)
       await router.push('/main')
       window.api.resizeWindow('main')
     } else {

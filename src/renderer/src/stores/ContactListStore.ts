@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia'
 
+// 用来临时存储联系人列表
+
 interface userInfo {
   id: string | number
   username: string

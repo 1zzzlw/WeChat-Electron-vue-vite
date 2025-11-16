@@ -2,7 +2,12 @@
   <div class="user-list">
     <div class="user-list-left">
       <div class="list-top">
-        <el-input style="width: 240px" placeholder="搜索" :prefix-icon="Search" />
+        <el-input
+          style="width: 240px"
+          placeholder="搜索"
+          :prefix-icon="Search"
+          spellcheck="false"
+        />
       </div>
       <div class="list-bottom">
         <el-scrollbar>
@@ -62,7 +67,7 @@ import { getFriendListApi } from '../../api/Friend'
 import { getApplyListApi } from '../../api/Apply'
 import { CollapseModelValue } from 'element-plus'
 import { userApplyListInfo } from '../../stores/UserApplyListStore'
-import { userListInfo } from '../../stores/UserListStore'
+import { userListInfo } from '../../stores/ContactListStore'
 
 const userApplyStore = userApplyListInfo()
 const userListStore = userListInfo()
@@ -144,6 +149,7 @@ const friendApplyListArr = computed(() => {
 
 onMounted(() => {
   fetchUserList()
+
   fetchApplyList()
 })
 </script>

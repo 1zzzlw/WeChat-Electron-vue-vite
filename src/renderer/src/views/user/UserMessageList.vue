@@ -2,7 +2,12 @@
   <div class="user-message-list">
     <div class="user-message-list-left">
       <div class="message-list-top">
-        <el-input style="width: 240px" placeholder="搜索" :prefix-icon="Search" />
+        <el-input
+          style="width: 240px"
+          placeholder="搜索"
+          :prefix-icon="Search"
+          spellcheck="false"
+        />
         <el-dropdown>
           <el-button :icon="Plus" square></el-button>
           <template #dropdown>
@@ -18,16 +23,16 @@
         <el-scrollbar>
           <div
             class="left-list"
-            v-for="(user, index) in friendList.arr"
+            v-for="(friend, index) in friendListArr"
             :key="index"
-            :class="{ 'left-list-bg': active == user.id }"
-            @click="starCall(user)"
+            :class="{ 'left-list-bg': active == friend.id }"
+            @click="starCall(friend)"
           >
             <div class="left-image">
-              <img :src="user.avatar" alt="头像" class="left-list-img" />
+              <img :src="friend.avatar" alt="头像" class="left-list-img" />
             </div>
             <div class="mid-message">
-              <h1 class="friend-name">{{ user.username }}</h1>
+              <h1 class="friend-name">{{ friend.username }}</h1>
               <div class="friend-message">你好</div>
             </div>
             <div class="right-count">
@@ -47,18 +52,21 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { userNewMessageInfo } from '../../stores/UserNewMessageStore'
 import { Search, Plus, ArrowDown } from '@element-plus/icons-vue'
 import { getFriendListApi } from '../../api/Friend'
 
 const router = useRouter()
-const friendList = reactive({ arr: [] })
+const friendId = reactive({ arr: [] })
 const active = ref('')
+const userId = ref()
+const userNewMessageStore = userNewMessageInfo()
 
-const starCall = (user) => {
-  active.value = user.id
-  router.push({ path: '/chat', query: { friendId: user.id } })
+const starCall = (friend) => {
+  active.value = friend.id
+  router.push({ path: '/chat', query: { friendId: friend.id } })
 }
 
 const createGroupChat = () => {
@@ -71,11 +79,68 @@ const addFriend = () => {
   window.api.createNewWindow('addFriend')
 }
 
+const friendListArr = computed(() => Object.values(userNewMessageStore.userNewMessageMap))
+
+const getFriendList = async () => {
+  const cache = Object.keys(userNewMessageStore.userNewMessageMap).length > 0
+  if (cache) {
+    console.info('消息列表缓存非空:', cache)
+    return
+  }
+
+  const res = await getFriendListApi()
+  console.info('好友列表:', res.data)
+
+  const friendMap = new Map(res.data.map((f) => [f.id, f]))
+
+  // 获得当前登录用户id
+  userId.value = await window.api.storeGetUserId()
+
+  // 获得好友id数组
+  friendId.arr = res.data.map((item) => item.id)
+
+  console.info('好友id集合:', friendId.arr, '当前登录用户id为:', userId.value)
+
+  // 接下来需要构建会话ID和res.data中好友信息之间的联系
+  // 映射的键为 conversationIds 中的每一个元素；
+  // 映射的值为 res.data 中的元素；
+  // 映射关系是 conversationIds 中的 conversationId 包含 res.data 中的用户 id；
+  // 如 conversationId 为 2_1，则 res.data 中包含用户 id 为 1 和 2 的好友信息；
+  // 注意事项：由于 2 是当前登录用户，所以 2 不可能存在于 res.data 中，因为目前为止是没有添加自己为好友的业务的
+
+  // 组合会话id并关联对应的好友信息并存储在pinia中
+  // friendId.arr.forEach((friendIdItem) => {
+  //   conversationId.value =
+  //     userId.value > friendIdItem
+  //       ? userId.value + '_' + friendIdItem
+  //       : friendIdItem + '_' + userId.value
+  //   console.info('conversationId:', conversationId.value)
+  //   userNewMessageStore.setUserNewMessageMap(conversationId.value, {
+  //     id: friendIdItem,
+  //     username: friendMap.get(friendIdItem).username,
+  //     avatar: friendMap.get(friendIdItem).avatar,
+  //     remark: friendMap.get(friendIdItem).remark
+  //   })
+  // })
+
+  // 优化方案
+  for (const fid of friendId.arr) {
+    const cid = `${Math.max(userId.value, fid)}_${Math.min(userId.value, fid)}`
+    console.info('cid:', cid)
+    const friend = friendMap.get(fid)
+    if (!friend) continue
+
+    userNewMessageStore.setUserNewMessageMap(cid, {
+      id: fid,
+      username: friend.username,
+      avatar: friend.avatar,
+      remark: friend.remark
+    })
+  }
+}
+
 onMounted(() => {
-  getFriendListApi().then((res) => {
-    console.info('好友列表:', res.data)
-    friendList.arr = res.data
-  })
+  getFriendList()
 })
 </script>
 

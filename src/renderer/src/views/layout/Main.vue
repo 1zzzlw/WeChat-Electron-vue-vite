@@ -32,11 +32,6 @@ import { mainAvatarApi } from '../../api/User'
 const avatarUrl = ref('')
 
 onMounted(async () => {
-  // const result = await mainAvatarApi()
-  // const status = result.code
-  // if (status === 1) {
-  //   avatarUrl.value = result.data
-  // }
   // 从本地存储中获取头像
   avatarUrl.value = await window.api.storeGetAvatar()
 })

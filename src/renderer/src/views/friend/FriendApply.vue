@@ -27,7 +27,7 @@
 import { ref, reactive, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { userApplyListInfo } from '../../stores/UserApplyListStore'
-import { userListInfo } from '../../stores/UserListStore'
+import { userListInfo } from '../../stores/ContactListStore'
 import { dealApplyApi } from '../../api/Apply'
 import { ElMessage } from 'element-plus'
 

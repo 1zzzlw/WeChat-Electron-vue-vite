@@ -204,6 +204,15 @@ ipcMain.handle('store-get-avatar', (e) => {
   return store.get('avatar')
 })
 
+ipcMain.handle('store-set-userId', (e, userId) => {
+  store.set('userId', userId)
+  return true
+})
+
+ipcMain.handle('store-get-user-id', (e, userId) => {
+  return store.get('userId')
+})
+
 function createNewWindow(windowType) {
   if (windowType === 'addFriend') {
     const options = {

@@ -7,6 +7,7 @@
         placeholder="搜索微信号或者手机号"
         v-model="searchInput"
         :prefix-icon="Search"
+        spellcheck="false"
         clearable
       />
       <el-button type="success" @click="searchUser">搜索</el-button>
@@ -44,10 +45,13 @@
             v-model="applyMessage"
             maxlength="50"
             style="width: 100%"
+            resize="none"
             placeholder="请输入添加好友的消息"
             show-word-limit
             type="textarea"
             :rows="4"
+            spellcheck="false"
+            clearable
           />
         </div>
         <el-button type="primary" @click="sendApply">添加好友</el-button>

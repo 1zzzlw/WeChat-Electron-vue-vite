@@ -20,6 +20,12 @@ const api = {
   storeGetAvatar: () => {
     return ipcRenderer.invoke('store-get-avatar')
   },
+  storeSetUserId: (userId) => {
+    return ipcRenderer.invoke('store-set-userId', userId)
+  },
+  storeGetUserId: () => {
+    return ipcRenderer.invoke('store-get-user-id')
+  },
   createNewWindow: (windowType) => {
     ipcRenderer.send('create-new-window', windowType)
   }

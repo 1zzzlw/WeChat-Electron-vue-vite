@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia'
 
+// 用来临时存储好友申请列表
+
 interface userApplyInfo {
   applyId: string | number
   fromUserId: string | number

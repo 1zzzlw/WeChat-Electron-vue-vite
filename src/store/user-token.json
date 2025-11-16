@@ -1,4 +1,5 @@
 {
-	"token": "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjEwMTAsImV4cCI6MTc2MzIxODAyOX0.8AwE-XWvkvpdZ7dn_jovf7rdqq06Qb9Yllc0G6ZGevI",
-	"avatar": "E:\\JavaWeb\\zzz-IM-web\\image\\2.jpg"
+	"userId": 2,
+	"avatar": "E:\\JavaWeb\\zzz-IM-web\\image\\2.jpg",
+	"token": "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjEwMTAsImV4cCI6MTc2MzI4MTkzN30.Fncw_StSywREC3mLgtDyFknI0NT6SPtcF9P4SLFX1bU"
 }

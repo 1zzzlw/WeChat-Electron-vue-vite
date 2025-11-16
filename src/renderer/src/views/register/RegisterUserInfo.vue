@@ -8,7 +8,12 @@
         ref="ruleFormRef"
       >
         <el-form-item prop="password">
-          <el-input placeholder="创建密码" v-model="registerUserInfoForm.password" clearable>
+          <el-input
+            placeholder="创建密码"
+            v-model="registerUserInfoForm.password"
+            spellcheck="false"
+            clearable
+          >
             <template #prepend>
               <el-icon><Lock /></el-icon>
             </template>
@@ -20,6 +25,7 @@
             placeholder="确认密码"
             type="password"
             v-model="confirmPassword"
+            spellcheck="false"
             clearable
           >
             <template #prepend>
@@ -60,16 +66,16 @@ const route = useRoute()
 const ruleFormRef = ref<FormInstance>()
 const confirmPassword = ref()
 
-onMounted(() => {
-  registerUserInfoForm.username = route.query?.username || ''
-  registerUserInfoForm.phone = route.query?.phone || ''
-})
-
 const registerUserInfoForm = reactive({
   username: '',
   phone: '',
   password: '',
   gender: ''
+})
+
+onMounted(() => {
+  registerUserInfoForm.username = route.query?.username || ''
+  registerUserInfoForm.phone = route.query?.phone || ''
 })
 
 const rules = reactive({
@@ -92,7 +98,7 @@ const returnStep = () => {
 const nextStep = async (formRef: FormInstance | undefined) => {
   if (!formRef) return
   if (confirmPassword.value !== registerUserInfoForm.password) {
-    ElMessage.error("确认密码输入错误")
+    ElMessage.error('确认密码输入错误')
     return
   }
   try {
