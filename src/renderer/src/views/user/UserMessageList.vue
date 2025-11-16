@@ -54,7 +54,7 @@
 <script lang="ts" setup>
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { userNewMessageInfo } from '../../stores/UserNewMessageStore'
+import { friendNewMessageInfo } from '../../stores/FriendNewMessageStore'
 import { Search, Plus, ArrowDown } from '@element-plus/icons-vue'
 import { getFriendListApi } from '../../api/Friend'
 
@@ -62,11 +62,17 @@ const router = useRouter()
 const friendId = reactive({ arr: [] })
 const active = ref('')
 const userId = ref()
-const userNewMessageStore = userNewMessageInfo()
+const friendNewMessageStore = friendNewMessageInfo()
 
-const starCall = (friend) => {
+const starCall = async (friend) => {
   active.value = friend.id
-  router.push({ path: '/chat', query: { friendId: friend.id } })
+  userId.value = await window.api.storeGetUserId()
+  if (!userId.value) {
+    console.info('获取当前用户ID失败，无法进入聊天页')
+    return
+  }
+  const cid = `${Math.max(userId.value, friend.id)}_${Math.min(userId.value, friend.id)}`
+  await router.push({ path: '/chat', query: { conversationId: cid, friendId: friend.id } })
 }
 
 const createGroupChat = () => {
@@ -79,10 +85,10 @@ const addFriend = () => {
   window.api.createNewWindow('addFriend')
 }
 
-const friendListArr = computed(() => Object.values(userNewMessageStore.userNewMessageMap))
+const friendListArr = computed(() => Object.values(friendNewMessageStore.friendNewMessageMap))
 
 const getFriendList = async () => {
-  const cache = Object.keys(userNewMessageStore.userNewMessageMap).length > 0
+  const cache = Object.keys(friendNewMessageStore.friendNewMessageMap).length > 0
   if (cache) {
     console.info('消息列表缓存非空:', cache)
     return
@@ -123,14 +129,14 @@ const getFriendList = async () => {
   //   })
   // })
 
-  // 优化方案
+  // 优化写法
   for (const fid of friendId.arr) {
     const cid = `${Math.max(userId.value, fid)}_${Math.min(userId.value, fid)}`
     console.info('cid:', cid)
     const friend = friendMap.get(fid)
     if (!friend) continue
 
-    userNewMessageStore.setUserNewMessageMap(cid, {
+    friendNewMessageStore.setFriendNewMessageMap(cid, {
       id: fid,
       username: friend.username,
       avatar: friend.avatar,
