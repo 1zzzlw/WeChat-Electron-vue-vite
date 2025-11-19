@@ -52,6 +52,7 @@ import { computed, onMounted, reactive, ref, nextTick, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { getMessageListApi, sendMessageApi } from '../../api/Message'
 import { messageInfo } from '../../stores/MessageStore'
+import { WSManager } from '../../utils/websocket.js'
 import { friendNewMessageInfo } from '../../stores/FriendNewMessageStore'
 import { Eleme, Folder, Scissor, VideoCamera } from '@element-plus/icons-vue'
 
@@ -89,6 +90,7 @@ const scrollToBottom = () => {
 
 const sendMessage = () => {
   console.info('接收消息用户的ID:', route.query.friendId, '消息内容:', message.value)
+  WSManager.sendMessage(1, 0, { receiverId: route.query.friendId, content: message.value })
   sendMessageApi({ receiverId: route.query.friendId, content: message.value }).then((res) => {
     console.info('发送消息成功', res)
     message.value = ''

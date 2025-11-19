@@ -62,6 +62,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { loginApi, verifyCodeApi } from '../../api/Login.js'
+import { WSManager } from '../../utils/websocket.js'
 import { FormInstance, FormRules, ElMessage } from 'element-plus'
 
 onMounted(() => {
@@ -115,6 +116,7 @@ const Login = async (formEl: FormInstance | undefined) => {
       window.api.storeSetAvatar(result.data.avatar)
       window.api.storeSetToken(result.data.token)
       await router.push('/main')
+      await WSManager.connect()
       window.api.resizeWindow('main')
     } else {
       ElMessage.error('登录失败')
