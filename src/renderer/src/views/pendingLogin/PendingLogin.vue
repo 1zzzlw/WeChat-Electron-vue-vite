@@ -18,7 +18,6 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { PendingLoginApi } from '../../api/Login'
 import { ElMessage } from 'element-plus'
-import { WSManager } from '../../utils/websocket'
 
 const router = useRouter()
 
@@ -33,7 +32,6 @@ const confirmLogin = async () => {
   const res = await PendingLoginApi(token)
   if (res.code === 1) {
     await router.push('/main')
-    await WSManager.connect()
     window.api.resizeWindow('main')
   } else {
     ElMessage.error('登录过期，重新登录')

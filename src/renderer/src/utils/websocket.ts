@@ -1,4 +1,5 @@
 import { messageInfo } from '../stores/MessageStore'
+import { userApplyListInfo } from '../stores/UserApplyListStore'
 
 interface socket {
   // 用来存储websocket实例
@@ -177,10 +178,19 @@ class WebSocketManager {
       // 10.解析 JSON 字符串为对象
       const data = JSON.parse(jsonString)
 
-      // 先将消息存储到状态管理中
-      messageInfo().addMessageMap(data.conversationId, data)
-      console.info('收到消息:', data)
-      // TODO: 在这里根据 type 做不同业务处理
+      switch (messageType) {
+        case 1:
+          // 私信类型，将消息存储到状态管理中
+          messageInfo().addMessageMap(data.conversationId, data)
+          console.info('收到消息:', data)
+          break
+        case 5:
+          // 好友申请类型，将消息存储到状态管理中
+          userApplyListInfo().setUserApplyMap(data.applyId, data)
+          console.info('收到好友申请:', data)
+          break
+      }
+
     } catch (e) {
       console.warn('消息解析失败', e)
     }
@@ -196,6 +206,7 @@ class WebSocketManager {
   /** close */
   private onClose() {
     console.warn('WebSocket 关闭')
+    this.isConnect = false
 
     this.stopHeartbeat()
 

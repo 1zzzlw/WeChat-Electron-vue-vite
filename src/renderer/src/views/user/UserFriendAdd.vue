@@ -64,6 +64,7 @@
 import { ref, reactive, watch } from 'vue'
 import { sendApplyApi } from '../../api/Apply'
 import { searchFriendApi } from '../../api/Friend'
+import { WSManager } from '../../utils/websocket.js'
 import { Search } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 
@@ -108,7 +109,15 @@ const sendApply = () => {
   applyInfo.applyMsg = applyMessage.value
   sendApplyApi(applyInfo).then((res) => {
     if (res.code === 1) {
-      ElMessage.success('发送好友申请成功')
+      const applyId = res.data
+      ElMessage.success(`发送好友申请成功`)
+      console.info('好友申请表ID：' + applyId)
+      // 发送好友申请成功后，通知对方好友申请列表更新
+      WSManager.sendMessage(5, 0, {
+        applyId: applyId,
+        toUserId: applyInfo.toUserId,
+        applyMsg: applyInfo.applyMsg
+      })
     } else {
       ElMessage.error('发送好友申请失败')
     }
