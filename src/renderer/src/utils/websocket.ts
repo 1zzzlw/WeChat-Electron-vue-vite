@@ -158,6 +158,7 @@ class WebSocketManager {
 
       // 4.消息类型1个字节
       const messageType = view.getUint8(offset++)
+      console.info('收到消息，类型:', messageType)
 
       // 5.序列号4个字节
       const sequenceId = view.getUint32(offset)
@@ -176,18 +177,18 @@ class WebSocketManager {
       // 9.解析正文为 JSON 字符串
       const jsonString = new TextDecoder().decode(body)
       // 10.解析 JSON 字符串为对象
-      const res = JSON.parse(jsonString)
+      const data = JSON.parse(jsonString)
 
       switch (messageType) {
-        case 1:
+        case 2:
           // 私信类型，将消息存储到状态管理中
-          messageInfo().addMessageMap(res.data.conversationId, res.data)
-          console.info('收到消息:', res)
+          console.info('收到消息:', data)
+          messageInfo().addMessageMap(data.conversationId, data)
           break
-        case 5:
+        case 6:
           // 好友申请类型，将消息存储到状态管理中
-          userApplyListInfo().setUserApplyMap(res.data.applyId, res.data)
-          console.info('收到好友申请:', res)
+          console.info('收到好友申请:', data)
+          userApplyListInfo().setUserApplyMap(data.applyId, data)
           break
       }
     } catch (e) {
