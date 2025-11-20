@@ -107,21 +107,22 @@ const searchUser = () => {
 const sendApply = () => {
   applyInfo.toUserId = userInfo.id
   applyInfo.applyMsg = applyMessage.value
-  sendApplyApi(applyInfo).then((res) => {
-    if (res.code === 1) {
-      const applyId = res.data
-      ElMessage.success(`发送好友申请成功`)
-      console.info('好友申请表ID：' + applyId)
-      // 发送好友申请成功后，通知对方好友申请列表更新
-      WSManager.sendMessage(5, 0, {
-        applyId: applyId,
-        toUserId: applyInfo.toUserId,
-        applyMsg: applyInfo.applyMsg
-      })
-    } else {
-      ElMessage.error('发送好友申请失败')
-    }
-  })
+  const res = sendApplyApi(applyInfo)
+  console.info(res)
+  const applyId = res.data
+  console.info(applyId)
+  if (res.code === 1) {
+    ElMessage.success(`发送好友申请成功`)
+    console.info('好友申请表ID：' + applyId)
+    // 发送好友申请成功后，通知对方好友申请列表更新
+    WSManager.sendMessage(5, 0, {
+      applyId: applyId,
+      toUserId: applyInfo.toUserId,
+      applyMsg: applyInfo.applyMsg
+    })
+  } else {
+    ElMessage.error('发送好友申请失败')
+  }
 }
 
 // 添加监听，当输入框清空时重置isFriend状态
