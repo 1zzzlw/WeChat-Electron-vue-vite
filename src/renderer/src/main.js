@@ -19,9 +19,11 @@ const pinia = createPinia()
 window.api.onWsConnect(() => {
   console.log('start connect ws')
   // 调用connect方法（异步）
-  WSManager.connect().then((r) => {
-    window.api.sendWsStatus('connect ws success')
-  })
+  WSManager.connect().then((r) => {})
+})
+
+window.api.onForwardWS((messageType, sequenceId, data) => {
+  WSManager.sendMessage(messageType, sequenceId, data)
 })
 
 app.use(pinia)

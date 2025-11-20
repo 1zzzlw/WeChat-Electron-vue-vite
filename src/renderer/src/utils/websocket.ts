@@ -1,5 +1,6 @@
 import { messageInfo } from '../stores/MessageStore'
 import { userApplyListInfo } from '../stores/UserApplyListStore'
+import { ipcRenderer } from 'electron'
 
 interface socket {
   // 用来存储websocket实例
@@ -48,6 +49,7 @@ class WebSocketManager {
   /** 创建 WebSocket 实例 */
   private createWebSocket(token: string) {
     this.ws.websocket = new WebSocket(`ws://localhost:8000/ws?token=${token}`)
+
     this.ws.status = WebSocket.CONNECTING
 
     // 设置为二进制发送
@@ -61,6 +63,11 @@ class WebSocketManager {
 
   /** 公共方法：外部用于发送消息，需要严格按照和后端一致的二进制协议 */
   public sendMessage(messageType: number, sequenceId: number, jsonObject: Record<string, any>) {
+    if (this.ws.status !== WebSocket.OPEN) {
+      console.warn('WebSocket 未连接，无法发送消息')
+      return
+    }
+
     // 将要发送的 JSON 转 UTF-8 bytes，和后端的二进制协议保持一致
     const encoder = new TextEncoder()
     // 编码 JSON 字符串为 UTF-8 字节数组

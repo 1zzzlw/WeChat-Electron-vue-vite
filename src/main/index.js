@@ -236,3 +236,10 @@ function createNewWindow(windowType) {
 ipcMain.on('create-new-window', (e, windowType) => {
   createNewWindow(windowType)
 })
+
+ipcMain.on('ws:send', (event, { messageType, sequenceId, data }) => {
+  // 把消息广播给主窗口
+  if (mainWindow) {
+    mainWindow.webContents.send('ws:forward', { messageType, sequenceId, data })
+  }
+})

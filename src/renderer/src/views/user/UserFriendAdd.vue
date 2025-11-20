@@ -115,7 +115,7 @@ const sendApply = async () => {
     ElMessage.success(`发送好友申请成功`)
     console.info('好友申请表ID：' + applyId)
     // 发送好友申请成功后，通知对方好友申请列表更新
-    WSManager.sendMessage(5, 0, {
+    window.api.sendToMain(5, 0, {
       applyId: applyId,
       toUserId: applyInfo.toUserId,
       applyMsg: applyInfo.applyMsg
