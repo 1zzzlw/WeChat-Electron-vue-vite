@@ -28,6 +28,17 @@ const api = {
   },
   createNewWindow: (windowType) => {
     ipcRenderer.send('create-new-window', windowType)
+  },
+  onWsConnect: (callback) => {
+    ipcRenderer.on('ws:connect', (event) => callback())
+  },
+  // 渲染进程向主进程发送WS状态通知
+  sendWsStatus: (status) => {
+    ipcRenderer.send('ws:status', status);
+  },
+  // 移除监听，防止内存泄漏
+  removeWsConnectListener: () => {
+    ipcRenderer.removeAllListeners('ws:connect')
   }
 }
 
