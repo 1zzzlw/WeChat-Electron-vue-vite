@@ -221,7 +221,7 @@ class WebSocketManager {
         const heartbeatContent = { action: 'heartbeat' }
         this.sendMessage(0, 0, heartbeatContent)
       }
-    }, 5000)
+    }, 60000)
   }
 
   /** 停止心跳 */

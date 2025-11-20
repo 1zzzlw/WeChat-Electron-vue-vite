@@ -104,10 +104,10 @@ const searchUser = () => {
   })
 }
 
-const sendApply = () => {
+const sendApply = async () => {
   applyInfo.toUserId = userInfo.id
   applyInfo.applyMsg = applyMessage.value
-  const res = sendApplyApi(applyInfo)
+  const res = await sendApplyApi(applyInfo)
   console.info(res)
   const applyId = res.data
   console.info(applyId)
