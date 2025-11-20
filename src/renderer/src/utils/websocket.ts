@@ -176,21 +176,20 @@ class WebSocketManager {
       // 9.解析正文为 JSON 字符串
       const jsonString = new TextDecoder().decode(body)
       // 10.解析 JSON 字符串为对象
-      const data = JSON.parse(jsonString)
+      const res = JSON.parse(jsonString)
 
       switch (messageType) {
         case 1:
           // 私信类型，将消息存储到状态管理中
-          messageInfo().addMessageMap(data.conversationId, data)
-          console.info('收到消息:', data)
+          messageInfo().addMessageMap(res.data.conversationId, res.data)
+          console.info('收到消息:', res)
           break
         case 5:
           // 好友申请类型，将消息存储到状态管理中
-          userApplyListInfo().setUserApplyMap(data.applyId, data)
-          console.info('收到好友申请:', data)
+          userApplyListInfo().setUserApplyMap(res.data.applyId, res.data)
+          console.info('收到好友申请:', res)
           break
       }
-
     } catch (e) {
       console.warn('消息解析失败', e)
     }
