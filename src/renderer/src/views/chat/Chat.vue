@@ -52,6 +52,7 @@ import { computed, onMounted, reactive, ref, nextTick, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { getMessageListApi, sendMessageApi } from '../../api/Message'
 import { messageInfo } from '../../stores/MessageStore'
+import dayjs from 'dayjs'
 import { WSManager } from '../../utils/websocket.js'
 import { conversationInfo } from '../../stores/ConversationStore'
 import { Eleme, Folder, Scissor, VideoCamera } from '@element-plus/icons-vue'
@@ -96,6 +97,10 @@ const sendMessage = () => {
     message.value = ''
     if (res.data) {
       messageStore.addMessageMap(res.data.conversationId, res.data)
+      conversationStore.setConversationMap(route.query.conversationId, {
+        latestMsg: res.data.content,
+        latestMsgTime: dayjs(res.data.sendTime).format('HH:mm')
+      })
     }
   })
 }

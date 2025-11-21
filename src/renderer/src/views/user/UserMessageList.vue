@@ -33,12 +33,12 @@
             </div>
             <div class="mid-message">
               <h1 class="friend-name">{{ friend.username }}</h1>
-              <div class="friend-message">你好</div>
+              <div class="friend-message">{{ friend.latestMsg }}</div>
             </div>
             <div class="right-count">
-              <div class="left-list-time">6:00</div>
+              <div class="left-list-time">{{ friend.latestMsgTime }}</div>
               <div class="left-list-count"></div>
-              <div class="user-status"></div>
+              <div class="conversation-status"></div>
             </div>
           </div>
         </el-scrollbar>
@@ -58,6 +58,7 @@ import { conversationInfo } from '../../stores/ConversationStore'
 import { Search, Plus, ArrowDown } from '@element-plus/icons-vue'
 import { getFriendListApi } from '../../api/Friend'
 import { getConversationListApi } from '../../api/Conversation'
+import dayjs from 'dayjs'
 
 const router = useRouter()
 const friendId = reactive({ arr: [] })
@@ -161,8 +162,8 @@ const getFriendList = async () => {
     // 遍历会话列表，更新pinia中的会话信息
     res.data.forEach((item) => {
       conversationStore.setConversationMap(item.id, {
-        lastMsg: item.lastMsg,
-        lastMsgTime: item.lastMsgTime,
+        latestMsg: item.latestMsg,
+        latestMsgTime: dayjs(item.latestMsgTime).format('HH:mm'),
         unreadCount: item.unreadCount,
         isTop: item.isTop,
         status: item.status
@@ -244,9 +245,9 @@ onMounted(() => {
 }
 
 .friend-message {
-  font-size: 14px;
-  color: #9f9f9f;
-  margin: 0;
+  font-size: 13px;
+  color: black;
+  margin-bottom: 5px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -264,6 +265,7 @@ onMounted(() => {
   position: absolute;
   top: 0;
   right: 0;
+  font-size: 14px;
 }
 
 .left-list-count {

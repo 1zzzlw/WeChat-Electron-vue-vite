@@ -7,8 +7,8 @@ interface conversation {
   username: string
   avatar: string
   remark: string
-  lastMsg: string
-  lastMsgTime: number
+  latestMsg: string
+  latestMsgTime: string
   unreadCount: number
   isTop: number
   status: number
