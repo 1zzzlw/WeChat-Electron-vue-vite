@@ -64,7 +64,6 @@
 import { ref, reactive, watch } from 'vue'
 import { sendApplyApi } from '../../api/Apply'
 import { searchFriendApi } from '../../api/Friend'
-import { WSManager } from '../../utils/websocket.js'
 import { Search } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 

@@ -39,14 +39,9 @@ const api = {
   },
   // 主进程转发回渲染进程
   onForwardWS: (callback) => {
-    ipcRenderer.on('ws:forward', (event, { messageType, sequenceId, data }) => callback(messageType, sequenceId, data))
-  },
-  onWsConnect: (callback) => {
-    ipcRenderer.on('ws:connect', (event) => callback())
-  },
-  // 渲染进程向主进程发送WS状态通知
-  sendWsStatus: (status) => {
-    ipcRenderer.send('ws:status', status)
+    ipcRenderer.on('ws:forward', (event, { messageType, sequenceId, data }) =>
+      callback(messageType, sequenceId, data)
+    )
   },
   // 移除监听，防止内存泄漏
   removeWsConnectListener: () => {

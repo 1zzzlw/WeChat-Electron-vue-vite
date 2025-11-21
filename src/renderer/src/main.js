@@ -15,13 +15,6 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 }
 const pinia = createPinia()
 
-// 监听主进程的「触发WS连接」指令
-window.api.onWsConnect(() => {
-  console.log('start connect ws')
-  // 调用connect方法（异步）
-  WSManager.connect().then((r) => {})
-})
-
 window.api.onForwardWS((messageType, sequenceId, data) => {
   WSManager.sendMessage(messageType, sequenceId, data)
 })

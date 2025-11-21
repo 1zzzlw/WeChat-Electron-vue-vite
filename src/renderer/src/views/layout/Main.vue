@@ -27,12 +27,14 @@
 
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue'
+import { WSManager } from '../../utils/websocket'
 
 const avatarUrl = ref('')
 
 onMounted(async () => {
   // 从本地存储中获取头像
   avatarUrl.value = await window.api.storeGetAvatar()
+  WSManager.connect().then((r) => {})
 })
 </script>
 

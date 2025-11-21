@@ -74,16 +74,6 @@ function createMainWindow() {
     // 加载打包后的本地 HTML 文件（../renderer/index.html），这是应用打包后实际运行的静态资源，无需依赖开发服务器。
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
-
-  // 窗口加载完成后，发送WS连接指令
-  mainWindow.webContents.on('did-finish-load', () => {
-    // 向渲染进程发送WS连接指令
-    mainWindow.webContents.send('ws:connect')
-  })
-
-  ipcMain.on('ws:status', (_, status) => {
-    console.log('renderer receive ws status:', status)
-  })
 }
 
 function createExtraWindow(pagePath, options = {}) {
