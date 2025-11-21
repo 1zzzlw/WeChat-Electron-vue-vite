@@ -54,15 +54,17 @@
 <script lang="ts" setup>
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { friendNewMessageInfo } from '../../stores/FriendNewMessageStore'
+import { conversationInfo } from '../../stores/ConversationStore'
 import { Search, Plus, ArrowDown } from '@element-plus/icons-vue'
 import { getFriendListApi } from '../../api/Friend'
+import { getConversationListApi } from '../../api/Conversation'
 
 const router = useRouter()
 const friendId = reactive({ arr: [] })
 const active = ref('')
 const userId = ref()
-const friendNewMessageStore = friendNewMessageInfo()
+const conversationStore = conversationInfo()
+const conversationId = reactive({ list: [] })
 
 const starCall = async (friend) => {
   active.value = friend.id
@@ -85,24 +87,30 @@ const addFriend = () => {
   window.api.createNewWindow('addFriend')
 }
 
-const friendListArr = computed(() => Object.values(friendNewMessageStore.friendNewMessageMap))
+// 过滤出状态为1的会话列表
+const friendListArr = computed(() =>
+  Object.values(conversationStore.conversationMap).filter((item) => item.status === 1)
+)
 
 const getFriendList = async () => {
-  const cache = Object.keys(friendNewMessageStore.friendNewMessageMap).length > 0
+  const cache = Object.keys(conversationStore.conversationMap).length > 0
   if (cache) {
-    console.info('消息列表缓存非空:', cache)
+    console.info('会话列表缓存非空:', cache)
     return
   }
 
+  // TODO：修改第一步，数据库新增会话表，这里应该查询会话表，但是没有会话id，所以还是需要查询好友表来构建会话id
+  // res为当前用户的好友列表
   const res = await getFriendListApi()
   console.info('好友列表:', res.data)
 
+  // 构建以好友id为键的映射表
   const friendMap = new Map(res.data.map((f) => [f.id, f]))
 
   // 获得当前登录用户id
   userId.value = await window.api.storeGetUserId()
 
-  // 获得好友id数组
+  // 获得好友id数组，方便后续构建和每个好友的会话id
   friendId.arr = res.data.map((item) => item.id)
 
   console.info('好友id集合:', friendId.arr, '当前登录用户id为:', userId.value)
@@ -129,20 +137,38 @@ const getFriendList = async () => {
   //   })
   // })
 
-  // 优化写法
+  // 优化写法，遍历好友id数组，构建会话id并关联对应的好友信息并存储在pinia中
   for (const fid of friendId.arr) {
     const cid = `${Math.max(userId.value, fid)}_${Math.min(userId.value, fid)}`
     console.info('cid:', cid)
+    // 到这里只是为了构建会话id，用来关联好友信息
     const friend = friendMap.get(fid)
     if (!friend) continue
 
-    friendNewMessageStore.setFriendNewMessageMap(cid, {
+    // 用会话id做键，存储会话列表中的好友信息
+    conversationStore.setConversationMap(cid, {
       id: fid,
       username: friend.username,
       avatar: friend.avatar,
       remark: friend.remark
     })
+    conversationId.list.push(cid)
   }
+
+  // 从数据库查询会话列表
+  getConversationListApi(conversationId.list.join(',')).then((res) => {
+    console.info('会话列表:', res.data)
+    // 遍历会话列表，更新pinia中的会话信息
+    res.data.forEach((item) => {
+      conversationStore.setConversationMap(item.id, {
+        lastMsg: item.lastMsg,
+        lastMsgTime: item.lastMsgTime,
+        unreadCount: item.unreadCount,
+        isTop: item.isTop,
+        status: item.status
+      })
+    })
+  })
 }
 
 onMounted(() => {

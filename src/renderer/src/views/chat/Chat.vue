@@ -53,7 +53,7 @@ import { useRoute } from 'vue-router'
 import { getMessageListApi, sendMessageApi } from '../../api/Message'
 import { messageInfo } from '../../stores/MessageStore'
 import { WSManager } from '../../utils/websocket.js'
-import { friendNewMessageInfo } from '../../stores/FriendNewMessageStore'
+import { conversationInfo } from '../../stores/ConversationStore'
 import { Eleme, Folder, Scissor, VideoCamera } from '@element-plus/icons-vue'
 
 // 添加数据加载状态标记
@@ -66,7 +66,7 @@ const userId = ref()
 const chatScrollbar = ref(null)
 
 const messageStore = messageInfo()
-const friendNewMessageStore = friendNewMessageInfo()
+const conversationStore = conversationInfo()
 
 const scrollToBottom = () => {
   // nextTick：等待Vue将最新的消息渲染到DOM上后，再执行滚动操作
@@ -102,6 +102,7 @@ const sendMessage = () => {
 
 const getMessageList = async () => {
   const convId = route.query.conversationId
+
   if (!convId) {
     console.info('会话id不存在')
     return
@@ -137,9 +138,9 @@ const messageArr = computed(() => {
   return messageStore.messageMap[convId] || []
 })
 
-const friendAvatar = computed(() => friendNewMessageStore.getAvatar(route.query.conversationId))
-const friendUsername = computed(() => friendNewMessageStore.getUsername(route.query.conversationId))
-const friendRemark = computed(() => friendNewMessageStore.getRemark(route.query.conversationId))
+const friendAvatar = computed(() => conversationStore.getAvatar(route.query.conversationId))
+const friendUsername = computed(() => conversationStore.getUsername(route.query.conversationId))
+const friendRemark = computed(() => conversationStore.getRemark(route.query.conversationId))
 
 onMounted(async () => {
   try {
