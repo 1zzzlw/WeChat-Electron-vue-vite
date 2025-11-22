@@ -197,6 +197,11 @@ class WebSocketManager {
           console.info('收到好友申请:', data)
           userApplyListInfo().setUserApplyMap(data.applyId, data)
           break
+        case 8:
+          // 群聊申请类型，将消息存储到状态管理中
+          console.info('收到群聊加入邀请:', data)
+          userApplyListInfo().setGroupApplyMap(data.userId, data)
+          break
       }
     } catch (e) {
       console.warn('消息解析失败', e)

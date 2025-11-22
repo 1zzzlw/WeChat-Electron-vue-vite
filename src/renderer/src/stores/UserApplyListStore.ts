@@ -13,7 +13,6 @@ interface userApplyInfo {
 }
 
 interface groupApplyInfo {
-  id: string | number
   userId: string | number
   userAvatar: string
   groupName: string

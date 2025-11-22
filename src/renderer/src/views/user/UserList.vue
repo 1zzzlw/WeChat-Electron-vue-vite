@@ -166,8 +166,7 @@ const fetchGroupApplyList = () => {
   getGroupApplyListApi().then((res) => {
     console.info('群聊申请列表:', res.data)
     res.data.forEach((applyItem) => {
-      userApplyStore.setGroupApplyMap(applyItem.id, {
-        id: applyItem.id,
+      userApplyStore.setGroupApplyMap(applyItem.userId, {
         userId: applyItem.userId,
         userAvatar: applyItem.userAvatar,
         groupName: applyItem.groupName,

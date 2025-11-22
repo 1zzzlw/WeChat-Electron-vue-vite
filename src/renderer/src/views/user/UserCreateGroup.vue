@@ -108,7 +108,6 @@ const createGroup = async () => {
         ElMessage.success('创建群聊成功')
         // ws 发送创建群聊成功消息
         window.api.sendToMain(7, 0, {
-          id: res.data,
           userAvatar: userAvatar.value,
           groupName: groupName.value,
           invitedIds: invitedIdsArray
