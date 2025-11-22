@@ -13,6 +13,7 @@ const store = new Store({
 
 let mainWindow = null
 let addFriendWindow = null
+let createGroupWindow = null
 const login_width = 300
 const login_height = 370
 const main_width = 1100
@@ -20,6 +21,8 @@ const main_height = 700
 const register_height = 490
 const friendAdd_width = 350
 const friendAdd_height = 520
+const createGroup_width = 820
+const createGroup_height = 620
 
 function createMainWindow() {
   // Create the browser window.
@@ -220,6 +223,12 @@ function createNewWindow(windowType) {
       height: friendAdd_height
     }
     addFriendWindow = createExtraWindow('/friendAdd', options)
+  } else if (windowType === 'createGroup') {
+    const options = {
+      width: createGroup_width,
+      height: createGroup_height
+    }
+    createGroupWindow = createExtraWindow('/createGroup', options)
   }
 }
 

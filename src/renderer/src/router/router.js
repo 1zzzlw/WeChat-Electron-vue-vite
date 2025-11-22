@@ -13,6 +13,7 @@ import ChatView from '../views/chat/Chat.vue'
 import FriendAddView from '../views/user/UserFriendAdd.vue'
 import FriendApplyView from '../views/friend/FriendApply.vue'
 import FriendInfoView from '../views/friend/FriendInfo.vue'
+import CreateGroupView from '../views/user/UserCreateGroup.vue'
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -46,6 +47,11 @@ const router = createRouter({
       path: '/friendAdd',
       name: 'friendAdd',
       component: FriendAddView
+    },
+    {
+      path: '/createGroup',
+      name: 'createGroup',
+      component: CreateGroupView
     },
     {
       path: '/main',

@@ -80,6 +80,8 @@ const starCall = async (friend) => {
 
 const createGroupChat = () => {
   console.info('createGroupChat')
+  // 打开创建群聊窗口
+  window.api.createNewWindow('createGroup')
 }
 
 const addFriend = () => {
