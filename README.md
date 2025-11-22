@@ -14,3 +14,6 @@ git pull origin master
 如果要保持实时更新，确保当前在master分支
 git checkout master
 拉取远程master分支的最新代码
+pinia缓存多窗口共享的理解，代码不小心清空了，但是思路也理解了不少，
+以后有机会的话，会继续完善这个前端多窗口缓存共享的。
+![img.png](img.png)
