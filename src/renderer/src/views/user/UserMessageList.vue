@@ -57,7 +57,7 @@ import { useRouter } from 'vue-router'
 import { conversationInfo } from '../../stores/ConversationStore'
 import { Search, Plus, ArrowDown } from '@element-plus/icons-vue'
 import { getFriendListApi } from '../../api/Friend'
-import { getConversationListApi } from '../../api/Conversation'
+import { getConversationListApi, getGroupListApi } from '../../api/Conversation'
 import dayjs from 'dayjs'
 
 const router = useRouter()
@@ -175,8 +175,15 @@ const getFriendList = async () => {
   })
 }
 
+const getGroupList = () => {
+  getGroupListApi().then((res) => {
+    console.info('群聊列表:', res.data)
+  })
+}
+
 onMounted(() => {
   getFriendList()
+  getGroupList()
 })
 </script>
 

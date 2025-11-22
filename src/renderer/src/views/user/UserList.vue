@@ -33,7 +33,7 @@
               </el-collapse-item>
               <el-collapse-item title="群聊申请" name="2">
                 <div
-                  class="left-list"
+                  class="left-list-group"
                   v-for="(apply, index) in groupApplyListArr"
                   :key="index"
                   :class="{ 'left-list-bg': active == apply.id }"
@@ -42,11 +42,35 @@
                     <img :src="apply.userAvatar" alt="头像" class="left-list-img" />
                   </div>
                   <div class="friend-name">{{ apply.groupName }}</div>
-                  <el-button type="primary" size="small">入群</el-button>
-                  <el-button type="danger" size="small">忽略</el-button>
+                  <div class="btn1" v-if="apply.status === 1">
+                    <el-button type="primary" size="small" @click="joinGroup(apply)"
+                      >入群</el-button
+                    >
+                    <el-button type="danger" size="small" @click="ignoreGroupApply(apply)"
+                      >忽略</el-button
+                    >
+                  </div>
+                  <div v-else-if="apply.status === 2">
+                    <el-button type="primary" size="small" disabled>已入群</el-button>
+                  </div>
+                  <div v-else>
+                    <el-button type="danger" size="small" disabled>已忽略</el-button>
+                  </div>
                 </div>
               </el-collapse-item>
-              <el-collapse-item title="群聊" name="3"></el-collapse-item>
+              <el-collapse-item title="群聊" name="3">
+                <div
+                  class="left-list-group"
+                  v-for="(group, index) in groupListArr"
+                  :key="index"
+                  :class="{ 'left-list-bg': active == group.id }"
+                >
+                  <div class="left-image">
+                    <img :src="group.groupAvatar" alt="头像" class="left-list-img" />
+                  </div>
+                  <div class="friend-name">{{ group.groupName }}</div>
+                </div>
+              </el-collapse-item>
               <el-collapse-item title="联系人" name="4">
                 <div
                   class="left-list"
@@ -79,13 +103,16 @@ import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { Search } from '@element-plus/icons-vue'
 import { getFriendListApi } from '../../api/Friend'
-import { getApplyListApi, getGroupApplyListApi } from '../../api/Apply'
-import { CollapseModelValue } from 'element-plus'
+import { getApplyListApi, getGroupApplyListApi, dealGroupApplyApi } from '../../api/Apply'
+import { CollapseModelValue, ElMessage } from 'element-plus'
 import { userApplyListInfo } from '../../stores/UserApplyListStore'
 import { userListInfo } from '../../stores/ContactListStore'
+import { groupListInfo } from '../../stores/GroupListStores'
+import { getGroupListApi } from '../../api/Conversation'
 
 const userApplyStore = userApplyListInfo()
 const userListStore = userListInfo()
+const groupListStore = groupListInfo()
 // 联系人列表默认展开
 const activeNames = ref(['4'])
 const handleChange = (val: CollapseModelValue) => {
@@ -109,6 +136,34 @@ const startApply = (apply) => {
 const starCall = (user) => {
   active.value = user.id
   router.push({ path: '/friendInfo', query: { friendId: user.id } })
+}
+
+const joinGroup = async (apply) => {
+  console.info(apply)
+  const userId = await window.api.storeGetUserId()
+  console.info('用户', userId, '同意入群:')
+  dealGroupApplyApi(apply.conversationId, apply.userId, userId, 2).then((res) => {
+    if (res.code === 1) {
+      ElMessage.success('入群成功')
+      userApplyStore.updateGroupApplyStatus(apply.userId, 2)
+    } else {
+      ElMessage.error('入群失败')
+    }
+  })
+}
+
+const ignoreGroupApply = async (apply) => {
+  console.info(apply)
+  const userId = await window.api.storeGetUserId()
+  console.info('用户', userId, '忽略入群:')
+  dealGroupApplyApi(apply.conversationId, apply.userId, userId, 3).then((res) => {
+    if (res.code === 1) {
+      ElMessage.success('忽略入群成功')
+      userApplyStore.updateGroupApplyStatus(apply.userId, 3)
+    } else {
+      ElMessage.error('忽略入群失败')
+    }
+  })
 }
 
 const fetchApplyList = () => {
@@ -167,6 +222,7 @@ const fetchGroupApplyList = () => {
     console.info('群聊申请列表:', res.data)
     res.data.forEach((applyItem) => {
       userApplyStore.setGroupApplyMap(applyItem.userId, {
+        conversationId: applyItem.conversationId,
         userId: applyItem.userId,
         userAvatar: applyItem.userAvatar,
         groupName: applyItem.groupName,
@@ -175,6 +231,33 @@ const fetchGroupApplyList = () => {
     })
   })
 }
+
+const fetchGroupList = () => {
+  const cache = Object.keys(groupListStore.groupListMap).length > 0
+
+  if (cache) {
+    console.info('群聊列表缓存非空:', cache)
+    return
+  }
+
+  getGroupListApi().then((res) => {
+    console.info('群聊列表:', res.data)
+    res.data.forEach((groupItem) => {
+      groupListStore.setGroupListMap(groupItem.id, {
+        id: groupItem.id,
+        groupName: groupItem.groupName,
+        groupAvatar: groupItem.groupAvatar,
+        ownerId: groupItem.ownerId,
+        isTop: groupItem.isTop,
+        latestMsg: groupItem.latestMsg,
+        latestMsgTime: groupItem.latestMsgTime,
+        status: groupItem.status
+      })
+    })
+  })
+}
+
+const groupListArr = computed(() => Object.values(groupListStore.groupListMap))
 
 const groupApplyListArr = computed(() => Object.values(userApplyStore.groupApplyMap))
 
@@ -190,6 +273,8 @@ onMounted(() => {
   fetchApplyList()
 
   fetchGroupApplyList()
+
+  fetchGroupList()
 })
 </script>
 
@@ -235,6 +320,39 @@ onMounted(() => {
   padding: 10px;
   gap: 10px;
   transition: 0.3s;
+}
+
+.left-list-group {
+  /* 固定高度确保所有项目一致 */
+  height: 72px;
+  /* 确保占满父容器 */
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  gap: 10px;
+  transition: 0.3s;
+}
+
+.btn1 {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+.btn1 button {
+  width: 40px;
+  height: 20px;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 12px;
 }
 
 .friend-name {

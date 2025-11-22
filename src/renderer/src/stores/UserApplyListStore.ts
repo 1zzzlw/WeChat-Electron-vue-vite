@@ -13,6 +13,7 @@ interface userApplyInfo {
 }
 
 interface groupApplyInfo {
+  conversationId: string
   userId: string | number
   userAvatar: string
   groupName: string
@@ -59,6 +60,12 @@ export const userApplyListInfo = defineStore('userApplyListInfo', {
     },
     getGroupApplyMap(groupId: string | number): groupApplyInfo | undefined {
       return this.groupApplyMap[groupId]
+    },
+    updateGroupApplyStatus(groupId: string | number, status: number) {
+      const existingGroupApply = this.groupApplyMap[groupId]
+      if (existingGroupApply) {
+        this.groupApplyMap[groupId] = { ...existingGroupApply, status }
+      }
     }
   }
 })

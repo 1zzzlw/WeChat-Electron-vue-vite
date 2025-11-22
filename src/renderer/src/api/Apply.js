@@ -11,3 +11,6 @@ export const sendGroupApplyApi = (friendId, groupName) =>
   request.post(`/conversation/create/${friendId}`, { groupName })
 
 export const getGroupApplyListApi = () => request.get('/conversation/groupApplyList')
+
+export const dealGroupApplyApi = (conversationId, userId, memberId, status) =>
+  request.post('/conversation/groupApply/deal', { conversationId, userId, memberId, status })
