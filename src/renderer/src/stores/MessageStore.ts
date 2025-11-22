@@ -29,7 +29,9 @@ export const messageInfo = defineStore('messageInfo', {
       this.messageMap[conversationId].push(message)
     },
     initMessageMap(conversationId: string) {
-      this.messageMap[conversationId] = []
+      if (!this.messageMap[conversationId]) {
+        this.messageMap[conversationId] = []
+      }
     }
   }
 })

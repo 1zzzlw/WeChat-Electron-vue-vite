@@ -74,6 +74,7 @@ const starCall = async (friend) => {
     console.info('获取当前用户ID失败，无法进入聊天页')
     return
   }
+  console.info('消息列表时，好友id', friend.id)
   const cid = `${Math.max(userId.value, friend.id)}_${Math.min(userId.value, friend.id)}`
   await router.push({ path: '/chat', query: { conversationId: cid, friendId: friend.id } })
 }

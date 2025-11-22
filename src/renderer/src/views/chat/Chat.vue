@@ -48,7 +48,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref, nextTick, watch } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { getMessageListApi, sendMessageApi } from '../../api/Message'
 import { messageInfo } from '../../stores/MessageStore'
@@ -69,26 +69,6 @@ const chatScrollbar = ref(null)
 const messageStore = messageInfo()
 const conversationStore = conversationInfo()
 
-const scrollToBottom = () => {
-  // nextTick：等待Vue将最新的消息渲染到DOM上后，再执行滚动操作
-  // 原因：新消息添加到Pinia后，Vue不会立即更新DOM，需要等下一个DOM更新周期
-  nextTick(() => {
-    // 先判断scrollRef是否存在（避免未获取到DOM时报错）
-    if (chatScrollbar.value) {
-      // el-scrollbar组件的滚动容器是其内部的 .el-scrollbar__wrap 元素
-      // 通过 wrapRef 属性可以直接获取到这个滚动容器DOM
-      const scrollWrap = chatScrollbar.value.wrapRef
-      // 再次判断滚动容器是否存在（防止异常情况）
-      if (scrollWrap) {
-        // 关键：设置滚动条的滚动距离（scrollTop）等于内容总高度（scrollHeight）
-        // scrollHeight：滚动容器内所有内容的总高度（包括看不见的部分）
-        // scrollTop：滚动条向上滚动的距离，设为scrollHeight就会滚到最底部
-        scrollWrap.scrollTop = scrollWrap.scrollHeight
-      }
-    }
-  })
-}
-
 const sendMessage = () => {
   console.info('接收消息用户的ID:', route.query.friendId, '消息内容:', message.value)
   WSManager.sendMessage(1, 0, { receiverId: route.query.friendId, content: message.value })
@@ -107,6 +87,8 @@ const sendMessage = () => {
 
 const getMessageList = async () => {
   const convId = route.query.conversationId
+
+  console.info('获取消息列表，会话id:', convId)
 
   if (!convId) {
     console.info('会话id不存在')
@@ -149,10 +131,10 @@ const friendRemark = computed(() => conversationStore.getRemark(route.query.conv
 
 onMounted(async () => {
   try {
+    console.info('聊天页时，好友id', route.query.friendId)
     avatarUrl.value = await window.api.storeGetAvatar()
     userId.value = await window.api.storeGetUserId()
     await getMessageList()
-    scrollToBottom()
     // 所有数据加载完成，允许渲染
     isDataLoaded.value = true
   } catch (error) {
@@ -162,18 +144,15 @@ onMounted(async () => {
   }
 })
 
-// 监听消息列表变化：有新消息时自动滚到底部
-// watch监听messageArr的长度变化（消息数量增加时触发）
+// 监听conversationId变化 - 确保会话切换
 watch(
-  // 监听的目标：messageArr的长度（消息数量）
-  () => messageArr.value.length,
-  // 监听到变化后执行的回调函数
-  // newLength：变化后的消息长度，oldLength：变化前的消息长度
-  (newLength, oldLength) => {
-    // 只有当消息数量增加时（新消息到来），才执行滚动
-    // 避免消息列表减少时（比如删除消息）也滚动
-    if (newLength > oldLength) {
-      scrollToBottom()
+  () => route.query.conversationId,
+  async (newConversationId) => {
+    try {
+      console.info('切换会话，新的会话id', newConversationId)
+      await getMessageList()
+    } catch (error) {
+      console.error('加载新会话消息失败', error)
     }
   }
 )
