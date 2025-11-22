@@ -31,8 +31,23 @@
                   <h1 class="friend-name">{{ apply.username }}</h1>
                 </div>
               </el-collapse-item>
-              <el-collapse-item title="群聊" name="2"></el-collapse-item>
-              <el-collapse-item title="联系人" name="3">
+              <el-collapse-item title="群聊申请" name="2">
+                <div
+                  class="left-list"
+                  v-for="(apply, index) in groupApplyListArr"
+                  :key="index"
+                  :class="{ 'left-list-bg': active == apply.id }"
+                >
+                  <div class="left-image">
+                    <img :src="apply.userAvatar" alt="头像" class="left-list-img" />
+                  </div>
+                  <div class="friend-name">{{ apply.groupName }}</div>
+                  <el-button type="primary" size="small">入群</el-button>
+                  <el-button type="danger" size="small">忽略</el-button>
+                </div>
+              </el-collapse-item>
+              <el-collapse-item title="群聊" name="3"></el-collapse-item>
+              <el-collapse-item title="联系人" name="4">
                 <div
                   class="left-list"
                   v-for="(user, index) in friendListArr"
@@ -64,7 +79,7 @@ import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { Search } from '@element-plus/icons-vue'
 import { getFriendListApi } from '../../api/Friend'
-import { getApplyListApi } from '../../api/Apply'
+import { getApplyListApi, getGroupApplyListApi } from '../../api/Apply'
 import { CollapseModelValue } from 'element-plus'
 import { userApplyListInfo } from '../../stores/UserApplyListStore'
 import { userListInfo } from '../../stores/ContactListStore'
@@ -72,7 +87,7 @@ import { userListInfo } from '../../stores/ContactListStore'
 const userApplyStore = userApplyListInfo()
 const userListStore = userListInfo()
 // 联系人列表默认展开
-const activeNames = ref(['3'])
+const activeNames = ref(['4'])
 const handleChange = (val: CollapseModelValue) => {
   console.info(val)
   // 学习了computed之后感觉可以替代下方的代码了
@@ -141,6 +156,29 @@ const fetchUserList = () => {
   })
 }
 
+const fetchGroupApplyList = () => {
+  const cache = Object.keys(userApplyStore.groupApplyMap).length > 0
+  if (cache) {
+    console.info('群聊申请列表缓存非空:', cache)
+    return
+  }
+
+  getGroupApplyListApi().then((res) => {
+    console.info('群聊申请列表:', res.data)
+    res.data.forEach((applyItem) => {
+      userApplyStore.setGroupApplyMap(applyItem.id, {
+        id: applyItem.id,
+        userId: applyItem.userId,
+        userAvatar: applyItem.userAvatar,
+        groupName: applyItem.groupName,
+        status: applyItem.status
+      })
+    })
+  })
+}
+
+const groupApplyListArr = computed(() => Object.values(userApplyStore.groupApplyMap))
+
 const friendListArr = computed(() => Object.values(userListStore.userMap))
 
 const friendApplyListArr = computed(() => {
@@ -151,6 +189,8 @@ onMounted(() => {
   fetchUserList()
 
   fetchApplyList()
+
+  fetchGroupApplyList()
 })
 </script>
 

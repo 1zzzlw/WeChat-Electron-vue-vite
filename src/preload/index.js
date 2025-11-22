@@ -29,6 +29,9 @@ const api = {
   createNewWindow: (windowType) => {
     ipcRenderer.send('create-new-window', windowType)
   },
+  destroyNewWindow: (windowType) => {
+    ipcRenderer.send('destroy-new-window', windowType)
+  },
   // 发送给主进程，主进程会把消息广播给所有窗口
   sendToMain: (messageType, sequenceId, data) => {
     ipcRenderer.send('ws:send', {

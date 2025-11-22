@@ -37,6 +37,7 @@
           </div>
         </el-scrollbar>
         <div class="create-group-btn">
+          <el-input v-model="groupName" placeholder="请输入群聊名称" clearable></el-input>
           <el-button type="primary" class="create-btn" @click="createGroup">创建群聊</el-button>
         </div>
       </div>
@@ -47,6 +48,7 @@
 <script setup>
 import { ref, onMounted, reactive } from 'vue'
 import { getFriendListApi } from '../../api/Friend'
+import { sendGroupApplyApi } from '../../api/Apply'
 import { ElMessage } from 'element-plus'
 
 const count = ref(0)
@@ -54,6 +56,8 @@ const friendList = reactive({ list: [] })
 const invitedList = reactive({ list: [] })
 // hash 集合，用于存储已邀请用户的 ID
 const invitedIds = ref(new Set())
+const groupName = ref('')
+const userAvatar = ref('')
 
 const inviteBtn = (friend) => {
   if (invitedIds.value.has(friend.id)) {
@@ -84,12 +88,39 @@ const removeBtn = (friend) => {
   ElMessage.success('已移除该用户')
 }
 
-const createGroup = () => {
+const createGroup = async () => {
   if (invitedList.list.length === 0) {
     ElMessage.error('请邀请至少一个用户')
     return
   }
-  console.info(invitedIds.value)
+  if (groupName.value === '') {
+    ElMessage.error('请输入群聊名称')
+    return
+  }
+  // 获取当前用户头像
+  userAvatar.value = await window.api.storeGetAvatar()
+  // 将 Set 转换为数组
+  const invitedIdsArray = [...invitedIds.value]
+  console.info(invitedIdsArray)
+  sendGroupApplyApi(invitedIdsArray, groupName.value)
+    .then((res) => {
+      if (res.code === 1) {
+        ElMessage.success('创建群聊成功')
+        // ws 发送创建群聊成功消息
+        window.api.sendToMain(7, 0, {
+          id: res.data,
+          userAvatar: userAvatar.value,
+          groupName: groupName.value,
+          invitedIds: invitedIdsArray
+        })
+        window.api.destroyNewWindow('createGroup')
+      } else {
+        ElMessage.error(res.msg)
+      }
+    })
+    .catch((err) => {
+      ElMessage.error('创建群聊失败')
+    })
 }
 
 onMounted(() => {

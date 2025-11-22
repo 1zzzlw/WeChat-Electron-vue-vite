@@ -232,6 +232,21 @@ function createNewWindow(windowType) {
   }
 }
 
+// 关闭新窗口
+function destroyNewWindow(windowType) {
+  if (windowType === 'addFriend') {
+    if (addFriendWindow) {
+      addFriendWindow.close()
+      addFriendWindow = null
+    }
+  } else if (windowType === 'createGroup') {
+    if (createGroupWindow) {
+      createGroupWindow.close()
+      createGroupWindow = null
+    }
+  }
+}
+
 ipcMain.on('create-new-window', (e, windowType) => {
   createNewWindow(windowType)
 })

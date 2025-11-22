@@ -12,11 +12,20 @@ interface userApplyInfo {
   dealResult: 0 | 1
 }
 
+interface groupApplyInfo {
+  id: string | number
+  userId: string | number
+  userAvatar: string
+  groupName: string
+  status: number
+}
+
 export const userApplyListInfo = defineStore('userApplyListInfo', {
   state: () => {
     return {
       // Record<键类型, 值类型>：键是string/number，值是userInfo
-      userApplyMap: {} as Record<string | number, userApplyInfo>
+      userApplyMap: {} as Record<string | number, userApplyInfo>,
+      groupApplyMap: {} as Record<string | number, groupApplyInfo>
     }
   },
   actions: {
@@ -45,6 +54,12 @@ export const userApplyListInfo = defineStore('userApplyListInfo', {
     },
     deleteUserApplyMap(userId: string | number) {
       delete this.userApplyMap[userId]
+    },
+    setGroupApplyMap(groupId: string | number, groupInfo: groupApplyInfo) {
+      this.groupApplyMap[groupId] = groupInfo
+    },
+    getGroupApplyMap(groupId: string | number): groupApplyInfo | undefined {
+      return this.groupApplyMap[groupId]
     }
   }
 })
