@@ -70,9 +70,22 @@ const messageStore = messageInfo()
 const conversationStore = conversationInfo()
 
 const sendMessage = () => {
-  console.info('接收消息用户的ID:', route.query.friendId, '消息内容:', message.value)
+  console.info(
+    '接收消息用户的ID:',
+    route.query.friendId,
+    '消息内容:',
+    message.value,
+    '会话id:',
+    route.query.conversationId
+  )
+  // ws发送接收者id、消息内容
   WSManager.sendMessage(1, 0, { receiverId: route.query.friendId, content: message.value })
-  sendMessageApi({ receiverId: route.query.friendId, content: message.value }).then((res) => {
+  // http发送接收者id、会话id、消息内容
+  sendMessageApi({
+    receiverId: route.query.friendId,
+    conversationId: route.query.conversationId,
+    content: message.value
+  }).then((res) => {
     console.info('发送消息成功', res)
     message.value = ''
     if (res.data) {
@@ -95,6 +108,7 @@ const getMessageList = async () => {
     return
   }
 
+  // 此时群聊会话和单聊会话一起存储，只是格式差别比较大
   messageStore.initMessageMap(convId)
 
   // 再判断缓存（此时 messageMap[convId] 一定是数组，不会报错）
@@ -104,7 +118,7 @@ const getMessageList = async () => {
     return
   }
 
-  const res = await getMessageListApi({ receiverId: route.query.friendId })
+  const res = await getMessageListApi({ conversationId: convId })
   console.info('获取消息列表成功', res.data)
   arr.list = res.data
   res.data.forEach((messagePcak) => {
@@ -131,7 +145,9 @@ const friendRemark = computed(() => conversationStore.getRemark(route.query.conv
 
 onMounted(async () => {
   try {
-    console.info('聊天页时，好友id', route.query.friendId)
+    console.info(
+      '聊天页时，好友id' + route.query.friendId + ', 会话id:' + route.query.conversationId
+    )
     avatarUrl.value = await window.api.storeGetAvatar()
     userId.value = await window.api.storeGetUserId()
     await getMessageList()

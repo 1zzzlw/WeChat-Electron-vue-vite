@@ -4,6 +4,7 @@ import { defineStore } from 'pinia'
 
 interface conversation {
   id: string | number
+  friendId: string | number
   username: string
   avatar: string
   remark: string
@@ -18,7 +19,8 @@ export const conversationInfo = defineStore('conversationInfo', {
   state: () => {
     return {
       // 键为会话id
-      conversationMap: {} as Record<string, conversation>
+      conversationMap: {} as Record<string, conversation>,
+      groupConversationMap: {} as Record<string, conversation>
     }
   },
   actions: {
@@ -29,14 +31,37 @@ export const conversationInfo = defineStore('conversationInfo', {
         ...partialInfo
       }
     },
+    setGroupConversationMap(groupConversationId: string, partialInfo: Partial<conversation>) {
+      this.groupConversationMap[groupConversationId] = {
+        ...this.groupConversationMap[groupConversationId],
+        ...partialInfo
+      }
+    },
     getAvatar(conversationId: string) {
-      return this.conversationMap[conversationId].avatar
+      if (!conversationId.startsWith('g_')) {
+        // 单聊会话，返回好友头像
+        return this.conversationMap[conversationId].avatar
+      } else {
+        // 群聊会话，返回群聊头像
+        return this.groupConversationMap[conversationId].avatar
+      }
     },
     getUsername(conversationId: string) {
-      return this.conversationMap[conversationId].username
+      if (!conversationId.startsWith('g_')) {
+        // 单聊会话，返回好友用户名
+        return this.conversationMap[conversationId].username
+      } else {
+        // 群聊会话，返回群聊名称
+        return this.groupConversationMap[conversationId].username
+      }
     },
     getRemark(conversationId: string) {
-      return this.conversationMap[conversationId].remark
+      if (!conversationId.startsWith('g_')) {
+        // 只有单聊会话才会有remark，群聊会话remark为空字符串
+        return this.conversationMap[conversationId].remark
+      } else {
+        return ''
+      }
     }
   }
 })

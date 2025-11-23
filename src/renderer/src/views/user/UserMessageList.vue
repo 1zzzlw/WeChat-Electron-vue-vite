@@ -23,20 +23,22 @@
         <el-scrollbar>
           <div
             class="left-list"
-            v-for="(friend, index) in friendListArr"
+            v-for="(conversation, index) in conversationListArr"
             :key="index"
-            :class="{ 'left-list-bg': active == friend.id }"
-            @click="starCall(friend)"
+            :class="{ 'left-list-bg': active == conversation.id }"
+            @click="starCall(conversation)"
           >
             <div class="left-image">
-              <img :src="friend.avatar" alt="头像" class="left-list-img" />
+              <img :src="conversation.avatar" alt="头像" class="left-list-img" />
             </div>
             <div class="mid-message">
-              <h1 class="friend-name">{{ friend.username }}</h1>
-              <div class="friend-message">{{ friend.latestMsg }}</div>
+              <h1 class="friend-name">{{ conversation.username }}</h1>
+              <div class="friend-message">{{ conversation.latestMsg }}</div>
             </div>
             <div class="right-count">
-              <div class="left-list-time">{{ friend.latestMsgTime }}</div>
+              <div class="left-list-time" v-if="conversation.latestMsgTime !== 'Invalid Date'">
+                {{ conversation.latestMsgTime }}
+              </div>
               <div class="left-list-count"></div>
               <div class="conversation-status"></div>
             </div>
@@ -68,15 +70,30 @@ const conversationStore = conversationInfo()
 const conversationId = reactive({ list: [] })
 
 const starCall = async (friend) => {
-  active.value = friend.id
+  active.value = friend.friendId
   userId.value = await window.api.storeGetUserId()
   if (!userId.value) {
     console.info('获取当前用户ID失败，无法进入聊天页')
     return
   }
-  console.info('消息列表时，好友id', friend.id)
-  const cid = `${Math.max(userId.value, friend.id)}_${Math.min(userId.value, friend.id)}`
-  await router.push({ path: '/chat', query: { conversationId: cid, friendId: friend.id } })
+  console.info('消息列表时，好友id:' + friend.friendId + ', 会话id:' + friend.id)
+  if (friend.id.startsWith('g_')) {
+    // 群聊，去掉g_前缀当作接收者id，也就是单聊的好友id
+    const receiveGroupId = friend.id.substring(2)
+
+    await router.push({
+      path: '/chat',
+      // 传递群聊会话id和接收群聊id，
+      query: { conversationId: friend.id, friendId: receiveGroupId }
+    })
+  } else {
+    // 单聊
+    // const cid = `${Math.max(userId.value, friend.id)}_${Math.min(userId.value, friend.id)}`
+    await router.push({
+      path: '/chat',
+      query: { conversationId: friend.id, friendId: friend.friendId }
+    })
+  }
 }
 
 const createGroupChat = () => {
@@ -92,8 +109,11 @@ const addFriend = () => {
 }
 
 // 过滤出状态为1的会话列表
-const friendListArr = computed(() =>
-  Object.values(conversationStore.conversationMap).filter((item) => item.status === 1)
+const conversationListArr = computed(() =>
+  // Object.values(conversationStore.conversationMap).filter((item) => item.status === 1)
+  Object.values(conversationStore.conversationMap)
+    .concat(Object.values(conversationStore.groupConversationMap))
+    .filter((item) => item.status === 1)
 )
 
 const getFriendList = async () => {
@@ -151,7 +171,8 @@ const getFriendList = async () => {
 
     // 用会话id做键，存储会话列表中的好友信息
     conversationStore.setConversationMap(cid, {
-      id: fid,
+      // 好友id
+      friendId: fid,
       username: friend.username,
       avatar: friend.avatar,
       remark: friend.remark
@@ -159,12 +180,14 @@ const getFriendList = async () => {
     conversationId.list.push(cid)
   }
 
-  // 从数据库查询会话列表
+  // 从数据库查询会话列表，更新pinia中的会话信息
   getConversationListApi(conversationId.list.join(',')).then((res) => {
     console.info('会话列表:', res.data)
     // 遍历会话列表，更新pinia中的会话信息
     res.data.forEach((item) => {
       conversationStore.setConversationMap(item.id, {
+        // 单聊会话id，格式为：maxId_minId，字符串类型
+        id: item.id,
         latestMsg: item.latestMsg,
         latestMsgTime: dayjs(item.latestMsgTime).format('HH:mm'),
         unreadCount: item.unreadCount,
@@ -176,8 +199,28 @@ const getFriendList = async () => {
 }
 
 const getGroupList = () => {
+  const cache = Object.keys(conversationStore.groupConversationMap).length > 0
+  if (cache) {
+    console.info('群聊列表缓存非空:', cache)
+    return
+  }
+
   getGroupListApi().then((res) => {
     console.info('群聊列表:', res.data)
+    // 遍历群聊列表，更新pinia中的会话信息
+    res.data.forEach((item) => {
+      conversationStore.setGroupConversationMap(item.id, {
+        // 群聊会话id，格式为g_雪花算法生成的字符串
+        id: item.id,
+        username: item.groupName,
+        avatar: item.groupAvatar,
+        latestMsg: item.latestMsg,
+        latestMsgTime: dayjs(item.latestMsgTime).format('HH:mm'),
+        unreadCount: item.unreadCount,
+        isTop: item.isTop,
+        status: item.status
+      })
+    })
   })
 }
 
