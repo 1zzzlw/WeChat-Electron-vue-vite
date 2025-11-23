@@ -6,20 +6,17 @@
     <div class="chat-content">
       <el-scrollbar ref="chatScrollbar">
         <div class="chat-message" v-for="(message, index) in messageArr" :key="index">
-          <div
-            class="chat-list-left"
-            v-if="String(message.senderId) === String(route.query.friendId)"
-          >
+          <div class="chat-list-right" v-if="String(message.senderId) === String(userId)">
+            <img :src="avatarUrl" class="list-image" />
+            <div class="right-msg">{{ message.content }}</div>
+          </div>
+          <div class="chat-list-left" v-else>
             <img :src="friendAvatar" class="list-image" />
             <div class="msg">
               <div class="left-name" v-if="message.remark === ''">{{ friendUsername }}</div>
               <div class="left-name" v-else>{{ friendRemark }}</div>
               <div class="left-msg">{{ message.content }}</div>
             </div>
-          </div>
-          <div class="chat-list-right" v-if="String(message.senderId) === String(userId)">
-            <img :src="avatarUrl" class="list-image" />
-            <div class="right-msg">{{ message.content }}</div>
           </div>
         </div>
       </el-scrollbar>
