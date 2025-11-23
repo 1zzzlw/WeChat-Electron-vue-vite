@@ -12,7 +12,8 @@ export const groupMemberInfo = defineStore('groupMemberInfo', {
   state: () => {
     return {
       // 键为会话id
-      groupMemberMap: {} as Record<string, groupMember[]>
+      groupMemberMap: {} as Record<string, groupMember[]>,
+      groupMemberAvatarMap: {} as Record<string, string>
     }
   },
   actions: {
@@ -27,6 +28,12 @@ export const groupMemberInfo = defineStore('groupMemberInfo', {
         this.groupMemberMap[conversationId] = []
       }
       this.groupMemberMap[conversationId].push(groupMember)
+    },
+    addGroupMemberAvatar(userId: string, avatar: string) {
+      this.groupMemberAvatarMap[userId] = avatar
+    },
+    getGroupMemberAvatar(userId: string) {
+      return this.groupMemberAvatarMap[userId]
     }
   }
 })

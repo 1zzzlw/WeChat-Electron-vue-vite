@@ -6,17 +6,27 @@
     <div class="chat-content">
       <el-scrollbar ref="chatScrollbar">
         <div class="chat-message" v-for="(message, index) in messageArr" :key="index">
-          <div class="chat-list-right" v-if="String(message.senderId) === String(userId)">
-            <img :src="avatarUrl" class="list-image" />
-            <div class="right-msg">{{ message.content }}</div>
-          </div>
-          <div class="chat-list-left" v-else>
+          <div
+            class="chat-list-left"
+            v-if="String(message.senderId) === String(route.query.friendId)"
+          >
             <img :src="friendAvatar" class="list-image" />
             <div class="msg">
               <div class="left-name" v-if="message.remark === ''">{{ friendUsername }}</div>
               <div class="left-name" v-else>{{ friendRemark }}</div>
               <div class="left-msg">{{ message.content }}</div>
             </div>
+          </div>
+          <div class="chat-list-right" v-else-if="String(message.senderId) === String(userId)">
+            <img :src="avatarUrl" class="list-image" />
+            <div class="right-msg">{{ message.content }}</div>
+          </div>
+          <div class="chat-list-left" v-else>
+            <img
+              :src="groupMemberStore.getGroupMemberAvatar(message.senderId)"
+              class="list-image"
+            />
+            <div class="right-msg">{{ message.content }}</div>
           </div>
         </div>
       </el-scrollbar>
@@ -183,6 +193,8 @@ const getGroupMemberList = async () => {
       role: item.role,
       avatar: item.avatar
     })
+    // 缓存群成员头像，方便后续使用
+    groupMemberStore.addGroupMemberAvatar(item.userId, item.avatar)
   })
 }
 
@@ -193,6 +205,7 @@ const messageArr = computed(() => {
 })
 
 const friendAvatar = computed(() => conversationStore.getAvatar(route.query.conversationId))
+
 const friendUsername = computed(() => conversationStore.getUsername(route.query.conversationId))
 const friendRemark = computed(() => conversationStore.getRemark(route.query.conversationId))
 // const groupMemberArr = computed(() => {
