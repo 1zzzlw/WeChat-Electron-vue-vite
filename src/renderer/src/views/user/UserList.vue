@@ -109,10 +109,12 @@ import { userApplyListInfo } from '../../stores/UserApplyListStore'
 import { userListInfo } from '../../stores/ContactListStore'
 import { groupListInfo } from '../../stores/GroupListStores'
 import { getGroupListApi } from '../../api/Conversation'
+import { groupMemberInfo } from '../../stores/GroupMemberStores'
 
 const userApplyStore = userApplyListInfo()
 const userListStore = userListInfo()
 const groupListStore = groupListInfo()
+const groupMemberStore = groupMemberInfo()
 // 联系人列表默认展开
 const activeNames = ref(['4'])
 const handleChange = (val: CollapseModelValue) => {
@@ -146,6 +148,13 @@ const joinGroup = async (apply) => {
     if (res.code === 1) {
       ElMessage.success('入群成功')
       userApplyStore.updateGroupApplyStatus(apply.userId, 2)
+      groupMemberStore.addGroupMember(apply.conversationId, {
+        conversationId: apply.conversationId,
+        userId: apply.userId,
+        username: apply.username,
+        role: 0,
+        avatar: apply.avatar
+      })
     } else {
       ElMessage.error('入群失败')
     }

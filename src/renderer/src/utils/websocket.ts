@@ -192,6 +192,11 @@ class WebSocketManager {
           console.info('收到消息:', data)
           messageInfo().addMessageMap(data.conversationId, data)
           break
+        case 4:
+          // 群聊类型，将消息存储到状态管理中
+          console.info('收到群聊消息:', data)
+          messageInfo().addMessageMap(data.conversationId, data)
+          break
         case 6:
           // 好友申请类型，将消息存储到状态管理中
           console.info('收到好友申请:', data)

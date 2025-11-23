@@ -56,6 +56,8 @@ import dayjs from 'dayjs'
 import { WSManager } from '../../utils/websocket.js'
 import { conversationInfo } from '../../stores/ConversationStore'
 import { Eleme, Folder, Scissor, VideoCamera } from '@element-plus/icons-vue'
+import { groupMemberInfo } from '../../stores/GroupMemberStores'
+import { getGroupMemberListApi } from '../../api/Conversation'
 
 // 添加数据加载状态标记
 const isDataLoaded = ref(false)
@@ -67,6 +69,7 @@ const userId = ref()
 const chatScrollbar = ref(null)
 
 const messageStore = messageInfo()
+const groupMemberStore = groupMemberInfo()
 const conversationStore = conversationInfo()
 
 const sendMessage = () => {
@@ -78,19 +81,30 @@ const sendMessage = () => {
     '会话id:',
     route.query.conversationId
   )
-  // ws发送接收者id、消息内容
-  WSManager.sendMessage(1, 0, { receiverId: route.query.friendId, content: message.value })
+  const convId = route.query.conversationId
+  if (convId.startsWith('g_')) {
+    // ws发送群聊信息：群聊id、消息内容、接收者数组
+    WSManager.sendMessage(3, 0, { groupId: convId, content: message.value })
+  } else {
+    // ws发送单聊信息：会话id、接收者id、消息内容
+    WSManager.sendMessage(1, 0, {
+      conversationId: convId,
+      receiverId: route.query.friendId,
+      content: message.value
+    })
+  }
+
   // http发送接收者id、会话id、消息内容
   sendMessageApi({
     receiverId: route.query.friendId,
-    conversationId: route.query.conversationId,
+    conversationId: convId,
     content: message.value
   }).then((res) => {
     console.info('发送消息成功', res)
     message.value = ''
     if (res.data) {
-      messageStore.addMessageMap(res.data.conversationId, res.data)
-      conversationStore.setConversationMap(route.query.conversationId, {
+      messageStore.addMessageMap(convId, res.data)
+      conversationStore.setConversationMap(convId, {
         latestMsg: res.data.content,
         latestMsgTime: dayjs(res.data.sendTime).format('HH:mm')
       })
@@ -133,6 +147,37 @@ const getMessageList = async () => {
   })
 }
 
+const getGroupMemberList = async () => {
+  const convId = route.query.conversationId
+
+  console.info('获取群成员列表，会话id:', convId)
+
+  if (!convId) {
+    console.info('会话id不存在')
+    return
+  }
+
+  // 初始化群成员列表
+  groupMemberStore.initGroupMemberMap(convId)
+
+  // 再判断缓存（此时 groupMemberMap[convId] 一定是数组，不会报错）
+  const cache = groupMemberStore.groupMemberMap[convId].length > 0
+  if (cache) {
+    console.info('当前会话的群成员缓存非空')
+    return
+  }
+
+  const res = await getGroupMemberListApi(convId)
+  console.info('获取群成员列表成功', res.data)
+  groupMemberStore.setGroupMemberMap(convId, {
+    conversationId: convId,
+    userId: res.data.userId,
+    username: res.data.username,
+    role: res.data.role,
+    avatar: res.data.avatar
+  })
+}
+
 const messageArr = computed(() => {
   const convId = route.query.conversationId
   // 如果会话ID不存在，或消息列表未初始化，用空数组兜底
@@ -142,6 +187,13 @@ const messageArr = computed(() => {
 const friendAvatar = computed(() => conversationStore.getAvatar(route.query.conversationId))
 const friendUsername = computed(() => conversationStore.getUsername(route.query.conversationId))
 const friendRemark = computed(() => conversationStore.getRemark(route.query.conversationId))
+const groupMemberArr = computed(() => {
+  if (route.query.conversationId && route.query.conversationId.startsWith('g_')) {
+    const convId = route.query.conversationId
+    // 如果会话ID不存在，或群成员列表未初始化，用空数组兜底
+    return groupMemberStore.groupMemberMap[convId] || []
+  }
+})
 
 onMounted(async () => {
   try {
@@ -151,6 +203,9 @@ onMounted(async () => {
     avatarUrl.value = await window.api.storeGetAvatar()
     userId.value = await window.api.storeGetUserId()
     await getMessageList()
+    if (route.query.conversationId.startsWith('g_')) {
+      await getGroupMemberList()
+    }
     // 所有数据加载完成，允许渲染
     isDataLoaded.value = true
   } catch (error) {
@@ -167,6 +222,9 @@ watch(
     try {
       console.info('切换会话，新的会话id', newConversationId)
       await getMessageList()
+      if (route.query.conversationId.startsWith('g_')) {
+        await getGroupMemberList()
+      }
     } catch (error) {
       console.error('加载新会话消息失败', error)
     }

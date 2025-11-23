@@ -2,4 +2,7 @@ import request from '../utils/request'
 
 export const getConversationListApi = (list) => request.get(`/conversation/list/${list}`)
 
-export const getGroupListApi = () => request.get('/conversation/groupMemberList')
+export const getGroupListApi = () => request.get('/conversation/groupList')
+
+export const getGroupMemberListApi = (conversationId) =>
+  request.get(`/conversation/groupMemberList/${conversationId}`)

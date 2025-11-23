@@ -1,0 +1,38 @@
+import { defineStore } from 'pinia'
+
+interface groupMember {
+  conversationId: string | number
+  userId: string | number
+  username: string
+  role: number
+  avatar: string
+}
+
+export const groupMemberInfo = defineStore('groupMemberInfo', {
+  state: () => {
+    return {
+      // 键为会话id
+      groupMemberMap: {} as Record<string, groupMember[]>
+    }
+  },
+  actions: {
+    // 会话id为键，传入部分数据进行更新
+    setGroupMemberMap(conversationId: string, groupMemberList: groupMember[]) {
+      if (!this.groupMemberMap[conversationId]) {
+        this.groupMemberMap[conversationId] = []
+      }
+      this.groupMemberMap[conversationId] = groupMemberList
+    },
+    initGroupMemberMap(conversationId: string) {
+      if (!this.groupMemberMap[conversationId]) {
+        this.groupMemberMap[conversationId] = []
+      }
+    },
+    addGroupMember(conversationId: string, groupMember: groupMember) {
+      if (!this.groupMemberMap[conversationId]) {
+        this.groupMemberMap[conversationId] = []
+      }
+      this.groupMemberMap[conversationId].push(groupMember)
+    }
+  }
+})
