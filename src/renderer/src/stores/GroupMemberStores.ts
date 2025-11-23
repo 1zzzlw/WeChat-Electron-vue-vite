@@ -17,12 +17,6 @@ export const groupMemberInfo = defineStore('groupMemberInfo', {
   },
   actions: {
     // 会话id为键，传入部分数据进行更新
-    setGroupMemberMap(conversationId: string, groupMemberList: groupMember[]) {
-      if (!this.groupMemberMap[conversationId]) {
-        this.groupMemberMap[conversationId] = []
-      }
-      this.groupMemberMap[conversationId] = groupMemberList
-    },
     initGroupMemberMap(conversationId: string) {
       if (!this.groupMemberMap[conversationId]) {
         this.groupMemberMap[conversationId] = []

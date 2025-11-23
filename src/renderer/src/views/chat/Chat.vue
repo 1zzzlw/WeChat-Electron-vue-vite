@@ -84,7 +84,16 @@ const sendMessage = () => {
   const convId = route.query.conversationId
   if (convId.startsWith('g_')) {
     // ws发送群聊信息：群聊id、消息内容、接收者数组
-    WSManager.sendMessage(3, 0, { groupId: convId, content: message.value })
+    console.info('群成员列表:', groupMemberStore.groupMemberMap[convId])
+    console.info(
+      '群成员ID列表:',
+      groupMemberStore.groupMemberMap[convId].map((item) => item.userId)
+    )
+    WSManager.sendMessage(3, 0, {
+      conversationId: convId,
+      receiverIds: groupMemberStore.groupMemberMap[convId].map((item) => item.userId),
+      content: message.value
+    })
   } else {
     // ws发送单聊信息：会话id、接收者id、消息内容
     WSManager.sendMessage(1, 0, {
@@ -169,12 +178,14 @@ const getGroupMemberList = async () => {
 
   const res = await getGroupMemberListApi(convId)
   console.info('获取群成员列表成功', res.data)
-  groupMemberStore.setGroupMemberMap(convId, {
-    conversationId: convId,
-    userId: res.data.userId,
-    username: res.data.username,
-    role: res.data.role,
-    avatar: res.data.avatar
+  res.data.forEach((item) => {
+    groupMemberStore.addGroupMember(convId, {
+      conversationId: convId,
+      userId: item.userId,
+      username: item.username,
+      role: item.role,
+      avatar: item.avatar
+    })
   })
 }
 
@@ -187,13 +198,13 @@ const messageArr = computed(() => {
 const friendAvatar = computed(() => conversationStore.getAvatar(route.query.conversationId))
 const friendUsername = computed(() => conversationStore.getUsername(route.query.conversationId))
 const friendRemark = computed(() => conversationStore.getRemark(route.query.conversationId))
-const groupMemberArr = computed(() => {
-  if (route.query.conversationId && route.query.conversationId.startsWith('g_')) {
-    const convId = route.query.conversationId
-    // 如果会话ID不存在，或群成员列表未初始化，用空数组兜底
-    return groupMemberStore.groupMemberMap[convId] || []
-  }
-})
+// const groupMemberArr = computed(() => {
+//   if (route.query.conversationId && route.query.conversationId.startsWith('g_')) {
+//     const convId = route.query.conversationId
+//     // 如果会话ID不存在，或群成员列表未初始化，用空数组兜底
+//     return groupMemberStore.groupMemberMap[convId] || []
+//   }
+// })
 
 onMounted(async () => {
   try {
