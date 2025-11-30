@@ -4,7 +4,7 @@
       {{ friendRemark === '' ? friendUsername : friendRemark }}
     </div>
     <div class="chat-content">
-      <el-scrollbar ref="chatScrollbar">
+      <el-scrollbar ref="scrollbarRef">
         <div class="chat-message" v-for="(message, index) in messageArr" :key="index">
           <div
             class="chat-list-left"
@@ -32,9 +32,26 @@
       </el-scrollbar>
     </div>
     <div class="chat-tool">
-      <el-button :icon="Eleme" size="large" square></el-button>
+      <el-popover
+        placement="top"
+        trigger="click"
+        popper-style="width: 300px; height: 300px; display: flex; flex-wrap: wrap; overflow-y: auto; scrollbar-width: none; padding-left: 6px;"
+      >
+        <div
+          class="emoji-btn"
+          @click="handlerEmoji(emoji.icon)"
+          v-for="(emoji, index) in emojis.list"
+          :key="index"
+          :title="emoji.name"
+        >
+          {{ emoji.icon }}
+        </div>
+        <template #reference>
+          <el-button :icon="Eleme" size="large" square></el-button>
+        </template>
+      </el-popover>
       <el-button :icon="Folder" size="large" square></el-button>
-      <el-button :icon="Scissor" size="large" square></el-button>
+      <el-button :icon="Scissor" size="large" square @click="captureBtn"></el-button>
       <el-button :icon="VideoCamera" size="large" square></el-button>
     </div>
     <div class="chat-input">
@@ -55,8 +72,9 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import emojis from '../../emoji/emoji.js'
 import { getMessageListApi, sendMessageApi } from '../../api/Message'
 import { messageInfo } from '../../stores/MessageStore'
 import dayjs from 'dayjs'
@@ -73,11 +91,24 @@ const message = ref('')
 const arr = reactive({ list: [] })
 const avatarUrl = ref('')
 const userId = ref()
-const chatScrollbar = ref(null)
+const scrollbarRef = ref(null)
 
 const messageStore = messageInfo()
 const groupMemberStore = groupMemberInfo()
 const conversationStore = conversationInfo()
+
+const handlerEmoji = (emoji) => {
+  message.value += emoji
+}
+
+const captureBtn = () => {
+  console.info('截图按钮点击事件')
+  window.chatToolApi.openCapture()
+
+  window.chatToolApi.sendImageToMain((base64) => {
+
+  })
+}
 
 const sendMessage = () => {
   console.info(
@@ -229,6 +260,8 @@ onMounted(async () => {
     }
     // 所有数据加载完成，允许渲染
     isDataLoaded.value = true
+    await nextTick()
+    scrollToBottom()
   } catch (error) {
     console.error('初始化失败', error)
     // 即使失败也显示页面，避免白屏
@@ -246,11 +279,19 @@ watch(
       if (route.query.conversationId.startsWith('g_')) {
         await getGroupMemberList()
       }
+      await nextTick()
+      scrollToBottom()
     } catch (error) {
       console.error('加载新会话消息失败', error)
     }
   }
 )
+
+function scrollToBottom() {
+  if (scrollbarRef.value) {
+    scrollbarRef.value.setScrollTop(999999)
+  }
+}
 </script>
 
 <style scoped>
@@ -346,6 +387,28 @@ img {
   background-color: #2b3e49;
   color: #ffffff;
   box-shadow: none; /* 移除可能的阴影 */
+}
+
+:deep(.my-custom-popover) {
+  width: 300px;
+  height: 300px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.emoji-btn {
+  width: 35px;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.emoji-btn:hover {
+  background-color: rgba(255, 255, 255, 0.18);
+  transform: scale(1.15);
+  cursor: pointer;
 }
 
 .sendButton {

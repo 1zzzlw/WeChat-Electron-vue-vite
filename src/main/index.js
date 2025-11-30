@@ -1,4 +1,17 @@
-import { app, shell, BrowserWindow, ipcMain, Tray, Menu, dialog } from 'electron'
+import {
+  app,
+  shell,
+  BrowserWindow,
+  ipcMain,
+  Tray,
+  Menu,
+  dialog,
+  globalShortcut,
+  screen,
+  desktopCapturer,
+  nativeImage,
+  clipboard
+} from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
@@ -14,6 +27,7 @@ const store = new Store({
 let mainWindow = null
 let addFriendWindow = null
 let createGroupWindow = null
+let captureWindow = null
 const login_width = 300
 const login_height = 370
 const main_width = 1100
@@ -24,9 +38,18 @@ const friendAdd_height = 520
 const createGroup_width = 820
 const createGroup_height = 620
 
+// 注册快捷键统一放在这个方法里面
+function registerShortcuts() {
+  globalShortcut.register('Alt+Shift+A', () => {
+    mainWindow.hide()
+    createCaptureWindow()
+  })
+}
+
 function createMainWindow() {
   // Create the browser window.
   mainWindow = new BrowserWindow({
+    icon: icon,
     width: login_width,
     height: login_height,
     minWidth: login_width,
@@ -60,6 +83,8 @@ function createMainWindow() {
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
+    registerShortcuts()
+    mainWindow.setTitle('EasyChat')
   })
 
   // 控制窗口内 “链接打开行为” 的核心逻辑，作用是：禁止在当前应用内打开新窗口，强制所有外部链接通过系统默认的浏览器打开。
@@ -79,7 +104,29 @@ function createMainWindow() {
   }
 }
 
-function createExtraWindow(pagePath, options = {}) {
+function createTray() {
+  const template = [
+    {
+      label: '退出登录'
+    },
+    {
+      label: '退出应用',
+      click: () => {
+        // 先销毁主窗口才能完全退出
+        mainWindow.destroy()
+        app.quit()
+      }
+    }
+  ]
+  const menu = Menu.buildFromTemplate(template)
+  // 创建托盘并设置图标
+  const trayIconPath = 'src\\renderer\\src\\assets\\image\\weixinOnline.ico'
+  const tray = new Tray(trayIconPath)
+  tray.setToolTip('IM 客户端')
+  tray.setContextMenu(menu)
+}
+
+function createExtraWindow(pagePath, options = {}, isCapture = false) {
   const defaultOptions = {
     // 窗口创建后默认不显示
     show: false,
@@ -108,19 +155,32 @@ function createExtraWindow(pagePath, options = {}) {
 
   let loadUrl
 
-  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    loadUrl = `${process.env['ELECTRON_RENDERER_URL']}#${pagePath}`
-    win.loadURL(loadUrl)
+  if (isCapture) {
+    let capturePath
+    if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+      capturePath = 'out/renderer/capture.html'
+      console.log(`Capture: ${capturePath}`)
+    } else {
+      capturePath = 'out/renderer/capture.html'
+      console.log(`Capture: ${capturePath}`)
+    }
+    win.loadFile(capturePath)
   } else {
-    // 生产环境打包后只有一个 index.html，通过路由路径定位页面（依赖 Vue Router 的 history 模式或 hash 模式）
-    loadUrl = join(__dirname, '../renderer/index.html')
-    // 如果用 hash 模式，直接在文件路径后加 # + 页面路径
-    loadUrl = `file://${loadUrl}#${pagePath}`
-    win.loadURL(loadUrl)
+    if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+      loadUrl = `${process.env['ELECTRON_RENDERER_URL']}#${pagePath}`
+      win.loadURL(loadUrl)
+    } else {
+      // 生产环境打包后只有一个 index.html，通过路由路径定位页面（依赖 Vue Router 的 history 模式或 hash 模式）
+      loadUrl = join(__dirname, '../renderer/index.html')
+      // 如果用 hash 模式，直接在文件路径后加 # + 页面路径
+      loadUrl = `file://${loadUrl}#${pagePath}`
+      win.loadURL(loadUrl)
+    }
   }
 
   win.on('ready-to-show', () => {
     win.show()
+    win.setTitle('EasyChat')
   })
 
   // 控制窗口内 “链接打开行为” 的核心逻辑，作用是：禁止在当前应用内打开新窗口，强制所有外部链接通过系统默认的浏览器打开。
@@ -144,10 +204,17 @@ app.whenReady().then(() => {
 
   createMainWindow()
 
+  createTray()
+
   app.on('activate', function () {
     // 在 macOS 系统上，当点击程序坞图标且没有其他窗口打开时，在应用中重新创建一个窗口是很常见的做法。
     if (BrowserWindow.getAllWindows().length === 0) createMainWindow()
   })
+})
+
+// 退出时注销全局快捷键
+app.on('will-quit', () => {
+  globalShortcut.unregisterAll()
 })
 
 // 当所有窗口都关闭时退出，但 macOS 除外。在 macOS 上，应用程序及其菜单栏通常会保持活跃状态，直到用户通过 Cmd + Q 明确退出。
@@ -256,4 +323,94 @@ ipcMain.on('ws:send', (event, { messageType, sequenceId, data }) => {
   if (mainWindow) {
     mainWindow.webContents.send('ws:forward', { messageType, sequenceId, data })
   }
+})
+
+async function createCaptureWindow() {
+  const { screen, desktopCapturer } = require('electron')
+  // 获取主屏幕的宽度和高度和缩放因子
+  const {
+    bounds: { width, height },
+    scaleFactor
+  } = screen.getPrimaryDisplay()
+  console.info(width, height, scaleFactor)
+
+  const sources = await desktopCapturer.getSources({
+    types: ['screen'],
+    thumbnailSize: {
+      width: Math.round(width * scaleFactor),
+      height: Math.round(height * scaleFactor)
+    }
+  })
+
+  //选择第一个屏幕，转为base64的缩略图
+  const base64 = sources[0].thumbnail.toDataURL()
+
+  const options = {
+    // 全屏窗口
+    fullscreen: true,
+    // 窗口无标题栏
+    frame: false,
+    // 窗口透明
+    transparent: true,
+    // 窗口不在任务栏显示
+    skipTaskbar: true,
+    // 窗口无菜单栏
+    autoHideMenuBar: true,
+    // 窗口不可移动
+    movable: false,
+    // 窗口不可调整大小
+    resizable: false,
+    // 窗口可超出屏幕边界
+    enableLargerThanScreen: true,
+    // 窗口无阴影
+    hasShadow: false,
+    show: false
+  }
+  //截屏窗口
+  captureWindow = createExtraWindow(null, options, true)
+
+  captureWindow.on('show', () => {
+    // 窗口显示后，把图片的base64字符串发送给渲染进程
+    captureWindow.webContents.send('window:get-capture-base64', {
+      base64,
+      scaleFactor
+    })
+
+    // 注册全局快捷键
+    globalShortcut.register('Esc', () => {
+      captureWindow.close()
+    })
+  })
+
+  captureWindow.on('close', () => {
+    mainWindow.show()
+
+    // 注销全局快捷键
+    globalShortcut.unregister('Esc')
+  })
+}
+
+ipcMain.on('window:capture-open', (e) => {
+  mainWindow.hide()
+  createCaptureWindow()
+})
+
+ipcMain.on('window:save-capture', (e, base64) => {
+  const { nativeImage, clipboard } = require('electron')
+  const image = nativeImage.createFromDataURL(base64)
+  // 复制图片到剪贴板
+  clipboard.writeImage(image)
+  captureWindow.close()
+
+  if (mainWindow) {
+    mainWindow.webContents.send('capture:image', base64)
+  }
+})
+
+ipcMain.on('window:close-capture', () => {
+  if (captureWindow) {
+    captureWindow.close()
+    captureWindow = null
+  }
+  mainWindow.show()
 })

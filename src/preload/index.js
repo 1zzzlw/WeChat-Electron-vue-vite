@@ -52,15 +52,39 @@ const api = {
   }
 }
 
+const chatToolApi = {
+  openCapture: () => {
+    ipcRenderer.send('window:capture-open')
+  },
+  getCaptureBase64: (channel, func) => {
+    ipcRenderer.on('window:get-capture-base64', (event, ...args) => {
+      func(...args)
+    })
+  },
+  saveCapture: (base64) => {
+    ipcRenderer.send('window:save-capture', base64)
+  },
+  closeCapture: () => {
+    ipcRenderer.send('window:close-capture')
+  },
+  sendImageToMain: (func) => {
+    ipcRenderer.on('capture:image', (event, base64) => {
+      func(base64)
+    })
+  }
+}
+
 // 只有在启用上下文隔离的情况下，才使用contextBridge API 向渲染器暴露 Electron API；否则，只需将其添加到 DOM 全局变量中。
 if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('electron', electronAPI)
     contextBridge.exposeInMainWorld('api', api)
+    contextBridge.exposeInMainWorld('chatToolApi', chatToolApi)
   } catch (error) {
     console.error(error)
   }
 } else {
   window.electron = electronAPI
   window.api = api
+  window.chatToolApi = chatToolApi
 }
