@@ -14,19 +14,19 @@
             <div class="msg">
               <div class="left-name" v-if="message.remark === ''">{{ friendUsername }}</div>
               <div class="left-name" v-else>{{ friendRemark }}</div>
-              <div class="left-msg">{{ message.content }}</div>
+              <div class="chat-bubble left-bubble" v-html="formatMsg(message.content)"></div>
             </div>
           </div>
           <div class="chat-list-right" v-else-if="String(message.senderId) === String(userId)">
             <img :src="avatarUrl" class="list-image" />
-            <div class="right-msg">{{ message.content }}</div>
+            <div class="chat-bubble right-bubble" v-html="formatMsg(message.content)"></div>
           </div>
           <div class="chat-list-left" v-else>
             <img
               :src="groupMemberStore.getGroupMemberAvatar(message.senderId)"
               class="list-image"
             />
-            <div class="right-msg">{{ message.content }}</div>
+            <div class="chat-bubble right-bubble" v-html="formatMsg(message.content)"></div>
           </div>
         </div>
       </el-scrollbar>
@@ -51,7 +51,16 @@
         </template>
       </el-popover>
       <el-button :icon="Folder" size="large" square></el-button>
-      <el-button :icon="Scissor" size="large" square @click="captureBtn"></el-button>
+      <el-popover
+        placement="top"
+        :disabled="imageUrl === ''"
+        popper-style="display: flex; margin: 0; padding: 0; justify-content: center; align-items: center;"
+      >
+        <el-image :src="imageUrl" fit="contain" style="width: 150px; height: 150px" />
+        <template #reference>
+          <el-button :icon="Scissor" size="large" square @click="captureBtn"></el-button>
+        </template>
+      </el-popover>
       <el-button :icon="VideoCamera" size="large" square></el-button>
     </div>
     <div class="chat-input">
@@ -84,6 +93,7 @@ import { Eleme, Folder, Scissor, VideoCamera } from '@element-plus/icons-vue'
 import { groupMemberInfo } from '../../stores/GroupMemberStores'
 import { getGroupMemberListApi } from '../../api/Conversation'
 
+const imageUrl = ref('')
 // 添加数据加载状态标记
 const isDataLoaded = ref(false)
 const route = useRoute()
@@ -97,6 +107,28 @@ const messageStore = messageInfo()
 const groupMemberStore = groupMemberInfo()
 const conversationStore = conversationInfo()
 
+const formatMsg = (msg) => {
+  if (!msg) return '' // 处理空消息
+  let result = msg
+  // 1. 匹配@用户名，高亮显示（原有功能优化样式）
+  result = result.replace(
+    /@(\w+)/g,
+    '<span style="color: #409eff; font-weight: 600; background: #ecf5ff; padding: 0 4px; border-radius: 2px;">@$1</span>'
+  )
+  // 2. 匹配图片路径（本地/网络），转为img标签
+  result = result.replace(/\S+\.(png|jpg|jpeg|gif|webp)/gi, (imgPath) => {
+    // 处理Windows本地路径的反斜杠
+    const src = imgPath.replace(/\\/g, '/')
+    return `<img src="${src}" style="max-width: 300px; max-height: 200px; display: block; margin: 5px 0; border-radius: 4px;" alt="聊天图片">`
+  })
+  // 【可选】3. 给{{}}变量添加样式（如需高亮显示）
+  result = result.replace(
+    /\{\{(\w+)\}\}/g,
+    '<span style="color: #e6a23c; font-weight: 600;">{{$1}}</span>'
+  )
+  return result
+}
+
 const handlerEmoji = (emoji) => {
   message.value += emoji
 }
@@ -105,17 +137,27 @@ const captureBtn = () => {
   console.info('截图按钮点击事件')
   window.chatToolApi.openCapture()
 
-  window.chatToolApi.sendImageToMain((base64) => {
-
+  window.chatToolApi.sendImageToMain((savePath) => {
+    imageUrl.value = savePath
   })
 }
 
-const sendMessage = () => {
+const sendMessage = async () => {
+  if (imageUrl.value.length > 0) {
+    sendApi(imageUrl.value)
+  }
+
+  if (message.value !== '') {
+    sendApi(message.value)
+  }
+}
+
+const sendApi = (data) => {
   console.info(
     '接收消息用户的ID:',
     route.query.friendId,
     '消息内容:',
-    message.value,
+    data,
     '会话id:',
     route.query.conversationId
   )
@@ -130,14 +172,14 @@ const sendMessage = () => {
     WSManager.sendMessage(3, 0, {
       conversationId: convId,
       receiverIds: groupMemberStore.groupMemberMap[convId].map((item) => item.userId),
-      content: message.value
+      content: data
     })
   } else {
     // ws发送单聊信息：会话id、接收者id、消息内容
     WSManager.sendMessage(1, 0, {
       conversationId: convId,
       receiverId: route.query.friendId,
-      content: message.value
+      content: data
     })
   }
 
@@ -145,10 +187,11 @@ const sendMessage = () => {
   sendMessageApi({
     receiverId: route.query.friendId,
     conversationId: convId,
-    content: message.value
+    content: data
   }).then((res) => {
     console.info('发送消息成功', res)
     message.value = ''
+    imageUrl.value = ''
     if (res.data) {
       messageStore.addMessageMap(convId, res.data)
       conversationStore.setConversationMap(convId, {
@@ -157,6 +200,12 @@ const sendMessage = () => {
       })
     }
   })
+}
+
+function scrollToBottom() {
+  if (scrollbarRef.value) {
+    scrollbarRef.value.setScrollTop(999999)
+  }
 }
 
 const getMessageList = async () => {
@@ -286,12 +335,6 @@ watch(
     }
   }
 )
-
-function scrollToBottom() {
-  if (scrollbarRef.value) {
-    scrollbarRef.value.setScrollTop(999999)
-  }
-}
 </script>
 
 <style scoped>
@@ -341,11 +384,6 @@ img {
 .left-name {
   font-size: 14px;
   color: #ffffff;
-}
-
-.left-msg {
-  font-size: 16px;
-  color: black;
 }
 
 .chat-list-right {
@@ -421,5 +459,57 @@ img {
 .el-button {
   width: 100px;
   margin: 0 10px 5px 0;
+}
+
+/* 核心：聊天气泡样式（带三角箭头） */
+.chat-bubble {
+  padding: 8px 12px;
+  border-radius: 8px;
+  max-width: 400px;
+  word-break: break-all;
+  position: relative; /* 用于定位三角箭头 */
+}
+/* 左侧好友气泡 */
+.left-bubble {
+  background: #f1f1f1;
+  border-bottom-left-radius: 0; /* 左侧气泡左下角无圆角，贴合箭头 */
+}
+/* 左侧箭头 */
+.left-bubble::before {
+  content: '';
+  position: absolute;
+  left: -8px;
+  top: 10px;
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-right: 8px solid #f1f1f1;
+  border-bottom: 8px solid transparent;
+}
+/* 右侧自己的气泡 */
+.right-bubble {
+  background: #409eff;
+  color: #fff;
+  border-bottom-right-radius: 0; /* 右侧气泡右下角无圆角，贴合箭头 */
+}
+/* 右侧箭头 */
+.right-bubble::after {
+  content: '';
+  position: absolute;
+  right: -8px;
+  top: 10px;
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-left: 8px solid #409eff;
+  border-bottom: 8px solid transparent;
+}
+/* 气泡内图片样式 */
+.chat-bubble img {
+  max-width: 300px;
+  max-height: 200px;
+  display: block;
+  margin: 5px 0;
+  border-radius: 4px;
 }
 </style>

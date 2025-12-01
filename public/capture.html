@@ -74,12 +74,22 @@
   const $tool = document.querySelector(".tool");
 
   // 接收来自main发来的base64缩略图
-  window.chatToolApi.getCaptureBase64("window:get-capture-base64", ({ base64, scaleFactor }) => {
-    $source.style.backgroundImage = `url(${base64})`;
+  window.chatToolApi.getCapturePngBuffer("window:get-capture-pngBuffer", ({ pngBuffer, scaleFactor }) => {
+    $source.style.backgroundImage = `url(${pngBuffer})`;
     scaleFactorInfo = scaleFactor;
 
     const image = new Image();
-    image.src = base64;
+
+    // 将Node Buffer转换为浏览器的Blob对象
+    // Blob接收的是ArrayBuffer/Uint8Array，需先将Buffer转Uint8Array
+    const uint8Array = new Uint8Array(pngBuffer);
+    const blob = new Blob([uint8Array], { type: "image/png" });
+
+    // 生成Blob URL，赋值给img.src
+    const blobUrl = URL.createObjectURL(blob);
+
+    image.src = blobUrl;
+
     // 等待加载完成
     image.onload = () => {
       const canvas = document.createElement("canvas");
@@ -151,13 +161,47 @@
     selection.flag = false;
   });
 
+  // 检查Canvas是否绘制完成的工具函数
+  function checkCanvasReady(canvas, timeout = 3000, interval = 100) {
+    return new Promise((resolve, reject) => {
+      const startTime = Date.now();
+      // 轮询检查
+      const timer = setInterval(() => {
+        const ctx = canvas.getContext("2d");
+        const pixelData = ctx.getImageData(0, 0, 1, 1).data;
+        const isReady = !pixelData.every(p => p === 0); // 非全黑则认为绘制完成
+
+        if (isReady) {
+          clearInterval(timer);
+          resolve(true);
+        } else if (Date.now() - startTime > timeout) {
+          clearInterval(timer);
+          reject(new Error("截图绘制超时（3秒）"));
+        }
+      }, interval);
+    });
+  }
+
   const $confirmBtn = document.querySelector(".confirm-btn");
   const $cancelBtn = document.querySelector(".cancel-btn");
 
   // 确认截图
-  $confirmBtn.addEventListener("click", () => {
-    const base64 = $preview.toDataURL("image/png");
-    window.chatToolApi.saveCapture(base64);
+  $confirmBtn.addEventListener("click", async () => {
+    try {
+      // 智能等待Canvas绘制完成（最多等3秒）
+      await checkCanvasReady($preview);
+
+      // 绘制完成后生成Base64
+      const base64 = $preview.toDataURL("image/png");
+      window.chatToolApi.saveCapture(base64);
+      console.log("截图已发送");
+    } catch (err) {
+      console.error("截图失败：", err);
+      alert(err.message);
+    } finally {
+      $confirmBtn.disabled = false;
+      $loadingTip.style.display = "none";
+    }
   });
 
   // 取消截图

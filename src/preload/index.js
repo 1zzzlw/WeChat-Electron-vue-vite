@@ -56,20 +56,20 @@ const chatToolApi = {
   openCapture: () => {
     ipcRenderer.send('window:capture-open')
   },
-  getCaptureBase64: (channel, func) => {
-    ipcRenderer.on('window:get-capture-base64', (event, ...args) => {
+  getCapturePngBuffer: (channel, func) => {
+    ipcRenderer.on('window:get-capture-pngBuffer', (event, ...args) => {
       func(...args)
     })
   },
-  saveCapture: (base64) => {
-    ipcRenderer.send('window:save-capture', base64)
+  saveCapture: (data) => {
+    ipcRenderer.send('window:save-capture', data)
   },
   closeCapture: () => {
     ipcRenderer.send('window:close-capture')
   },
   sendImageToMain: (func) => {
-    ipcRenderer.on('capture:image', (event, base64) => {
-      func(base64)
+    ipcRenderer.on('capture:image', (event, savePath) => {
+      func(savePath)
     })
   }
 }

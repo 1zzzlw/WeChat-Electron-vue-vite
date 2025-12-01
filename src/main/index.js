@@ -343,7 +343,7 @@ async function createCaptureWindow() {
   })
 
   //选择第一个屏幕，转为base64的缩略图
-  const base64 = sources[0].thumbnail.toDataURL()
+  const pngBuffer = sources[0].thumbnail.toPNG()
 
   const options = {
     // 全屏窗口
@@ -371,8 +371,8 @@ async function createCaptureWindow() {
 
   captureWindow.on('show', () => {
     // 窗口显示后，把图片的base64字符串发送给渲染进程
-    captureWindow.webContents.send('window:get-capture-base64', {
-      base64,
+    captureWindow.webContents.send('window:get-capture-pngBuffer', {
+      pngBuffer,
       scaleFactor
     })
 
@@ -395,15 +395,45 @@ ipcMain.on('window:capture-open', (e) => {
   createCaptureWindow()
 })
 
-ipcMain.on('window:save-capture', (e, base64) => {
+function writeToFile(savePath, data) {
+  const fs = require('fs')
+  // 判断传入的是Base64字符串还是Buffer
+  if (typeof data === 'string' && data.startsWith('data:image/')) {
+    // 1. 剔除Base64头部，提取纯编码数据
+    const base64Data = data.replace(/^data:image\/\w+;base64,/, '')
+    // 2. 转换为二进制Buffer
+    const buffer = Buffer.from(base64Data, 'base64')
+    // 3. 写入Buffer
+    fs.writeFile(savePath, buffer, (err) => {
+      if (err) throw err
+      console.info('图片已保存到', savePath)
+    })
+  } else if (data instanceof Buffer) {
+    // 若传入的是Buffer，直接写入（兼容你的pngBuffer场景）
+    fs.writeFile(savePath, data, (err) => {
+      if (err) throw err
+      console.info('图片已保存到', savePath)
+    })
+  } else {
+    console.error('传入的数据不是Base64字符串或Buffer')
+  }
+}
+
+ipcMain.on('window:save-capture', (e, data) => {
   const { nativeImage, clipboard } = require('electron')
-  const image = nativeImage.createFromDataURL(base64)
+  console.info(data)
+  const image = nativeImage.createFromDataURL(data)
   // 复制图片到剪贴板
   clipboard.writeImage(image)
+  // 保存图片到指定路径
+  const fileName = `screenshot_${Date.now()}.png`
+  const savePath = 'E:\\JavaWeb\\zzz-IM-web\\imageScreen\\' + fileName
+  writeToFile(savePath, data)
+
   captureWindow.close()
 
   if (mainWindow) {
-    mainWindow.webContents.send('capture:image', base64)
+    mainWindow.webContents.send('capture:image', savePath)
   }
 })
 
