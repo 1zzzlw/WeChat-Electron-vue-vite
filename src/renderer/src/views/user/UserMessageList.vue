@@ -2,12 +2,7 @@
   <div class="user-message-list">
     <div class="user-message-list-left">
       <div class="message-list-top">
-        <el-input
-          style="width: 240px"
-          placeholder="搜索"
-          :prefix-icon="Search"
-          spellcheck="false"
-        />
+        <AutocompleteSearch />
         <el-dropdown>
           <el-button :icon="Plus" square></el-button>
           <template #dropdown>
@@ -29,7 +24,9 @@
             @click="starCall(conversation)"
           >
             <div class="left-image">
-              <img :src="conversation.avatar" alt="头像" class="left-list-img" />
+              <el-badge :value="1" :max="99" class="item">
+                <img :src="conversation.avatar" alt="头像" class="left-list-img" />
+              </el-badge>
             </div>
             <div class="mid-message">
               <h1 class="friend-name">{{ conversation.username }}</h1>
@@ -60,6 +57,7 @@ import { conversationInfo } from '../../stores/ConversationStore'
 import { Search, Plus, ArrowDown } from '@element-plus/icons-vue'
 import { getFriendListApi } from '../../api/Friend'
 import { getConversationListApi, getGroupListApi } from '../../api/Conversation'
+import AutocompleteSearch from '../../components/AutocompleteSearch.vue'
 import dayjs from 'dayjs'
 
 const router = useRouter()
@@ -108,7 +106,7 @@ const addFriend = () => {
   window.api.createNewWindow('addFriend')
 }
 
-// 过滤出状态为1的会话列表
+// TODO 过滤出状态为1的会话列表 后面可以修改为在pinia中的getter函数中筛选
 const conversationListArr = computed(() =>
   // Object.values(conversationStore.conversationMap).filter((item) => item.status === 1)
   Object.values(conversationStore.conversationMap)

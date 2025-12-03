@@ -23,11 +23,13 @@
       <router-view></router-view>
     </div>
   </div>
+  <WindowControls />
 </template>
 
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue'
 import { WSManager } from '../../utils/websocket'
+import WindowControls from '../../components/WindowControls.vue'
 
 const avatarUrl = ref('')
 

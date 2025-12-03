@@ -5,6 +5,9 @@ const api = {
   resizeWindow: (windowType) => {
     ipcRenderer.send('window:type', windowType)
   },
+  windowControls: (controlType, value) => {
+    ipcRenderer.send('window:controls', controlType, value)
+  },
   selectAvatar: (file) => {
     return ipcRenderer.invoke('select-avatar', file)
   },

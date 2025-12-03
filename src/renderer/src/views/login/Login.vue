@@ -56,6 +56,7 @@
       <div class="login-bottom-reset">重置密码</div>
     </div>
   </div>
+  <WindowControls :showSetTop="false" :showSetMiniSize="false" :showSetFullScreen="false" />
 </template>
 
 <script lang="ts" setup>
@@ -63,6 +64,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { loginApi, verifyCodeApi } from '../../api/Login.js'
 import { FormInstance, FormRules, ElMessage } from 'element-plus'
+import WindowControls from '../../components/WindowControls.vue'
 
 onMounted(() => {
   refreshVerifyCode()

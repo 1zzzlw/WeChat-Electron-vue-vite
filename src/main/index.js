@@ -28,6 +28,7 @@ let mainWindow = null
 let addFriendWindow = null
 let createGroupWindow = null
 let captureWindow = null
+let tray = null
 const login_width = 300
 const login_height = 370
 const main_width = 1100
@@ -57,13 +58,13 @@ function createMainWindow() {
     // 窗口创建后默认不显示
     show: false,
     // 固定窗口大小
-    // resizable: false,
+    resizable: false,
     // 隐藏窗口默认的标题栏和边框
     frame: false,
     // 自动隐藏菜单栏
-    // autoHideMenuBar: true,
+    autoHideMenuBar: true,
     //始终置顶
-    alwaysOnTop: true,
+    // alwaysOnTop: true,
     // 使窗口背景透明（窗口区域会显示桌面或下层窗口的内容）
     // transparent: true,
 
@@ -121,9 +122,13 @@ function createTray() {
   const menu = Menu.buildFromTemplate(template)
   // 创建托盘并设置图标
   const trayIconPath = 'src\\renderer\\src\\assets\\image\\weixinOnline.ico'
-  const tray = new Tray(trayIconPath)
+  tray = new Tray(trayIconPath)
   tray.setToolTip('IM 客户端')
   tray.setContextMenu(menu)
+
+  tray.on('click', () => {
+    mainWindow.show()
+  })
 }
 
 function createExtraWindow(pagePath, options = {}, isCapture = false) {
@@ -226,18 +231,48 @@ app.on('window-all-closed', () => {
 
 ipcMain.on('window:type', (e, windowType) => {
   if (windowType === 'login') {
+    console.log('LOGIN')
+    mainWindow.setResizable(true)
     mainWindow.setSize(login_width, login_height)
     mainWindow.center()
-    mainWindow.setMinimumSize(login_width, login_height)
+    mainWindow.setResizable(false)
+    // mainWindow.setMinimumSize(login_width, login_height)
   } else if (windowType === 'main') {
+    console.log('MAIN')
     mainWindow.setSize(main_width, main_height)
     mainWindow.center()
     mainWindow.setResizable(true)
     mainWindow.setMinimumSize(main_width, main_height)
   } else if (windowType === 'register') {
+    console.log('REGISTER')
     mainWindow.setSize(login_width, register_height)
     mainWindow.center()
-    mainWindow.setMinimumSize(login_width, register_height)
+    // mainWindow.setMinimumSize(login_width, register_height)
+  }
+})
+
+ipcMain.on('window:controls', (e, controlType, value) => {
+  switch (controlType) {
+    case 'setTop':
+      if (value) {
+        mainWindow.setAlwaysOnTop(true)
+      } else {
+        mainWindow.setAlwaysOnTop(false)
+      }
+      break
+    case 'miniWindow':
+      mainWindow.hide()
+      break
+    case 'changeScreen':
+      if (value) {
+        mainWindow.maximize()
+      } else {
+        mainWindow.unmaximize()
+      }
+      break
+    case 'closeWindow':
+      mainWindow.close()
+      break
   }
 })
 

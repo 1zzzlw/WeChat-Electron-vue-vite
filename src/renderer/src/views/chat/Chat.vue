@@ -121,7 +121,7 @@ const formatMsg = (msg) => {
     const src = imgPath.replace(/\\/g, '/')
     return `<img src="${src}" style="max-width: 300px; max-height: 200px; display: block; margin: 5px 0; border-radius: 4px;" alt="聊天图片">`
   })
-  // 【可选】3. 给{{}}变量添加样式（如需高亮显示）
+  // 3. 给{{}}变量添加样式（如需高亮显示）
   result = result.replace(
     /\{\{(\w+)\}\}/g,
     '<span style="color: #e6a23c; font-weight: 600;">{{$1}}</span>'

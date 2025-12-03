@@ -1,13 +1,9 @@
 <template>
-  <div>
-    收藏
-  </div>
+  <div>收藏</div>
 </template>
 
-<script setup>
-
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
 </script>
 
-<style scoped>
-
-</style>
+<style scoped></style>

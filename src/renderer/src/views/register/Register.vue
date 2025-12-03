@@ -55,6 +55,7 @@
       <a href="">协议</a>
     </div>
   </div>
+  <WindowControls :showSetTop="false" :showSetMiniSize="false" :showSetFullScreen="false" />
 </template>
 
 <script lang="ts" setup>
@@ -62,6 +63,7 @@ import { ref, reactive, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { sendPhoneCodeApi } from '../../api/Register'
 import { ElMessage, FormInstance, FormRules } from 'element-plus'
+import WindowControls from '../../components/WindowControls.vue'
 
 const router = useRouter()
 const isCounting = ref(false)
@@ -134,6 +136,8 @@ const startCountdown = () => {
 }
 
 const returnLogin = () => {
+  console.info('返回登录页')
+  window.api.resizeWindow('login')
   router.push('/login')
 }
 

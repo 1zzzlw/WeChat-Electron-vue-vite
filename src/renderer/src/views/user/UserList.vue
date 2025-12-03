@@ -2,12 +2,13 @@
   <div class="user-list">
     <div class="user-list-left">
       <div class="list-top">
-        <el-input
-          style="width: 240px"
-          placeholder="搜索"
-          :prefix-icon="Search"
-          spellcheck="false"
-        />
+        <!--        <el-input-->
+        <!--          style="width: 240px"-->
+        <!--          placeholder="搜索"-->
+        <!--          :prefix-icon="Search"-->
+        <!--          spellcheck="false"-->
+        <!--        />-->
+        <AutocompleteSearch />
       </div>
       <div class="list-bottom">
         <el-scrollbar>
@@ -110,6 +111,7 @@ import { userListInfo } from '../../stores/ContactListStore'
 import { groupListInfo } from '../../stores/GroupListStores'
 import { getGroupListApi } from '../../api/Conversation'
 import { groupMemberInfo } from '../../stores/GroupMemberStores'
+import AutocompleteSearch from '../../components/AutocompleteSearch.vue'
 
 const userApplyStore = userApplyListInfo()
 const userListStore = userListInfo()
