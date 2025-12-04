@@ -22,6 +22,14 @@ html, body {
   padding: 0;
 }
 
+img {
+  /* 兼容Electron/Chrome/webkit内核 */
+  -webkit-user-drag: none;
+  /* 禁止选中图片（防止误选） */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
 @media (max-width: 350px) {
   .tip,
   .actions {

@@ -2,7 +2,13 @@
   <div class="main-count">
     <div class="main-count-left">
       <div class="main-count-left-top">
-        <img :src="avatarUrl" alt="头像" class="main-count-left-top-img" />
+        <el-popover popper-style="width: 400px; height: 300px; padding: 0;" show-after="500">
+          <UserInfoCart />
+          <template #reference>
+            <img :src="avatarUrl" alt="头像" class="main-count-left-top-img" />
+          </template>
+        </el-popover>
+        <UserOnlineStatus />
         <router-link tag="div" to="/messageList" class="left-icon">
           <el-icon size="30"><ChatRound /></el-icon>
         </router-link>
@@ -12,11 +18,12 @@
         <router-link tag="div" to="/collect" class="left-icon">
           <el-icon size="30"><Star /></el-icon>
         </router-link>
+        <router-link tag="div" to="/moments" class="left-icon">
+          <div class="iconfont icon-pengyouquan"></div>
+        </router-link>
       </div>
       <div class="main-count-left-bottom">
-        <router-link tag="div" to="" class="left-icon">
-          <el-icon size="30"><MoreFilled /></el-icon>
-        </router-link>
+        <el-icon size="30"><MoreFilled /></el-icon>
       </div>
     </div>
     <div class="main-count-right">
@@ -24,12 +31,17 @@
     </div>
   </div>
   <WindowControls />
+  <Notification />
 </template>
 
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue'
 import { WSManager } from '../../utils/websocket'
 import WindowControls from '../../components/WindowControls.vue'
+import UserOnlineStatus from '../../components/UserOnlineStatus.vue'
+import UserInfoCart from '../../components/UserInfoCart.vue'
+import '../../assets/iconfont/iconfont.css'
+import Notification from '../../components/Notification.vue'
 
 const avatarUrl = ref('')
 
@@ -69,6 +81,7 @@ onMounted(async () => {
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  margin-bottom: 10px;
 }
 
 .main-count-left-top-img {
@@ -82,6 +95,13 @@ onMounted(async () => {
   margin-bottom: 10px;
   /*鼠标移动到这里时变成手*/
   cursor: pointer;
+}
+
+.iconfont {
+  font-size: 30px;
+  color: blue;
+  margin-bottom: 10px;
+  text-decoration: none;
 }
 
 .left-icon:hover {

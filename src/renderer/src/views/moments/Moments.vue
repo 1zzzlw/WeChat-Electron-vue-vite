@@ -1,5 +1,5 @@
 <template>
-  <div>收藏</div>
+  <div>朋友圈</div>
 </template>
 
 <script setup lang="ts"></script>

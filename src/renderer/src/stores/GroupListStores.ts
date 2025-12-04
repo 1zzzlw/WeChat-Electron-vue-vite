@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia'
 
+// 群聊会话缓存，用于首次加载群聊列表时，缓存群聊信息，后续更新使用conversationStore中的群聊会话缓存
+
 interface groupInfo {
   id: string | number
   groupName: string

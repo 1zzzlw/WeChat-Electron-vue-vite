@@ -1,6 +1,9 @@
 import { messageInfo } from '../stores/MessageStore'
 import { userApplyListInfo } from '../stores/UserApplyListStore'
-import { ipcRenderer } from 'electron'
+import { useRoute } from 'vue-router'
+import emitter from '../utils/mitt'
+
+const route = useRoute()
 
 interface socket {
   // 用来存储websocket实例
@@ -190,6 +193,7 @@ class WebSocketManager {
         case 2:
           // 私信类型，将消息存储到状态管理中
           console.info('收到消息:', data)
+          console.log('当前路径:', route.path)
           messageInfo().addMessageMap(data.conversationId, data)
           break
         case 4:
@@ -206,6 +210,12 @@ class WebSocketManager {
           // 群聊申请类型，将消息存储到状态管理中
           console.info('收到群聊加入邀请:', data)
           userApplyListInfo().setGroupApplyMap(data.userId, data)
+          break
+        case 9:
+          // 收到好友上线消息
+          console.info('收到好友上线消息:', data)
+          // 触发好友上线事件
+          emitter.emit('friendOnline', data)
           break
       }
     } catch (e) {

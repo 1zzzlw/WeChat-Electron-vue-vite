@@ -18,8 +18,9 @@ interface conversation {
 export const conversationInfo = defineStore('conversationInfo', {
   state: () => {
     return {
-      // 键为会话id
+      // 键为单聊会话id
       conversationMap: {} as Record<string, conversation>,
+      // 键为群聊会话id
       groupConversationMap: {} as Record<string, conversation>
     }
   },
@@ -61,6 +62,28 @@ export const conversationInfo = defineStore('conversationInfo', {
         return this.conversationMap[conversationId].remark
       } else {
         return ''
+      }
+    },
+    clearUnreadCount(conversationId: string) {
+      if (conversationId.startsWith('g_')) {
+        // 群聊会话，清除未读消息数量
+        this.setGroupConversationMap(conversationId, {
+          unreadCount: 0
+        })
+      } else {
+        // 单聊会话，清除未读消息数量
+        this.setConversationMap(conversationId, {
+          unreadCount: 0
+        })
+      }
+    },
+    getUnreadCount(conversationId: string) {
+      if (conversationId.startsWith('g_')) {
+        // 群聊会话，返回未读消息数量
+        return this.groupConversationMap[conversationId].unreadCount
+      } else {
+        // 单聊会话，返回未读消息数量
+        return this.conversationMap[conversationId].unreadCount
       }
     }
   }

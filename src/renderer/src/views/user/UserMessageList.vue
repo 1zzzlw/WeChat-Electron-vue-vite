@@ -20,13 +20,12 @@
             class="left-list"
             v-for="(conversation, index) in conversationListArr"
             :key="index"
-            :class="{ 'left-list-bg': active == conversation.id }"
+            :class="{ 'left-list-bg': active === conversation.id }"
             @click="starCall(conversation)"
           >
             <div class="left-image">
-              <el-badge :value="1" :max="99" class="item">
-                <img :src="conversation.avatar" alt="头像" class="left-list-img" />
-              </el-badge>
+              <UnreadCounts :unreadCounts="conversation.unreadCount" />
+              <img :src="conversation.avatar" alt="头像" class="left-list-img" />
             </div>
             <div class="mid-message">
               <h1 class="friend-name">{{ conversation.username }}</h1>
@@ -58,6 +57,7 @@ import { Search, Plus, ArrowDown } from '@element-plus/icons-vue'
 import { getFriendListApi } from '../../api/Friend'
 import { getConversationListApi, getGroupListApi } from '../../api/Conversation'
 import AutocompleteSearch from '../../components/AutocompleteSearch.vue'
+import UnreadCounts from '../../components/UnreadCounts.vue'
 import dayjs from 'dayjs'
 
 const router = useRouter()
@@ -75,6 +75,9 @@ const starCall = async (friend) => {
     return
   }
   console.info('消息列表时，好友id:' + friend.friendId + ', 会话id:' + friend.id)
+  // 清除会话缓存中的未读消息数量
+  conversationStore.clearUnreadCount(friend.id)
+
   if (friend.id.startsWith('g_')) {
     // 群聊，去掉g_前缀当作接收者id，也就是单聊的好友id
     const receiveGroupId = friend.id.substring(2)
@@ -92,6 +95,8 @@ const starCall = async (friend) => {
       query: { conversationId: friend.id, friendId: friend.friendId }
     })
   }
+  // 像后端发送消息已读状态更新请求
+
 }
 
 const createGroupChat = () => {
@@ -106,7 +111,7 @@ const addFriend = () => {
   window.api.createNewWindow('addFriend')
 }
 
-// TODO 过滤出状态为1的会话列表 后面可以修改为在pinia中的getter函数中筛选
+// TODO 过滤出状态为1的单聊会话列表 后面可以修改为在pinia中的getter函数中筛选
 const conversationListArr = computed(() =>
   // Object.values(conversationStore.conversationMap).filter((item) => item.status === 1)
   Object.values(conversationStore.conversationMap)

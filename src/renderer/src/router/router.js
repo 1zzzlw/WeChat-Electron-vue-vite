@@ -14,6 +14,7 @@ import FriendAddView from '../views/user/UserFriendAdd.vue'
 import FriendApplyView from '../views/friend/FriendApply.vue'
 import FriendInfoView from '../views/friend/FriendInfo.vue'
 import CreateGroupView from '../views/user/UserCreateGroup.vue'
+import MomentsView from '../views/moments/Moments.vue'
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -92,6 +93,11 @@ const router = createRouter({
           path: '/collect',
           name: 'collect',
           component: CollectView
+        },
+        {
+          path: '/moments',
+          name: 'moments',
+          component: MomentsView
         }
       ]
     }

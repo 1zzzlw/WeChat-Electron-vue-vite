@@ -29,7 +29,8 @@ const returnLogin = () => {
 
 const confirmLogin = async () => {
   const token = await window.api.storeGetToken()
-  const res = await PendingLoginApi(token)
+  const userId = await window.api.storeGetUserId()
+  const res = await PendingLoginApi(token, userId)
   if (res.code === 1) {
     await router.push('/main')
     window.api.resizeWindow('main')

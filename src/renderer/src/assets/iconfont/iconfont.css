@@ -1,5 +1,5 @@
 @font-face {
-  font-family: "iconfont"; /* Project id  */
+  font-family: "iconfont";
   src: url('iconfont.ttf?t=1764755556700') format('truetype');
 }
 
@@ -9,6 +9,19 @@
   font-style: normal;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  -webkit-app-region: no-drag;
+}
+
+.icon-pengyouquan:before {
+  content: "\e8b4";
+}
+
+.icon-xihuan:before {
+  content: "\e86f";
+}
+
+.icon-dianzan:before {
+  content: "\e65e";
 }
 
 .icon-quxiaozhiding:before {

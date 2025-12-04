@@ -102,7 +102,6 @@ const arr = reactive({ list: [] })
 const avatarUrl = ref('')
 const userId = ref()
 const scrollbarRef = ref(null)
-
 const messageStore = messageInfo()
 const groupMemberStore = groupMemberInfo()
 const conversationStore = conversationInfo()
@@ -193,8 +192,15 @@ const sendApi = (data) => {
     message.value = ''
     imageUrl.value = ''
     if (res.data) {
+      // 聊天记录缓存新增数据
       messageStore.addMessageMap(convId, res.data)
+      // 单聊会话缓存更新最新消息
       conversationStore.setConversationMap(convId, {
+        latestMsg: res.data.content,
+        latestMsgTime: dayjs(res.data.sendTime).format('HH:mm')
+      })
+      // 群聊会话缓存更新最新消息
+      conversationStore.setGroupConversationMap(convId, {
         latestMsg: res.data.content,
         latestMsgTime: dayjs(res.data.sendTime).format('HH:mm')
       })
@@ -285,7 +291,6 @@ const messageArr = computed(() => {
 })
 
 const friendAvatar = computed(() => conversationStore.getAvatar(route.query.conversationId))
-
 const friendUsername = computed(() => conversationStore.getUsername(route.query.conversationId))
 const friendRemark = computed(() => conversationStore.getRemark(route.query.conversationId))
 // const groupMemberArr = computed(() => {
