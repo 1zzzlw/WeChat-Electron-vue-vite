@@ -102,7 +102,6 @@
 <script lang="ts" setup>
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { Search } from '@element-plus/icons-vue'
 import { getFriendListApi } from '../../api/Friend'
 import { getApplyListApi, getGroupApplyListApi, dealGroupApplyApi } from '../../api/Apply'
 import { CollapseModelValue, ElMessage } from 'element-plus'

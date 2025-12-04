@@ -14,23 +14,39 @@
             <div class="msg">
               <div class="left-name" v-if="message.remark === ''">{{ friendUsername }}</div>
               <div class="left-name" v-else>{{ friendRemark }}</div>
-              <div class="chat-bubble left-bubble" v-html="formatMsg(message.content)"></div>
+              <div class="chat-bubble left-bubble" v-if="message.msgType === 1">
+                {{ message.content }}
+              </div>
+              <div class="chat-bubble left-bubble" v-if="message.msgType === 2">
+                <ChatImageView :imageUrl="message.content" />
+              </div>
             </div>
           </div>
           <div class="chat-list-right" v-else-if="String(message.senderId) === String(userId)">
             <img :src="avatarUrl" class="list-image" />
-            <div class="chat-bubble right-bubble" v-html="formatMsg(message.content)"></div>
+            <div class="chat-bubble right-bubble" v-if="message.msgType === 1">
+              {{ message.content }}
+            </div>
+            <div class="chat-bubble right-bubble" v-else-if="message.msgType === 2">
+              <ChatImageView :imageUrl="message.content" />
+            </div>
           </div>
           <div class="chat-list-left" v-else>
             <img
               :src="groupMemberStore.getGroupMemberAvatar(message.senderId)"
               class="list-image"
             />
-            <div class="chat-bubble right-bubble" v-html="formatMsg(message.content)"></div>
+            <div class="chat-bubble left-bubble" v-if="message.msgType === 1">
+              {{ message.content }}
+            </div>
+            <div class="chat-bubble left-bubble" v-else-if="message.msgType === 2">
+              <ChatImageView :imageUrl="message.content" />
+            </div>
           </div>
         </div>
       </el-scrollbar>
     </div>
+    <FilePreviewView :fileInfoList="fileInfoList" />
     <div class="chat-tool">
       <el-popover
         placement="top"
@@ -50,7 +66,18 @@
           <el-button :icon="Eleme" size="large" square></el-button>
         </template>
       </el-popover>
-      <el-button :icon="Folder" size="large" square></el-button>
+      <el-upload
+        multiple
+        :limit="3"
+        action="#"
+        :show-file-list="false"
+        :auto-upload="false"
+        :on-exceed="handleExceed"
+        @change="selectFiles"
+        class="upload-button"
+      >
+        <el-button :icon="Folder" size="large" square></el-button>
+      </el-upload>
       <el-popover
         placement="top"
         :disabled="imageUrl === ''"
@@ -81,7 +108,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import emojis from '../../emoji/emoji.js'
@@ -91,8 +118,23 @@ import dayjs from 'dayjs'
 import { WSManager } from '../../utils/websocket.js'
 import { conversationInfo } from '../../stores/ConversationStore'
 import { Eleme, Folder, Scissor, VideoCamera } from '@element-plus/icons-vue'
+import type { UploadFile } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import { groupMemberInfo } from '../../stores/GroupMemberStores'
 import { getGroupMemberListApi } from '../../api/Conversation'
+import { getFileType } from '../../utils/FilterFileKind.js'
+import FilePreviewView from '../../components/FilePreviewView.vue'
+import ChatImageView from '../../components/ChatImageView.vue'
+import ChatVideoView from '../../components/ChatVideoView.vue'
+import ChatFileView from '../../components/ChatFileView.vue'
+
+interface fileBaseInfo {
+  fileName: string
+  fileSize: string
+  fileType: number
+  fileRaw: File | null
+  fileUrl?: string
+}
 
 const imageUrl = ref('')
 // 添加数据加载状态标记
@@ -108,33 +150,35 @@ const scrollbarRef = ref(null)
 const messageStore = messageInfo()
 const groupMemberStore = groupMemberInfo()
 const conversationStore = conversationInfo()
+const fileInfoList = reactive<fileBaseInfo>([])
 
-const formatMsg = (msg) => {
-  if (!msg) return '' // 处理空消息
-  let result = msg
-  // 1. 匹配@用户名，高亮显示（原有功能优化样式）
-  result = result.replace(
-    /@(\w+)/g,
-    '<span style="color: #409eff; font-weight: 600; background: #ecf5ff; padding: 0 4px; border-radius: 2px;">@$1</span>'
-  )
-  // 2. 匹配图片路径（本地/网络），转为img标签
-  result = result.replace(/\S+\.(png|jpg|jpeg|gif|webp)/gi, (imgPath) => {
-    // 处理Windows本地路径的反斜杠
-    const src = imgPath.replace(/\\/g, '/')
-    return `<img src="${src}" style="max-width: 300px; max-height: 200px; display: block; margin: 5px 0; border-radius: 4px;" alt="聊天图片">`
+const selectFiles = (file: UploadFile) => {
+  console.info(file.raw)
+  console.info('文件名称:', file.name)
+  console.info('文件大小:', file.size)
+  console.info('文件类型:', file.raw.type)
+  console.info('文件URL:', URL.createObjectURL(file.raw))
+  const fileType = getFileType(file.raw)
+  fileInfoList.push({
+    fileName: file.name,
+    fileSize: file.size,
+    fileType: fileType,
+    fileRaw: file.raw,
+    fileUrl: URL.createObjectURL(file.raw)
   })
-  // 3. 给{{}}变量添加样式（如需高亮显示）
-  result = result.replace(
-    /\{\{(\w+)\}\}/g,
-    '<span style="color: #e6a23c; font-weight: 600;">{{$1}}</span>'
-  )
-  return result
 }
 
+// 处理上传文件超出限制
+const handleExceed = () => {
+  ElMessage.warning('最多只能上传3个文件')
+}
+
+// 处理emoji点击事件
 const handlerEmoji = (emoji) => {
   message.value += emoji
 }
 
+// 处理截图按钮点击事件
 const captureBtn = () => {
   console.info('截图按钮点击事件')
   window.chatToolApi.openCapture()
@@ -488,6 +532,14 @@ img {
   border: none;
 }
 
+.upload-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+}
+
 .chat-input {
   margin: 0 auto;
   height: 120px;
@@ -539,7 +591,7 @@ img {
   margin: 0 10px 5px 0;
 }
 
-/* 核心：聊天气泡样式（带三角箭头） */
+/* 聊天气泡样式 */
 .chat-bubble {
   padding: 8px 12px;
   border-radius: 8px;
