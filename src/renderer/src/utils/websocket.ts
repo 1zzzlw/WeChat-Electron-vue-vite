@@ -1,9 +1,7 @@
 import { messageInfo } from '../stores/MessageStore'
 import { userApplyListInfo } from '../stores/UserApplyListStore'
-import { useRoute } from 'vue-router'
 import emitter from '../utils/mitt'
-
-const route = useRoute()
+import router from '../router/router'
 
 interface socket {
   // 用来存储websocket实例
@@ -193,7 +191,8 @@ class WebSocketManager {
         case 2:
           // 私信类型，将消息存储到状态管理中
           console.info('收到消息:', data)
-          console.log('当前路径:', route.path)
+          console.info('当前路径:', router.currentRoute.value.path)
+          console.info('当前路由参数:', router.currentRoute.value.query)
           messageInfo().addMessageMap(data.conversationId, data)
           break
         case 4:
