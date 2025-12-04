@@ -75,7 +75,8 @@
       />
     </div>
     <div class="sendButton">
-      <el-button type="success" @click="sendMessage">发送</el-button>
+      <el-button type="success" v-if="chatType" @click="sendPrivateMessage">发送</el-button>
+      <el-button type="success" v-else @click="sendGroupMessage">发送</el-button>
     </div>
   </div>
 </template>
@@ -96,6 +97,8 @@ import { getGroupMemberListApi } from '../../api/Conversation'
 const imageUrl = ref('')
 // 添加数据加载状态标记
 const isDataLoaded = ref(false)
+// true为单聊，false为群聊
+const chatType = ref(true)
 const route = useRoute()
 const message = ref('')
 const arr = reactive({ list: [] })
@@ -141,69 +144,116 @@ const captureBtn = () => {
   })
 }
 
-const sendMessage = async () => {
+// 发送单聊消息
+const sendPrivateMessage = async () => {
+  // 获取会话id
+  const convId = route.query.conversationId
+  const content = message.value
+  // 处理消息类型
+  console.info(
+    '发送单聊消息 ===> 接收消息用户的ID:',
+    route.query.friendId,
+    '消息内容:',
+    content,
+    '会话id:',
+    convId
+  )
+
+  // ws发送单聊信息：会话id、接收者id、消息内容
+  WSManager.sendMessage(1, 0, {
+    conversationId: convId,
+    receiverId: route.query.friendId,
+    content: content
+  })
+
   if (imageUrl.value.length > 0) {
-    sendApi(imageUrl.value)
+    sendApi(imageUrl.value, convId, 2)
   }
 
   if (message.value !== '') {
-    sendApi(message.value)
+    sendApi(content, convId, 1)
   }
 }
 
-const sendApi = (data) => {
-  console.info(
-    '接收消息用户的ID:',
-    route.query.friendId,
-    '消息内容:',
-    data,
-    '会话id:',
-    route.query.conversationId
-  )
+// 发送群聊消息
+const sendGroupMessage = async () => {
+  // 获取会话id
   const convId = route.query.conversationId
-  if (convId.startsWith('g_')) {
-    // ws发送群聊信息：群聊id、消息内容、接收者数组
-    console.info('群成员列表:', groupMemberStore.groupMemberMap[convId])
-    console.info(
-      '群成员ID列表:',
-      groupMemberStore.groupMemberMap[convId].map((item) => item.userId)
-    )
-    WSManager.sendMessage(3, 0, {
-      conversationId: convId,
-      receiverIds: groupMemberStore.groupMemberMap[convId].map((item) => item.userId),
-      content: data
-    })
-  } else {
-    // ws发送单聊信息：会话id、接收者id、消息内容
-    WSManager.sendMessage(1, 0, {
-      conversationId: convId,
-      receiverId: route.query.friendId,
-      content: data
-    })
+  const content = message.value
+  // 处理消息类型
+  console.info('发送群聊消息 ===> 群聊ID:', convId, '消息内容:', content)
+  // ws发送群聊信息：群聊id、消息内容、接收者数组
+  console.info('群成员列表:', groupMemberStore.groupMemberMap[convId])
+  console.info(
+    '群成员ID列表:',
+    groupMemberStore.groupMemberMap[convId].map((item) => item.userId)
+  )
+
+  WSManager.sendMessage(3, 0, {
+    conversationId: convId,
+    receiverIds: groupMemberStore.groupMemberMap[convId].map((item) => item.userId),
+    content: content
+  })
+
+  if (imageUrl.value.length > 0) {
+    sendApi(imageUrl.value, convId, 2)
   }
+
+  if (message.value !== '') {
+    sendApi(message.value, convId, 1)
+  }
+}
+
+const sendApi = (content, convId, msgType) => {
+  // const convId = route.query.conversationId
+  // if (convId.startsWith('g_')) {
+  //   // ws发送群聊信息：群聊id、消息内容、接收者数组
+  //   console.info('群成员列表:', groupMemberStore.groupMemberMap[convId])
+  //   console.info(
+  //     '群成员ID列表:',
+  //     groupMemberStore.groupMemberMap[convId].map((item) => item.userId)
+  //   )
+  //   WSManager.sendMessage(3, 0, {
+  //     conversationId: convId,
+  //     receiverIds: groupMemberStore.groupMemberMap[convId].map((item) => item.userId),
+  //     content: content
+  //   })
+  // } else {
+  //   // ws发送单聊信息：会话id、接收者id、消息内容
+  //   WSManager.sendMessage(1, 0, {
+  //     conversationId: convId,
+  //     receiverId: route.query.friendId,
+  //     content: content
+  //   })
+  // }
 
   // http发送接收者id、会话id、消息内容
   sendMessageApi({
     receiverId: route.query.friendId,
     conversationId: convId,
-    content: data
+    content: content,
+    msgType: msgType
   }).then((res) => {
     console.info('发送消息成功', res)
+    // 清空输入框
     message.value = ''
     imageUrl.value = ''
     if (res.data) {
       // 聊天记录缓存新增数据
       messageStore.addMessageMap(convId, res.data)
-      // 单聊会话缓存更新最新消息
-      conversationStore.setConversationMap(convId, {
-        latestMsg: res.data.content,
-        latestMsgTime: dayjs(res.data.sendTime).format('HH:mm')
-      })
-      // 群聊会话缓存更新最新消息
-      conversationStore.setGroupConversationMap(convId, {
-        latestMsg: res.data.content,
-        latestMsgTime: dayjs(res.data.sendTime).format('HH:mm')
-      })
+      if (chatType.value) {
+        // 单聊会话缓存更新最新消息
+        conversationStore.setConversationMap(convId, {
+          latestMsg: res.data.content,
+          latestMsgTime: dayjs(res.data.sendTime).format('HH:mm')
+        })
+      } else {
+        // 群聊会话缓存更新最新消息
+        conversationStore.setGroupConversationMap(convId, {
+          latestMsg: res.data.content,
+          latestMsgTime: dayjs(res.data.sendTime).format('HH:mm')
+        })
+      }
     }
   })
 }
@@ -301,45 +351,68 @@ const friendRemark = computed(() => conversationStore.getRemark(route.query.conv
 //   }
 // })
 
-onMounted(async () => {
-  try {
-    console.info(
-      '聊天页时，好友id' + route.query.friendId + ', 会话id:' + route.query.conversationId
-    )
-    avatarUrl.value = await window.api.storeGetAvatar()
-    userId.value = await window.api.storeGetUserId()
-    await getMessageList()
-    if (route.query.conversationId.startsWith('g_')) {
-      await getGroupMemberList()
-    }
-    // 所有数据加载完成，允许渲染
-    isDataLoaded.value = true
-    await nextTick()
-    scrollToBottom()
-  } catch (error) {
-    console.error('初始化失败', error)
-    // 即使失败也显示页面，避免白屏
-    isDataLoaded.value = true
-  }
-})
-
 // 监听conversationId变化 - 确保会话切换
 watch(
+  // 监听会话ID变化
   () => route.query.conversationId,
-  async (newConversationId) => {
+  async (newConversationId, oldConversationId) => {
     try {
-      console.info('切换会话，新的会话id', newConversationId)
-      await getMessageList()
-      if (route.query.conversationId.startsWith('g_')) {
-        await getGroupMemberList()
+      console.info('切换会话，新的会话id:', newConversationId, '旧的会话id:', oldConversationId)
+
+      if (!isDataLoaded.value && oldConversationId === undefined) {
+        // 说明是第一次加载，更新用户的头像和id
+        console.info('第一次加载，更新用户的头像和id')
+        avatarUrl.value = await window.api.storeGetAvatar()
+        userId.value = await window.api.storeGetUserId()
       }
+
+      // 判断当前会话是单聊还是群聊
+      await getMessageList()
+      // 默认设置为单聊
+      chatType.value = true
+      if (newConversationId.startsWith('g_')) {
+        // 是群聊，获取群成员列表，获取用户的头像等信息
+        await getGroupMemberList()
+        // 将会话类型设置为群聊
+        chatType.value = false
+      }
+
+      // 所有数据加载完成，允许渲染
+      isDataLoaded.value = true
+
       await nextTick()
       scrollToBottom()
     } catch (error) {
       console.error('加载新会话消息失败', error)
+      isDataLoaded.value = true
     }
-  }
+  },
+  { immediate: true }
 )
+
+// onMounted(async () => {
+//   try {
+//     console.info(
+//       '聊天页时，好友id' + route.query.friendId + ', 会话id:' + route.query.conversationId
+//     )
+//     avatarUrl.value = await window.api.storeGetAvatar()
+//     userId.value = await window.api.storeGetUserId()
+//
+//     await getMessageList()
+//     if (route.query.conversationId.startsWith('g_')) {
+//       await getGroupMemberList()
+//     }
+//
+//     // 所有数据加载完成，允许渲染
+//     isDataLoaded.value = true
+//     await nextTick()
+//     scrollToBottom()
+//   } catch (error) {
+//     console.error('初始化失败', error)
+//     // 即使失败也显示页面，避免白屏
+//     isDataLoaded.value = true
+//   }
+// })
 </script>
 
 <style scoped>
