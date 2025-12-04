@@ -1,16 +1,16 @@
 <template>
   <div class="unread-count">
-    <div class="count-dot" v-if="unreadCounts > 0">{{ unreadCounts }}</div>
+    <div class="count-dot" v-if="unreadCounts > 0">
+      {{ unreadCounts <= 99 ? unreadCounts : '99+' }}
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-
 defineProps({
   unreadCounts: {
     type: Number,
-    default: 1
+    default: 0
   }
 })
 </script>

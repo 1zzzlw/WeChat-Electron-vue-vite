@@ -1,6 +1,8 @@
 import { messageInfo } from '../stores/MessageStore'
 import { userApplyListInfo } from '../stores/UserApplyListStore'
+import { conversationInfo } from '../stores/ConversationStore'
 import emitter from '../utils/mitt'
+import dayjs from 'dayjs'
 import router from '../router/router'
 
 interface socket {
@@ -138,6 +140,20 @@ class WebSocketManager {
     this.ws.status = WebSocket.OPEN
   }
 
+  private updateMessageStore(data: any) {
+    // 私信类型，将消息存储到状态管理中
+    const path = router.currentRoute.value.path
+    const conversationId = router.currentRoute.value.query.conversationId
+    console.info('当前路径:', path)
+    console.info('当前路由参数:', router.currentRoute.value.query)
+    const isInCurrentChatPage = path === '/chat' && conversationId === data.conversationId
+    if (!isInCurrentChatPage) {
+      // 此时用户不在和对方聊天，未读消息数增涨
+      conversationInfo().addUnreadCount(data.conversationId)
+    }
+    messageInfo().addMessageMap(data.conversationId, data)
+  }
+
   /** 接收后端消息，接收的是二进制协议，需要解析后存储到状态管理中 */
   private onMessage(event: MessageEvent) {
     try {
@@ -189,16 +205,23 @@ class WebSocketManager {
 
       switch (messageType) {
         case 2:
-          // 私信类型，将消息存储到状态管理中
-          console.info('收到消息:', data)
-          console.info('当前路径:', router.currentRoute.value.path)
-          console.info('当前路由参数:', router.currentRoute.value.query)
-          messageInfo().addMessageMap(data.conversationId, data)
+          console.info('收到私聊消息:', data)
+          this.updateMessageStore(data)
+          // 更新会话的最新消息和最新消息时间展示
+          conversationInfo().setConversationMap(data.conversationId, {
+            latestMsg: data.content,
+            latestMsgTime: dayjs(data.sendTime).format('HH:mm')
+          })
           break
         case 4:
           // 群聊类型，将消息存储到状态管理中
           console.info('收到群聊消息:', data)
-          messageInfo().addMessageMap(data.conversationId, data)
+          this.updateMessageStore(data)
+          // 更新群聊会话的最新消息和最新消息时间展示
+          conversationInfo().setGroupConversationMap(data.conversationId, {
+            latestMsg: data.content,
+            latestMsgTime: dayjs(data.sendTime).format('HH:mm')
+          })
           break
         case 6:
           // 好友申请类型，将消息存储到状态管理中

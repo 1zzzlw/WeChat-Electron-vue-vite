@@ -77,13 +77,17 @@ export const conversationInfo = defineStore('conversationInfo', {
         })
       }
     },
-    getUnreadCount(conversationId: string) {
+    addUnreadCount(conversationId: string) {
       if (conversationId.startsWith('g_')) {
-        // 群聊会话，返回未读消息数量
-        return this.groupConversationMap[conversationId].unreadCount
+        // 群聊会话，未读消息数量增涨
+        this.setGroupConversationMap(conversationId, {
+          unreadCount: this.groupConversationMap[conversationId].unreadCount + 1
+        })
       } else {
-        // 单聊会话，返回未读消息数量
-        return this.conversationMap[conversationId].unreadCount
+        // 单聊会话，未读消息数量增涨
+        this.setConversationMap(conversationId, {
+          unreadCount: this.conversationMap[conversationId].unreadCount + 1
+        })
       }
     }
   }

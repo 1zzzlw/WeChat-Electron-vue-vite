@@ -96,7 +96,6 @@ const starCall = async (friend) => {
     })
   }
   // 像后端发送消息已读状态更新请求
-
 }
 
 const createGroupChat = () => {
