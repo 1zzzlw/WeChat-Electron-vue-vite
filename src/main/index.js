@@ -300,31 +300,37 @@ ipcMain.handle('select-file', async (e, file) => {
   return canceled ? null : filePaths[0]
 })
 
-ipcMain.handle('store-set-token', (e, token) => {
-  store.set('token', token)
+ipcMain.handle('window:setUserInfo', (e, userInfoType, userInfo) => {
+  console.log(userInfoType)
+  console.info('设置用户信息', userInfoType, userInfo)
+  switch (userInfoType) {
+    case 'token':
+      store.set('token', userInfo)
+      break
+    case 'avatar':
+      store.set('avatar', userInfo)
+      break
+    case 'userId':
+      store.set('userId', userInfo)
+      break
+    case 'storeLocation':
+      store.set('storeLocation', userInfo)
+      break
+  }
   return true
 })
 
-ipcMain.handle('store-get-token', (e) => {
-  return store.get('token')
-})
-
-ipcMain.handle('store-set-avatar', (e, avatar) => {
-  store.set('avatar', avatar)
-  return true
-})
-
-ipcMain.handle('store-get-avatar', (e) => {
-  return store.get('avatar')
-})
-
-ipcMain.handle('store-set-userId', (e, userId) => {
-  store.set('userId', userId)
-  return true
-})
-
-ipcMain.handle('store-get-user-id', (e, userId) => {
-  return store.get('userId')
+ipcMain.handle('window:getUserInfo', (e, userInfoType) => {
+  switch (userInfoType) {
+    case 'token':
+      return store.get('token')
+    case 'avatar':
+      return store.get('avatar')
+    case 'userId':
+      return store.get('userId')
+    case 'storeLocation':
+      return store.get('storeLocation')
+  }
 })
 
 function createNewWindow(windowType) {

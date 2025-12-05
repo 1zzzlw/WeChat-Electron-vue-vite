@@ -39,7 +39,7 @@ class WebSocketManager {
   async connect() {
     if (this.isConnect) return
 
-    const token = await (window as any).api.storeGetToken()
+    const token = await (window as any).api.storeGetUserInfo('token')
     if (!token) {
       console.warn('没有 token，无法连接 WebSocket')
       return
@@ -292,8 +292,7 @@ class WebSocketManager {
   /** 重连逻辑 */
   private async tryReconnect() {
     if (this.lockReconnect) return
-
-    const token = await (window as any).api.storeGetToken()
+    const token = await (window as any).api.storeGetUserInfo('token')
     if (!token) return
 
     this.lockReconnect = true

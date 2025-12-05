@@ -340,6 +340,7 @@ const sendApi = (content: string, convId: string, msgType: number) => {
         // 图片，前端展示并缓存到本地
       }
       // 滚动到最底部
+      nextTick()
       scrollToBottom()
     }
   })
@@ -459,8 +460,8 @@ watch(
       if (!isDataLoaded.value && oldConversationId === undefined) {
         // 说明是第一次加载，更新用户的头像和id
         console.info('第一次加载，更新用户的头像和id')
-        avatarUrl.value = await window.api.storeGetAvatar()
-        userId.value = await window.api.storeGetUserId()
+        avatarUrl.value = await window.api.storeGetUserInfo('avatar')
+        userId.value = await window.api.storeGetUserInfo('userId')
       }
 
       // 判断当前会话是单聊还是群聊

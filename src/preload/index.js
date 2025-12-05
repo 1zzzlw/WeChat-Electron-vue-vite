@@ -11,24 +11,13 @@ const api = {
   selectFile: (file) => {
     return ipcRenderer.invoke('select-file', file)
   },
-  storeSetToken: (token) => {
-    return ipcRenderer.invoke('store-set-token', token)
+  storeSetUserInfo: (userInfoType, userInfo) => {
+    return ipcRenderer.invoke('window:setUserInfo', userInfoType, userInfo)
   },
-  storeGetToken: () => {
-    return ipcRenderer.invoke('store-get-token')
+  storeGetUserInfo: (userInfoType) => {
+    return ipcRenderer.invoke('window:getUserInfo', userInfoType)
   },
-  storeSetAvatar: (avatar) => {
-    return ipcRenderer.invoke('store-set-avatar', avatar)
-  },
-  storeGetAvatar: () => {
-    return ipcRenderer.invoke('store-get-avatar')
-  },
-  storeSetUserId: (userId) => {
-    return ipcRenderer.invoke('store-set-userId', userId)
-  },
-  storeGetUserId: () => {
-    return ipcRenderer.invoke('store-get-user-id')
-  },
+
   createNewWindow: (windowType) => {
     ipcRenderer.send('create-new-window', windowType)
   },

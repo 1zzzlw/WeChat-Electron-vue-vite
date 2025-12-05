@@ -20,12 +20,17 @@ const choose = () => {
   window.api.selectFile('storeLocation').then((filePath) => {
     if (filePath) {
       location.value = filePath
+      console.info('选择的存储位置:', filePath)
+      // 将选择的路径保存到本地
+      window.api.storeSetUserInfo('storeLocation', filePath)
+      console.info('存储位置已保存')
     }
   })
-  // 将选择的路径保存到本地
 }
 
-onMounted(() => {})
+onMounted(async () => {
+  location.value = (await window.api.storeGetUserInfo('storeLocation')) || ''
+})
 </script>
 
 <style scoped>

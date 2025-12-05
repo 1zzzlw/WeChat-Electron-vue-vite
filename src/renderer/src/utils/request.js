@@ -24,8 +24,8 @@ server.interceptors.response.use(
       const res = await refreshTokenAPI()
       const newToken = res.data
       // 更新本地存储
-      await window.api.storeSetToken(newToken)
-      // 更新请求头
+      await window.api.storeSetUserInfo('token', newToken)
+      // 更新请求头中的 token
       axios.defaults.headers.common['Authorization'] = newToken
       originalRequest.headers['Authorization'] = newToken
       // 重发原请求,用新的 token 重新发一次原来的请求：
@@ -39,7 +39,7 @@ server.interceptors.response.use(
 server.interceptors.request.use(
   async (config) => {
     // 从store中获取token，必须是异步获取
-    const token = await window.api.storeGetToken()
+    const token = await window.api.storeGetUserInfo('token')
     if (token) {
       // token存在，添加到请求头
       config.headers.Authorization = token

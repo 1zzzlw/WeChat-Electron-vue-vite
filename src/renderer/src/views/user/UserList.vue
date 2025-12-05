@@ -143,7 +143,7 @@ const starCall = (user) => {
 
 const joinGroup = async (apply) => {
   console.info(apply)
-  const userId = await window.api.storeGetUserId()
+  const userId = await window.api.storeGetUserInfo('userId')
   console.info('用户', userId, '同意入群:')
   dealGroupApplyApi(apply.conversationId, apply.userId, userId, 2).then((res) => {
     if (res.code === 1) {
@@ -164,7 +164,7 @@ const joinGroup = async (apply) => {
 
 const ignoreGroupApply = async (apply) => {
   console.info(apply)
-  const userId = await window.api.storeGetUserId()
+  const userId = await window.api.storeGetUserInfo('userId')
   console.info('用户', userId, '忽略入群:')
   dealGroupApplyApi(apply.conversationId, apply.userId, userId, 3).then((res) => {
     if (res.code === 1) {

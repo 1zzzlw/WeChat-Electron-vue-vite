@@ -113,9 +113,9 @@ const Login = async (formEl: FormInstance | undefined) => {
     if (status === 1) {
       // 存储令牌信息，由于token存储到了本地store，这里可以不需要了
       // localStorage.setItem('token', result.data.token)
-      window.api.storeSetUserId(result.data.id)
-      window.api.storeSetAvatar(result.data.avatar)
-      window.api.storeSetToken(result.data.token)
+      window.api.storeSetUserInfo('userId', result.data.id)
+      window.api.storeSetUserInfo('avatar', result.data.avatar)
+      window.api.storeSetUserInfo('token', result.data.token)
       await router.push('/main')
       window.api.resizeWindow('main')
     } else {

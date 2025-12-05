@@ -69,7 +69,7 @@ const conversationId = reactive({ list: [] })
 
 const starCall = async (friend) => {
   active.value = friend.friendId
-  userId.value = await window.api.storeGetUserId()
+  userId.value = await window.api.storeGetUserInfo('userId')
   if (!userId.value) {
     console.info('获取当前用户ID失败，无法进入聊天页')
     return
@@ -134,7 +134,7 @@ const getFriendList = async () => {
   const friendMap = new Map(res.data.map((f) => [f.id, f]))
 
   // 获得当前登录用户id
-  userId.value = await window.api.storeGetUserId()
+  userId.value = await window.api.storeGetUserInfo('userId')
 
   // 获得好友id数组，方便后续构建和每个好友的会话id
   friendId.arr = res.data.map((item) => item.id)

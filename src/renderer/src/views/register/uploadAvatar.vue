@@ -23,12 +23,21 @@ import { registerApi } from '../../api/Register'
 import { Plus } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 
+interface UserInfo {
+  username: string
+  phone: string
+  password: string
+  gender: string
+  // 缓存选中的文件对象
+  avatar: string
+}
+
 const router = useRouter()
 const route = useRoute()
 // 存储预览图片的临时URL
 const imageUrl = ref('')
 
-const userInfo = reactive({
+const userInfo = reactive<UserInfo>({
   username: '',
   phone: '',
   password: '',
@@ -61,8 +70,8 @@ const submitForm = () => {
       console.info('注册成功:', res)
       ElMessage.success('注册成功')
       // 登录成功后，将token存储到本地
-      window.api.storeSetAvatar(userInfo.avatar)
-      window.api.storeSetToken(res.data)
+      window.api.storeSetUserInfo('avatar', userInfo.avatar)
+      window.api.storeSetUserInfo('token', res.data)
       router.push('/main')
       window.api.resizeWindow('main')
     } else {
@@ -79,10 +88,10 @@ const returnStep = () => {
 }
 
 onMounted(() => {
-  userInfo.username = route.query?.username || ''
-  userInfo.phone = route.query?.phone || ''
-  userInfo.password = route.query?.password || ''
-  userInfo.gender = route.query?.gender || ''
+  userInfo.username = (route.query?.username as string) || ''
+  userInfo.phone = (route.query?.phone as string) || ''
+  userInfo.password = (route.query?.password as string) || ''
+  userInfo.gender = (route.query?.gender as string) || ''
 })
 </script>
 
