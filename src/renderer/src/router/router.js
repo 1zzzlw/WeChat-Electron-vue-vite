@@ -15,6 +15,12 @@ import FriendApplyView from '../views/friend/FriendApply.vue'
 import FriendInfoView from '../views/friend/FriendInfo.vue'
 import CreateGroupView from '../views/user/UserCreateGroup.vue'
 import MomentsView from '../views/moments/Moments.vue'
+import SetUserInfoView from '../views/setting/SetUserInfo.vue'
+import AccountVue from '../views/setting/Account.vue'
+import StoreLocationView from '../views/setting/StoreLocation.vue'
+import ShortcutKeyVue from '../views/setting/ShortcutKey.vue'
+import InformSetVue from '../views/setting/InformSet.vue'
+import AboutVue from '../views/setting/About.vue'
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -53,6 +59,38 @@ const router = createRouter({
       path: '/createGroup',
       name: 'createGroup',
       component: CreateGroupView
+    },
+    {
+      path: '/setting',
+      name: 'setting',
+      component: SetUserInfoView,
+      children: [
+        {
+          path: '/account',
+          name: 'account',
+          component: AccountVue
+        },
+        {
+          path: '/storeLocation',
+          name: 'storeLocation',
+          component: StoreLocationView
+        },
+        {
+          path: '/shortcutKey',
+          name: 'shortcutKey',
+          component: ShortcutKeyVue
+        },
+        {
+          path: '/informSet',
+          name: 'informSet',
+          component: InformSetVue
+        },
+        {
+          path: '/about',
+          name: 'about',
+          component: AboutVue
+        }
+      ]
     },
     {
       path: '/main',

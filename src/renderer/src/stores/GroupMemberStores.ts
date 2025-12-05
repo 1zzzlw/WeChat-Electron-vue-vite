@@ -32,7 +32,7 @@ export const groupMemberInfo = defineStore('groupMemberInfo', {
     addGroupMemberAvatar(userId: string, avatar: string) {
       this.groupMemberAvatarMap[userId] = avatar
     },
-    getGroupMemberAvatar(userId: string) {
+    getGroupMemberAvatar(userId: string | number) {
       return this.groupMemberAvatarMap[userId]
     }
   }

@@ -1,9 +1,9 @@
 <template>
   <div class="file-preview-view">
     <div class="content">
-      <div v-for="(fileInfo, index) in fileInfoList" :key="index">
+      <div class="content-main" v-for="(fileInfo, index) in fileList" :key="index">
         <div class="file-item" v-if="fileInfo.fileType === 2">
-          <el-icon class="close-icon"><Close /></el-icon>
+          <el-icon class="close-icon" @click="closePreview(index)"><Close /></el-icon>
           <img
             class="file-image"
             style="width: 100px; height: 100px"
@@ -11,25 +11,25 @@
             alt=""
           />
         </div>
-        <div v-else-if="fileInfo.fileType === 3">
-          <el-icon class="close-icon"><Close /></el-icon>
+        <div class="file-item" v-else-if="fileInfo.fileType === 3">
+          <el-icon class="close-icon" @click="closePreview(index)"><Close /></el-icon>
           <video
             class="file-video"
             style="width: 100px; height: 100px"
             :src="fileInfo.fileUrl"
           ></video>
         </div>
-        <div v-else-if="fileInfo.fileType === 4">
-          <el-icon class="close-icon"><Close /></el-icon>
+        <div class="file-item" v-else-if="fileInfo.fileType === 4">
+          <el-icon class="close-icon" @click="closePreview(index)"><Close /></el-icon>
           <audio
             class="file-audio"
             style="width: 100px; height: 100px"
             :src="fileInfo.fileUrl"
           ></audio>
         </div>
-        <div v-else>
+        <div class="file-item" v-else>
           <div class="file">
-            <el-icon class="close-icon"><Close /></el-icon>
+            <el-icon class="close-icon" @click="closePreview(index)"><Close /></el-icon>
             <img style="width: 80px; height: 80px" src="../assets/wenjian.svg" alt="" />
             <div class="file-content">
               <div class="file-name">名称：{{ fileInfo.fileName }}</div>
@@ -43,12 +43,43 @@
 </template>
 
 <script setup lang="ts">
+import { reactive, watch } from 'vue'
+
+interface fileBaseInfo {
+  fileName: string
+  fileSize: number | string
+  fileType: number
+  fileRaw: File | null
+  fileUrl?: string
+}
+
 const props = defineProps({
   fileInfoList: {
-    type: Array,
+    type: Array as () => fileBaseInfo[],
     default: () => []
   }
 })
+
+const emit = defineEmits(['delete-file'])
+const fileList = reactive([...props.fileInfoList])
+
+const closePreview = (index: number) => {
+  console.info('删除索引为', index, '的文件预览')
+  if (index >= 0 && index < fileList.length) {
+    fileList.splice(index, 1)
+    emit('delete-file', index)
+  }
+}
+
+watch(
+  () => props.fileInfoList,
+  (newList) => {
+    // 清空本地列表，重新同步
+    fileList.length = 0
+    newList.forEach((item) => fileList.push({ ...item }))
+  },
+  { immediate: true, deep: true } // 立即执行+深度监听
+)
 </script>
 
 <style scoped>
@@ -61,6 +92,7 @@ const props = defineProps({
   border-radius: 50%;
   background-color: rgba(255, 255, 255, 0.1);
   transition: all 0.2s ease;
+  z-index: 10;
 }
 
 .close-icon:hover {
@@ -72,8 +104,10 @@ const props = defineProps({
 .file-preview-view {
   width: 100%;
   height: 120px;
+  display: flex;
   position: relative;
   opacity: 0.8;
+  overflow: hidden;
   background: rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.3);
@@ -89,28 +123,35 @@ const props = defineProps({
   align-items: center;
   overflow-x: auto;
   overflow-y: hidden;
+  scrollbar-width: none;
   gap: 20px;
-  scrollbar-width: thin;
 }
 
-/* 隐藏滚动条（可选） */
 .content::-webkit-scrollbar {
-  height: 4px;
+  display: none;
 }
-.content::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.4);
-  border-radius: 2px;
+
+.content-main {
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 20px;
 }
 
 .file-item {
+  height: 100px;
   position: relative;
-  overflow: hidden;
-  object-fit: cover;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .file-image,
 .file-video,
-.file-audio {
+.file-audio .file {
   width: 100px;
   height: 100px;
 }
@@ -120,5 +161,18 @@ const props = defineProps({
   justify-content: center;
   align-items: center;
   gap: 5px;
+}
+
+.file-name {
+  width: 140px;
+  /* 强制文本不换行 */
+  white-space: nowrap;
+  /* 隐藏超出部分 */
+  overflow: hidden;
+  /* 超出部分显示省略号 */
+  text-overflow: ellipsis;
+  /* 行内块级，适配行内元素 */
+  display: inline-block;
+  text-align: center;
 }
 </style>

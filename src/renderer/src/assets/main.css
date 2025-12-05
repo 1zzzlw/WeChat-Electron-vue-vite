@@ -30,6 +30,20 @@ img {
   -webkit-user-select: none;
 }
 
+/* 清除路由链接的默认样式 */
+.router-link-active,
+.router-link-exact-active,
+a.router-link {
+  text-decoration: none; /* 清除下划线 */
+  color: inherit; /* 继承父元素颜色，不再变蓝 */
+}
+
+a {
+  color: inherit;
+  text-decoration: none
+}
+
+
 @media (max-width: 350px) {
   .tip,
   .actions {

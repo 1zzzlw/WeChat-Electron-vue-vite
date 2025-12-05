@@ -27,6 +27,7 @@ const store = new Store({
 let mainWindow = null
 let addFriendWindow = null
 let createGroupWindow = null
+let settingViewWindow = null
 let captureWindow = null
 let tray = null
 const login_width = 300
@@ -38,6 +39,8 @@ const friendAdd_width = 350
 const friendAdd_height = 520
 const createGroup_width = 820
 const createGroup_height = 620
+const settingView_width = 800
+const settingView_height = 650
 
 // 注册快捷键统一放在这个方法里面
 function registerShortcuts() {
@@ -276,20 +279,26 @@ ipcMain.on('window:controls', (e, controlType, value) => {
   }
 })
 
-async function handleFileOpen() {
-  const { canceled, filePaths } = await dialog.showOpenDialog({
-    // openFile 允许用户选择单个文件
-    properties: ['openFile']
-  })
-  if (!canceled) {
-    return filePaths[0]
-  } else {
-    return null
+// 从本地选择文件或目录
+ipcMain.handle('select-file', async (e, file) => {
+  let dialogConfig = {}
+  switch (file) {
+    case 'avatar':
+      dialogConfig = {
+        properties: ['openFile'],
+        // 限制仅能选择图片文件，避免选到其他类型
+        filters: [{ name: 'Images', extensions: ['jpg', 'png', 'jpeg', 'webp'] }]
+      }
+      break
+    case 'storeLocation':
+      dialogConfig = {
+        properties: ['openDirectory']
+      }
+      break
   }
-}
-
-// 从本地选择头像
-ipcMain.handle('select-avatar', handleFileOpen)
+  const { canceled, filePaths } = await dialog.showOpenDialog(dialogConfig)
+  return canceled ? null : filePaths[0]
+})
 
 ipcMain.handle('store-set-token', (e, token) => {
   store.set('token', token)
@@ -319,18 +328,31 @@ ipcMain.handle('store-get-user-id', (e, userId) => {
 })
 
 function createNewWindow(windowType) {
-  if (windowType === 'addFriend') {
-    const options = {
-      width: friendAdd_width,
-      height: friendAdd_height
+  switch (windowType) {
+    case 'addFriend': {
+      const options = {
+        width: friendAdd_width,
+        height: friendAdd_height
+      }
+      addFriendWindow = createExtraWindow('/friendAdd', options)
+      break
     }
-    addFriendWindow = createExtraWindow('/friendAdd', options)
-  } else if (windowType === 'createGroup') {
-    const options = {
-      width: createGroup_width,
-      height: createGroup_height
+    case 'createGroup': {
+      const options = {
+        width: createGroup_width,
+        height: createGroup_height
+      }
+      createGroupWindow = createExtraWindow('/createGroup', options)
+      break
     }
-    createGroupWindow = createExtraWindow('/createGroup', options)
+    case 'settingView': {
+      const options = {
+        width: settingView_width,
+        height: settingView_height
+      }
+      settingViewWindow = createExtraWindow('/setting', options)
+      break
+    }
   }
 }
 

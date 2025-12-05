@@ -38,7 +38,7 @@ const userInfo = reactive({
 })
 
 const handleClick = async () => {
-  const filePath = await window.api.selectAvatar()
+  const filePath = await window.api.selectFile('avatar')
   console.log(filePath)
   if (filePath) {
     // 预览选中的图片

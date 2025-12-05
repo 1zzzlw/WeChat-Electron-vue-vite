@@ -23,7 +23,7 @@
         </router-link>
       </div>
       <div class="main-count-left-bottom">
-        <el-icon size="30"><MoreFilled /></el-icon>
+        <el-icon style="cursor: pointer" size="30" @click="openSettingView"><MoreFilled /></el-icon>
       </div>
     </div>
     <div class="main-count-right">
@@ -44,6 +44,11 @@ import '../../assets/iconfont/iconfont.css'
 import Notification from '../../components/Notification.vue'
 
 const avatarUrl = ref('')
+
+const openSettingView = () => {
+  console.info('openSettingView')
+  window.api.createNewWindow('settingView')
+}
 
 onMounted(async () => {
   // 从本地存储中获取头像
@@ -99,7 +104,6 @@ onMounted(async () => {
 
 .iconfont {
   font-size: 30px;
-  color: blue;
   margin-bottom: 10px;
   text-decoration: none;
 }

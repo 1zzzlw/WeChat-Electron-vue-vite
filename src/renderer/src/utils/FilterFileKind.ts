@@ -3,6 +3,16 @@ const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg']
 const VIDEO_EXTENSIONS = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv', 'webm']
 const AUDIO_EXTENSIONS = ['mp3', 'wav', 'flac', 'm4a']
 
+/**
+ * 文件类型映射表
+ */
+export const FILE_TYPE_MAP = new Map([
+  [2, '[图片]'],
+  [3, '[视频]'],
+  [4, '[音频]'],
+  [5, '[文件]']
+])
+
 // 核心判断函数
 export const getFileType = (file: File): number => {
   // 1. 获取文件后缀

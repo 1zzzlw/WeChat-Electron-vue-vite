@@ -8,8 +8,8 @@ const api = {
   windowControls: (controlType, value) => {
     ipcRenderer.send('window:controls', controlType, value)
   },
-  selectAvatar: (file) => {
-    return ipcRenderer.invoke('select-avatar', file)
+  selectFile: (file) => {
+    return ipcRenderer.invoke('select-file', file)
   },
   storeSetToken: (token) => {
     return ipcRenderer.invoke('store-set-token', token)

@@ -6,7 +6,7 @@ interface message {
   conversationId: string
   senderId: string | number
   receiverId: string | number
-  msgType: string
+  msgType: number
   content: string
   sendTime: number
   // TODO 下面写扩展字段，以后再写，因为后端还没写传过来的代码(消息引用状态，撤回状态)

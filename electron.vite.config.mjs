@@ -30,6 +30,16 @@ export default defineConfig({
           // 路径重写规则，将api替换成空字符串
           rewrite: (path) => path.replace(/^\/api/, '')
         }
+      },
+      headers: {
+        // 服务端返回 CSP 响应头，无多余空格、格式严格
+        'Content-Security-Policy':
+          "default-src 'self'; " +
+          "script-src 'self'; " +
+          "style-src 'self' 'unsafe-inline'; " +
+          "img-src 'self' data: blob: file:; " +
+          "media-src 'self' blob: data: file:; " +
+          "connect-src 'self' ws://localhost:8000;"
       }
     }
   }

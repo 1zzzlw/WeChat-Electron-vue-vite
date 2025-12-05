@@ -12,7 +12,7 @@
           >
             <img :src="friendAvatar" class="list-image" />
             <div class="msg">
-              <div class="left-name" v-if="message.remark === ''">{{ friendUsername }}</div>
+              <div class="left-name" v-if="friendRemark === ''">{{ friendUsername }}</div>
               <div class="left-name" v-else>{{ friendRemark }}</div>
               <div class="chat-bubble left-bubble" v-if="message.msgType === 1">
                 {{ message.content }}
@@ -46,7 +46,11 @@
         </div>
       </el-scrollbar>
     </div>
-    <FilePreviewView :fileInfoList="fileInfoList" />
+    <FilePreviewView
+      v-if="fileInfoList.length > 0"
+      :fileInfoList="fileInfoList"
+      @delete-file="handleDeleteFile"
+    />
     <div class="chat-tool">
       <el-popover
         placement="top"
@@ -67,13 +71,14 @@
         </template>
       </el-popover>
       <el-upload
+        v-model:file-list="fileList"
         multiple
         :limit="3"
         action="#"
         :show-file-list="false"
         :auto-upload="false"
         :on-exceed="handleExceed"
-        @change="selectFiles"
+        :on-change="selectFiles"
         class="upload-button"
       >
         <el-button :icon="Folder" size="large" square></el-button>
@@ -109,7 +114,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
+import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import emojis from '../../emoji/emoji.js'
 import { getMessageListApi, sendMessageApi } from '../../api/Message'
@@ -122,7 +127,7 @@ import type { UploadFile } from 'element-plus'
 import { ElMessage } from 'element-plus'
 import { groupMemberInfo } from '../../stores/GroupMemberStores'
 import { getGroupMemberListApi } from '../../api/Conversation'
-import { getFileType } from '../../utils/FilterFileKind.js'
+import { FILE_TYPE_MAP, getFileType } from '../../utils/FilterFileKind.js'
 import FilePreviewView from '../../components/FilePreviewView.vue'
 import ChatImageView from '../../components/ChatImageView.vue'
 import ChatVideoView from '../../components/ChatVideoView.vue'
@@ -130,7 +135,7 @@ import ChatFileView from '../../components/ChatFileView.vue'
 
 interface fileBaseInfo {
   fileName: string
-  fileSize: string
+  fileSize: number | string
   fileType: number
   fileRaw: File | null
   fileUrl?: string
@@ -150,7 +155,8 @@ const scrollbarRef = ref(null)
 const messageStore = messageInfo()
 const groupMemberStore = groupMemberInfo()
 const conversationStore = conversationInfo()
-const fileInfoList = reactive<fileBaseInfo>([])
+let fileInfoList = reactive<fileBaseInfo[]>([])
+let fileList = ref<UploadFile[]>([])
 
 const selectFiles = (file: UploadFile) => {
   console.info(file.raw)
@@ -166,6 +172,21 @@ const selectFiles = (file: UploadFile) => {
     fileRaw: file.raw,
     fileUrl: URL.createObjectURL(file.raw)
   })
+}
+
+const handleDeleteFile = (index: number) => {
+  console.info('删除索引为', index, '的文件预览')
+  if (index >= 0 && index < fileInfoList.length) {
+    // 释放 blob URL（避免内存泄漏）
+    const deletedFile = fileInfoList[index]
+    if (deletedFile.fileUrl) {
+      URL.revokeObjectURL(deletedFile.fileUrl)
+    }
+    fileInfoList.splice(index, 1)
+    fileList.value.splice(index, 1)
+  }
+  console.info('删除后的文件预览列表:', fileInfoList)
+  console.log('删除后长度：', fileInfoList.length)
 }
 
 // 处理上传文件超出限制
@@ -191,7 +212,7 @@ const captureBtn = () => {
 // 发送单聊消息
 const sendPrivateMessage = async () => {
   // 获取会话id
-  const convId = route.query.conversationId
+  const convId = route.query.conversationId as string
   const content = message.value
   // 处理消息类型
   console.info(
@@ -202,6 +223,20 @@ const sendPrivateMessage = async () => {
     '会话id:',
     convId
   )
+  if (fileInfoList.length > 0) {
+    for (const file of fileInfoList) {
+      console.info('文件类型:', file.fileType, '文件类型名称:', FILE_TYPE_MAP.get(file.fileType))
+      imageUrl.value = fileInfoList[fileInfoList.indexOf(file)].fileUrl || ''
+      console.info('文件URL:', imageUrl.value)
+      sendApi(FILE_TYPE_MAP.get(file.fileType), convId, file.fileType)
+    }
+    fileInfoList.length = 0
+    fileList.value = []
+  }
+
+  if (content === '') {
+    return
+  }
 
   // ws发送单聊信息：会话id、接收者id、消息内容
   WSManager.sendMessage(1, 0, {
@@ -214,7 +249,7 @@ const sendPrivateMessage = async () => {
     sendApi(imageUrl.value, convId, 2)
   }
 
-  if (message.value !== '') {
+  if (content !== '') {
     sendApi(content, convId, 1)
   }
 }
@@ -222,10 +257,13 @@ const sendPrivateMessage = async () => {
 // 发送群聊消息
 const sendGroupMessage = async () => {
   // 获取会话id
-  const convId = route.query.conversationId
+  const convId = route.query.conversationId as string
   const content = message.value
-  // 处理消息类型
   console.info('发送群聊消息 ===> 群聊ID:', convId, '消息内容:', content)
+  if (content === '') {
+    return
+  }
+  // 处理消息类型
   // ws发送群聊信息：群聊id、消息内容、接收者数组
   console.info('群成员列表:', groupMemberStore.groupMemberMap[convId])
   console.info(
@@ -248,7 +286,7 @@ const sendGroupMessage = async () => {
   }
 }
 
-const sendApi = (content, convId, msgType) => {
+const sendApi = (content: string, convId: string, msgType: number) => {
   // const convId = route.query.conversationId
   // if (convId.startsWith('g_')) {
   //   // ws发送群聊信息：群聊id、消息内容、接收者数组
@@ -298,6 +336,11 @@ const sendApi = (content, convId, msgType) => {
           latestMsgTime: dayjs(res.data.sendTime).format('HH:mm')
         })
       }
+      if (res.data.msgType === 2) {
+        // 图片，前端展示并缓存到本地
+      }
+      // 滚动到最底部
+      scrollToBottom()
     }
   })
 }
@@ -309,7 +352,7 @@ function scrollToBottom() {
 }
 
 const getMessageList = async () => {
-  const convId = route.query.conversationId
+  const convId = route.query.conversationId as string
 
   console.info('获取消息列表，会话id:', convId)
 
@@ -338,13 +381,13 @@ const getMessageList = async () => {
       receiverId: messagePcak.receiverId,
       msgType: messagePcak.msgType,
       content: messagePcak.content,
-      createTime: messagePcak.createTime
+      sendTime: messagePcak.sendTime
     })
   })
 }
 
 const getGroupMemberList = async () => {
-  const convId = route.query.conversationId
+  const convId = route.query.conversationId as string
 
   console.info('获取群成员列表，会话id:', convId)
 
@@ -379,14 +422,20 @@ const getGroupMemberList = async () => {
 }
 
 const messageArr = computed(() => {
-  const convId = route.query.conversationId
+  const convId = route.query.conversationId as string
   // 如果会话ID不存在，或消息列表未初始化，用空数组兜底
   return messageStore.messageMap[convId] || []
 })
 
-const friendAvatar = computed(() => conversationStore.getAvatar(route.query.conversationId))
-const friendUsername = computed(() => conversationStore.getUsername(route.query.conversationId))
-const friendRemark = computed(() => conversationStore.getRemark(route.query.conversationId))
+const friendAvatar = computed(() =>
+  conversationStore.getAvatar(route.query.conversationId as string)
+)
+const friendUsername = computed(() =>
+  conversationStore.getUsername(route.query.conversationId as string)
+)
+const friendRemark = computed(() =>
+  conversationStore.getRemark(route.query.conversationId as string)
+)
 // const groupMemberArr = computed(() => {
 //   if (route.query.conversationId && route.query.conversationId.startsWith('g_')) {
 //     const convId = route.query.conversationId
@@ -402,6 +451,10 @@ watch(
   async (newConversationId, oldConversationId) => {
     try {
       console.info('切换会话，新的会话id:', newConversationId, '旧的会话id:', oldConversationId)
+
+      // 清空文件预览列表
+      fileInfoList.length = 0
+      fileList.value = []
 
       if (!isDataLoaded.value && oldConversationId === undefined) {
         // 说明是第一次加载，更新用户的头像和id

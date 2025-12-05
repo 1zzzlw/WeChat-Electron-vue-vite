@@ -12,6 +12,26 @@
   -webkit-app-region: no-drag;
 }
 
+.icon-tongzhi:before {
+  content: "\e607";
+}
+
+.icon-cunchujuan:before {
+  content: "\e61e";
+}
+
+.icon-guanyu:before {
+  content: "\e641";
+}
+
+.icon-yonghu:before {
+  content: "\e608";
+}
+
+.icon-kuaijiejian:before {
+  content: "\e635";
+}
+
 .icon-pengyouquan:before {
   content: "\e8b4";
 }
