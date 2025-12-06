@@ -59,7 +59,6 @@ onMounted(async () => {
   width: 30px;
   font-size: 24px;
   margin-right: 20px;
-
 }
 
 .iconfont:hover {

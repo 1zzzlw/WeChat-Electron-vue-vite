@@ -1,6 +1,6 @@
 <template>
   <div class="chat-image">
-    <img :src="imageUrl" alt="聊天图片" class="chat-image-content" @click="openImage" />
+    <img :src="fileUrl" alt="聊天图片" class="chat-image-content" @click="openImage" />
   </div>
 </template>
 
@@ -10,7 +10,7 @@ const openImage = () => {
 }
 
 defineProps({
-  imageUrl: {
+  fileUrl: {
     type: String,
     default: ''
   }

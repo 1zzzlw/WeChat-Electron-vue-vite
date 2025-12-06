@@ -1,7 +1,7 @@
 <template>
   <div class="chat-count" v-if="isDataLoaded">
     <div class="chat-title">
-      {{ friendRemark === '' ? friendUsername : friendRemark }}
+      {{ friendRemark || friendUsername }}
     </div>
     <div class="chat-content">
       <el-scrollbar ref="scrollbarRef">
@@ -12,41 +12,24 @@
           >
             <img :src="friendAvatar" class="list-image" />
             <div class="msg">
-              <div class="left-name" v-if="friendRemark === ''">{{ friendUsername }}</div>
-              <div class="left-name" v-else>{{ friendRemark }}</div>
-              <div class="chat-bubble left-bubble" v-if="message.msgType === 1">
-                {{ message.content }}
-              </div>
-              <div class="chat-bubble left-bubble" v-if="message.msgType === 2">
-                <ChatImageView :imageUrl="message.content" />
-              </div>
-              <div class="chat-bubble left-bubble" v-if="message.msgType === 3">
-                <ChatVideoView :imageUrl="message.content" />
-              </div>
-              <div class="chat-bubble left-bubble" v-if="message.msgType === 4">
-                <ChatAudioView :imageUrl="message.content" />
-              </div>
-              <div class="chat-bubble left-bubble" v-if="message.msgType === 5">
-                <ChatFileView :imageUrl="message.content" />
+              <div class="left-name">{{ friendRemark || friendUsername }}</div>
+              <div class="chat-bubble left-bubble">
+                <MessageContentManage
+                  :msgType="message.msgType"
+                  :content="message.content"
+                  :fileUrl="message.content"
+                />
               </div>
             </div>
           </div>
           <div class="chat-list-right" v-else-if="String(message.senderId) === String(userId)">
             <img :src="avatarUrl" class="list-image" />
-            <div class="chat-bubble right-bubble" v-if="message.msgType === 1">
-              {{ message.content }}
-            </div>
-            <div class="chat-bubble right-bubble" v-else-if="message.msgType === 2">
-              <ChatImageView :imageUrl="message.content" />
-            </div>
-            <div class="chat-bubble right-bubble" v-else-if="message.msgType === 3">
-              <ChatVideoView :imageUrl="message.content" />
-            </div>
-            <div class="chat-bubble right-bubble" v-else-if="message.msgType === 4">
-              <ChatAudioView :imageUrl="message.content" />
-            </div>
-            <div class="chat-bubble right-bubble" v-else-if="message.msgType === 5">
-              <ChatFileView :imageUrl="message.content" />
+            <div class="chat-bubble right-bubble">
+              <MessageContentManage
+                :msgType="message.msgType"
+                :content="message.content"
+                :fileUrl="message.content"
+              />
             </div>
           </div>
           <div class="chat-list-left" v-else>
@@ -54,20 +37,12 @@
               :src="groupMemberStore.getGroupMemberAvatar(message.senderId)"
               class="list-image"
             />
-            <div class="chat-bubble left-bubble" v-if="message.msgType === 1">
-              {{ message.content }}
-            </div>
-            <div class="chat-bubble left-bubble" v-else-if="message.msgType === 2">
-              <ChatImageView :imageUrl="message.content" />
-            </div>
-            <div class="chat-bubble left-bubble" v-else-if="message.msgType === 3">
-              <ChatVideoView :imageUrl="message.content" />
-            </div>
-            <div class="chat-bubble left-bubble" v-else-if="message.msgType === 4">
-              <ChatAudioView :imageUrl="message.content" />
-            </div>
-            <div class="chat-bubble left-bubble" v-else-if="message.msgType === 5">
-              <ChatFileView :imageUrl="message.content" />
+            <div class="chat-bubble left-bubble">
+              <MessageContentManage
+                :msgType="message.msgType"
+                :content="message.content"
+                :fileUrl="message.content"
+              />
             </div>
           </div>
         </div>
@@ -155,11 +130,8 @@ import { ElMessage } from 'element-plus'
 import { groupMemberInfo } from '../../stores/GroupMemberStores'
 import { getGroupMemberListApi } from '../../api/Conversation'
 import { FILE_TYPE_MAP, getFileType } from '../../utils/FilterFileKind.js'
+import MessageContentManage from '../../components/MessageContentManage.vue'
 import FilePreviewView from '../../components/FilePreviewView.vue'
-import ChatImageView from '../../components/ChatImageView.vue'
-import ChatVideoView from '../../components/ChatVideoView.vue'
-import ChatAudioView from '../../components/ChatAudioView.vue'
-import ChatFileView from '../../components/ChatFileView.vue'
 
 interface fileBaseInfo {
   fileName: string
@@ -169,7 +141,7 @@ interface fileBaseInfo {
   fileUrl?: string
 }
 
-const imageUrl = ref('')
+const fileUrl = ref('')
 const captureImageUrl = ref('')
 // 添加数据加载状态标记
 const isDataLoaded = ref(false)
@@ -351,7 +323,7 @@ const sendApi = (content: string, convId: string, msgType: number) => {
     console.info('发送消息成功', res)
     // 清空输入框
     message.value = ''
-    imageUrl.value = ''
+    fileUrl.value = ''
     captureImageUrl.value = ''
     if (res.data) {
       // 聊天记录缓存新增数据
