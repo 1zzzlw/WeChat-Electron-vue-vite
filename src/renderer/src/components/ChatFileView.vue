@@ -1,5 +1,5 @@
 <template>
-  <div></div>
+  <div>文件</div>
 </template>
 
 <script setup lang="ts"></script>

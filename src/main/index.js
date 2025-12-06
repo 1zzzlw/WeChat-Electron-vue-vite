@@ -16,6 +16,8 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import Store from 'electron-store'
+import dayjs from 'dayjs'
+import fs from 'fs'
 
 // 初始化store实例，指定存储文件名（会生成user-token.json文件）
 const store = new Store({
@@ -472,7 +474,7 @@ function writeToFile(savePath, data) {
       console.info('图片已保存到', savePath)
     })
   } else if (data instanceof Buffer) {
-    // 若传入的是Buffer，直接写入（兼容你的pngBuffer场景）
+    // 若传入的是Buffer，直接写入
     fs.writeFile(savePath, data, (err) => {
       if (err) throw err
       console.info('图片已保存到', savePath)
@@ -506,4 +508,23 @@ ipcMain.on('window:close-capture', () => {
     captureWindow = null
   }
   mainWindow.show()
+})
+
+ipcMain.handle('window:create-file', async (e, arrayBuffer, fileName) => {
+  const fs = require('fs').promises
+  // 获得当前时间
+  const currentTime = dayjs().format('YYYY-MM-DD')
+  // 获得存储文件路径
+  const savePath = store.get('storeLocation') + '\\' + currentTime
+  // 根据当前日期创建文件夹
+  await fs.mkdir(savePath, { recursive: true })
+  console.info('文件夹创建成功:', savePath)
+  // 获得文件名
+  const buffer = Buffer.from(arrayBuffer)
+  // 文件路径
+  const filePath = savePath + '\\' + fileName
+  // 根据文件信息复制文件
+  await fs.writeFile(filePath, buffer)
+  console.info('文件创建成功:', filePath)
+  return filePath
 })

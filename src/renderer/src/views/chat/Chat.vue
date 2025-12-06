@@ -20,6 +20,15 @@
               <div class="chat-bubble left-bubble" v-if="message.msgType === 2">
                 <ChatImageView :imageUrl="message.content" />
               </div>
+              <div class="chat-bubble left-bubble" v-if="message.msgType === 3">
+                <ChatVideoView :imageUrl="message.content" />
+              </div>
+              <div class="chat-bubble left-bubble" v-if="message.msgType === 4">
+                <ChatAudioView :imageUrl="message.content" />
+              </div>
+              <div class="chat-bubble left-bubble" v-if="message.msgType === 5">
+                <ChatFileView :imageUrl="message.content" />
+              </div>
             </div>
           </div>
           <div class="chat-list-right" v-else-if="String(message.senderId) === String(userId)">
@@ -29,6 +38,15 @@
             </div>
             <div class="chat-bubble right-bubble" v-else-if="message.msgType === 2">
               <ChatImageView :imageUrl="message.content" />
+            </div>
+            <div class="chat-bubble right-bubble" v-else-if="message.msgType === 3">
+              <ChatVideoView :imageUrl="message.content" />
+            </div>
+            <div class="chat-bubble right-bubble" v-else-if="message.msgType === 4">
+              <ChatAudioView :imageUrl="message.content" />
+            </div>
+            <div class="chat-bubble right-bubble" v-else-if="message.msgType === 5">
+              <ChatFileView :imageUrl="message.content" />
             </div>
           </div>
           <div class="chat-list-left" v-else>
@@ -41,6 +59,15 @@
             </div>
             <div class="chat-bubble left-bubble" v-else-if="message.msgType === 2">
               <ChatImageView :imageUrl="message.content" />
+            </div>
+            <div class="chat-bubble left-bubble" v-else-if="message.msgType === 3">
+              <ChatVideoView :imageUrl="message.content" />
+            </div>
+            <div class="chat-bubble left-bubble" v-else-if="message.msgType === 4">
+              <ChatAudioView :imageUrl="message.content" />
+            </div>
+            <div class="chat-bubble left-bubble" v-else-if="message.msgType === 5">
+              <ChatFileView :imageUrl="message.content" />
             </div>
           </div>
         </div>
@@ -85,10 +112,10 @@
       </el-upload>
       <el-popover
         placement="top"
-        :disabled="imageUrl === ''"
+        :disabled="captureImageUrl === ''"
         popper-style="display: flex; margin: 0; padding: 0; justify-content: center; align-items: center;"
       >
-        <el-image :src="imageUrl" fit="contain" style="width: 150px; height: 150px" />
+        <el-image :src="captureImageUrl" fit="contain" style="width: 150px; height: 150px" />
         <template #reference>
           <el-button :icon="Scissor" size="large" square @click="captureBtn"></el-button>
         </template>
@@ -131,6 +158,7 @@ import { FILE_TYPE_MAP, getFileType } from '../../utils/FilterFileKind.js'
 import FilePreviewView from '../../components/FilePreviewView.vue'
 import ChatImageView from '../../components/ChatImageView.vue'
 import ChatVideoView from '../../components/ChatVideoView.vue'
+import ChatAudioView from '../../components/ChatAudioView.vue'
 import ChatFileView from '../../components/ChatFileView.vue'
 
 interface fileBaseInfo {
@@ -142,6 +170,7 @@ interface fileBaseInfo {
 }
 
 const imageUrl = ref('')
+const captureImageUrl = ref('')
 // 添加数据加载状态标记
 const isDataLoaded = ref(false)
 // true为单聊，false为群聊
@@ -205,7 +234,7 @@ const captureBtn = () => {
   window.chatToolApi.openCapture()
 
   window.chatToolApi.sendImageToMain((savePath) => {
-    imageUrl.value = savePath
+    captureImageUrl.value = savePath
   })
 }
 
@@ -226,9 +255,12 @@ const sendPrivateMessage = async () => {
   if (fileInfoList.length > 0) {
     for (const file of fileInfoList) {
       console.info('文件类型:', file.fileType, '文件类型名称:', FILE_TYPE_MAP.get(file.fileType))
-      imageUrl.value = fileInfoList[fileInfoList.indexOf(file)].fileUrl || ''
-      console.info('文件URL:', imageUrl.value)
-      sendApi(FILE_TYPE_MAP.get(file.fileType), convId, file.fileType)
+      // 跟随日期生成文件夹，并复制选择发送的文件
+      const arrayBuffer = await file.fileRaw.arrayBuffer()
+      const filePath = await window.chatToolApi.createFile(arrayBuffer, file.fileName)
+      // sendApi(FILE_TYPE_MAP.get(file.fileType), convId, file.fileType)
+      // TODO 暂时让后端MySQL存储文件路径，后期使用SQLite3存储本地文件路径信息
+      sendApi(filePath, convId, file.fileType)
     }
     fileInfoList.length = 0
     fileList.value = []
@@ -245,8 +277,8 @@ const sendPrivateMessage = async () => {
     content: content
   })
 
-  if (imageUrl.value.length > 0) {
-    sendApi(imageUrl.value, convId, 2)
+  if (captureImageUrl.value.length > 0) {
+    sendApi(captureImageUrl.value, convId, 2)
   }
 
   if (content !== '') {
@@ -277,8 +309,8 @@ const sendGroupMessage = async () => {
     content: content
   })
 
-  if (imageUrl.value.length > 0) {
-    sendApi(imageUrl.value, convId, 2)
+  if (captureImageUrl.value.length > 0) {
+    sendApi(captureImageUrl.value, convId, 2)
   }
 
   if (message.value !== '') {
@@ -320,6 +352,7 @@ const sendApi = (content: string, convId: string, msgType: number) => {
     // 清空输入框
     message.value = ''
     imageUrl.value = ''
+    captureImageUrl.value = ''
     if (res.data) {
       // 聊天记录缓存新增数据
       messageStore.addMessageMap(convId, res.data)
@@ -337,7 +370,7 @@ const sendApi = (content: string, convId: string, msgType: number) => {
         })
       }
       if (res.data.msgType === 2) {
-        // 图片，前端展示并缓存到本地
+        // TODO 暂时通过MySQL传来的图片路径展示
       }
       // 滚动到最底部
       nextTick()

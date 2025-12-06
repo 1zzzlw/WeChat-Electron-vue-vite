@@ -1,5 +1,5 @@
 <template>
-  <div>视频</div>
+  <div>气泡展示内容</div>
 </template>
 
 <script setup lang="ts"></script>

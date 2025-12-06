@@ -19,7 +19,7 @@ import '../assets/iconfont/iconfont.css'
 const avatarUrl = ref('')
 
 onMounted(async () => {
-  avatarUrl.value = await window.api.storeGetAvatar()
+  avatarUrl.value = await window.api.storeGetUserInfo('avatar')
 })
 </script>
 

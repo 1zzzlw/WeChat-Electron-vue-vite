@@ -17,7 +17,6 @@ const api = {
   storeGetUserInfo: (userInfoType) => {
     return ipcRenderer.invoke('window:getUserInfo', userInfoType)
   },
-
   createNewWindow: (windowType) => {
     ipcRenderer.send('create-new-window', windowType)
   },
@@ -63,6 +62,9 @@ const chatToolApi = {
     ipcRenderer.on('capture:image', (event, savePath) => {
       func(savePath)
     })
+  },
+  createFile: (arrayBuffer, fileName) => {
+    return ipcRenderer.invoke('window:create-file', arrayBuffer, fileName)
   }
 }
 
