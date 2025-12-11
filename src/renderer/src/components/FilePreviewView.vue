@@ -50,7 +50,6 @@ interface fileBaseInfo {
   fileSize: number | string
   fileType: number
   fileRaw: File | null
-  fileUrl?: string
 }
 
 const props = defineProps({

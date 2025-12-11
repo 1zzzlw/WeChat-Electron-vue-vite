@@ -1,3 +1,5 @@
+npm 版本 22.16.0
+
 第一部分：先介绍一下git拉去github项目要的基础命令
 
 方法一：使用git clone命令拉取项目
@@ -17,3 +19,6 @@ git checkout master
 pinia缓存多窗口共享的理解，代码不小心清空了，但是思路也理解了不少，
 以后有机会的话，会继续完善这个前端多窗口缓存共享的。
 ![img.png](img.png)
+
+计算md5值的依赖
+npm install spark-md5

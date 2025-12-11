@@ -119,7 +119,12 @@
 import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import emojis from '../../emoji/emoji.js'
-import { getMessageListApi, sendMessageApi } from '../../api/Message'
+import {
+  getMessageListApi,
+  sendMessageApi,
+  uploadFileApi,
+  checkUploadedApi
+} from '../../api/Message'
 import { messageInfo } from '../../stores/MessageStore'
 import dayjs from 'dayjs'
 import { WSManager } from '../../utils/websocket.js'
@@ -129,16 +134,17 @@ import type { UploadFile } from 'element-plus'
 import { ElMessage } from 'element-plus'
 import { groupMemberInfo } from '../../stores/GroupMemberStores'
 import { getGroupMemberListApi } from '../../api/Conversation'
-import { FILE_TYPE_MAP, getFileType } from '../../utils/FilterFileKind.js'
+import { FILE_TYPE_MAP, getFileType } from '../../utils/filterFileKind.js'
 import MessageContentManage from '../../components/MessageContentManage.vue'
 import FilePreviewView from '../../components/FilePreviewView.vue'
+import { fileChunkInfo } from '../../stores/FileChunkInfoStore'
+import { cutFile } from '../../utils/cutFile.js'
 
 interface fileBaseInfo {
+  fileRaw: File | null
   fileName: string
   fileSize: number | string
   fileType: number
-  fileRaw: File | null
-  fileUrl?: string
 }
 
 const fileUrl = ref('')
@@ -156,6 +162,7 @@ const scrollbarRef = ref(null)
 const messageStore = messageInfo()
 const groupMemberStore = groupMemberInfo()
 const conversationStore = conversationInfo()
+const fileChunkInfoStore = fileChunkInfo()
 let fileInfoList = reactive<fileBaseInfo[]>([])
 let fileList = ref<UploadFile[]>([])
 
@@ -167,22 +174,17 @@ const selectFiles = (file: UploadFile) => {
   console.info('文件URL:', URL.createObjectURL(file.raw))
   const fileType = getFileType(file.raw)
   fileInfoList.push({
+    // 包含文件名，文件大小，文件流
+    fileRaw: file.raw,
     fileName: file.name,
     fileSize: file.size,
-    fileType: fileType,
-    fileRaw: file.raw,
-    fileUrl: URL.createObjectURL(file.raw)
+    fileType: fileType
   })
 }
 
 const handleDeleteFile = (index: number) => {
   console.info('删除索引为', index, '的文件预览')
   if (index >= 0 && index < fileInfoList.length) {
-    // 释放 blob URL（避免内存泄漏）
-    const deletedFile = fileInfoList[index]
-    if (deletedFile.fileUrl) {
-      URL.revokeObjectURL(deletedFile.fileUrl)
-    }
     fileInfoList.splice(index, 1)
     fileList.value.splice(index, 1)
   }
@@ -227,12 +229,67 @@ const sendPrivateMessage = async () => {
   if (fileInfoList.length > 0) {
     for (const file of fileInfoList) {
       console.info('文件类型:', file.fileType, '文件类型名称:', FILE_TYPE_MAP.get(file.fileType))
-      // 跟随日期生成文件夹，并复制选择发送的文件
-      const arrayBuffer = await file.fileRaw.arrayBuffer()
-      const filePath = await window.chatToolApi.createFile(arrayBuffer, file.fileName)
+      // 跟随日期生成文件夹，并复制选择发送的文件到指定目录
+      // const arrayBuffer = await file.fileRaw.arrayBuffer()
+      // const filePath = await window.chatToolApi.createFile(arrayBuffer, file.fileName)
+
+      // 发送请求获取上传成功的分片索引列表
+      const res = await checkUploadedApi({
+        filename: file.fileName
+      })
+
+      console.info('上传成功的分片索引列表:', res.data)
+
+      const uploadedChunkIndexList = res.data
+
+      // 对文件进行切片
+      const chunks = await cutFile(file.fileRaw, uploadedChunkIndexList)
+
+      console.info('文件切片结果:', chunks)
+
+      for (let index = 0; index < chunks.length; index++) {
+        const { chunkBlob, chunkIndex, chunkHash, filename, isUploaded } = chunks[index]
+
+        if (isUploaded) {
+          // 分片已上传，跳过
+          console.info(`分片 ${chunkIndex} 已上传，跳过`)
+          continue
+        }
+
+        const fromData = new FormData()
+
+        // 检查分片是否已上传
+        // if (fileChunkInfoStore.getIsUploaded(chunkIndex)) {
+        //   console.info(`分片 ${chunkIndex} 已上传，跳过`)
+        //   continue
+        // }
+
+        fromData.append('chunkBlob', chunkBlob)
+        fromData.append('chunkIndex', chunkIndex)
+        fromData.append('chunkHash', chunkHash)
+        fromData.append('filename', filename)
+        fromData.append('isUploaded', isUploaded)
+
+        // 模拟失败：假设第 2 个和第 5 个分块失败
+        // if (chunkIndex === 2 || chunkIndex === 5) {
+        //   console.warn(`模拟上传失败: chunk ${chunkIndex}`)
+        //   return // 不标记 isUploaded
+        // }
+
+        // 上传文件
+        uploadFileApi(fromData)
+          .then((res) => {
+            console.info(`上传第 ${chunkIndex} 个分片成功:`, res.data)
+            // fileChunkInfoStore.addUploadSuccess(chunkIndex)
+          })
+          .catch((err) => {
+            console.error(`上传第 ${chunkIndex} 个分片失败`, err)
+          })
+      }
+
       // sendApi(FILE_TYPE_MAP.get(file.fileType), convId, file.fileType)
       // TODO 暂时让后端MySQL存储文件路径，后期使用SQLite3存储本地文件路径信息
-      sendApi(filePath, convId, file.fileType)
+      // sendApi(filePath, convId, file.fileType)
     }
     fileInfoList.length = 0
     fileList.value = []
