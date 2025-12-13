@@ -28,7 +28,8 @@ export function computedChunksMD5(file, index, chunkSize) {
         chunkIndex: index,
         chunkHash: spark.end(),
         chunkBlob: blob,
-        isUploaded: false // 是否已经上传成功的标志，默认没有上传成功
+        isUploaded: false, // 是否已经上传成功的标志，默认没有上传成功
+        _uploaded: 0 // 已上传的大小，默认没有上传
       })
     }
 

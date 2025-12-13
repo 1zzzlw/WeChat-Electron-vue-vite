@@ -3,9 +3,9 @@ const CHUNK_SIZE = 1024 * 1024 * 5
 // 获取电脑的CPU核心数
 const THREAD_COUNT = navigator.hardwareConcurrency || 4
 
-export function cutFile(file, uploadedChunkIndexList) {
+export function cutFile(file, uploadedChunkIndexList, callback) {
   return new Promise((resolve, reject) => {
-    console.info('cutFile', file)
+    // console.info('cutFile', file)
 
     // 计算当前文件需要分多少个块
     const chunkCount = Math.ceil(file.size / CHUNK_SIZE)
@@ -13,9 +13,13 @@ export function cutFile(file, uploadedChunkIndexList) {
     // 计算一个线程需要分配多少块
     const threadChunkCount = Math.ceil(chunkCount / THREAD_COUNT)
 
-    const result = []
+    // 实际创建的线程总数
+    let createdWorkerCount = 0
 
-    const threadQueue = []
+    // 已终止/报错的线程数
+    let completedWorkerCount = 0
+
+    let isResolved = false
 
     console.info('当前电脑CPU核心数为：', THREAD_COUNT)
     console.info('该文件需要分块个数为：', chunkCount)
@@ -45,6 +49,8 @@ export function cutFile(file, uploadedChunkIndexList) {
         // 完整错误信息：错误原因、文件、行号、列号
         const errorMsg = `Worker错误：${error.message}，文件：${error.filename}，行号：${error.lineno}，列号：${error.colno}`
         console.error(errorMsg)
+        // 每个线程报错，就增加一个线程数
+        completedWorkerCount++
         reject(new Error(errorMsg))
         worker.terminate()
       }
@@ -58,26 +64,42 @@ export function cutFile(file, uploadedChunkIndexList) {
         uploadedChunkIndexList
       })
 
-      threadQueue.push(worker)
+      // 每个线程创建一个worker，就增加一个线程数
+      createdWorkerCount++
 
       // 接收worker线程发送的消息
       worker.onmessage = (e) => {
-        const chunks = e.data
+        // 获得一个线程处理完成的结果
+        const doneChunk = e.data
 
-        chunks.forEach((chunk) => {
-          console.info('每个线程内部块的信息', chunk)
-          result[chunk.chunkIndex] = chunk
-        })
+        // 调用回调函数
+        callback(
+          doneChunk.chunkBlob,
+          doneChunk.chunkIndex,
+          doneChunk.chunkHash,
+          doneChunk.filename,
+          doneChunk.isUploaded,
+          doneChunk._uploaded,
+          chunkCount
+        )
 
-        // 销毁worker线程
-        worker.terminate()
+        // 表示当前线程已经处理完所有块
+        if (doneChunk.isThreadDone) {
+          // 销毁线程
+          worker.terminate()
+          // 每个线程处理完所有块，就增加一个线程数
+          completedWorkerCount++
+          // 检查是否所有线程都完成
+          checkAllWorkersCompleted()
+        }
 
-        // 每个线程处理完成后，从队列中移除
-        threadQueue.shift()
-
-        // 所有线程处理完成后，返回结果
-        if (threadQueue.length === 0) {
-          resolve(result)
+        // 所有创建的线程都完成时resolve
+        function checkAllWorkersCompleted() {
+          if (completedWorkerCount === createdWorkerCount && !isResolved) {
+            isResolved = true
+            // 大文件场景：所有线程处理完才resolve
+            resolve()
+          }
         }
       }
     }
