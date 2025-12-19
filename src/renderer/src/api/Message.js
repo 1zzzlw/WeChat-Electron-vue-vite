@@ -10,5 +10,5 @@ export const checkUploadedApi = (data) => request.get('/message/checkUploaded', 
 
 export const mergeFileApi = (data) =>
   request.post(
-    `/message/merge?filename=${data.filename}&fileType=${data.fileType}&chunkCount=${data.chunkCount}`
+    `/message/merge?fileHash=${data.fileHash}&fileName=${data.fileName}&fileType=${data.fileType}&chunkCount=${data.chunkCount}`
   )

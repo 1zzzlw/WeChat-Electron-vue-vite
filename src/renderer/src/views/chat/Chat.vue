@@ -11,7 +11,7 @@
         :modal="false"
         modal-penetrable
       >
-        <Downloading :downloadFileList="downloadFileList" />
+        <Downloading />
       </el-drawer>
     </div>
     <div class="chat-content">
@@ -130,13 +130,7 @@
 import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import emojis from '../../emoji/emoji.js'
-import {
-  checkUploadedApi,
-  getMessageListApi,
-  mergeFileApi,
-  sendMessageApi,
-  uploadFileApi
-} from '../../api/Message'
+import { getMessageListApi, sendMessageApi } from '../../api/Message'
 import { messageInfo } from '../../stores/MessageStore'
 import dayjs from 'dayjs'
 import { WSManager } from '../../utils/websocket.js'
@@ -150,24 +144,14 @@ import { FILE_TYPE_MAP, getFileType } from '../../utils/filterFileKind.js'
 import MessageContentManage from '../../components/MessageContentManage.vue'
 import FilePreviewView from '../../components/FilePreviewView.vue'
 import Downloading from '../../components/Downloading.vue'
-import { fileChunkInfo } from '../../stores/FileChunkInfoStore'
-import { cutFile } from '../../utils/cutFile.js'
+import { uploadFile } from '../../utils/fileUpload.js'
 
 interface fileBaseInfo {
-  fileId: string
   fileRaw: File | null
   fileName: string
   fileSize: number
   fileType: number
   fileUrl: string
-}
-
-interface uploadFileInfo {
-  fileId: string
-  fileName: string
-  fileSize: number
-  uploadedSize: number
-  progress: number
 }
 
 const fileUrl = ref('')
@@ -185,9 +169,7 @@ const scrollbarRef = ref(null)
 const messageStore = messageInfo()
 const groupMemberStore = groupMemberInfo()
 const conversationStore = conversationInfo()
-const fileChunkInfoStore = fileChunkInfo()
 let fileInfoList = reactive<fileBaseInfo[]>([])
-let uploadFileInfoList = ref<Map<string, uploadFileInfo>>(new Map<string, uploadFileInfo>())
 let fileList = ref<UploadFile[]>([])
 // 抽屉状态
 const drawer = ref(false)
@@ -199,9 +181,7 @@ const selectFiles = (file: UploadFile) => {
   console.info('文件类型:', file.raw.type)
   console.info('文件URL:', URL.createObjectURL(file.raw))
   const fileType = getFileType(file.raw)
-  const fileId = crypto.randomUUID()
   fileInfoList.push({
-    fileId: fileId,
     // 包含文件名，文件大小，文件流
     fileRaw: file.raw,
     fileName: file.name,
@@ -256,7 +236,10 @@ const sendPrivateMessage = async () => {
     convId
   )
   if (fileInfoList.length > 0) {
-    await uploadFile()
+    for (const file of fileInfoList) {
+      console.info(file.fileRaw)
+      uploadFile(file.fileRaw)
+    }
     fileInfoList.length = 0
     fileList.value = []
   }
@@ -279,156 +262,6 @@ const sendPrivateMessage = async () => {
   if (content !== '') {
     sendApi(content, convId, 1)
   }
-}
-
-const uploadFile = async () => {
-  for (const file of fileInfoList) {
-    uploadFileInfoList.value.set(file.fileId, {
-      fileId: file.fileId,
-      fileName: file.fileName,
-      fileSize: file.fileSize,
-      uploadedSize: 0,
-      progress: 0
-    })
-    console.log('上传文件信息:', [...uploadFileInfoList.value.values()])
-    console.info('文件类型:', file.fileType, '文件类型名称:', FILE_TYPE_MAP.get(file.fileType))
-    // 跟随日期生成文件夹，并复制选择发送的文件到指定目录
-    // const arrayBuffer = await file.fileRaw.arrayBuffer()
-    // const filePath = await window.chatToolApi.createFile(arrayBuffer, file.fileName)
-
-    // 发送请求获取上传成功的分片索引列表
-    const res = await checkUploadedApi({
-      filename: file.fileName
-    })
-    // console.info('上传成功的分片索引列表:', res.data)
-    const uploadedChunkIndexList = res.data
-
-    // 收集需要上传的文件
-    const needUploadChunks = new Map<number, boolean>()
-
-    // 对文件进行切片
-    await cutFile(
-      file.fileRaw,
-      uploadedChunkIndexList,
-
-      (
-        chunkBlob: File,
-        chunkIndex: number,
-        chunkHash: string,
-        filename: string,
-        isUploaded: boolean,
-        _uploaded: number,
-        chunkCount: number
-      ) => {
-        needUploadChunks.set(Number(chunkIndex), isUploaded)
-
-        if (isMergeChunks(needUploadChunks, chunkCount)) {
-          // 说明所有文件之前都已经上传过了，直接进行合并
-
-          mergeFile(file, chunkCount)
-
-          return
-        }
-
-        uploadFileChunk(
-          file,
-          chunkBlob,
-          chunkIndex,
-          chunkHash,
-          filename,
-          isUploaded,
-          _uploaded,
-          chunkCount,
-          needUploadChunks
-        )
-      }
-    )
-
-    // console.info('文件切片结果:', chunks)
-
-    // sendApi(FILE_TYPE_MAP.get(file.fileType), convId, file.fileType)
-    // TODO 暂时让后端MySQL存储文件路径，后期使用SQLite3存储本地文件路径信息
-    // sendApi(filePath, convId, file.fileType)
-  }
-}
-
-const uploadFileChunk = async (
-  file: fileBaseInfo,
-  chunkBlob: File,
-  chunkIndex: number,
-  chunkHash: string,
-  filename: string,
-  isUploaded: boolean,
-  _uploaded: number,
-  chunkCount: number,
-  needUploadChunks: Map<number, boolean>
-) => {
-  if (!chunkBlob) {
-    console.warn(`分片 ${chunkIndex} 为空，跳过上传`)
-    return
-  }
-
-  const fromData = new FormData()
-
-  fromData.append('chunkBlob', chunkBlob)
-  fromData.append('chunkIndex', chunkIndex.toString())
-  fromData.append('chunkHash', chunkHash)
-  fromData.append('filename', filename)
-  fromData.append('isUploaded', isUploaded ? 'true' : 'false')
-
-  const config = {
-    onUploadProgress: (e: ProgressEvent) => {
-      if (!e.lengthComputable) return
-      // 当前 chunk 的进度
-      const delta = e.loaded - (_uploaded || 0)
-      _uploaded = e.loaded
-
-      const uploadFileInfo = uploadFileInfoList.value.get(file.fileId)
-      if (uploadFileInfo) {
-        uploadFileInfo.uploadedSize += delta
-        uploadFileInfo.progress = Math.min(
-          100,
-          Math.round((uploadFileInfo.uploadedSize / file.fileSize) * 100)
-        )
-      }
-    }
-  }
-
-  // 上传文件
-  await uploadFileApi(fromData, config)
-    .then((res) => {
-      console.info(`上传第 ${chunkIndex} 个分片成功:`, res.data)
-      needUploadChunks.set(Number(chunkIndex), true)
-    })
-    .catch((err) => {
-      console.error(`上传第 ${chunkIndex} 个分片失败`, err)
-    })
-
-  // 检查是否可以合并文件
-  if (isMergeChunks(needUploadChunks, chunkCount)) {
-    await mergeFile(file, chunkCount)
-  } else {
-    console.info('有分片未上传成功，等待其他分片上传完成')
-  }
-}
-
-const isMergeChunks = (needUploadChunks: Map<number, boolean>, chunkCount: number) => {
-  if (needUploadChunks.size === chunkCount) {
-    // 检查是否需要上传的分块都上传成功
-    return [...needUploadChunks.values()].every((item) => item)
-  }
-
-  return false
-}
-
-const mergeFile = async (file: fileBaseInfo, chunkCount: number) => {
-  await mergeFileApi({
-    filename: file.fileName,
-    fileType: getFileType(file.fileRaw),
-    chunkCount: chunkCount
-  }).then((res) => {
-    console.info('合并文件成功:', res.data)
-  })
 }
 
 // 发送群聊消息
@@ -599,8 +432,6 @@ const getGroupMemberList = async () => {
     groupMemberStore.addGroupMemberAvatar(item.userId, item.avatar)
   })
 }
-
-const downloadFileList = computed(() => [...uploadFileInfoList.value.values()])
 
 const messageArr = computed(() => {
   const convId = route.query.conversationId as string

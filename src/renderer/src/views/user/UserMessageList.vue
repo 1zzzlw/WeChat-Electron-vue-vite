@@ -16,13 +16,8 @@
 
       <div class="message-list-bottom">
         <el-scrollbar>
-          <div
-            class="left-list"
-            v-for="(conversation, index) in conversationListArr"
-            :key="index"
-            :class="{ 'left-list-bg': active === conversation.id }"
-            @click="starCall(conversation)"
-          >
+          <div class="left-list" v-for="(conversation, index) in conversationListArr" :key="index"
+            :class="{ 'left-list-bg': active === conversation.id }" @click="starCall(conversation)">
             <div class="left-image">
               <UnreadCounts :unreadCounts="conversation.unreadCount" />
               <img :src="conversation.avatar" alt="头像" class="left-list-img" />
@@ -67,7 +62,7 @@ const userId = ref()
 const conversationStore = conversationInfo()
 const conversationId = reactive({ list: [] })
 
-const starCall = async (friend) => {
+const starCall = async (friend: { friendId: string; id: string }) => {
   active.value = friend.friendId
   userId.value = await window.api.storeGetUserInfo('userId')
   if (!userId.value) {
@@ -99,15 +94,15 @@ const starCall = async (friend) => {
 }
 
 const createGroupChat = () => {
-  console.info('createGroupChat')
+  console.info('createGroupChat');
   // 打开创建群聊窗口
-  window.api.createNewWindow('createGroup')
+  (window as any).api.createNewWindow('createGroup')
 }
 
 const addFriend = () => {
-  console.info('addFriend')
+  console.info('addFriend');
   // 打开添加好友窗口
-  window.api.createNewWindow('addFriend')
+  (window as any).api.createNewWindow('addFriend')
 }
 
 // TODO 过滤出状态为1的单聊会话列表 后面可以修改为在pinia中的getter函数中筛选
@@ -131,13 +126,13 @@ const getFriendList = async () => {
   console.info('好友列表:', res.data)
 
   // 构建以好友id为键的映射表
-  const friendMap = new Map(res.data.map((f) => [f.id, f]))
+  const friendMap = new Map(res.data.map((f: { id: any }) => [f.id, f]))
 
   // 获得当前登录用户id
   userId.value = await window.api.storeGetUserInfo('userId')
 
   // 获得好友id数组，方便后续构建和每个好友的会话id
-  friendId.arr = res.data.map((item) => item.id)
+  friendId.arr = res.data.map((item: { id: any }) => item.id)
 
   console.info('好友id集合:', friendId.arr, '当前登录用户id为:', userId.value)
 

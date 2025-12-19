@@ -1,35 +1,45 @@
-import { computedChunksMD5 } from './computedChunksMD5.js'
+import { computedFileChunkHash } from './computedChunksMD5.js'
 
-// 接收主线程发送的消息
+// 接收信息
 onmessage = async (e) => {
-  const { file, start, end, CHUNK_SIZE, uploadedChunkIndexList } = e.data
+  const { file, CHUNK_SIZE, start, end, doneUploadChunkList, fileTaskMap, fileKey } = e.data
 
-  let doneNumber = 0
+  let doneChunk = 0
 
-  // 开始遍历每个线程内部的块
-  for (let i = start; i < end; i++) {
-    // 如果当前分片索引在已上传分片索引列表中，跳过计算
-    if (uploadedChunkIndexList.includes(i)) {
-      // 已上传的分片
-      doneNumber++
-
+  // 遍历每个线程的起始位置，即可获得线程内部的每个文件块
+  for (let index = start; index < end; index++) {
+    if (doneUploadChunkList.includes(index)) {
+      console.info('已经有了~~~')
+      doneChunk++
+      const fileTask = fileTaskMap.get(fileKey)
+      fileTask.chunkIndex = index
+      fileTask.isUploaded = true
+      fileTask.isDoneThread = doneChunk === end - start
       postMessage({
-        chunkIndex: i,
-        isUploaded: true,
-        isThreadDone: doneNumber === end - start
+        fileTaskMap: fileTaskMap,
+        fileKey: fileKey
       })
-
       continue
     }
 
-    const result = await computedChunksMD5(file, i, CHUNK_SIZE)
+    const chunkData = await computedFileChunkHash({
+      file,
+      index,
+      CHUNK_SIZE,
+      fileTaskMap,
+      fileKey
+    })
 
-    doneNumber++
+    // console.info(chunkData)
 
-    if (doneNumber === end - start) {
-      result.isThreadDone = true
-    }
+    doneChunk++
 
-    postMessage(result)
+    if (doneChunk === end - start) chunkData.get(fileKey).isDoneThread = true
+
+    // 分块文件计算完成之后直接传递给主线程
+    postMessage({
+      fileTaskMap: chunkData,
+      fileKey: fileKey
+    })
   }
 }

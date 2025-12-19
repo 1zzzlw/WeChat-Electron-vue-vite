@@ -1,7 +1,7 @@
 <template>
   <div class="downloading-list">
     <el-scrollbar>
-      <div class="download-item" v-for="(item, index) in downloadFileList" :key="index">
+      <div class="download-item" v-for="item in downloadFileList" :key="item.fileId">
         <div class="file-icon">
           <img style="width: 80px; height: 80px" src="../assets/wenjian.svg" alt="" />
         </div>
@@ -11,10 +11,11 @@
             <div
               class="progress"
               :style="{
-                '--progress-percent': item.progress > 100 ? 100 : item.progress,
-                '--progress-value': (item.progress > 100 ? 100 : item.progress) + '%'
+                '--progress-percent': item.process > 100 ? 100 : item.process,
+                '--progress-value': (item.process > 100 ? 100 : item.process) + '%'
               }"
-            ></div>
+            >
+            </div>
           </div>
         </div>
       </div>
@@ -22,18 +23,15 @@
   </div>
 </template>
 
-<script lang="ts" setup>
-interface uploadFileInfo {
-  fileId: string
-  fileName: string
-  fileSize: number
-  uploadedSize: number
-  progress: number
-}
+<script setup>
+import { computed } from 'vue'
+import { fileBaseListInfo } from '../stores/FileBaseInfoStore'
 
-defineProps<{
-  downloadFileList: uploadFileInfo[]
-}>()
+const fileBaseListStore = fileBaseListInfo()
+
+const downloadFileList = computed(() => {
+  return Object.values(fileBaseListStore.fileListMap)
+})
 </script>
 
 <style scoped>

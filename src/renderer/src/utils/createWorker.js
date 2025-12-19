@@ -1,107 +1,120 @@
-// 设置每个块的大小为5MB
+// 每个文件有一个独立的状态管理集合
+const fileTaskMap = new Map()
+// 每个文件的合并状态管理集合
+const fileThreadNumberMap = new Map()
+// 分块文件的大小
 const CHUNK_SIZE = 1024 * 1024 * 5
-// 获取电脑的CPU核心数
-const THREAD_COUNT = navigator.hardwareConcurrency || 4
+// 分配线程数的数量
+const THREAD_COUNT = navigator.hardwareConcurrency / 4
 
-export function cutFile(file, uploadedChunkIndexList, callback) {
-  return new Promise((resolve, reject) => {
-    // console.info('cutFile', file)
+// 创建文件的唯一key
+function createUniqueFileKey(file) {
+  // key的组成：文件名称_文件大小_文件最后修改时间戳
+  return `${file.name}_${file.size}_${file.lastModified}`
+}
 
-    // 计算当前文件需要分多少个块
-    const chunkCount = Math.ceil(file.size / CHUNK_SIZE)
+export function createWorker(file, doneUploadChunkList, callback) {
+  // 计算分块数量
+  const chunkCount = Math.ceil(file.size / CHUNK_SIZE)
+  // 计算每个线程处理的分块数量
+  const threadChunkCount = Math.ceil(chunkCount / THREAD_COUNT)
 
-    // 计算一个线程需要分配多少块
-    const threadChunkCount = Math.ceil(chunkCount / THREAD_COUNT)
+  console.info(`该文件需要分${chunkCount}块，每个线程需要处理${threadChunkCount}块`)
 
-    // 实际创建的线程总数
-    let createdWorkerCount = 0
+  const fileKey = createUniqueFileKey(file)
 
-    // 已终止/报错的线程数
-    let completedWorkerCount = 0
+  fileTaskMap.set(fileKey, {
+    chunkCount: chunkCount,
+    chunkIndex: null,
+    chunkHash: null,
+    chunkArrayBuffer: null,
+    chunkBlob: null,
+    isUploaded: false,
+    isDoneThread: false
+  })
 
-    let isResolved = false
+  fileThreadNumberMap.set(fileKey, {
+    createThreadNumber: 0,
+    doneThreadNumber: 0
+  })
 
-    console.info('当前电脑CPU核心数为：', THREAD_COUNT)
-    console.info('该文件需要分块个数为：', chunkCount)
-    console.info('每个线程需要处理的块数', threadChunkCount)
+  const fileThreadNumber = fileThreadNumberMap.get(fileKey)
 
-    // 遍历每个线程
-    for (let i = 0; i < THREAD_COUNT; i++) {
-      const start = i * threadChunkCount
+  // 循环遍历可以创建的线程数量，给每个线程开辟一个worker后台处理线程
+  for (let i = 0; i < THREAD_COUNT; i++) {
+    const start = i * threadChunkCount
 
-      let end = (i + 1) * threadChunkCount
+    let end = (i + 1) * threadChunkCount
 
-      // 这里的end就相当于遍历到的块数，如果超出了chunkCount，需要单独赋值
-      if (end > chunkCount) {
-        end = chunkCount
+    if (end > chunkCount) end = chunkCount
+
+    if (start >= end) {
+      // 这种情况说明创建了无用的线程，直接continue
+      continue
+    }
+
+    // console.info(start, end)
+
+    const worker = new Worker(new URL('./worker.js', import.meta.url), { type: 'module' })
+
+    // 线程创建成功
+    fileThreadNumber.createThreadNumber++
+
+    // worker线程创建失败
+    worker.onerror = (error) => {
+      console.info(error)
+      fileThreadNumber.doneThreadNumber++
+      worker.terminate()
+    }
+
+    // 给worker传递信息
+    worker.postMessage({
+      file,
+      CHUNK_SIZE,
+      start,
+      end,
+      doneUploadChunkList,
+      fileTaskMap,
+      fileKey
+    })
+
+    worker.onmessage = (e) => {
+      // console.info('创建的线程数量', createThreadNumber)
+      const fileTaskMap = e.data.fileTaskMap
+      const fileKey = e.data.fileKey
+
+      const fileThreadNumber = fileThreadNumberMap.get(fileKey)
+      const fileTask = fileTaskMap.get(fileKey)
+
+      const chunkCount = fileTask.chunkCount
+
+      // console.info(fileTask)
+
+      if (fileTask.isUploaded) {
+        fileThreadNumber.doneThreadNumber++
+        worker.terminate()
+        if (isMerge(fileThreadNumber)) {
+          const isNeedMerge = true
+          const fileTask = null
+          callback({ fileTask, isNeedMerge, fileKey })
+        }
+        return
       }
 
-      if (start >= end) {
-        continue
-      }
-
-      // 每个线程创建一个worker
-      const worker = new Worker(new URL('./worker.js', import.meta.url), { type: 'module' })
-
-      // console.info('线程', i, '需要处理的块数为：', start, end)
-
-      worker.onerror = (error) => {
-        // 完整错误信息：错误原因、文件、行号、列号
-        const errorMsg = `Worker错误：${error.message}，文件：${error.filename}，行号：${error.lineno}，列号：${error.colno}`
-        console.error(errorMsg)
-        // 每个线程报错，就增加一个线程数
-        completedWorkerCount++
-        reject(new Error(errorMsg))
+      if (fileTask.isDoneThread) {
+        // 销毁这个线程
+        fileThreadNumber.doneThreadNumber++
         worker.terminate()
       }
 
-      // 像worker线程发送消息
-      worker.postMessage({
-        file,
-        start,
-        end,
-        CHUNK_SIZE,
-        uploadedChunkIndexList
-      })
+      const isNeedMerge = isMerge(fileThreadNumber)
 
-      // 每个线程创建一个worker，就增加一个线程数
-      createdWorkerCount++
-
-      // 接收worker线程发送的消息
-      worker.onmessage = (e) => {
-        // 获得一个线程处理完成的结果
-        const doneChunk = e.data
-
-        // 调用回调函数
-        callback(
-          doneChunk.chunkBlob,
-          doneChunk.chunkIndex,
-          doneChunk.chunkHash,
-          doneChunk.filename,
-          doneChunk.isUploaded,
-          doneChunk._uploaded,
-          chunkCount
-        )
-
-        // 表示当前线程已经处理完所有块
-        if (doneChunk.isThreadDone) {
-          // 销毁线程
-          worker.terminate()
-          // 每个线程处理完所有块，就增加一个线程数
-          completedWorkerCount++
-          // 检查是否所有线程都完成
-          checkAllWorkersCompleted()
-        }
-
-        // 所有创建的线程都完成时resolve
-        function checkAllWorkersCompleted() {
-          if (completedWorkerCount === createdWorkerCount && !isResolved) {
-            isResolved = true
-            // 大文件场景：所有线程处理完才resolve
-            resolve()
-          }
-        }
-      }
+      callback({ fileTask, isNeedMerge, fileKey, chunkCount })
     }
-  })
+
+    // 判断是否需要合并文件
+    function isMerge(fileThreadNumber) {
+      return fileThreadNumber.createThreadNumber === fileThreadNumber.doneThreadNumber
+    }
+  }
 }

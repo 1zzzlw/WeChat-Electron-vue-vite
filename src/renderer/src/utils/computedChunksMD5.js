@@ -1,39 +1,48 @@
 // 引入计算md5的库
 import SparkMD5 from 'spark-md5'
 
-export function computedChunksMD5(file, index, chunkSize) {
+export function computedFileChunkHash(data) {
   return new Promise((resolve) => {
-    // 计算当前块的起始位置
-    const start = index * chunkSize
-    // 计算当前块的结束位置
-    const end = start + chunkSize
+    // 收到总文件，以及块的索引，块的尺寸
+    const { file, index, CHUNK_SIZE, fileTaskMap, fileKey } = data
 
-    // 定义读取文件信息的对象
-    const fileReader = new FileReader()
+    // 每个块的开始尺寸
+    const start = index * CHUNK_SIZE
 
-    const spark = new SparkMD5.ArrayBuffer()
+    // 每个块的结束尺寸
+    let end = start + CHUNK_SIZE
 
+    if (end > file.size) end = file.size
+
+    // 根据块的起始尺寸来分割出来该块
     const blob = file.slice(start, end)
 
-    // 异步读取文件信息，不阻塞主线程，需要提前定义好读取完成事件，否则会导致读取文件的信息错过
-    fileReader.onload = (e) => {
-      // 计算当前块的md5值,通过 spark.end() 合并所有片段,算出完整的md5值
-      spark.append(e.target.result)
+    // 创建文件的读取器
+    const fileReader = new FileReader()
 
-      // 所有异步处理进行完成之后，spark.end() 合并所有片段,算出完整的md5值，在进行返回数据
-      resolve({
-        filename: file.name,
-        chunkStart: start,
-        chunkEnd: end,
-        chunkIndex: index,
-        chunkHash: spark.end(),
-        chunkBlob: blob,
-        isUploaded: false, // 是否已经上传成功的标志，默认没有上传成功
-        _uploaded: 0 // 已上传的大小，默认没有上传
-      })
+    const chunkSpark = new SparkMD5.ArrayBuffer()
+
+    // 异步执行不阻塞
+    fileReader.onload = (e) => {
+      const arraybuffer = e.target.result
+
+      chunkSpark.append(arraybuffer)
+
+      const chunkHash = chunkSpark.end()
+
+      const fileTask = fileTaskMap.get(fileKey)
+
+      fileTask.chunkIndex = index
+      fileTask.chunkHash = chunkHash
+      fileTask.chunkArrayBuffer = arraybuffer
+      fileTask.chunkBlob = blob
+
+      resolve(fileTaskMap)
     }
 
-    // 需要在onload之后，才能保证文件信息不被错过
+    // 读取blob为二进制的 ArrayBuffer 格式，读取完成之后执行onload
     fileReader.readAsArrayBuffer(blob)
+
+    // console.info(`文件块${index}的blob对象 =======> ${blob}`)
   })
 }
