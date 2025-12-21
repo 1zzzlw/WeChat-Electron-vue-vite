@@ -83,8 +83,6 @@ const starCall = async (friend: { friendId: string; id: string }) => {
       query: { conversationId: friend.id, friendId: receiveGroupId }
     })
   } else {
-    // 单聊
-    // const cid = `${Math.max(userId.value, friend.id)}_${Math.min(userId.value, friend.id)}`
     await router.push({
       path: '/chat',
       query: { conversationId: friend.id, friendId: friend.friendId }

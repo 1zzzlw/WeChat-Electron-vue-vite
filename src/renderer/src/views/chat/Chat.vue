@@ -297,28 +297,6 @@ const sendGroupMessage = async () => {
 }
 
 const sendApi = (content: string, convId: string, msgType: number) => {
-  // const convId = route.query.conversationId
-  // if (convId.startsWith('g_')) {
-  //   // ws发送群聊信息：群聊id、消息内容、接收者数组
-  //   console.info('群成员列表:', groupMemberStore.groupMemberMap[convId])
-  //   console.info(
-  //     '群成员ID列表:',
-  //     groupMemberStore.groupMemberMap[convId].map((item) => item.userId)
-  //   )
-  //   WSManager.sendMessage(3, 0, {
-  //     conversationId: convId,
-  //     receiverIds: groupMemberStore.groupMemberMap[convId].map((item) => item.userId),
-  //     content: content
-  //   })
-  // } else {
-  //   // ws发送单聊信息：会话id、接收者id、消息内容
-  //   WSManager.sendMessage(1, 0, {
-  //     conversationId: convId,
-  //     receiverId: route.query.friendId,
-  //     content: content
-  //   })
-  // }
-
   // http发送接收者id、会话id、消息内容
   sendMessageApi({
     receiverId: route.query.friendId,
@@ -448,13 +426,6 @@ const friendUsername = computed(() =>
 const friendRemark = computed(() =>
   conversationStore.getRemark(route.query.conversationId as string)
 )
-// const groupMemberArr = computed(() => {
-//   if (route.query.conversationId && route.query.conversationId.startsWith('g_')) {
-//     const convId = route.query.conversationId
-//     // 如果会话ID不存在，或群成员列表未初始化，用空数组兜底
-//     return groupMemberStore.groupMemberMap[convId] || []
-//   }
-// })
 
 // 监听conversationId变化 - 确保会话切换
 watch(
@@ -502,29 +473,6 @@ watch(
   { immediate: true }
 )
 
-// onMounted(async () => {
-//   try {
-//     console.info(
-//       '聊天页时，好友id' + route.query.friendId + ', 会话id:' + route.query.conversationId
-//     )
-//     avatarUrl.value = await window.api.storeGetAvatar()
-//     userId.value = await window.api.storeGetUserId()
-//
-//     await getMessageList()
-//     if (route.query.conversationId.startsWith('g_')) {
-//       await getGroupMemberList()
-//     }
-//
-//     // 所有数据加载完成，允许渲染
-//     isDataLoaded.value = true
-//     await nextTick()
-//     scrollToBottom()
-//   } catch (error) {
-//     console.error('初始化失败', error)
-//     // 即使失败也显示页面，避免白屏
-//     isDataLoaded.value = true
-//   }
-// })
 </script>
 
 <style scoped>

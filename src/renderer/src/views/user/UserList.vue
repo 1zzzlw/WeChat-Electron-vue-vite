@@ -2,12 +2,6 @@
   <div class="user-list">
     <div class="user-list-left">
       <div class="list-top">
-        <!--        <el-input-->
-        <!--          style="width: 240px"-->
-        <!--          placeholder="搜索"-->
-        <!--          :prefix-icon="Search"-->
-        <!--          spellcheck="false"-->
-        <!--        />-->
         <AutocompleteSearch />
       </div>
       <div class="list-bottom">
@@ -120,12 +114,6 @@ const groupMemberStore = groupMemberInfo()
 const activeNames = ref(['4'])
 const handleChange = (val: CollapseModelValue) => {
   console.info(val)
-  // 学习了computed之后感觉可以替代下方的代码了
-  // const cache = Object.keys(userApplyStore.userApplyMap).length > 0
-  // if (cache) {
-  //   console.info('pinia的缓存好友申请列表:', userApplyStore.getAllUserApplyMap())
-  //   friendApplyList.arr = userApplyStore.getAllUserApplyMap()
-  // }
 }
 
 const router = useRouter()
