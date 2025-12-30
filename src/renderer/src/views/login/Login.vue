@@ -47,7 +47,7 @@
           />
         </el-form-item>
         <div class="login-form-button">
-          <el-button type="primary" @click="Login(ruleFormRef)">登录</el-button>
+          <el-button type="primary" native-type="submit" @click="Login(ruleFormRef)">登录</el-button>
           <el-button type="primary" @click="Register">注册</el-button>
         </div>
       </el-form>
@@ -107,6 +107,7 @@ const Login = async (formEl: FormInstance | undefined) => {
   try {
     // 验证成功会进入这里，失败会直接跳去 catch
     await formEl.validate()
+    console.info('登录表单数据:', loginForm)
     const result = await loginApi(loginForm)
     const status = result.code
     console.log(status)

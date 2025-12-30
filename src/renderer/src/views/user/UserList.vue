@@ -15,9 +15,9 @@
               <el-collapse-item title="好友申请列表" name="1">
                 <div
                   class="left-list"
-                  v-for="(apply, index) in friendApplyListArr"
-                  :key="index"
-                  :class="{ 'left-list-bg': active == apply.applyId }"
+                  v-for="apply in friendApplyListArr"
+                  :key="apply.applyId"
+                  :class="{ 'left-applyList-bg': activeApply == apply.applyId }"
                   @click="startApply(apply)"
                 >
                   <div class="left-image">
@@ -31,7 +31,7 @@
                   class="left-list-group"
                   v-for="(apply, index) in groupApplyListArr"
                   :key="index"
-                  :class="{ 'left-list-bg': active == apply.id }"
+                  :class="{ 'left-groupApplyList-bg': activeGroupApply == apply.id }"
                 >
                   <div class="left-image">
                     <img :src="apply.userAvatar" alt="头像" class="left-list-img" />
@@ -58,7 +58,7 @@
                   class="left-list-group"
                   v-for="(group, index) in groupListArr"
                   :key="index"
-                  :class="{ 'left-list-bg': active == group.id }"
+                  :class="{ 'left-list-bg': activeGroup == group.id }"
                 >
                   <div class="left-image">
                     <img :src="group.groupAvatar" alt="头像" class="left-list-img" />
@@ -69,9 +69,9 @@
               <el-collapse-item title="联系人" name="4">
                 <div
                   class="left-list"
-                  v-for="(user, index) in friendListArr"
-                  :key="index"
-                  :class="{ 'left-list-bg': active == user.id }"
+                  v-for="user in friendListArr"
+                  :key="user.id"
+                  :class="{ 'left-friendList-bg': activeFriend == user.id }"
                   @click="starCall(user)"
                 >
                   <div class="left-image">
@@ -117,32 +117,36 @@ const handleChange = (val: CollapseModelValue) => {
 }
 
 const router = useRouter()
-const active = ref('')
+const activeApply = ref('')
+const activeGroupApply = ref('')
+const activeGroup = ref('')
+const activeFriend = ref('')
 
-const startApply = (apply) => {
-  console.info(apply.applyId)
-  router.push({ path: '/friendApply', query: { applyId: apply.applyId } })
+const startApply = (activeApply) => {
+  console.info(activeApply.applyId)
+  router.push({ path: '/friendApply', query: { applyId: activeApply.applyId } })
 }
 
 const starCall = (user) => {
-  active.value = user.id
+  console.info('用户', user.id, '点击了联系人')
+  activeFriend.value = user.id
   router.push({ path: '/friendInfo', query: { friendId: user.id } })
 }
 
-const joinGroup = async (apply) => {
-  console.info(apply)
+const joinGroup = async (activeGroupApply) => {
+  console.info(activeGroupApply)
   const userId = await window.api.storeGetUserInfo('userId')
   console.info('用户', userId, '同意入群:')
-  dealGroupApplyApi(apply.conversationId, apply.userId, userId, 2).then((res) => {
+  dealGroupApplyApi(activeGroupApply.conversationId, activeGroupApply.userId, userId, 2).then((res) => {
     if (res.code === 1) {
       ElMessage.success('入群成功')
-      userApplyStore.updateGroupApplyStatus(apply.userId, 2)
-      groupMemberStore.addGroupMember(apply.conversationId, {
-        conversationId: apply.conversationId,
-        userId: apply.userId,
-        username: apply.username,
+      userApplyStore.updateGroupApplyStatus(activeGroupApply.userId, 2)
+      groupMemberStore.addGroupMember(activeGroupApply.conversationId, {
+        conversationId: activeGroupApply.conversationId,
+        userId: activeGroupApply.userId,
+        username: activeGroupApply.username,
         role: 0,
-        avatar: apply.avatar
+        avatar: activeGroupApply.avatar
       })
     } else {
       ElMessage.error('入群失败')
@@ -387,7 +391,15 @@ onMounted(() => {
   background-color: #f5f7fa;
 }
 
-.left-list-bg {
+.left-applyList-bg {
+  background-color: #f5f7fa;
+}
+
+.left-groupApplyList-bg {
+  background-color: #f5f7fa;
+}
+
+.left-friendList-bg {
   background-color: #f5f7fa;
 }
 
