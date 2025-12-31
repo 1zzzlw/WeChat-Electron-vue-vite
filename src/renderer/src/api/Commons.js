@@ -1,8 +1,5 @@
-import request from '../utils/request'
+import request from '../utils/axios/request'
 
-export const refreshTokenAPI = () => {
-  return request({
-    url: '/commons/refreshToken',
-    method: 'post'
-  })
+export const refreshTokenAPI = (userId, config = {}) => {
+  return request.post(`/commons/refreshToken/${userId}`, config)
 }

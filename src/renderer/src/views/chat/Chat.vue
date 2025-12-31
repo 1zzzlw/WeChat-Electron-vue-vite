@@ -140,11 +140,11 @@ import type { UploadFile } from 'element-plus'
 import { ElMessage } from 'element-plus'
 import { groupMemberInfo } from '../../stores/GroupMemberStores'
 import { getGroupMemberListApi } from '../../api/Conversation'
-import { FILE_TYPE_MAP, getFileType } from '../../utils/filterFileKind.js'
+import { FILE_TYPE_MAP, getFileType } from '../../utils/file/filterFileKind.js'
 import MessageContentManage from '../../components/MessageContentManage.vue'
 import FilePreviewView from '../../components/FilePreviewView.vue'
 import Downloading from '../../components/Downloading.vue'
-import { uploadFile } from '../../utils/fileUpload.js'
+import { uploadFile } from '../../utils/file/fileUpload.js'
 
 interface fileBaseInfo {
   fileRaw: File | null

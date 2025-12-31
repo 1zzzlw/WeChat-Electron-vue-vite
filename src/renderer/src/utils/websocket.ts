@@ -39,7 +39,7 @@ class WebSocketManager {
   async connect() {
     if (this.isConnect) return
 
-    const token = await (window as any).api.storeGetUserInfo('token')
+    const token = localStorage.getItem('token')
     if (!token) {
       console.warn('没有 token，无法连接 WebSocket')
       return

@@ -69,9 +69,9 @@ const submitForm = () => {
     if (res.code === 1) {
       console.info('注册成功:', res)
       ElMessage.success('注册成功')
-      // 登录成功后，将token存储到本地
+      // 注册成功后，将用户头像和用户id存储到本地
       window.api.storeSetUserInfo('avatar', userInfo.avatar)
-      window.api.storeSetUserInfo('token', res.data)
+      window.api.storeSetUserInfo('userId', res.data)
       router.push('/main')
       window.api.resizeWindow('main')
     } else {

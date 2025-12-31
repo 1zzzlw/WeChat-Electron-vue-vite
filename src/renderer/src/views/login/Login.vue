@@ -47,7 +47,7 @@
           />
         </el-form-item>
         <div class="login-form-button">
-          <el-button type="primary" native-type="submit" @click="Login(ruleFormRef)">登录</el-button>
+          <el-button type="primary" @click="Login(ruleFormRef)">登录</el-button>
           <el-button type="primary" @click="Register">注册</el-button>
         </div>
       </el-form>
@@ -103,20 +103,16 @@ const rules = reactive<FormRules>({
 
 const Login = async (formEl: FormInstance | undefined) => {
   if (!formEl) return
-
+  console.info('登录表单数据:', loginForm)
   try {
     // 验证成功会进入这里，失败会直接跳去 catch
     await formEl.validate()
-    console.info('登录表单数据:', loginForm)
     const result = await loginApi(loginForm)
     const status = result.code
     console.log(status)
     if (status === 1) {
-      // 存储令牌信息，由于token存储到了本地store，这里可以不需要了
-      // localStorage.setItem('token', result.data.token)
       window.api.storeSetUserInfo('userId', result.data.id)
       window.api.storeSetUserInfo('avatar', result.data.avatar)
-      window.api.storeSetUserInfo('token', result.data.token)
       await router.push('/main')
       window.api.resizeWindow('main')
     } else {

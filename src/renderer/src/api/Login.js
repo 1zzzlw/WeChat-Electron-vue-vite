@@ -1,4 +1,4 @@
-import request from '../utils/request'
+import request from '../utils/axios/request'
 
 export const loginApi = (data) => request.post('/login', data)
 

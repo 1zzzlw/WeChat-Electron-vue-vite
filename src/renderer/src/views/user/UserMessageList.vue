@@ -16,8 +16,13 @@
 
       <div class="message-list-bottom">
         <el-scrollbar>
-          <div class="left-list" v-for="(conversation, index) in conversationListArr" :key="index"
-            :class="{ 'left-list-bg': active === conversation.id }" @click="starCall(conversation)">
+          <div
+            class="left-list"
+            v-for="(conversation, index) in conversationListArr"
+            :key="index"
+            :class="{ 'left-list-bg': active === conversation.id }"
+            @click="starCall(conversation)"
+          >
             <div class="left-image">
               <UnreadCounts :unreadCounts="conversation.unreadCount" />
               <img :src="conversation.avatar" alt="头像" class="left-list-img" />
@@ -48,7 +53,7 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { conversationInfo } from '../../stores/ConversationStore'
-import { Search, Plus, ArrowDown } from '@element-plus/icons-vue'
+import { Plus } from '@element-plus/icons-vue'
 import { getFriendListApi } from '../../api/Friend'
 import { getConversationListApi, getGroupListApi } from '../../api/Conversation'
 import AutocompleteSearch from '../../components/AutocompleteSearch.vue'
@@ -92,15 +97,15 @@ const starCall = async (friend: { friendId: string; id: string }) => {
 }
 
 const createGroupChat = () => {
-  console.info('createGroupChat');
+  console.info('createGroupChat')
   // 打开创建群聊窗口
-  (window as any).api.createNewWindow('createGroup')
+  ;(window as any).api.createNewWindow('createGroup')
 }
 
 const addFriend = () => {
-  console.info('addFriend');
+  console.info('addFriend')
   // 打开添加好友窗口
-  (window as any).api.createNewWindow('addFriend')
+  ;(window as any).api.createNewWindow('addFriend')
 }
 
 // TODO 过滤出状态为1的单聊会话列表 后面可以修改为在pinia中的getter函数中筛选
@@ -157,40 +162,43 @@ const getFriendList = async () => {
   // })
 
   // 优化写法，遍历好友id数组，构建会话id并关联对应的好友信息并存储在pinia中
-  for (const fid of friendId.arr) {
-    const cid = `${Math.max(userId.value, fid)}_${Math.min(userId.value, fid)}`
-    console.info('cid:', cid)
-    // 到这里只是为了构建会话id，用来关联好友信息
-    const friend = friendMap.get(fid)
-    if (!friend) continue
+  if (friendId.arr.length > 0) {
+    for (const fid of friendId.arr) {
+      const cid = `${Math.max(userId.value, fid)}_${Math.min(userId.value, fid)}`
+      console.info('cid:', cid)
+      // 到这里只是为了构建会话id，用来关联好友信息
+      const friend = friendMap.get(fid)
+      if (!friend) continue
 
-    // 用会话id做键，存储会话列表中的好友信息
-    conversationStore.setConversationMap(cid, {
-      // 好友id
-      friendId: fid,
-      username: friend.username,
-      avatar: friend.avatar,
-      remark: friend.remark
-    })
-    conversationId.list.push(cid)
+      // 用会话id做键，存储会话列表中的好友信息
+      conversationStore.setConversationMap(cid, {
+        // 好友id
+        friendId: fid,
+        username: friend.username,
+        avatar: friend.avatar,
+        remark: friend.remark
+      })
+      conversationId.list.push(cid)
+    }
   }
-
-  // 从数据库查询会话列表，更新pinia中的会话信息
-  getConversationListApi(conversationId.list.join(',')).then((res) => {
-    console.info('会话列表:', res.data)
-    // 遍历会话列表，更新pinia中的会话信息
-    res.data.forEach((item) => {
-      conversationStore.setConversationMap(item.id, {
-        // 单聊会话id，格式为：maxId_minId，字符串类型
-        id: item.id,
-        latestMsg: item.latestMsg,
-        latestMsgTime: dayjs(item.latestMsgTime).format('HH:mm'),
-        unreadCount: item.unreadCount,
-        isTop: item.isTop,
-        status: item.status
+  if (conversationId.list.length > 0) {
+    // 从数据库查询会话列表，更新pinia中的会话信息
+    getConversationListApi(conversationId.list.join(',')).then((res) => {
+      console.info('会话列表:', res.data)
+      // 遍历会话列表，更新pinia中的会话信息
+      res.data.forEach((item) => {
+        conversationStore.setConversationMap(item.id, {
+          // 单聊会话id，格式为：maxId_minId，字符串类型
+          id: item.id,
+          latestMsg: item.latestMsg,
+          latestMsgTime: dayjs(item.latestMsgTime).format('HH:mm'),
+          unreadCount: item.unreadCount,
+          isTop: item.isTop,
+          status: item.status
+        })
       })
     })
-  })
+  }
 }
 
 const getGroupList = () => {

@@ -237,6 +237,8 @@ app.on('window-all-closed', () => {
 ipcMain.on('window:type', (e, windowType) => {
   if (windowType === 'login') {
     console.log('LOGIN')
+    // 取消窗口最小限制
+    mainWindow.setMinimumSize(0, 0)
     mainWindow.setResizable(true)
     mainWindow.setSize(login_width, login_height)
     mainWindow.center()
