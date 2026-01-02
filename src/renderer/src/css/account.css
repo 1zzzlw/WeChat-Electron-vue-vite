@@ -1,0 +1,195 @@
+.login-count,
+.register-count,
+.registerUserInfo-count,
+.uploadAvatar-count {
+  /* 设置宽度和高度，确保有足够空间展示居中效果 */
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  border-radius: 15px;
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.25);
+  flex-direction: column;
+  justify-content: space-around;
+  padding: 20px;
+  transition: 0.5s;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.1);
+  -webkit-app-region: drag;
+  z-index: 0;
+}
+
+.login-count::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-conic-gradient(from var(--a), #43f3ff 0%, #43f3ff 10%, transparent 10%, transparent 80%, #43f3ff 100%);
+  border-radius: 20px;
+  animation: animate 2.5s linear infinite;
+  z-index: -1;
+}
+
+.register-count::before,
+.registerUserInfo-count::before,
+.uploadAvatar-count::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-conic-gradient(from var(--a), #ff76e0 0%, #ff76e0 10%, transparent 10%, transparent 80%, #ff76e0 100%);
+  border-radius: 20px;
+  animation: animate 2.5s linear infinite;
+  z-index: -1;
+}
+
+/* 自定义属性注册语法，核心作用是给自定义属性 --a 设定明确的类型、继承规则和初始值 */
+@property --a {
+  /* 1. 定义自定义属性的语法/类型 角度 */
+  syntax: '<angle>';
+  /* 2. 定义是否继承父元素的值 */
+  inherits: false;
+  /* 3. 定义初始值，0deg、90deg、180deg（度）、1rad（弧度）、1turn（圈）等角度单位 */
+  initial-value: 0deg;
+}
+
+@keyframes animate {
+  0% {
+    --a: 0deg
+  }
+
+  100% {
+    --a: 360deg
+  }
+}
+
+.login-count span::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  background-size: cover;
+  background: url('../assets/image/4.jpg') fixed center;
+  background-size: cover;
+  /* 添加模糊效果 */
+  filter: blur(10px);
+  z-index: -1;
+}
+
+.register-count span::before,
+.registerUserInfo-count span::before,
+.uploadAvatar-count span::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  background-size: cover;
+  background: url('../assets/image/2.jpg') fixed center;
+  background-size: cover;
+  /* 添加模糊效果 */
+  filter: blur(10px);
+  z-index: -1;
+}
+
+.login-top,
+.register-top {
+  font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-style: italic;
+  text-align: center;
+  color: #ffffff;
+  font-weight: 500;
+  text-shadow: 0 0 8px rgba(179, 200, 255, 0.5), 0 0 20px rgba(120, 140, 255, 0.3);
+  position: absolute;
+  top: 20px;
+  left: 120px;
+}
+
+.login-form,
+.register-form,
+.registerUserInfo-form,
+.uploadAvatar-top {
+  margin-top: 30px;
+}
+
+.el-input {
+  height: 40px;
+  --el-input-placeholder-color: #ffffff;
+}
+
+:deep(.el-input-group__prepend) {
+  background: rgba(0, 0, 0, 0.15);
+  box-shadow: inset 0 2px 2px rgba(0, 0, 0, 0.1);
+}
+
+:deep(.el-input__inner) {
+  color: #ffffff;
+}
+
+:deep(.el-input__wrapper) {
+  background: rgba(0, 0, 0, 0.15);
+  box-shadow: none;
+  transition: box-shadow 0.2s ease;
+}
+
+/* 输入框聚焦时：加轻量外发光，突出交互状态 */
+:deep(.el-input__wrapper:focus-within) {
+  /* 白色半透明外发光，不刺眼且适配深色背景 */
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.15);
+}
+
+.login-form-button,
+.register-form-button,
+.registerUserInfo-form-button {
+  display: flex;
+  justify-content: space-around;
+}
+
+.login-form-button button,
+.register-form-button button,
+.registerUserInfo-form-button button,
+.uploadAvatar-bottom button {
+  width: 50%;
+}
+
+:deep(.el-button--primary) {
+  /* 玻璃质感 */
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: none;
+  border-radius: 6px;
+  /* 立体阴影 */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15),
+  inset 0 1px 2px rgba(255, 255, 255, 0.1);
+  /* 文字样式 */
+  color: #ffffff;
+  font-size: 14px;
+  padding: 8px 24px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+:deep(.el-button--primary:hover) {
+  background: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2),
+  inset 0 1px 3px rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+:deep(.el-button--primary:active) {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1),
+  inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.login-bottom,
+.register-bottom,
+.register-mid,
+.registerUserInfo-mid{
+  /* 不可拖动，保证能够点击 */
+  -webkit-app-region: no-drag;
+}
+
+

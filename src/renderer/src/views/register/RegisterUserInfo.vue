@@ -1,5 +1,9 @@
 <template>
   <div class="registerUserInfo-count">
+    <span></span>
+    <div class="register-top">
+      <h1 class="title">注册</h1>
+    </div>
     <div class="registerUserInfo-mid">
       <el-form
         class="registerUserInfo-form"
@@ -41,6 +45,7 @@
             size="large"
             placement="top"
             clearable
+            class="gender-select"
           >
             <el-option label="男" value="1" />
             <el-option label="女" value="0" />
@@ -96,52 +101,35 @@ const returnStep = () => {
 }
 
 const nextStep = async (formRef: FormInstance | undefined) => {
-  if (!formRef) return
-  if (confirmPassword.value !== registerUserInfoForm.password) {
-    ElMessage.error('确认密码输入错误')
-    return
-  }
-  try {
-    await formRef.validate()
-    console.log(registerUserInfoForm)
-    await router.push({ path: '/uploadAvatar', query: { ...registerUserInfoForm } })
-  } catch (error: any) {
-    ElMessage.error('表单校验失败')
-  }
+  // if (!formRef) return
+  // if (confirmPassword.value !== registerUserInfoForm.password) {
+  //   ElMessage.error('确认密码输入错误')
+  //   return
+  // }
+  // try {
+  //   await formRef.validate()
+  //   console.log(registerUserInfoForm)
+  //   await router.push({ path: '/uploadAvatar', query: { ...registerUserInfoForm } })
+  // } catch (error: any) {
+  //   ElMessage.error('表单校验失败')
+  // }
+  await router.push({ path: '/uploadAvatar', query: { ...registerUserInfoForm } })
 }
 </script>
 
 <style scoped>
-.registerUserInfo-count {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  background-color: #2b3e49;
-  padding: 20px;
-  -webkit-app-region: drag;
+@import '../../css/account.css';
+
+:deep(.el-select__wrapper) {
+  background: rgba(0, 0, 0, 0.15);
+  box-shadow: none;
+}
+
+:deep(.el-select__placeholder) {
+  color: #fff;
 }
 
 .registerUserInfo-mid {
-  /* 不可拖动，保证能够点击 */
-  -webkit-app-region: no-drag;
-}
-
-.registerUserInfo-form {
-  margin-top: 30px;
-}
-
-.el-input {
-  height: 40px;
-}
-
-.registerUserInfo-form-button {
-  display: flex;
-  justify-content: space-around;
-}
-
-.registerUserInfo-form-button button {
-  width: 50%;
+  height: 320px;
 }
 </style>

@@ -1,5 +1,9 @@
 <template>
   <div class="register-count">
+    <span></span>
+    <div class="register-top">
+      <h1 class="title">注册</h1>
+    </div>
     <div class="register-mid">
       <el-form class="register-form" :model="registerForm" ref="ruleFormRef" :rules="rules">
         <el-form-item prop="username">
@@ -52,7 +56,7 @@
       </el-form>
     </div>
     <div class="register-bottom">
-      <a href="">协议</a>
+      <router-link to="/?">协议</router-link>
     </div>
   </div>
   <WindowControls :showSetTop="false" :showSetMiniSize="false" :showSetFullScreen="false" />
@@ -143,25 +147,29 @@ const returnLogin = () => {
 
 const nextStep = async (formEl: FormInstance | undefined, type: 'username') => {
   console.log('registerForm: ', registerForm)
-  if (!formEl) return
-  try {
-    await formEl.validateField(type)
-    if (correctCode.value !== registerForm.phoneCode) {
-      ElMessage.error('验证码输入错误')
-      return
-    }
-    if (!registerForm.phoneCode) {
-      ElMessage.error('验证码不能为空')
-      return
-    }
-    await router.push({
-      path: '/registerUserInfo',
-      query: { username: registerForm.username, phone: registerForm.phone }
-    })
-  } catch (error: any) {
-    ElMessage.error('用户名校验失败')
-    return
-  }
+  // if (!formEl) return
+  // try {
+  //   await formEl.validateField(type)
+  //   if (correctCode.value !== registerForm.phoneCode) {
+  //     ElMessage.error('验证码输入错误')
+  //     return
+  //   }
+  //   if (!registerForm.phoneCode) {
+  //     ElMessage.error('验证码不能为空')
+  //     return
+  //   }
+  //   await router.push({
+  //     path: '/registerUserInfo',
+  //     query: { username: registerForm.username, phone: registerForm.phone }
+  //   })
+  // } catch (error: any) {
+  //   ElMessage.error('用户名校验失败')
+  //   return
+  // }
+  await router.push({
+    path: '/registerUserInfo',
+    query: { username: registerForm.username, phone: registerForm.phone }
+  })
 }
 
 onUnmounted(() => {
@@ -173,41 +181,46 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.register-count {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  background-color: #2b3e49;
-  padding: 20px;
-  -webkit-app-region: drag;
+@import '../../css/account.css';
+
+:deep(.el-input-group__append) {
+  /* 适配注册页的红粉色系，更柔和不刺眼 */
+  background: rgba(237, 40, 100, 0.7);
+  /* 玻璃边框+圆角，贴合整体风格 */
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  /* 去掉默认阴影，加细腻内发光 */
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.2);
+  /* 文字样式优化 */
+  color: #fff;
+  font-size: 13px;
+  /* 交互动效增强 */
+  transition: all 0.2s ease;
 }
 
-.register-mid {
-  /* 不可拖动，保证能够点击 */
-  -webkit-app-region: no-drag;
+/* hover效果：提亮+轻微放大 */
+:deep(.el-input-group__append):hover {
+  background: rgba(237, 40, 100, 0.85);
+  transform: scale(1.02);
+  box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.3);
 }
 
-.register-form {
-  margin-top: 30px;
-}
-
-.el-input {
-  height: 40px;
-}
-
-.register-form-button {
-  display: flex;
-  justify-content: space-around;
-}
-
-.register-form-button button {
-  width: 50%;
+/* 不可点击时的样式（比如倒计时中） */
+:deep(.el-input-group__append):disabled {
+  background: rgba(237, 40, 100, 0.4);
+  cursor: not-allowed;
+  transform: none;
 }
 
 .register-bottom {
-  /* 不可拖动，保证能够点击 */
+  display: flex;
+  justify-content: end;
+  margin-top: 20px;
+  font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-style: italic;
+  text-align: center;
+  color: #ffffff;
+  text-decoration: underline;
   -webkit-app-region: no-drag;
 }
 </style>

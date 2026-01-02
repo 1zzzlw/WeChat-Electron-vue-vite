@@ -31,6 +31,7 @@ let addFriendWindow = null
 let createGroupWindow = null
 let settingViewWindow = null
 let captureWindow = null
+let loadingWindow = null
 let tray = null
 const login_width = 300
 const login_height = 370
@@ -72,7 +73,7 @@ function createMainWindow() {
     // alwaysOnTop: true,
     // 使窗口背景透明（窗口区域会显示桌面或下层窗口的内容）
     // transparent: true,
-
+    backgroundColor: '#00000000',
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       // 关闭网页安全限制（允许加载本地文件）

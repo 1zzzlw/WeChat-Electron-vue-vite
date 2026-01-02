@@ -1,5 +1,6 @@
 <template>
   <div class="login-count">
+    <span></span>
     <div class="login-top">
       <h1 class="title">登录</h1>
     </div>
@@ -53,7 +54,7 @@
       </el-form>
     </div>
     <div class="login-bottom">
-      <div class="login-bottom-reset">重置密码</div>
+      <router-link to="/" class="login-bottom-reset">重置密码</router-link>
     </div>
   </div>
   <WindowControls :showSetTop="false" :showSetMiniSize="false" :showSetFullScreen="false" />
@@ -96,9 +97,9 @@ const loginForm = reactive({
 })
 
 const rules = reactive<FormRules>({
-  account: [{ required: true, message: '账号不能为空', trigger: 'blur' }],
-  password: [{ required: true, message: '密码不能为空', trigger: 'blur' }],
-  verifyCode: [{ required: true, message: '验证码不能为空', trigger: 'blur' }]
+  account: [{ required: true, message: '账号不能为空', trigger: 'change' }],
+  password: [{ required: true, message: '密码不能为空', trigger: 'change' }],
+  verifyCode: [{ required: true, message: '验证码不能为空', trigger: 'change' }]
 })
 
 const Login = async (formEl: FormInstance | undefined) => {
@@ -132,32 +133,10 @@ const Register = () => {
 </script>
 
 <style scoped>
-.login-count {
-  /* 设置宽度和高度，确保有足够空间展示居中效果 */
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  background-color: #2b3e49;
-  padding: 20px;
-  -webkit-app-region: drag;
-}
-
-.login-form {
-  margin-top: 30px;
-}
-
-.title {
-  text-align: center;
-}
+@import "../../css/account.css";
 
 .login-mid {
   -webkit-app-region: no-drag;
-}
-
-.el-input {
-  height: 40px;
 }
 
 .login-verify {
@@ -178,18 +157,15 @@ const Register = () => {
   height: 40px;
 }
 
-.login-form-button {
+.login-bottom {
   display: flex;
-  justify-content: space-around;
-}
-
-.login-form-button button {
-  width: 50%;
-}
-
-.login-bottom-reset {
-  text-align: center;
+  justify-content: end;
   margin-top: 20px;
+  font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-style: italic;
+  text-align: center;
+  color: #ffffff;
+  text-decoration: underline;
   -webkit-app-region: no-drag;
 }
 </style>

@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      user-select: none;
+    }
+
+    .container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* 标题动画：6秒延迟 + 从左到右渐显 + 科技感字体 */
+    .title {
+      /* 基础字体样式（可根据你的页面调整） */
+      font-family: "Microsoft Yahei", "PingFang SC", sans-serif;
+      font-size: 28px;
+      font-weight: 600;
+      color: #b3c8ff;
+      /* 和M/I填充色统一 */
+      /* 核心：动画前保持透明，溢出隐藏（保证渐显效果） */
+      opacity: 0;
+      overflow: hidden;
+      position: relative;
+      /* 动画：6秒延迟 + 1.5秒渐显 + 停在显隐状态 */
+      animation: titleFadeIn 1.5s ease-out 6s 1 forwards;
+      /* 文字发光效果 */
+      text-shadow: 0 0 8px rgba(179, 200, 255, 0.5), 0 0 20px rgba(120, 140, 255, 0.3);
+    }
+
+    /* 从左到右渐显核心动画 */
+    @keyframes titleFadeIn {
+      0% {
+        opacity: 0;
+        transform: translateX(-100%);
+        -webkit-mask: linear-gradient(90deg, transparent 0%, black 0%);
+        mask: linear-gradient(90deg, transparent 0%, black 0%);
+      }
+
+      100% {
+        opacity: 1;
+        transform: translateX(0);
+        -webkit-mask: linear-gradient(90deg, transparent 0%, black 100%);
+        mask: linear-gradient(90deg, transparent 0%, black 100%);
+      }
+    }
+
+    .title:hover {
+      color: #f5f8ff;
+      text-shadow: 0 0 12px rgba(245, 248, 255, 0.8), 0 0 30px rgba(120, 140, 255, 0.6);
+      transition: all 0.3s ease;
+    }
+
+    .IMLoading {
+      width: 730px;
+      height: 500px;
+      display: flex;
+      justify-content: space-between;
+      padding: 60px;
+    }
+
+    .I {
+      width: 30px;
+      height: 400px;
+      position: relative;
+      transition: all 0.5s ease;
+      overflow: hidden;
+      /* 轻微圆角*/
+      border-radius: 6px;
+      /* 倾斜字体 */
+      transform: skewX(-12deg) scale(1);
+    }
+
+    /* 改变进度条颜色 */
+    .I:hover::before {
+      opacity: 0.95;
+      /* 修改渐变颜色 */
+      background-image: linear-gradient(to bottom, #f5f8ff, #99aaff);
+    }
+
+    .I::before {
+      content: '';
+      position: absolute;
+      border-radius: 5px;
+      width: 100%;
+      height: 100%;
+      /* 初始状态：颜色高度为0（完全看不到），锚点在底部 */
+      background-size: 100% 0%;
+      /* 颜色从底部开始填充 */
+      background: linear-gradient(to bottom, #b3c8ff, #8a9eff) no-repeat bottom;
+      /* 循环进度 */
+      /* animation: fillUp 3s linear infinite; */
+      /* 一次性进度 */
+      animation: fillUp 1.5s ease-out 1 forwards;
+      /* 给填充层加轻微透明度，不遮挡凹凸质感 */
+      opacity: 0.85;
+      transition: background 0.3s ease;
+    }
+
+    @keyframes fillUp {
+      0% {
+        background-size: 100% 0%;
+        opacity: 0.85;
+      }
+
+      5% {
+        background-size: 100% 5%;
+        opacity: 0.9;
+      }
+
+      100% {
+        background-size: 100% 100%;
+        opacity: 1;
+      }
+    }
+
+    .M {
+      width: 450px;
+      height: 410px;
+      display: flex;
+      justify-content: space-around;
+      padding: 0 10px 0 10px;
+      position: relative;
+    }
+
+    .vertical {
+      width: 30px;
+      height: 400px;
+      transform: skewX(-12deg);
+      background: transparent;
+      position: relative;
+      overflow: hidden;
+      border-radius: 6px;
+    }
+
+    .slant {
+      width: 30px;
+      height: 400px;
+      transform: skewX(12deg);
+      background: transparent;
+      position: relative;
+      overflow: hidden;
+      border-radius: 6px;
+    }
+
+    /* 1. 第一个vertical（左竖）：自下而上（手写第1笔） */
+    .vertical:nth-child(1)::before {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background-image: linear-gradient(to bottom, #b3c8ff, #8a9eff);
+      background-size: 100% 0%;
+      background-repeat: no-repeat;
+      background-position: bottom;
+      /* 自下而上动画 */
+      animation: fillUp 1.5s ease-out 1.5s 1 forwards;
+      opacity: 0.85;
+      transition: background 0.3s ease;
+    }
+
+    /* 2. 第一个slant（左斜）：自上而下（手写第2笔，接左竖结尾） */
+    .slant:nth-child(2)::before {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background-image: linear-gradient(to top, #b3c8ff, #8a9eff);
+      background-size: 100% 0%;
+      background-repeat: no-repeat;
+      background-position: top;
+      /* 等第1笔完成后启动 */
+      animation: fillUp 1.5s ease-out 3s 1 forwards;
+      opacity: 0.85;
+      transition: background 0.3s ease;
+    }
+
+    /* 3. 第二个vertical（右竖）：自下而上（手写第3笔，接左斜结尾） */
+    .vertical:nth-child(3)::before {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background-image: linear-gradient(to bottom, #b3c8ff, #8a9eff);
+      background-size: 100% 0%;
+      background-repeat: no-repeat;
+      background-position: bottom;
+      /* 等第2笔完成后启动 */
+      animation: fillUp 1.5s ease-out 4.5s 1 forwards;
+      opacity: 0.85;
+      transition: background 0.3s ease;
+    }
+
+    /* 4. 第二个slant（右斜）：自上而下（手写第4笔，接右竖结尾） */
+    .slant:nth-child(4)::before {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background-image: linear-gradient(to top, #b3c8ff, #8a9eff);
+      background-size: 100% 0%;
+      background-repeat: no-repeat;
+      background-position: top;
+      /* 等第3笔完成后启动 */
+      animation: fillUp 1.5s ease-out 6s 1 forwards;
+      opacity: 0.85;
+      transition: background 0.3s ease;
+    }
+
+    .IMLoading:hover .I,
+    .IMLoading:hover .vertical,
+    .IMLoading:hover .slant {
+      box-shadow: inset 3px 3px 6px rgba(220, 230, 255, 0.3),
+      inset -3px -3px 6px rgba(0, 0, 0, 0.2),
+      0 4px 12px rgba(0, 0, 0, 0.15),
+      0 0 20px rgba(120, 140, 255, 0.5);;
+      border-color: rgba(120, 140, 255, 0.7);
+    }
+
+    .IMLoading:hover .I {
+      transform: skewX(-8deg) scale(1.15);
+    }
+
+    .IMLoading:hover .vertical {
+      transform: skewX(-8deg) scale(1.15)
+    }
+
+    .IMLoading:hover .slant {
+      transform: skewX(16deg) scale(1.15)
+    }
+
+    .M:hover .vertical::before {
+      opacity: 0.95;
+      /* 修改渐变颜色 */
+      background-image: linear-gradient(to bottom, #f5f8ff, #99aaff);
+    }
+
+    .M:hover .slant::before {
+      opacity: 0.95;
+      /* 修改渐变颜色 */
+      background-image: linear-gradient(to bottom, #f5f8ff, #99aaff);
+    }
+
+
+    @keyframes fillUp {
+      0% {
+        background-size: 100% 0%;
+        opacity: 0.85;
+      }
+
+      5% {
+        background-size: 100% 5%;
+        opacity: 0.9;
+      }
+
+      100% {
+        background-size: 100% 100%;
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+
+<body>
+<div class="container">
+  <span class="title">zzzlew-IM聊天室</span>
+  <div class="IMLoading">
+    <div class="I"></div>
+    <div class="M">
+      <div class="vertical"></div>
+      <div class="slant"></div>
+      <div class="vertical"></div>
+      <div class="slant"></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

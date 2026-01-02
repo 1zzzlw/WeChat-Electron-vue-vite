@@ -1,5 +1,9 @@
 <template>
   <div class="uploadAvatar-count">
+    <span></span>
+    <div class="register-top">
+      <h1 class="title">注册</h1>
+    </div>
     <div class="uploadAvatar-top">
       <div class="title">上传头像</div>
     </div>
@@ -96,44 +100,49 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.uploadAvatar-count {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  background-color: #2b3e49;
-  padding: 20px;
-  -webkit-app-region: drag;
-}
+@import '../../css/account.css';
 
 .title {
   text-align: center;
+  color: #fff; /* 适配深色背景的白色文字 */
 }
 
-.uploadAvatar-top {
-  margin-bottom: 30px;
-}
-
+/* 上传区域：调整尺寸+hover效果 */
 .uploadAvatar-mid {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 30px;
-  margin-bottom: 30px;
   -webkit-app-region: no-drag;
+  width: 180px; /* 适配头像显示尺寸 */
+  height: 180px;
+  margin: 30px auto;
 }
 
+/* 已上传头像：加圆角+hover放大 */
 .avatar {
   width: 100%;
   height: 100%;
+  border-radius: 8px; /* 轻微圆角更精致 */
+  transition: transform 0.2s ease;
+}
+.avatar:hover {
+  transform: scale(1.03); /* 头像hover轻微放大 */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); /* 增强阴影 */
 }
 
+/* 上传图标：调整样式+hover效果 */
 .avatar-uploader-icon {
   font-size: 40px;
-  color: #8c939d;
+  color: rgba(255, 255, 255, 0.7); /* 浅白图标适配背景 */
+  cursor: pointer;
+  transition: color 0.2s ease;
 }
 
+.avatar-uploader-icon:hover {
+  color: #ff76e0; /* 注册页粉紫调hover色 */
+}
+
+/* 底部按钮：hover效果 */
 .uploadAvatar-bottom {
   display: flex;
   margin-top: 30px;
@@ -141,7 +150,13 @@ onMounted(() => {
   justify-content: space-around;
 }
 
-.uploadAvatar-bottom button {
-  width: 50%;
+/* 给el-button加hover效果 */
+:deep(.el-button) {
+  transition: all 0.2s ease;
+}
+
+:deep(.el-button:hover) {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
 }
 </style>
