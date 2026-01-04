@@ -1,0 +1,103 @@
+.user-message-list,
+.user-list {
+  display: flex;
+  height: 100%;
+  width: 100%;
+}
+
+.user-message-list-left,
+.user-list-left {
+  width: 200px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: rgba(35, 45, 60, 0.2);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-right: 1px solid rgba(66, 153, 225, 0.4);
+}
+
+.message-list-top,
+.list-top {
+  height: 70px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 10px 10px 10px;
+  gap: 5px;
+  background-color: rgba(40, 50, 65, 0.2);
+}
+
+
+/* 搜索框前置元素 */
+:deep(.el-input-group__prepend) {
+  background: rgba(35, 45, 60, 0.7);
+  box-shadow: inset 0 2px 2px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(66, 153, 225, 0.2);
+  border-right: none;
+  border-radius: 6px 0 0 6px;
+}
+
+/* 输入框文字 */
+:deep(.el-input__inner) {
+  color: #f0f0f0; /* 保留浅白文字，匹配整体文字色 */
+  background: transparent;
+  border: none;
+  &::placeholder {
+    color: rgba(240, 240, 240, 0.5);
+  }
+}
+
+/* 输入框外层容器 */
+:deep(.el-input__wrapper) {
+  /* 替换纯黑背景为深灰蓝调，增加玻璃模糊 */
+  background: rgba(35, 45, 60, 0.7);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: none;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  border: 1px solid rgba(66, 153, 225, 0.2);
+}
+
+/* 输入框聚焦时：替换白色发光为科技蓝发光，更贴合整体风格 */
+:deep(.el-input__wrapper:focus-within) {
+  box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.25);
+  /* 聚焦时边框高亮，强化交互反馈 */
+  border-color: rgba(66, 153, 225, 0.4);
+}
+
+/* 补充：整行输入框的圆角统一 */
+:deep(.el-input-group) {
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.message-list-bottom,
+.list-bottom {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+.left-list {
+  /* 固定高度确保所有项目一致 */
+  height: 72px;
+  /* 确保占满父容器 */
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  gap: 10px;
+  transition: 0.3s;
+  transform-style: preserve-3d;
+}
+
+.left-list:hover {
+  background-color: rgba(50, 70, 95, 0.7);
+  transform: translate3d(0, -2px, 5px);
+  box-shadow:
+    0 4px 12px rgba(66, 153, 225, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  text-shadow: 0 0 6px rgba(66, 153, 225, 0.3);
+}

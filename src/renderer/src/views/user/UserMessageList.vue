@@ -4,7 +4,7 @@
       <div class="message-list-top">
         <AutocompleteSearch />
         <el-dropdown>
-          <el-button :icon="Plus" square></el-button>
+          <el-button style="background-color: rgba(35, 45, 60, 0.7); border-color: rgba(66, 153, 225, 0.2);" :icon="Plus" square></el-button>
           <template #dropdown>
             <el-dropdown-menu>
               <el-dropdown-item @click="createGroupChat">发起群聊</el-dropdown-item>
@@ -234,48 +234,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.user-message-list {
-  display: flex;
-  height: 100%;
-  width: 100%;
-}
-
-.user-message-list-left {
-  width: 200px;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  background-color: #91b5cf;
-}
-
-.message-list-top {
-  height: 70px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 10px 10px 10px;
-  gap: 5px;
-  background-color: white;
-}
-
-.message-list-bottom {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  overflow: hidden;
-}
-
-.left-list {
-  /* 固定高度确保所有项目一致 */
-  height: 72px;
-  /* 确保占满父容器 */
-  width: 100%;
-  display: flex;
-  align-items: center;
-  padding: 10px;
-  gap: 10px;
-  transition: 0.3s;
-}
+@import "../../css/layout.css";
 
 .mid-message {
   flex: 1;
@@ -336,10 +295,6 @@ onMounted(() => {
   right: 0;
 }
 
-.left-list:hover {
-  background-color: #f5f7fa;
-}
-
 .left-list-img {
   width: 50px;
   height: 50px;
@@ -350,7 +305,6 @@ onMounted(() => {
 
 .user-chat-list-right {
   flex: 1;
-  background-color: aqua;
   -webkit-app-region: drag;
 }
 </style>

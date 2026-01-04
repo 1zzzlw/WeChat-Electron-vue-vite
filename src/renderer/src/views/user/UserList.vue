@@ -281,48 +281,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.user-list {
-  display: flex;
-  height: 100%;
-  width: 100%;
-}
-
-.user-list-left {
-  width: 200px;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  background-color: #91b5cf;
-}
-
-.list-top {
-  height: 70px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 10px 10px 10px;
-  gap: 5px;
-  background-color: white;
-}
-
-.list-bottom {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  overflow: hidden;
-}
-
-.left-list {
-  /* 固定高度确保所有项目一致 */
-  height: 72px;
-  /* 确保占满父容器 */
-  width: 100%;
-  display: flex;
-  align-items: center;
-  padding: 10px;
-  gap: 10px;
-  transition: 0.3s;
-}
+@import "../../css/layout.css";
 
 .left-list-group {
   /* 固定高度确保所有项目一致 */
@@ -387,22 +346,6 @@ onMounted(() => {
   color: #ffffff;
 }
 
-.left-list:hover {
-  background-color: #f5f7fa;
-}
-
-.left-applyList-bg {
-  background-color: #f5f7fa;
-}
-
-.left-groupApplyList-bg {
-  background-color: #f5f7fa;
-}
-
-.left-friendList-bg {
-  background-color: #f5f7fa;
-}
-
 .left-list-img {
   width: 50px;
   height: 50px;
@@ -413,7 +356,6 @@ onMounted(() => {
 
 .user-list-right {
   flex: 1;
-  background-color: aqua;
   -webkit-app-region: drag;
 }
 </style>

@@ -15,7 +15,7 @@
       </el-drawer>
     </div>
     <div class="chat-content">
-      <el-scrollbar ref="scrollbarRef">
+      <el-scrollbar ref="scrollbarRef" style="height: 100%; width: 100%">
         <div class="chat-message" v-for="(message, index) in messageArr" :key="index">
           <div
             class="chat-list-left"
@@ -108,7 +108,7 @@
       </el-popover>
       <el-button :icon="VideoCamera" size="large" square></el-button>
     </div>
-    <div class="chat-input">
+    <form class="chat-input">
       <el-input
         v-model="message"
         type="textarea"
@@ -117,11 +117,12 @@
         placeholder="请输入消息"
         spellcheck="false"
         clearable
+        @keydown.enter="handleEnterMessage"
       />
-    </div>
+    </form>
     <div class="sendButton">
-      <el-button type="success" v-if="chatType" @click="sendPrivateMessage">发送</el-button>
-      <el-button type="success" v-else @click="sendGroupMessage">发送</el-button>
+      <el-button type="primary" v-if="chatType" @click="sendPrivateMessage">发送</el-button>
+      <el-button type="primary" v-else @click="sendGroupMessage">发送</el-button>
     </div>
   </div>
 </template>
@@ -221,6 +222,18 @@ const captureBtn = () => {
   })
 }
 
+const handleEnterMessage = (e: KeyboardEvent) => {
+  if (e.shiftKey) {
+    return
+  }
+  e.preventDefault()
+  if (chatType.value) {
+    sendPrivateMessage()
+  } else {
+    sendGroupMessage()
+  }
+}
+
 // 发送单聊消息
 const sendPrivateMessage = async () => {
   // 获取会话id
@@ -303,7 +316,7 @@ const sendApi = (content: string, convId: string, msgType: number) => {
     conversationId: convId,
     content: content,
     msgType: msgType
-  }).then((res) => {
+  }).then(async (res) => {
     console.info('发送消息成功', res)
     // 清空输入框
     message.value = ''
@@ -329,7 +342,7 @@ const sendApi = (content: string, convId: string, msgType: number) => {
         // TODO 暂时通过MySQL传来的图片路径展示
       }
       // 滚动到最底部
-      nextTick()
+      await nextTick()
       scrollToBottom()
     }
   })
@@ -337,7 +350,7 @@ const sendApi = (content: string, convId: string, msgType: number) => {
 
 function scrollToBottom() {
   if (scrollbarRef.value) {
-    scrollbarRef.value.setScrollTop(999999)
+    scrollbarRef.value.setScrollTop(1000000)
   }
 }
 
@@ -472,7 +485,6 @@ watch(
   },
   { immediate: true }
 )
-
 </script>
 
 <style scoped>
@@ -483,7 +495,9 @@ watch(
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  background-color: #2b3e49;
+  background-color: rgba(28, 38, 50, 0.4);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   -webkit-app-region: no-drag;
 }
 
@@ -493,8 +507,9 @@ watch(
   display: flex;
   align-items: center;
   padding: 10px;
-  border-bottom: 1px solid #ffffff;
+  border-bottom: 1px solid rgba(66, 153, 225, 0.5);
   -webkit-app-region: drag;
+  color: #f0f0f0;
 }
 
 .chat-title button {
@@ -504,7 +519,7 @@ watch(
   -webkit-app-region: no-drag;
 }
 
-/* 2. 修改抽屉头部（标题栏） */
+/* 2. 修改抽屉头部*/
 :deep(.download-drawer .el-drawer__header) {
   background-color: #e8f4ff; /* 头部背景 */
   padding: 15px 20px; /* 头部内边距 */
@@ -558,7 +573,7 @@ img {
   height: 30px;
   display: flex;
   align-items: center;
-  border-top: 1px solid #ffffff;
+  border-top: 1px solid rgba(3, 32, 120, 0.5);
   overflow: hidden;
 }
 
@@ -570,6 +585,15 @@ img {
   font-size: 20px;
   background-color: transparent;
   border: none;
+  color: rgba(240, 240, 240, 0.8);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.chat-tool button:hover,
+.chat-title button:hover {
+  color: rgba(66, 153, 225, 0.9);
+  text-shadow: 0 0 6px rgba(66, 153, 225, 0.3);
 }
 
 .upload-button {
@@ -592,9 +616,15 @@ img {
 }
 
 .chat-input :deep(.el-textarea__inner) {
-  background-color: #2b3e49;
-  color: #ffffff;
-  box-shadow: none; /* 移除可能的阴影 */
+  background-color: rgba(28, 38, 50, 1);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #f0f0f0;
+  box-shadow: none;
+  border: 1px solid rgba(66, 153, 225, 0.2);
+  &::placeholder {
+    color: rgba(240, 240, 240, 0.5);
+  }
 }
 
 :deep(.my-custom-popover) {
@@ -626,6 +656,39 @@ img {
   align-items: center;
 }
 
+:deep(.el-button--primary) {
+  background: rgba(66, 153, 225, 0.2);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: none;
+  border-radius: 6px;
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.2),
+    inset 0 1px 2px rgba(255, 255, 255, 0.08);
+  color: #f0f0f0;
+  font-size: 14px;
+  padding: 8px 24px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+:deep(.el-button--primary:hover),
+:deep(.el-button--primary:focus) {
+  background: rgba(66, 153, 225, 0.3);
+  box-shadow:
+    0 3px 8px rgba(0, 0, 0, 0.25),
+    inset 0 1px 3px rgba(255, 255, 255, 0.1);
+  transform: translateY(-1px);
+}
+
+:deep(.el-button--primary:active) {
+  transform: translateY(0);
+  background: rgba(66, 153, 225, 0.15);
+  box-shadow:
+    0 1px 4px rgba(0, 0, 0, 0.15),
+    inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
 .el-button {
   width: 100px;
   margin: 0 10px 5px 0;
@@ -637,13 +700,21 @@ img {
   border-radius: 8px;
   max-width: 400px;
   word-break: break-all;
-  position: relative; /* 用于定位三角箭头 */
+  /* 定位三角箭头 */
+  position: relative;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
+
 /* 左侧好友气泡 */
 .left-bubble {
-  background: #f1f1f1;
-  border-bottom-left-radius: 0; /* 左侧气泡左下角无圆角，贴合箭头 */
+  background: rgba(45, 55, 70, 0.85);
+  color: #f0f0f0;
+  /* 左侧气泡左下角无圆角，贴合箭头 */
+  border-bottom-left-radius: 0;
+  border: 1px solid rgba(66, 153, 225, 0.1);
 }
+
 /* 左侧箭头 */
 .left-bubble::before {
   content: '';
@@ -653,15 +724,18 @@ img {
   width: 0;
   height: 0;
   border-top: 8px solid transparent;
-  border-right: 8px solid #f1f1f1;
+  border-right: 8px solid rgba(45, 55, 70, 0.85);
   border-bottom: 8px solid transparent;
 }
+
 /* 右侧自己的气泡 */
 .right-bubble {
-  background: #409eff;
-  color: #fff;
-  border-bottom-right-radius: 0; /* 右侧气泡右下角无圆角，贴合箭头 */
+  background: rgba(66, 153, 225, 0.35);
+  color: #ffffff;
+  border-bottom-right-radius: 0;
+  border: 1px solid rgba(66, 153, 225, 0.2);
 }
+
 /* 右侧箭头 */
 .right-bubble::after {
   content: '';
@@ -671,15 +745,7 @@ img {
   width: 0;
   height: 0;
   border-top: 8px solid transparent;
-  border-left: 8px solid #409eff;
+  border-left: 8px solid rgba(66, 153, 225, 0.35);
   border-bottom: 8px solid transparent;
-}
-/* 气泡内图片样式 */
-.chat-bubble img {
-  max-width: 300px;
-  max-height: 200px;
-  display: block;
-  margin: 5px 0;
-  border-radius: 4px;
 }
 </style>

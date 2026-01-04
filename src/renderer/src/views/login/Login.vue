@@ -5,7 +5,13 @@
       <h1 class="title">登录</h1>
     </div>
     <div class="login-mid">
-      <el-form class="login-form" :model="loginForm" ref="ruleFormRef" :rules="rules">
+      <el-form
+        class="login-form"
+        :model="loginForm"
+        ref="ruleFormRef"
+        :rules="rules"
+        @keyup.enter="handleEnterLogin"
+      >
         <el-form-item prop="username">
           <el-input
             placeholder="请输入账号"
@@ -102,6 +108,11 @@ const rules = reactive<FormRules>({
   verifyCode: [{ required: true, message: '验证码不能为空', trigger: 'change' }]
 })
 
+// 回车触发登录
+const handleEnterLogin = () => {
+  Login(ruleFormRef.value)
+}
+
 const Login = async (formEl: FormInstance | undefined) => {
   if (!formEl) return
   console.info('登录表单数据:', loginForm)
@@ -133,7 +144,7 @@ const Register = () => {
 </script>
 
 <style scoped>
-@import "../../css/account.css";
+@import '../../css/account.css';
 
 .login-mid {
   -webkit-app-region: no-drag;
@@ -161,7 +172,7 @@ const Register = () => {
   display: flex;
   justify-content: end;
   margin-top: 20px;
-  font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
   font-style: italic;
   text-align: center;
   color: #ffffff;

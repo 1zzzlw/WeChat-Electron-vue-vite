@@ -1,4 +1,4 @@
-import { resolve } from 'path'
+import { join } from 'path'
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
 import vue from '@vitejs/plugin-vue'
 
@@ -14,10 +14,11 @@ export default defineConfig({
     plugins: [externalizeDepsPlugin()]
   },
   renderer: {
-    publicDir: resolve(__dirname, 'public'),
+    // 构建项目的静态资源路径
+    publicDir: join(__dirname, 'public'),
     resolve: {
       alias: {
-        '@': resolve('src/renderer/src')
+        '@': join(__dirname, 'src/renderer/src')
       }
     },
     plugins: [vue()],

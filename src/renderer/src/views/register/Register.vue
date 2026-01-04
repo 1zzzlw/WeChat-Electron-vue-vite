@@ -5,7 +5,13 @@
       <h1 class="title">注册</h1>
     </div>
     <div class="register-mid">
-      <el-form class="register-form" :model="registerForm" ref="ruleFormRef" :rules="rules">
+      <el-form
+        @keyup.enter="handleEnterRegister"
+        class="register-form"
+        :model="registerForm"
+        ref="ruleFormRef"
+        :rules="rules"
+      >
         <el-form-item prop="username">
           <el-input
             placeholder="输入用户名"
@@ -63,12 +69,14 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, onUnmounted } from 'vue'
+import { ref, reactive, onUnmounted, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { sendPhoneCodeApi } from '../../api/Register'
 import { ElMessage, FormInstance, FormRules } from 'element-plus'
 import WindowControls from '../../components/WindowControls.vue'
+import { useRegisterInfoStore } from '../../stores/RegisterInfoStore'
 
+const registerInfoStore = useRegisterInfoStore()
 const router = useRouter()
 const isCounting = ref(false)
 const count = ref(60)
@@ -145,32 +153,45 @@ const returnLogin = () => {
   router.push('/login')
 }
 
+// 回车触发下一步
+const handleEnterRegister = () => {
+  nextStep(ruleFormRef.value, 'username')
+}
+
 const nextStep = async (formEl: FormInstance | undefined, type: 'username') => {
   console.log('registerForm: ', registerForm)
-  // if (!formEl) return
-  // try {
-  //   await formEl.validateField(type)
-  //   if (correctCode.value !== registerForm.phoneCode) {
-  //     ElMessage.error('验证码输入错误')
-  //     return
-  //   }
-  //   if (!registerForm.phoneCode) {
-  //     ElMessage.error('验证码不能为空')
-  //     return
-  //   }
-  //   await router.push({
-  //     path: '/registerUserInfo',
-  //     query: { username: registerForm.username, phone: registerForm.phone }
-  //   })
-  // } catch (error: any) {
-  //   ElMessage.error('用户名校验失败')
-  //   return
-  // }
-  await router.push({
-    path: '/registerUserInfo',
-    query: { username: registerForm.username, phone: registerForm.phone }
-  })
+  if (!formEl) return
+  try {
+    await formEl.validateField(type)
+    if (correctCode.value !== registerForm.phoneCode) {
+      ElMessage.error('验证码输入错误')
+      return
+    }
+    if (!registerForm.phoneCode) {
+      ElMessage.error('验证码不能为空')
+      return
+    }
+    // 保存注册信息
+    registerInfoStore.setRegisterInfo({
+      userName: registerForm.username,
+      phoneNumber: registerForm.phone
+    })
+    await router.push({
+      path: '/registerUserInfo',
+      query: { username: registerForm.username, phone: registerForm.phone }
+    })
+  } catch (error: any) {
+    ElMessage.error('用户名校验失败')
+    return
+  }
 }
+
+onMounted(() => {
+  const registerInfo = registerInfoStore.getRegisterOneInfo()
+  console.log(registerInfo)
+  registerForm.username = registerInfo.userName
+  registerForm.phone = registerInfo.phoneNumber
+})
 
 onUnmounted(() => {
   if (timer) {

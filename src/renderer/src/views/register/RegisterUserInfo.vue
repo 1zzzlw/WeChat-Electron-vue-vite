@@ -10,6 +10,7 @@
         :model="registerUserInfoForm"
         :rules="rules"
         ref="ruleFormRef"
+        @keyup.enter="handleEnterRegisterUserInfo"
       >
         <el-form-item prop="password">
           <el-input
@@ -65,7 +66,9 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, FormInstance } from 'element-plus'
+import { useRegisterInfoStore } from '../../stores/RegisterInfoStore'
 
+const registerInfoStore = useRegisterInfoStore()
 const router = useRouter()
 const route = useRoute()
 const ruleFormRef = ref<FormInstance>()
@@ -79,6 +82,10 @@ const registerUserInfoForm = reactive({
 })
 
 onMounted(() => {
+  const registerTwoInfo = registerInfoStore.getRegisterTwoInfo()
+  registerUserInfoForm.password = registerTwoInfo.password || ''
+  registerUserInfoForm.gender = registerTwoInfo.gender || ''
+
   registerUserInfoForm.username = route.query?.username || ''
   registerUserInfoForm.phone = route.query?.phone || ''
 })
@@ -100,20 +107,30 @@ const returnStep = () => {
   router.push('/register')
 }
 
+// 回车触发下一步
+const handleEnterRegisterUserInfo = () => {
+  nextStep(ruleFormRef.value)
+}
+
 const nextStep = async (formRef: FormInstance | undefined) => {
-  // if (!formRef) return
-  // if (confirmPassword.value !== registerUserInfoForm.password) {
-  //   ElMessage.error('确认密码输入错误')
-  //   return
-  // }
-  // try {
-  //   await formRef.validate()
-  //   console.log(registerUserInfoForm)
-  //   await router.push({ path: '/uploadAvatar', query: { ...registerUserInfoForm } })
-  // } catch (error: any) {
-  //   ElMessage.error('表单校验失败')
-  // }
-  await router.push({ path: '/uploadAvatar', query: { ...registerUserInfoForm } })
+  if (!formRef) return
+  if (confirmPassword.value !== registerUserInfoForm.password) {
+    ElMessage.error('确认密码输入错误')
+    return
+  }
+  try {
+    await formRef.validate()
+    console.log(registerUserInfoForm)
+    registerInfoStore.setRegisterInfo({
+      userName: registerUserInfoForm.username,
+      phoneNumber: registerUserInfoForm.phone,
+      password: registerUserInfoForm.password,
+      gender: registerUserInfoForm.gender
+    })
+    await router.push({ path: '/uploadAvatar', query: { ...registerUserInfoForm } })
+  } catch (error: any) {
+    ElMessage.error('表单校验失败')
+  }
 }
 </script>
 

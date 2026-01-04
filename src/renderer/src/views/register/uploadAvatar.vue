@@ -26,6 +26,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { registerApi } from '../../api/Register'
 import { Plus } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import { useRegisterInfoStore } from '../../stores/RegisterInfoStore'
 
 interface UserInfo {
   username: string
@@ -36,6 +37,7 @@ interface UserInfo {
   avatar: string
 }
 
+const registerInfoStore = useRegisterInfoStore()
 const router = useRouter()
 const route = useRoute()
 // 存储预览图片的临时URL
@@ -76,6 +78,10 @@ const submitForm = () => {
       // 注册成功后，将用户头像和用户id存储到本地
       window.api.storeSetUserInfo('avatar', userInfo.avatar)
       window.api.storeSetUserInfo('userId', res.data)
+
+      // 清空缓存的注册信息
+      registerInfoStore.$reset()
+
       router.push('/main')
       window.api.resizeWindow('main')
     } else {

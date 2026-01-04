@@ -17,7 +17,6 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import Store from 'electron-store'
 import dayjs from 'dayjs'
-import fs from 'fs'
 
 // 初始化store实例，指定存储文件名（会生成user-token.json文件）
 const store = new Store({
@@ -74,6 +73,7 @@ function createMainWindow() {
     // 使窗口背景透明（窗口区域会显示桌面或下层窗口的内容）
     // transparent: true,
     backgroundColor: '#00000000',
+    opacity: 0.98,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       // 关闭网页安全限制（允许加载本地文件）

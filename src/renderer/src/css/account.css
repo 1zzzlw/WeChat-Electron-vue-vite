@@ -1,7 +1,8 @@
 .login-count,
 .register-count,
 .registerUserInfo-count,
-.uploadAvatar-count {
+.uploadAvatar-count,
+.pending-login-count {
   /* 设置宽度和高度，确保有足够空间展示居中效果 */
   width: 100%;
   height: 100%;
@@ -19,7 +20,8 @@
   z-index: 0;
 }
 
-.login-count::before {
+.login-count::before,
+.pending-login-count::before {
   content: '';
   position: absolute;
   top: 0;
@@ -67,10 +69,11 @@
   }
 }
 
-.login-count span::before {
+.login-count span::before,
+.pending-login-count span::before {
   content: '';
   position: absolute;
-  inset: 6px;
+  inset: 5px;
   background-size: cover;
   background: url('../assets/image/4.jpg') fixed center;
   background-size: cover;
@@ -84,7 +87,7 @@
 .uploadAvatar-count span::before {
   content: '';
   position: absolute;
-  inset: 6px;
+  inset: 5px;
   background-size: cover;
   background: url('../assets/image/2.jpg') fixed center;
   background-size: cover;
@@ -104,6 +107,19 @@
   position: absolute;
   top: 20px;
   left: 120px;
+  animation: titleFadeIn 1s ease forwards;
+}
+
+/* 标题渐显动画 */
+@keyframes titleFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .login-form,
@@ -141,7 +157,8 @@
 
 .login-form-button,
 .register-form-button,
-.registerUserInfo-form-button {
+.registerUserInfo-form-button,
+.pending-login-bottom {
   display: flex;
   justify-content: space-around;
 }
@@ -149,7 +166,8 @@
 .login-form-button button,
 .register-form-button button,
 .registerUserInfo-form-button button,
-.uploadAvatar-bottom button {
+.uploadAvatar-bottom button,
+.pending-login-bottom button {
   width: 50%;
 }
 
@@ -171,7 +189,8 @@
   transition: all 0.2s ease;
 }
 
-:deep(.el-button--primary:hover) {
+:deep(.el-button--primary:hover),
+:deep(.el-button--primary:focus) {
   background: rgba(255, 255, 255, 0.18);
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2),
   inset 0 1px 3px rgba(255, 255, 255, 0.15);
@@ -187,7 +206,7 @@
 .login-bottom,
 .register-bottom,
 .register-mid,
-.registerUserInfo-mid{
+.registerUserInfo-mid {
   /* 不可拖动，保证能够点击 */
   -webkit-app-region: no-drag;
 }
