@@ -1,6 +1,6 @@
 {
-	"userId": 1,
-	"avatar": "E:\\JavaWeb\\zzz-IM-web\\image\\1.jpg",
-	"token": "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjEsImV4cCI6MTc5OTAzODc5N30.ay1Xr5-oN1Qblz_s3cK9IqIg0vgPnDelbQRqlfjhr2A",
+	"userId": 2,
+	"avatar": "E:\\JavaWeb\\zzz-IM-web\\image\\2.jpg",
+	"token": "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjIsImV4cCI6MTc5OTA1MjQ4MH0.EMg5f86qfC0qDbZ2Vycbs1s9NztU88D8Pueg6e7Kr6I",
 	"storeLocation": "G:\\WeChatFile"
 }

@@ -370,7 +370,7 @@ const getMessageList = async () => {
   // 再判断缓存（此时 messageMap[convId] 一定是数组，不会报错）
   const cache = messageStore.messageMap[convId].length > 0
   if (cache) {
-    console.info('当前会话的聊天记录缓存非空')
+    console.info('当前会话的聊天记录缓存非空: ', messageStore.messageMap[convId])
     return
   }
 
@@ -405,7 +405,7 @@ const getGroupMemberList = async () => {
   // 再判断缓存（此时 groupMemberMap[convId] 一定是数组，不会报错）
   const cache = groupMemberStore.groupMemberMap[convId].length > 0
   if (cache) {
-    console.info('当前会话的群成员缓存非空')
+    console.info('当前会话的群成员缓存非空: ', groupMemberStore.groupMemberMap[convId])
     return
   }
 

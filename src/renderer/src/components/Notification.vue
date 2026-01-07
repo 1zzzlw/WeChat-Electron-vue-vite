@@ -21,6 +21,11 @@ const isOnline = ref(false)
 emitter.on('friendOnline', (data: any) => {
   isOnline.value = true
   console.info('好友上线:', data)
+
+  // 3秒后关闭通知
+  setTimeout(() => {
+    isOnline.value = false
+  }, 3000)
 })
 </script>
 
