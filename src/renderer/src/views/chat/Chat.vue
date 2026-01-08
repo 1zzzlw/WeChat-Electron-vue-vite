@@ -458,8 +458,8 @@ watch(
       if (!isDataLoaded.value && oldConversationId === undefined) {
         // 说明是第一次加载，更新用户的头像和id
         console.info('第一次加载，更新用户的头像和id')
-        avatarUrl.value = await window.api.storeGetUserInfo('avatar')
-        userId.value = await window.api.storeGetUserInfo('userId')
+        avatarUrl.value = await window.userInfoApi.storeGetUserInfo('avatar')
+        userId.value = await window.userInfoApi.storeGetUserInfo('userId')
       }
 
       // 判断当前会话是单聊还是群聊

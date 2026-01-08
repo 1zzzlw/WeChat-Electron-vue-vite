@@ -29,8 +29,8 @@ const returnLogin = () => {
 }
 
 const confirmLogin = async () => {
-  const token = await window.api.storeGetUserInfo('token')
-  const userId = await window.api.storeGetUserInfo('userId')
+  const token = await window.userInfoApi.storeGetUserInfo('token')
+  const userId = await window.userInfoApi.storeGetUserInfo('userId')
   const res = await PendingLoginApi(token, userId)
   if (res.code === 1) {
     await router.push('/main')
@@ -42,7 +42,7 @@ const confirmLogin = async () => {
 
 onMounted(async () => {
   // 从本地存储中获取头像
-  avatarUrl.value = await window.api.storeGetUserInfo('avatar')
+  avatarUrl.value = await window.userInfoApi.storeGetUserInfo('avatar')
 })
 </script>
 

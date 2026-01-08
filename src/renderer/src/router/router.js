@@ -145,7 +145,7 @@ const router = createRouter({
 // 全局前置守卫：处理所有路由跳转的权限判断
 router.beforeEach(async (to, from, next) => {
   // 1. 获取token（调用主进程的IPC接口）
-  const token = await window.api.storeGetUserInfo('token')
+  const token = await window.userInfoApi.storeGetUserInfo('token')
 
   if (to.path === '/friendAdd') {
     next()

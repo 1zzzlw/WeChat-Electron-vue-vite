@@ -292,7 +292,8 @@ class WebSocketManager {
   /** 重连逻辑 */
   private async tryReconnect() {
     if (this.lockReconnect) return
-    const token = await (window as any).api.storeGetUserInfo('token')
+    const token = localStorage.getItem('token')
+    // 没有 token 时，不尝试重连
     if (!token) return
 
     this.lockReconnect = true

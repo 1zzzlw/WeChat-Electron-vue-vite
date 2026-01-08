@@ -22,14 +22,14 @@ const choose = () => {
       location.value = filePath
       console.info('选择的存储位置:', filePath)
       // 将选择的路径保存到本地
-      window.api.storeSetUserInfo('storeLocation', filePath)
+      window.userInfoApi.storeSetUserInfo('storeLocation', filePath)
       console.info('存储位置已保存')
     }
   })
 }
 
 onMounted(async () => {
-  location.value = (await window.api.storeGetUserInfo('storeLocation')) || ''
+  location.value = (await window.userInfoApi.storeGetUserInfo('storeLocation')) || ''
 })
 </script>
 

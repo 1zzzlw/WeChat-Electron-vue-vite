@@ -5,53 +5,30 @@
       <h1 class="title">登录</h1>
     </div>
     <div class="login-mid">
-      <el-form
-        class="login-form"
-        :model="loginForm"
-        ref="ruleFormRef"
-        :rules="rules"
-        @keyup.enter="handleEnterLogin"
-      >
+      <el-form class="login-form" :model="loginForm" ref="ruleFormRef" :rules="rules" @keyup.enter="handleEnterLogin">
         <el-form-item prop="username">
-          <el-input
-            placeholder="请输入账号"
-            v-model="loginForm.account"
-            spellcheck="false"
-            clearable
-          >
+          <el-input placeholder="请输入账号" v-model="loginForm.account" spellcheck="false" clearable>
             <template #prepend>
-              <el-icon><User /></el-icon>
+              <el-icon>
+                <User />
+              </el-icon>
             </template>
           </el-input>
         </el-form-item>
 
         <el-form-item prop="password">
-          <el-input
-            placeholder="请输入密码"
-            type="password"
-            v-model="loginForm.password"
-            spellcheck="false"
-            clearable
-          >
+          <el-input placeholder="请输入密码" type="password" v-model="loginForm.password" spellcheck="false" clearable>
             <template #prepend>
-              <el-icon><Lock /></el-icon>
+              <el-icon>
+                <Lock />
+              </el-icon>
             </template>
           </el-input>
         </el-form-item>
 
         <el-form-item prop="verifyCode" class="login-verify">
-          <el-input
-            placeholder="请输入验证码"
-            v-model="loginForm.verifyCode"
-            spellcheck="false"
-            clearable
-          />
-          <img
-            :src="verifyCodeImg"
-            alt="验证码"
-            class="login-verifyImg"
-            @click="refreshVerifyCode"
-          />
+          <el-input placeholder="请输入验证码" v-model="loginForm.verifyCode" spellcheck="false" clearable />
+          <img :src="verifyCodeImg" alt="验证码" class="login-verifyImg" @click="refreshVerifyCode" />
         </el-form-item>
         <div class="login-form-button">
           <el-button type="primary" @click="Login(ruleFormRef)">登录</el-button>
@@ -123,8 +100,9 @@ const Login = async (formEl: FormInstance | undefined) => {
     const status = result.code
     console.log(status)
     if (status === 1) {
-      window.api.storeSetUserInfo('userId', result.data.id)
-      window.api.storeSetUserInfo('avatar', result.data.avatar)
+      window.userInfoApi.storeSetUserInfo('userId', result.data.id)
+      window.userInfoApi.storeSetUserInfo('avatar', result.data.avatar)
+
       await router.push('/main')
       window.api.resizeWindow('main')
     } else {

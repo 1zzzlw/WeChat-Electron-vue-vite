@@ -17,32 +17,23 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import Store from 'electron-store'
 import dayjs from 'dayjs'
+import './IPC/userInfoStoreIPC.js'
+import './IPC/windowToolIPC.js'
+import './IPC/newWindowIPC.js'
+import { initTable } from './DB/mainDB.js'
 
 // 初始化store实例，指定存储文件名（会生成user-token.json文件）
-const store = new Store({
+export const store = new Store({
   name: 'user-token', // 存储文件名称，避免和其他存储冲突
   fileExtension: 'json', // 文件后缀
   cwd: 'E:\\JavaWeb\\zzz-IM-web\\src\\store' // 存储目录（用自定义路径的目录）
 })
 
-let mainWindow = null
-let addFriendWindow = null
-let createGroupWindow = null
-let settingViewWindow = null
+export let mainWindow = null
 let captureWindow = null
-let loadingWindow = null
 let tray = null
 const login_width = 300
 const login_height = 370
-const main_width = 1100
-const main_height = 700
-const register_height = 490
-const friendAdd_width = 350
-const friendAdd_height = 520
-const createGroup_width = 820
-const createGroup_height = 620
-const settingView_width = 800
-const settingView_height = 650
 
 // 注册快捷键统一放在这个方法里面
 function registerShortcuts() {
@@ -109,6 +100,7 @@ function createMainWindow() {
     // 加载打包后的本地 HTML 文件（../renderer/index.html），这是应用打包后实际运行的静态资源，无需依赖开发服务器。
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
+
 }
 
 function createTray() {
@@ -137,72 +129,6 @@ function createTray() {
   })
 }
 
-function createExtraWindow(pagePath, options = {}, isCapture = false) {
-  const defaultOptions = {
-    // 窗口创建后默认不显示
-    show: false,
-    // 固定窗口大小
-    resizable: false,
-    // 隐藏窗口默认的标题栏和边框
-    frame: false,
-    //始终置顶
-    alwaysOnTop: true,
-    // 使窗口背景透明（窗口区域会显示桌面或下层窗口的内容）
-    transparent: true,
-    ...(process.platform === 'linux' ? { icon } : {}),
-    webPreferences: {
-      // 关闭网页安全限制（允许加载本地文件）
-      webSecurity: false,
-      nodeIntegration: true,
-      // 默认上下文隔离开启
-      contextIsolation: true,
-      preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
-    }
-  }
-  // 合并，后面的相同的属性会覆盖掉前面的属性
-  options = Object.assign(defaultOptions, options)
-  const win = new BrowserWindow(options)
-
-  let loadUrl
-
-  if (isCapture) {
-    let capturePath
-    if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-      capturePath = 'out/renderer/capture.html'
-      console.log(`Capture: ${capturePath}`)
-    } else {
-      capturePath = 'out/renderer/capture.html'
-      console.log(`Capture: ${capturePath}`)
-    }
-    win.loadFile(capturePath)
-  } else {
-    if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-      loadUrl = `${process.env['ELECTRON_RENDERER_URL']}#${pagePath}`
-      win.loadURL(loadUrl)
-    } else {
-      // 生产环境打包后只有一个 index.html，通过路由路径定位页面（依赖 Vue Router 的 history 模式或 hash 模式）
-      loadUrl = join(__dirname, '../renderer/index.html')
-      // 如果用 hash 模式，直接在文件路径后加 # + 页面路径
-      loadUrl = `file://${loadUrl}#${pagePath}`
-      win.loadURL(loadUrl)
-    }
-  }
-
-  win.on('ready-to-show', () => {
-    win.show()
-    win.setTitle('EasyChat')
-  })
-
-  // 控制窗口内 “链接打开行为” 的核心逻辑，作用是：禁止在当前应用内打开新窗口，强制所有外部链接通过系统默认的浏览器打开。
-  win.webContents.setWindowOpenHandler((details) => {
-    shell.openExternal(details.url)
-    return { action: 'deny' }
-  })
-
-  return win
-}
-
 // 当 Electron 完成初始化并准备好创建浏览器窗口时，此方法将被调用。一些 API 仅能在此事件发生后使用。
 app.whenReady().then(() => {
   // 用于在Windows系统上为Electron应用设置唯一标识符，确保任务栏、开始菜单等功能能正确识别和显示应用。
@@ -212,6 +138,8 @@ app.whenReady().then(() => {
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
   })
+
+  initTable()
 
   createMainWindow()
 
@@ -235,55 +163,6 @@ app.on('window-all-closed', () => {
   }
 })
 
-ipcMain.on('window:type', (e, windowType) => {
-  if (windowType === 'login') {
-    console.log('LOGIN')
-    // 取消窗口最小限制
-    mainWindow.setMinimumSize(0, 0)
-    mainWindow.setResizable(true)
-    mainWindow.setSize(login_width, login_height)
-    mainWindow.center()
-    mainWindow.setResizable(false)
-    // mainWindow.setMinimumSize(login_width, login_height)
-  } else if (windowType === 'main') {
-    console.log('MAIN')
-    mainWindow.setSize(main_width, main_height)
-    mainWindow.center()
-    mainWindow.setResizable(true)
-    mainWindow.setMinimumSize(main_width, main_height)
-  } else if (windowType === 'register') {
-    console.log('REGISTER')
-    mainWindow.setSize(login_width, register_height)
-    mainWindow.center()
-    // mainWindow.setMinimumSize(login_width, register_height)
-  }
-})
-
-ipcMain.on('window:controls', (e, controlType, value) => {
-  switch (controlType) {
-    case 'setTop':
-      if (value) {
-        mainWindow.setAlwaysOnTop(true)
-      } else {
-        mainWindow.setAlwaysOnTop(false)
-      }
-      break
-    case 'miniWindow':
-      mainWindow.hide()
-      break
-    case 'changeScreen':
-      if (value) {
-        mainWindow.maximize()
-      } else {
-        mainWindow.unmaximize()
-      }
-      break
-    case 'closeWindow':
-      mainWindow.close()
-      break
-  }
-})
-
 // 从本地选择文件或目录
 ipcMain.handle('select-file', async (e, file) => {
   let dialogConfig = {}
@@ -303,87 +182,6 @@ ipcMain.handle('select-file', async (e, file) => {
   }
   const { canceled, filePaths } = await dialog.showOpenDialog(dialogConfig)
   return canceled ? null : filePaths[0]
-})
-
-ipcMain.handle('window:setUserInfo', (e, userInfoType, userInfo) => {
-  console.log(userInfoType)
-  console.info('设置用户信息', userInfoType, userInfo)
-  switch (userInfoType) {
-    case 'token':
-      store.set('token', userInfo)
-      break
-    case 'avatar':
-      store.set('avatar', userInfo)
-      break
-    case 'userId':
-      store.set('userId', userInfo)
-      break
-    case 'storeLocation':
-      store.set('storeLocation', userInfo)
-      break
-  }
-  return true
-})
-
-ipcMain.handle('window:getUserInfo', (e, userInfoType) => {
-  switch (userInfoType) {
-    case 'token':
-      return store.get('token')
-    case 'avatar':
-      return store.get('avatar')
-    case 'userId':
-      return store.get('userId')
-    case 'storeLocation':
-      return store.get('storeLocation')
-  }
-})
-
-function createNewWindow(windowType) {
-  switch (windowType) {
-    case 'addFriend': {
-      const options = {
-        width: friendAdd_width,
-        height: friendAdd_height
-      }
-      addFriendWindow = createExtraWindow('/friendAdd', options)
-      break
-    }
-    case 'createGroup': {
-      const options = {
-        width: createGroup_width,
-        height: createGroup_height
-      }
-      createGroupWindow = createExtraWindow('/createGroup', options)
-      break
-    }
-    case 'settingView': {
-      const options = {
-        width: settingView_width,
-        height: settingView_height
-      }
-      settingViewWindow = createExtraWindow('/setting', options)
-      break
-    }
-  }
-}
-
-// 关闭新窗口
-function destroyNewWindow(windowType) {
-  if (windowType === 'addFriend') {
-    if (addFriendWindow) {
-      addFriendWindow.close()
-      addFriendWindow = null
-    }
-  } else if (windowType === 'createGroup') {
-    if (createGroupWindow) {
-      createGroupWindow.close()
-      createGroupWindow = null
-    }
-  }
-}
-
-ipcMain.on('create-new-window', (e, windowType) => {
-  createNewWindow(windowType)
 })
 
 ipcMain.on('ws:send', (event, { messageType, sequenceId, data }) => {

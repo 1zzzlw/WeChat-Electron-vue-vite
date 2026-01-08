@@ -34,7 +34,7 @@ import { onMounted, ref } from 'vue'
 const imageUrl = ref('')
 
 onMounted(async () => {
-  imageUrl.value = await window.api.storeGetUserInfo('avatar')
+  imageUrl.value = await window.userInfoApi.storeGetUserInfo('avatar')
 })
 </script>
 

@@ -27,7 +27,7 @@ server.interceptors.response.use(
     if (response.headers.refreshtoken) {
       const refreshToken = response.headers.refreshtoken
       // 将刷新token存储在本地中
-      window.api.storeSetUserInfo('token', refreshToken)
+      window.userInfoApi.storeSetUserInfo('token', refreshToken)
     }
     return response.data
   },
@@ -35,7 +35,7 @@ server.interceptors.response.use(
     // 如果是401错误，且不是刷新token的请求
     if (error.response.status === 401 && !isRefreshToken(error.config)) {
       console.info('token过期,刷新token')
-      const userId = await window.api.storeGetUserInfo('userId')
+      const userId = await window.userInfoApi.storeGetUserInfo('userId')
       // 刷新token
       const isSuccess = await refreshToken(userId)
       if (isSuccess) {

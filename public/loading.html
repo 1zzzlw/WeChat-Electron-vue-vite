@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -221,9 +222,10 @@
     .IMLoading:hover .vertical,
     .IMLoading:hover .slant {
       box-shadow: inset 3px 3px 6px rgba(220, 230, 255, 0.3),
-      inset -3px -3px 6px rgba(0, 0, 0, 0.2),
-      0 4px 12px rgba(0, 0, 0, 0.15),
-      0 0 20px rgba(120, 140, 255, 0.5);;
+        inset -3px -3px 6px rgba(0, 0, 0, 0.2),
+        0 4px 12px rgba(0, 0, 0, 0.15),
+        0 0 20px rgba(120, 140, 255, 0.5);
+      ;
       border-color: rgba(120, 140, 255, 0.7);
     }
 
@@ -272,17 +274,25 @@
 </head>
 
 <body>
-<div class="container">
-  <span class="title">zzzlew-IM聊天室</span>
-  <div class="IMLoading">
-    <div class="I"></div>
-    <div class="M">
-      <div class="vertical"></div>
-      <div class="slant"></div>
-      <div class="vertical"></div>
-      <div class="slant"></div>
+  <div class="container">
+    <span class="title">欢迎来到zzzlew-IM聊天室</span>
+    <div class="IMLoading">
+      <div class="I"></div>
+      <div class="M">
+        <div class="vertical"></div>
+        <div class="slant"></div>
+        <div class="vertical"></div>
+        <div class="slant"></div>
+      </div>
     </div>
   </div>
-</div>
+
+  <script>
+    // 8S 后加载完成，通知主进程关闭窗口
+    setTimeout(() => {
+      window.loadApi.loadFinish()
+    }, 8000)
+  </script>
 </body>
+
 </html>

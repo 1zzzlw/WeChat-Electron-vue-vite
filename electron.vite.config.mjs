@@ -14,7 +14,7 @@ export default defineConfig({
     plugins: [externalizeDepsPlugin()]
   },
   renderer: {
-    // 构建项目的静态资源路径
+    // 构建项目的静态资源路径 - 你的 HTML 文件在 public 目录
     publicDir: join(__dirname, 'public'),
     resolve: {
       alias: {

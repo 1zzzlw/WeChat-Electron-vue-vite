@@ -1,6 +1,21 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 
+const userInfoApi = {
+  storeSetUserInfo: (userInfoType, userInfo) => {
+    return ipcRenderer.invoke('window:setUserInfo', userInfoType, userInfo)
+  },
+  storeGetUserInfo: (userInfoType) => {
+    return ipcRenderer.invoke('window:getUserInfo', userInfoType)
+  }
+}
+
+const loadApi = {
+  loadFinish: () => {
+    ipcRenderer.send('close-loading-window')
+  }
+}
+
 const api = {
   resizeWindow: (windowType) => {
     ipcRenderer.send('window:type', windowType)
@@ -10,12 +25,6 @@ const api = {
   },
   selectFile: (file) => {
     return ipcRenderer.invoke('select-file', file)
-  },
-  storeSetUserInfo: (userInfoType, userInfo) => {
-    return ipcRenderer.invoke('window:setUserInfo', userInfoType, userInfo)
-  },
-  storeGetUserInfo: (userInfoType) => {
-    return ipcRenderer.invoke('window:getUserInfo', userInfoType)
   },
   createNewWindow: (windowType) => {
     ipcRenderer.send('create-new-window', windowType)
@@ -72,6 +81,8 @@ const chatToolApi = {
 if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('electron', electronAPI)
+    contextBridge.exposeInMainWorld('userInfoApi', userInfoApi)
+    contextBridge.exposeInMainWorld('loadApi', loadApi)
     contextBridge.exposeInMainWorld('api', api)
     contextBridge.exposeInMainWorld('chatToolApi', chatToolApi)
   } catch (error) {
@@ -79,6 +90,8 @@ if (process.contextIsolated) {
   }
 } else {
   window.electron = electronAPI
+  window.userInfoApi = userInfoApi
+  window.loadApi = loadApi
   window.api = api
   window.chatToolApi = chatToolApi
 }

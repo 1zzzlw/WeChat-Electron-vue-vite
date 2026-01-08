@@ -4,7 +4,8 @@
       <div class="message-list-top">
         <AutocompleteSearch />
         <el-dropdown>
-          <el-button style="background-color: rgba(35, 45, 60, 0.7); border-color: rgba(66, 153, 225, 0.2);" :icon="Plus" square></el-button>
+          <el-button style="background-color: rgba(35, 45, 60, 0.7); border-color: rgba(66, 153, 225, 0.2);"
+            :icon="Plus" square></el-button>
           <template #dropdown>
             <el-dropdown-menu>
               <el-dropdown-item @click="createGroupChat">发起群聊</el-dropdown-item>
@@ -16,13 +17,8 @@
 
       <div class="message-list-bottom">
         <el-scrollbar>
-          <div
-            class="left-list"
-            v-for="(conversation, index) in conversationListArr"
-            :key="index"
-            :class="{ 'left-list-bg': active === conversation.id }"
-            @click="starCall(conversation)"
-          >
+          <div class="left-list" v-for="(conversation, index) in conversationListArr" :key="index"
+            :class="{ 'left-list-bg': active === conversation.id }" @click="starCall(conversation)">
             <div class="left-image">
               <UnreadCounts :unreadCounts="conversation.unreadCount" />
               <img :src="conversation.avatar" alt="头像" class="left-list-img" />
@@ -69,7 +65,7 @@ const conversationId = reactive({ list: [] })
 
 const starCall = async (friend: { friendId: string; id: string }) => {
   active.value = friend.friendId
-  userId.value = await window.api.storeGetUserInfo('userId')
+  userId.value = await window.userInfoApi.storeGetUserInfo('userId')
   if (!userId.value) {
     console.info('获取当前用户ID失败，无法进入聊天页')
     return
@@ -99,13 +95,13 @@ const starCall = async (friend: { friendId: string; id: string }) => {
 const createGroupChat = () => {
   console.info('createGroupChat')
   // 打开创建群聊窗口
-  ;(window as any).api.createNewWindow('createGroup')
+  window.api.createNewWindow('createGroup')
 }
 
 const addFriend = () => {
   console.info('addFriend')
   // 打开添加好友窗口
-  ;(window as any).api.createNewWindow('addFriend')
+  window.api.createNewWindow('addFriend')
 }
 
 // TODO 过滤出状态为1的单聊会话列表 后面可以修改为在pinia中的getter函数中筛选
@@ -132,7 +128,7 @@ const getFriendList = async () => {
   const friendMap = new Map(res.data.map((f: { id: any }) => [f.id, f]))
 
   // 获得当前登录用户id
-  userId.value = await window.api.storeGetUserInfo('userId')
+  userId.value = await window.userInfoApi.storeGetUserInfo('userId')
 
   // 获得好友id数组，方便后续构建和每个好友的会话id
   friendId.arr = res.data.map((item: { id: any }) => item.id)

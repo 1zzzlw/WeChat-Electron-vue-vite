@@ -53,7 +53,7 @@ const openSettingView = () => {
 
 onMounted(async () => {
   // 从本地存储中获取头像
-  avatarUrl.value = await window.api.storeGetUserInfo('avatar')
+  avatarUrl.value = await window.userInfoApi.storeGetUserInfo('avatar')
   WSManager.connect().then((r) => {})
 })
 </script>

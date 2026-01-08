@@ -98,7 +98,7 @@ const createGroup = async () => {
     return
   }
   // 获取当前用户头像
-  userAvatar.value = await window.api.storeGetUserInfo('avatar')
+  userAvatar.value = await window.userInfoApi.storeGetUserInfo('avatar')
   // 将 Set 转换为数组
   const invitedIdsArray = [...invitedIds.value]
   console.info(invitedIdsArray)

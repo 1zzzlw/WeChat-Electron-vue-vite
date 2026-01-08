@@ -76,8 +76,8 @@ const submitForm = () => {
       console.info('注册成功:', res)
       ElMessage.success('注册成功')
       // 注册成功后，将用户头像和用户id存储到本地
-      window.api.storeSetUserInfo('avatar', userInfo.avatar)
-      window.api.storeSetUserInfo('userId', res.data)
+      window.userInfoApi.storeSetUserInfo('avatar', userInfo.avatar)
+      window.userInfoApi.storeSetUserInfo('userId', res.data)
 
       // 清空缓存的注册信息
       registerInfoStore.$reset()

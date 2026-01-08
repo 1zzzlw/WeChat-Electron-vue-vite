@@ -3,5 +3,5 @@ export function getAccessToken() {
 }
 
 export async function getRefreshToken() {
-  return await window.api.storeGetUserInfo('token')
+  return await window.userInfoApi.storeGetUserInfo('token')
 }
