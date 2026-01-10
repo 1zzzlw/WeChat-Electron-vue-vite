@@ -20,6 +20,8 @@ server.interceptors.response.use(
       const token = response.headers.authorization.replace('Bearer ', '')
       // 将短期token存储在localStorage中
       localStorage.setItem('token', token)
+      // 短期token写入electron-store中
+      window.userInfoApi.storeSetUserInfo('accessToken', token)
       // 更新请求头中的token
       server.defaults.headers.Authorization = `${token}`
     }

@@ -7,19 +7,10 @@
       <div class="list-bottom">
         <el-scrollbar>
           <div>
-            <el-collapse
-              :expand-icon-position="'left'"
-              v-model="activeNames"
-              @change="handleChange"
-            >
+            <el-collapse :expand-icon-position="'left'" v-model="activeNames" @change="handleChange">
               <el-collapse-item title="好友申请列表" name="1">
-                <div
-                  class="left-list"
-                  v-for="apply in friendApplyListArr"
-                  :key="apply.applyId"
-                  :class="{ 'left-applyList-bg': activeApply == apply.applyId }"
-                  @click="startApply(apply)"
-                >
+                <div class="left-list" v-for="apply in friendApplyListArr" :key="apply.applyId"
+                  :class="{ 'left-applyList-bg': activeApply == apply.applyId }" @click="startApply(apply)">
                   <div class="left-image">
                     <img :src="apply.avatar" alt="头像" class="left-list-img" />
                   </div>
@@ -27,23 +18,15 @@
                 </div>
               </el-collapse-item>
               <el-collapse-item title="群聊申请" name="2">
-                <div
-                  class="left-list-group"
-                  v-for="(apply, index) in groupApplyListArr"
-                  :key="index"
-                  :class="{ 'left-groupApplyList-bg': activeGroupApply == apply.id }"
-                >
+                <div class="left-list-group" v-for="(apply, index) in groupApplyListArr" :key="index"
+                  :class="{ 'left-groupApplyList-bg': activeGroupApply == apply.id }">
                   <div class="left-image">
                     <img :src="apply.userAvatar" alt="头像" class="left-list-img" />
                   </div>
                   <div class="friend-name">{{ apply.groupName }}</div>
                   <div class="btn1" v-if="apply.status === 1">
-                    <el-button type="primary" size="small" @click="joinGroup(apply)"
-                      >入群</el-button
-                    >
-                    <el-button type="danger" size="small" @click="ignoreGroupApply(apply)"
-                      >忽略</el-button
-                    >
+                    <el-button type="primary" size="small" @click="joinGroup(apply)">入群</el-button>
+                    <el-button type="danger" size="small" @click="ignoreGroupApply(apply)">忽略</el-button>
                   </div>
                   <div v-else-if="apply.status === 2">
                     <el-button type="primary" size="small" disabled>已入群</el-button>
@@ -54,12 +37,8 @@
                 </div>
               </el-collapse-item>
               <el-collapse-item title="群聊" name="3">
-                <div
-                  class="left-list-group"
-                  v-for="(group, index) in groupListArr"
-                  :key="index"
-                  :class="{ 'left-list-bg': activeGroup == group.id }"
-                >
+                <div class="left-list-group" v-for="(group, index) in groupListArr" :key="index"
+                  :class="{ 'left-list-bg': activeGroup == group.id }">
                   <div class="left-image">
                     <img :src="group.groupAvatar" alt="头像" class="left-list-img" />
                   </div>
@@ -67,13 +46,8 @@
                 </div>
               </el-collapse-item>
               <el-collapse-item title="联系人" name="4">
-                <div
-                  class="left-list"
-                  v-for="user in friendListArr"
-                  :key="user.id"
-                  :class="{ 'left-friendList-bg': activeFriend == user.id }"
-                  @click="starCall(user)"
-                >
+                <div class="left-list" v-for="user in friendListArr" :key="user.id"
+                  :class="{ 'left-friendList-bg': activeFriend == user.id }" @click="starCall(user)">
                   <div class="left-image">
                     <img :src="user.avatar" alt="头像" class="left-list-img" />
                   </div>
@@ -102,7 +76,6 @@ import { CollapseModelValue, ElMessage } from 'element-plus'
 import { userApplyListInfo } from '../../stores/UserApplyListStore'
 import { userListInfo } from '../../stores/ContactListStore'
 import { groupListInfo } from '../../stores/GroupListStores'
-import { getGroupListApi } from '../../api/Conversation'
 import { groupMemberInfo } from '../../stores/GroupMemberStores'
 import AutocompleteSearch from '../../components/AutocompleteSearch.vue'
 
@@ -242,21 +215,21 @@ const fetchGroupList = () => {
     return
   }
 
-  getGroupListApi().then((res) => {
-    console.info('群聊列表:', res.data)
-    res.data.forEach((groupItem) => {
-      groupListStore.setGroupListMap(groupItem.id, {
-        id: groupItem.id,
-        groupName: groupItem.groupName,
-        groupAvatar: groupItem.groupAvatar,
-        ownerId: groupItem.ownerId,
-        isTop: groupItem.isTop,
-        latestMsg: groupItem.latestMsg,
-        latestMsgTime: groupItem.latestMsgTime,
-        status: groupItem.status
-      })
-    })
-  })
+  // getGroupListApi().then((res) => {
+  //   console.info('群聊列表:', res.data)
+  //   res.data.forEach((groupItem) => {
+  //     groupListStore.setGroupListMap(groupItem.id, {
+  //       id: groupItem.id,
+  //       groupName: groupItem.groupName,
+  //       groupAvatar: groupItem.groupAvatar,
+  //       ownerId: groupItem.ownerId,
+  //       isTop: groupItem.isTop,
+  //       latestMsg: groupItem.latestMsg,
+  //       latestMsgTime: groupItem.latestMsgTime,
+  //       status: groupItem.status
+  //     })
+  //   })
+  // })
 }
 
 const groupListArr = computed(() => Object.values(groupListStore.groupListMap))
@@ -270,13 +243,13 @@ const friendApplyListArr = computed(() => {
 })
 
 onMounted(() => {
-  fetchUserList()
+  // fetchUserList()
 
   fetchApplyList()
 
-  fetchGroupApplyList()
+  // fetchGroupApplyList()
 
-  fetchGroupList()
+  // fetchGroupList()
 })
 </script>
 

@@ -51,9 +51,10 @@ import { useRouter } from 'vue-router'
 import { conversationInfo } from '../../stores/ConversationStore'
 import { Plus } from '@element-plus/icons-vue'
 import { getFriendListApi } from '../../api/Friend'
-import { getConversationListApi, getGroupListApi } from '../../api/Conversation'
+import { getConversationListApi } from '../../api/Conversation'
 import AutocompleteSearch from '../../components/AutocompleteSearch.vue'
 import UnreadCounts from '../../components/UnreadCounts.vue'
+import { initConverationInfo } from '../../db/dualDB'
 import dayjs from 'dayjs'
 
 const router = useRouter()
@@ -207,7 +208,7 @@ const getGroupList = () => {
   getGroupListApi().then((res) => {
     console.info('群聊列表:', res.data)
     // 遍历群聊列表，更新pinia中的会话信息
-    res.data.forEach((item) => {
+    res.data.forEach((item: any) => {
       conversationStore.setGroupConversationMap(item.id, {
         // 群聊会话id，格式为g_雪花算法生成的字符串
         id: item.id,
@@ -223,9 +224,18 @@ const getGroupList = () => {
   })
 }
 
-onMounted(() => {
-  getFriendList()
-  getGroupList()
+const getConversationList = async () => {
+  const list = await initConverationInfo()
+
+  console.log('会话列表', list)
+
+}
+
+onMounted(async () => {
+  // getFriendList()
+  // getGroupList()
+
+  getConversationList()
 })
 </script>
 

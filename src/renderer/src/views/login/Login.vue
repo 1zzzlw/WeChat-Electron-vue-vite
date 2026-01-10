@@ -103,8 +103,9 @@ const Login = async (formEl: FormInstance | undefined) => {
       window.userInfoApi.storeSetUserInfo('userId', result.data.id)
       window.userInfoApi.storeSetUserInfo('avatar', result.data.avatar)
 
-      await router.push('/main')
       window.api.resizeWindow('main')
+      // 需要等初始化完成在进入main窗口
+      await router.push('/main')
     } else {
       ElMessage.error('登录失败')
     }

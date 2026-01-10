@@ -13,6 +13,18 @@ const userInfoApi = {
 const loadApi = {
   loadFinish: () => {
     ipcRenderer.send('close-loading-window')
+  },
+  // 监听开始数据初始化的消息
+  onStartDataInitialization: (callback) => {
+    ipcRenderer.on('start-data-initialization', callback)
+  },
+  // 发送数据初始化完成
+  dataInitializationComplete: (data) => {
+    ipcRenderer.send('data-initialization-complete', data)
+  },
+  // 发送数据初始化错误
+  dataInitializationError: (error) => {
+    ipcRenderer.send('data-initialization-error', error)
   }
 }
 
