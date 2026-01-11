@@ -6,7 +6,7 @@ import PendingLogin from '../views/pendingLogin/PendingLogin.vue'
 import RegisterUserInfoView from '../views/register/RegisterUserInfo.vue'
 import UploadAvatarView from '../views/register/uploadAvatar.vue'
 import LayoutView from '../views/layout/Main.vue'
-import UserMessageListView from '../views/user/UserMessageList.vue'
+import UserConversationListView from '../views/user/UserConversationList.vue'
 import UserListView from '../views/user/UserList.vue'
 import CollectView from '../views/collect/Collect.vue'
 import ChatView from '../views/chat/Chat.vue'
@@ -118,7 +118,7 @@ const router = createRouter({
         {
           path: '/messageList',
           name: 'messageList',
-          component: UserMessageListView,
+          component: UserConversationListView,
           children: [
             {
               path: '/chat',

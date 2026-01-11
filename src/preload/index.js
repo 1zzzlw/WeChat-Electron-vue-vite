@@ -28,6 +28,15 @@ const loadApi = {
   }
 }
 
+const dbApi = {
+  queryConversationList: () => {
+    return ipcRenderer.invoke('query:conversation')
+  },
+  queryFriendList: () => {
+    return ipcRenderer.invoke('query:friend')
+  }
+}
+
 const api = {
   resizeWindow: (windowType) => {
     ipcRenderer.send('window:type', windowType)
@@ -95,6 +104,7 @@ if (process.contextIsolated) {
     contextBridge.exposeInMainWorld('electron', electronAPI)
     contextBridge.exposeInMainWorld('userInfoApi', userInfoApi)
     contextBridge.exposeInMainWorld('loadApi', loadApi)
+    contextBridge.exposeInMainWorld('dbApi', dbApi)
     contextBridge.exposeInMainWorld('api', api)
     contextBridge.exposeInMainWorld('chatToolApi', chatToolApi)
   } catch (error) {
@@ -104,6 +114,7 @@ if (process.contextIsolated) {
   window.electron = electronAPI
   window.userInfoApi = userInfoApi
   window.loadApi = loadApi
+  window.dbApi = dbApi
   window.api = api
   window.chatToolApi = chatToolApi
 }

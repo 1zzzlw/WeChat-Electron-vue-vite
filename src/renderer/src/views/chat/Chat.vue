@@ -3,104 +3,57 @@
     <div class="chat-title">
       {{ friendRemark || friendUsername }}
       <el-button :icon="Download" @click="drawer = true" size="large" square></el-button>
-      <el-drawer
-        v-model="drawer"
-        title="下载文件"
-        :with-header="true"
-        class="download-drawer"
-        :modal="false"
-        modal-penetrable
-      >
+      <el-drawer v-model="drawer" title="下载文件" :with-header="true" class="download-drawer" :modal="false"
+        modal-penetrable>
         <Downloading />
       </el-drawer>
     </div>
     <div class="chat-content">
       <el-scrollbar ref="scrollbarRef" style="height: 100%; width: 100%">
         <div class="chat-message" v-for="(message, index) in messageArr" :key="index">
-          <div
-            class="chat-list-left"
-            v-if="String(message.senderId) === String(route.query.friendId)"
-          >
+          <div class="chat-list-left" v-if="String(message.senderId) === String(route.query.friendId)">
             <img :src="friendAvatar" class="list-image" />
             <div class="msg">
               <div class="left-name">{{ friendRemark || friendUsername }}</div>
               <div class="chat-bubble left-bubble">
-                <MessageContentManage
-                  :msgType="message.msgType"
-                  :content="message.content"
-                  :fileUrl="message.content"
-                />
+                <MessageContentManage :msgType="message.msgType" :content="message.content"
+                  :fileUrl="message.content" />
               </div>
             </div>
           </div>
           <div class="chat-list-right" v-else-if="String(message.senderId) === String(userId)">
             <img :src="avatarUrl" class="list-image" />
             <div class="chat-bubble right-bubble">
-              <MessageContentManage
-                :msgType="message.msgType"
-                :content="message.content"
-                :fileUrl="message.content"
-              />
+              <MessageContentManage :msgType="message.msgType" :content="message.content" :fileUrl="message.content" />
             </div>
           </div>
           <div class="chat-list-left" v-else>
-            <img
-              :src="groupMemberStore.getGroupMemberAvatar(message.senderId)"
-              class="list-image"
-            />
+            <img :src="groupMemberStore.getGroupMemberAvatar(message.senderId)" class="list-image" />
             <div class="chat-bubble left-bubble">
-              <MessageContentManage
-                :msgType="message.msgType"
-                :content="message.content"
-                :fileUrl="message.content"
-              />
+              <MessageContentManage :msgType="message.msgType" :content="message.content" :fileUrl="message.content" />
             </div>
           </div>
         </div>
       </el-scrollbar>
     </div>
-    <FilePreviewView
-      v-if="fileInfoList.length > 0"
-      :fileInfoList="fileInfoList"
-      @delete-file="handleDeleteFile"
-    />
+    <FilePreviewView v-if="fileInfoList.length > 0" :fileInfoList="fileInfoList" @delete-file="handleDeleteFile" />
     <div class="chat-tool">
-      <el-popover
-        placement="top"
-        trigger="click"
-        popper-style="width: 300px; height: 300px; display: flex; flex-wrap: wrap; overflow-y: auto; scrollbar-width: none; padding-left: 6px;"
-      >
-        <div
-          class="emoji-btn"
-          @click="handlerEmoji(emoji.icon)"
-          v-for="(emoji, index) in emojis.list"
-          :key="index"
-          :title="emoji.name"
-        >
+      <el-popover placement="top" trigger="click"
+        popper-style="width: 300px; height: 300px; display: flex; flex-wrap: wrap; overflow-y: auto; scrollbar-width: none; padding-left: 6px;">
+        <div class="emoji-btn" @click="handlerEmoji(emoji.icon)" v-for="(emoji, index) in emojis.list" :key="index"
+          :title="emoji.name">
           {{ emoji.icon }}
         </div>
         <template #reference>
           <el-button :icon="Eleme" size="large" square></el-button>
         </template>
       </el-popover>
-      <el-upload
-        v-model:file-list="fileList"
-        multiple
-        :limit="3"
-        action="#"
-        :show-file-list="false"
-        :auto-upload="false"
-        :on-exceed="handleExceed"
-        :on-change="selectFiles"
-        class="upload-button"
-      >
+      <el-upload v-model:file-list="fileList" multiple :limit="3" action="#" :show-file-list="false"
+        :auto-upload="false" :on-exceed="handleExceed" :on-change="selectFiles" class="upload-button">
         <el-button :icon="Folder" size="large" square></el-button>
       </el-upload>
-      <el-popover
-        placement="top"
-        :disabled="captureImageUrl === ''"
-        popper-style="display: flex; margin: 0; padding: 0; justify-content: center; align-items: center;"
-      >
+      <el-popover placement="top" :disabled="captureImageUrl === ''"
+        popper-style="display: flex; margin: 0; padding: 0; justify-content: center; align-items: center;">
         <el-image :src="captureImageUrl" fit="contain" style="width: 150px; height: 150px" />
         <template #reference>
           <el-button :icon="Scissor" size="large" square @click="captureBtn"></el-button>
@@ -109,16 +62,8 @@
       <el-button :icon="VideoCamera" size="large" square></el-button>
     </div>
     <form class="chat-input">
-      <el-input
-        v-model="message"
-        type="textarea"
-        :rows="4"
-        resize="none"
-        placeholder="请输入消息"
-        spellcheck="false"
-        clearable
-        @keydown.enter="handleEnterMessage"
-      />
+      <el-input v-model="message" type="textarea" :rows="4" resize="none" placeholder="请输入消息" spellcheck="false"
+        clearable @keydown.enter="handleEnterMessage" />
     </form>
     <div class="sendButton">
       <el-button type="primary" v-if="chatType" @click="sendPrivateMessage">发送</el-button>
@@ -521,17 +466,24 @@ watch(
 
 /* 2. 修改抽屉头部*/
 :deep(.download-drawer .el-drawer__header) {
-  background-color: #e8f4ff; /* 头部背景 */
-  padding: 15px 20px; /* 头部内边距 */
-  border-bottom: 1px solid #dcdfe6; /* 头部下边框 */
+  background-color: #e8f4ff;
+  /* 头部背景 */
+  padding: 15px 20px;
+  /* 头部内边距 */
+  border-bottom: 1px solid #dcdfe6;
+  /* 头部下边框 */
 }
 
 /* 3. 修改抽屉内容区 */
 :deep(.download-drawer .el-drawer__body) {
-  padding: 0; /* 内容区内边距 */
-  background-color: #f8f9fa; /* 内容区背景 */
-  height: calc(100% - 60px); /* 自适应高度（减去头部高度） */
-  overflow-y: auto; /* 内容超出滚动 */
+  padding: 0;
+  /* 内容区内边距 */
+  background-color: #f8f9fa;
+  /* 内容区背景 */
+  height: calc(100% - 60px);
+  /* 自适应高度（减去头部高度） */
+  overflow-y: auto;
+  /* 内容超出滚动 */
 }
 
 .chat-content {
@@ -622,6 +574,7 @@ img {
   color: #f0f0f0;
   box-shadow: none;
   border: 1px solid rgba(66, 153, 225, 0.2);
+
   &::placeholder {
     color: rgba(240, 240, 240, 0.5);
   }

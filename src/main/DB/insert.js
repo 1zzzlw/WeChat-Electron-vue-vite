@@ -1,6 +1,7 @@
-import { db, globalColumnsMap, run } from "./mainDB";
+import { globalColumnsMap, run } from "./mainDB";
 
 /**
+ * 初始化信息一键多条插入
  * @param tableName 表名
  * @param data 数据
 */
@@ -29,12 +30,14 @@ const initInsert = (tableName, data) => {
     const singlePlaceholder = tableFieldNames.map(() => '?').join(',');
     // 根据单条占位符的数量，生成多条占位符
     const batchPlaceholder = data.map(() => `(${singlePlaceholder})`).join(',');
-    const sql = `insert into ${tableName} (${tableFieldNames.join(",")}) values ${batchPlaceholder}`
+    const sql = `insert or ignore into ${tableName} (${tableFieldNames.join(",")}) values ${batchPlaceholder}`
     return run(sql, allParams)
 }
 
 /**
  * 插入单条数据
+ * @param tableName -- 表名
+ * @param data -- 插入数据
  * */
 const insert = (tableName, data) => {
     // 获得该表的字段映射关系
@@ -46,13 +49,12 @@ const insert = (tableName, data) => {
             // 加入数据库格式的的字段名
             tableFieldNames.push(columnsMap[item])
             // 加入该字段的值
-            params.push[data[item]]
+            params.push(data[item])
         }
     }
     const placeholder = tableFieldNames.map(() => '?').join(',')
     const sql = `insert into ${tableName} (${tableFieldNames.join(',')}) values (${placeholder})`
-    console.log(sql)
-    return run(sql)
+    return run(sql, params)
 }
 
 export {

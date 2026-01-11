@@ -114,6 +114,7 @@ ipcMain.on('data-initialization-complete', (e, data) => {
   }
 
   const userId = store.get('userId');
+  console.log('------', userId)
   initAndUpdateUserLoginRecord(userId);
 
   // 关闭加载窗口，进入主界面

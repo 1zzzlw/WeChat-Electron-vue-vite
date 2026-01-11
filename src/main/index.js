@@ -20,6 +20,7 @@ import dayjs from 'dayjs'
 import './IPC/userInfoStoreIPC.js'
 import './IPC/windowToolIPC.js'
 import './IPC/newWindowIPC.js'
+import './IPC/DBIPC.js'
 import { initTable, initTableColumnsMap } from './DB/mainDB.js'
 
 // 初始化store实例，指定存储文件名（会生成user-token.json文件）

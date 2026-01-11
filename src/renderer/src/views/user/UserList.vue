@@ -46,13 +46,13 @@
                 </div>
               </el-collapse-item>
               <el-collapse-item title="联系人" name="4">
-                <div class="left-list" v-for="user in friendListArr" :key="user.id"
-                  :class="{ 'left-friendList-bg': activeFriend == user.id }" @click="starCall(user)">
+                <div class="left-list" v-for="friend in friendListArr" :key="friend.friendId"
+                  :class="{ 'left-friendList-bg': activeFriend == friend.friendId }" @click="starCall(friend)">
                   <div class="left-image">
-                    <img :src="user.avatar" alt="头像" class="left-list-img" />
+                    <img :src="friend.avatar" alt="头像" class="left-list-img" />
                   </div>
-                  <h1 class="friend-name" v-if="user.remark === ''">{{ user.username }}</h1>
-                  <h1 class="friend-name" v-else>{{ user.remark }}</h1>
+                  <h1 class="friend-name" v-if="friend.remark === ''">{{ friend.username }}</h1>
+                  <h1 class="friend-name" v-else>{{ friend.remark }}</h1>
                 </div>
               </el-collapse-item>
             </el-collapse>
@@ -72,6 +72,8 @@ import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { getFriendListApi } from '../../api/Friend'
 import { getApplyListApi, getGroupApplyListApi, dealGroupApplyApi } from '../../api/Apply'
+import { Friend } from '../../types/friend'
+import { getFriendList } from '../../db/dualDB'
 import { CollapseModelValue, ElMessage } from 'element-plus'
 import { userApplyListInfo } from '../../stores/UserApplyListStore'
 import { userListInfo } from '../../stores/ContactListStore'
@@ -85,6 +87,7 @@ const groupListStore = groupListInfo()
 const groupMemberStore = groupMemberInfo()
 // 联系人列表默认展开
 const activeNames = ref(['4'])
+const friendListArr = ref<Friend[]>()
 const handleChange = (val: CollapseModelValue) => {
   console.info(val)
 }
@@ -93,7 +96,7 @@ const router = useRouter()
 const activeApply = ref('')
 const activeGroupApply = ref('')
 const activeGroup = ref('')
-const activeFriend = ref('')
+const activeFriend = ref()
 
 const startApply = (activeApply) => {
   console.info(activeApply.applyId)
@@ -232,24 +235,24 @@ const fetchGroupList = () => {
   // })
 }
 
-const groupListArr = computed(() => Object.values(groupListStore.groupListMap))
+// const groupListArr = computed(() => Object.values(groupListStore.groupListMap))
 
-const groupApplyListArr = computed(() => Object.values(userApplyStore.groupApplyMap))
+// const groupApplyListArr = computed(() => Object.values(userApplyStore.groupApplyMap))
 
-const friendListArr = computed(() => Object.values(userListStore.userMap))
+// const friendListArr = computed(() => Object.values(userListStore.userMap))
 
 const friendApplyListArr = computed(() => {
   return userApplyStore.getAllUserApplyMap()
 })
 
-onMounted(() => {
+onMounted(async () => {
   // fetchUserList()
-
+  // fetchGroupApplyList()
+  // fetchGroupList()
   fetchApplyList()
 
-  // fetchGroupApplyList()
+  friendListArr.value = await getFriendList()
 
-  // fetchGroupList()
 })
 </script>
 

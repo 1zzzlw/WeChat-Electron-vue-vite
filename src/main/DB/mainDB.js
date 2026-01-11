@@ -1,8 +1,7 @@
 const fs = require('fs')
 const Database = require('better-sqlite3')
 import { init_table, table_index } from './tableInfo'
-import { queryAll } from './query'
-import { toCamelCase } from './utils'
+import { toCamelCase, convertDBObjToCamelCase } from './utils'
 import { insert } from './insert'
 
 // 自定义DB文件存储路径
@@ -18,6 +17,10 @@ let globalColumnsMap = []
 db.pragma('journal_mode = WAL')
 db.pragma('synchronous = NORMAL');
 
+/**
+ * 初始化表结构
+ * @returns 返回执行结果
+ */
 const initTable = () => {
     // 初始化表
     for (const sql of init_table) {
@@ -40,6 +43,9 @@ const initTable = () => {
     }
 }
 
+/**
+ * 初始化数据库字段名和驼峰名的映射关系
+ */
 const initTableColumnsMap = () => {
     // 查询所有的表名
     let sql = `select name from sqlite_master where type = 'table' and name != 'sqlite_sequence'`
@@ -62,13 +68,37 @@ const initTableColumnsMap = () => {
  * 初始化或更新用户的登录信息
  * @param userId -- 用户id
  */
-const initAndUpdateUserLoginRecord = (userId) => {
+const initAndUpdateUserLoginRecord = (id) => {
     const data = {
-        userId: userId
+        userId: id
     }
     insert('device_user_record', data)
 }
 
+/**
+ * 查询数据库表返回驼峰命名格式数据
+ * @param  sql sql语句
+ * @param  params 查询参数
+ * @returns -- 返回驼峰命名的数据格式 
+ */
+const queryAll = (sql, params) => {
+    try {
+        const stmt = db.prepare(sql)
+        const rows = stmt.all(params);
+
+        return rows.map(row => convertDBObjToCamelCase(row));
+    } catch (err) {
+        console.error('查询失败:', err, sql);
+        return [];
+    }
+}
+
+/**
+ * 执行sql语句
+ * @param  sql sql语句
+ * @param  params 执行参数
+ * @returns 
+ */
 const run = (sql, params) => {
     try {
         const stmt = db.prepare(sql)
@@ -85,5 +115,6 @@ export {
     initTable,
     initTableColumnsMap,
     initAndUpdateUserLoginRecord,
+    queryAll,
     run
 }

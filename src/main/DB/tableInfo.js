@@ -28,7 +28,7 @@ const init_table = [
   // 会话表
   `
     CREATE TABLE IF NOT EXISTS conversation (
-    id TEXT NOT NULL PRIMARY KEY,               -- 会话ID
+    id TEXT NOT NULL,                           -- 会话ID
     user_id INTEGER NOT NULL,                   -- 登录用户ID
     target_id TEXT NOT NULL,                    -- 目标ID: 好友ID或群ID
     name TEXT,                                  -- 用于快速显示（昵称/群名）
@@ -77,6 +77,10 @@ const table_index = [
   // 会话表的会话更新时间索引
   `
     CREATE INDEX IF NOT EXISTS idx_conversation_update_time ON conversation(update_time DESC);
+  `,
+  // 会话表中用户id和会话id形成的联合唯一索引
+  `
+    CREATE UNIQUE INDEX IF NOT EXISTS uk_user_convid ON conversation(user_id, id);
   `,
   // 会话表中会话状态和登录用户ID的联合索引
   `
