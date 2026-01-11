@@ -54,7 +54,6 @@ import { getFriendListApi } from '../../api/Friend'
 import { getConversationListApi } from '../../api/Conversation'
 import AutocompleteSearch from '../../components/AutocompleteSearch.vue'
 import UnreadCounts from '../../components/UnreadCounts.vue'
-import { initConverationInfo } from '../../db/dualDB'
 import dayjs from 'dayjs'
 
 const router = useRouter()
@@ -228,10 +227,9 @@ const getConversationList = async () => {
   const list = await initConverationInfo()
 
   console.log('会话列表', list)
-
 }
 
-onMounted(async () => {
+onMounted(() => {
   // getFriendList()
   // getGroupList()
 

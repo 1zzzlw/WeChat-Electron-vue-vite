@@ -3,7 +3,7 @@ const Database = require('better-sqlite3')
 import { init_table, table_index } from './tableInfo'
 import { queryAll } from './query'
 import { toCamelCase } from './utils'
-import { resolve } from 'path'
+import { insert } from './insert'
 
 // 自定义DB文件存储路径
 const userDir = 'E:\\JavaWeb\\zzz-IM-web\\db\\'
@@ -42,7 +42,7 @@ const initTable = () => {
 
 const initTableColumnsMap = () => {
     // 查询所有的表名
-    let sql = `select name from sqlite_master where type = 'table'`
+    let sql = `select name from sqlite_master where type = 'table' and name != 'sqlite_sequence'`
     const tables = queryAll(sql, [])
     for (let i = 0; i < tables.length; i++) {
         sql = `PRAGMA table_info(${tables[i].name});`
@@ -56,6 +56,17 @@ const initTableColumnsMap = () => {
         globalColumnsMap[tables[i].name] = columnMapItem
     }
     console.log(globalColumnsMap)
+}
+
+/**
+ * 初始化或更新用户的登录信息
+ * @param userId -- 用户id
+ */
+const initAndUpdateUserLoginRecord = (userId) => {
+    const data = {
+        userId: userId
+    }
+    insert('device_user_record', data)
 }
 
 const run = (sql, params) => {
@@ -73,5 +84,6 @@ export {
     globalColumnsMap,
     initTable,
     initTableColumnsMap,
+    initAndUpdateUserLoginRecord,
     run
 }
