@@ -346,7 +346,7 @@
         }
 
         // 发送 HTTP 请求获取会话列表
-        const conversationResponse = await fetch(`${api}/conversation/init/list`, {
+        const conversationResponse = await fetch(`${api}/conversation/init/list?isInit=true`, {
           headers: {
             Authorization: token,
             'Content-Type': 'application/json'
@@ -364,7 +364,7 @@
         const conversationIds = conversation.map(c => c.id)
 
         // 发送 HTTP 请求获取好友列表
-        const friendRelationResponse = await fetch(`${api}/friend/init/list`, {
+        const friendRelationResponse = await fetch(`${api}/friend/init/list?isInit=true`, {
           headers: {
             Authorization: token,
             'Content-Type': 'application/json'

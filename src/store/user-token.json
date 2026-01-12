@@ -1,7 +1,7 @@
 {
-	"userId": 1,
-	"avatar": "E:\\JavaWeb\\zzz-IM-web\\image\\1.jpg",
-	"token": "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjEsImV4cCI6MTc5OTc1MjI0OH0.TjobnbsbxTsWuQl8dadXqgfl2qb-vH-ZZr7OUL0BbJg",
-	"accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjEsImV4cCI6MTc2ODIxOTg0OH0.Oo5x4KhJYoqRJTY4x2B9ky3KWC-94Wuv-u-3EiZBTBw",
-	"storeLocation": "G:\\WeChatFile"
+	"userId": 2,
+	"avatar": "E:\\JavaWeb\\zzz-IM-web\\image\\2.jpg",
+	"storeLocation": "G:\\WeChatFile",
+	"accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjIsImV4cCI6MTc2ODI0MjkwN30.mJVkf_fdSGfBK6FyRxpHTE-5gCwQ-MT9N4xqG3x4xlw",
+	"token": "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjIsImV4cCI6MTc5OTc3NTMwN30.MT5Ysx8bQ3aT--XmW-hLiJ_KeBWqezIwMTN2tPBSPC4"
 }

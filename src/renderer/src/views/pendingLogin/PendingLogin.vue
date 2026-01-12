@@ -33,8 +33,11 @@ const confirmLogin = async () => {
   const userId = await window.userInfoApi.storeGetUserInfo('userId')
   const res = await PendingLoginApi(token, userId)
   if (res.code === 1) {
+    // 等待更新成功的通知
+    console.info('响应成功')
+    await window.dbApi.updateDBData()
+    await window.api.resizeWindow('main')
     await router.push('/main')
-    window.api.resizeWindow('main')
   } else {
     ElMessage.error('登录过期，重新登录')
   }
@@ -90,7 +93,8 @@ onMounted(async () => {
 /* 头像悬浮效果：放大+轻微旋转+增强阴影 */
 .avatar:hover {
   transform: scale(1.8) rotate(2deg);
-  box-shadow: 0 6px 20px rgba(0, 122, 255, 0.3); /* 加淡蓝色阴影呼应头像色调 */
+  box-shadow: 0 6px 20px rgba(0, 122, 255, 0.3);
+  /* 加淡蓝色阴影呼应头像色调 */
 }
 
 .pending-login-bottom {
@@ -103,6 +107,7 @@ onMounted(async () => {
     opacity: 0;
     transform: translateY(-10px);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0);

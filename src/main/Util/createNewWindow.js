@@ -24,10 +24,10 @@ const WINDOW_CONFIGS = {
 
 /**
  * 创建额外窗口的统一方法
- * @param {string} windowType - 窗口类型 ('capture', 'loading', 'friendAdd' 等)
- * @param {object} options - 窗口选项
- * @param {string} loadType - 加载类型 ('standalone': 独立的HTML文件，'vue'(默认): 渲染进程中的vue页面)
- * @returns {BrowserWindow} 创建的窗口实例
+ * @param windowType - 窗口类型 ('capture', 'loading', 'friendAdd' 等)
+ * @param options - 窗口选项
+ * @param loadType - 加载类型 ('standalone': 独立的HTML文件，'vue'(默认): 渲染进程中的vue页面)
+ * @returns 创建的窗口实例
  */
 export function createExtraWindow(windowType, options = {}, loadType = 'vue') {
     console.log(11 + windowType)
@@ -78,9 +78,9 @@ export function createExtraWindow(windowType, options = {}, loadType = 'vue') {
 
 /**
  * 为窗口加载内容的统一方法
- * @param {BrowserWindow} window - Electron 窗口实例
- * @param {string} windowType - 窗口类型
- * @param {string} loadType - 加载类型 ('standalone': 独立的HTML文件，'vue'(默认): 渲染进程中的vue页面)
+ * @param window - Electron 窗口实例
+ * @param windowType - 窗口类型
+ * @param loadType - 加载类型 ('standalone': 独立的HTML文件，'vue'(默认): 渲染进程中的vue页面)
  */
 function loadWindowContent(window, windowType, loadType = 'vue') {
     // 获得新建窗口的配置内容
@@ -97,9 +97,9 @@ function loadWindowContent(window, windowType, loadType = 'vue') {
 
 /**
  * 获取窗口加载 URL 或文件路径
- * @param {string} windowType - 窗口类型 ('capture', 'loading', 'friendAdd' 等)
- * @param {string} loadType - 加载类型 ('standalone': 独立的HTML文件，'vue'(默认): 渲染进程中的vue页面)
- * @returns {object} 包含加载方法和路径的对象
+ * @param windowType - 窗口类型 ('capture', 'loading', 'friendAdd' 等)
+ * @param loadType - 加载类型 ('standalone': 独立的HTML文件，'vue'(默认): 渲染进程中的vue页面)
+ * @returns 包含加载方法和路径的对象
  */
 function getWindowLoadConfig(windowType, loadType = 'vue') {
     const isDev = is.dev && process.env['ELECTRON_RENDERER_URL']

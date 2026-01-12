@@ -49,6 +49,10 @@ const dbApi = {
   },
   queryMessageList: () => {
     return ipcRenderer.invoke('query:message')
+  },
+  // 登录时更新离线消息，会话状态，好友状态
+  updateDBData: () => {
+    ipcRenderer.send('update:db')
   }
 }
 

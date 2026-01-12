@@ -1,11 +1,12 @@
 import { globalColumnsMap, run } from "./mainDB";
 
 /**
- * 初始化信息一键多条插入
+ * 一键多条插入
+ * @param insertPrefix 插入前缀
  * @param tableName 表名
  * @param data 数据
 */
-const initInsert = (tableName, data) => {
+const multipleInsert = (insertPrefix, tableName, data) => {
     // 获得该表的字段映射关系
     const columnsMap = globalColumnsMap[tableName]
     const fieldKeys = Object.keys(columnsMap)
@@ -30,7 +31,7 @@ const initInsert = (tableName, data) => {
     const singlePlaceholder = tableFieldNames.map(() => '?').join(',');
     // 根据单条占位符的数量，生成多条占位符
     const batchPlaceholder = data.map(() => `(${singlePlaceholder})`).join(',');
-    const sql = `insert or ignore into ${tableName} (${tableFieldNames.join(",")}) values ${batchPlaceholder}`
+    const sql = `${insertPrefix} into ${tableName} (${tableFieldNames.join(",")}) values ${batchPlaceholder}`
     return run(sql, allParams)
 }
 
@@ -58,6 +59,6 @@ const insert = (tableName, data) => {
 }
 
 export {
-    initInsert,
+    multipleInsert,
     insert
 }

@@ -1,9 +1,5 @@
-import { store, mainWindow } from '../index'
-import { dialog, ipcMain } from 'electron'
-import { isExistUserRecord } from '../DB/select'
-import { createExtraWindow } from '../Util/createNewWindow'
-import { initInsert } from '../DB/insert'
-import { initAndUpdateUserLoginRecord } from '../DB/mainDB'
+import { mainWindow } from '../index'
+import { ipcMain } from 'electron'
 
 const login_width = 300
 const login_height = 370

@@ -2,7 +2,7 @@ import { ipcMain } from "electron";
 import { store, mainWindow } from '../index'
 import { isExistUserRecord } from '../DB/select'
 import { createExtraWindow } from '../Util/createNewWindow'
-import { initInsert } from '../DB/insert'
+import { multipleInsert } from '../DB/insert'
 import { initAndUpdateUserLoginRecord } from '../DB/mainDB'
 
 let loadingWindow = null
@@ -56,7 +56,7 @@ ipcMain.on('data-initialization-complete', (e, data) => {
 
     // 将数据加载到本地数据库中
     for (const tableName of keys) {
-        initInsert(tableName, data[`${tableName}`])
+        multipleInsert('insert or ignore', tableName, data[`${tableName}`])
     }
 
     const userId = store.get('userId');
