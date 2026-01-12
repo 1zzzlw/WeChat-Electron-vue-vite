@@ -107,20 +107,23 @@ const Login = async (formEl: FormInstance | undefined) => {
       const isNeed = await (window as any).loadApi.isNeedInitData()
       console.info('是否需要初始化数据', isNeed)
       if (!isNeed) {
-        // 不需要，直接进入main窗口
-        console.info('不需要初始化数据, 直接进入main窗口')
+        // 不需要，更新离线数据
+        console.info('更新离线数据')
+        // 等待更新成功的通知
+        // await new Promise(resolve => {
+        //   (window as any).dbApi.updateDBData(resolve)
+        // })
+        await (window as any).api.resizeWindow('main')
+        await router.push('/main')
+      } else {
+        // 等待通知在路由跳转
+        await new Promise(resolve => {
+          (window as any).loadApi.onDataInitComplete(resolve)
+        })
+        console.info('初始化完成, 进入main界面');
         await (window as any).api.resizeWindow('main')
         await router.push('/main')
       }
-
-      // 等待通知在路由跳转
-      await new Promise(resolve => {
-        (window as any).loadApi.onDataInitComplete(resolve)
-      })
-
-      console.info('初始化完成, 进入main界面');
-      await (window as any).api.resizeWindow('main')
-      await router.push('/main')
 
     } else {
       ElMessage.error('登录失败')
