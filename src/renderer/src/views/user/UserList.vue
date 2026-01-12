@@ -243,6 +243,7 @@ const fetchGroupList = () => {
 
 const friendApplyListArr = computed(() => {
   return userApplyStore.getAllUserApplyMap()
+
 })
 
 onMounted(async () => {

@@ -22,3 +22,6 @@ pinia缓存多窗口共享的理解，代码不小心清空了，但是思路也
 
 计算md5值的依赖
 npm install spark-md5
+
+生成照片，视频的预览压缩图 -- ffmpeg
+npm install ffmpeg

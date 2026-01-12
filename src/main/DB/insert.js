@@ -45,7 +45,7 @@ const insert = (tableName, data) => {
     const tableFieldNames = []
     const params = []
     for (let item in data) {
-        if (columnsMap[item] != undefined) {
+        if (data[item] !== undefined && columnsMap[item] != undefined) {
             // 加入数据库格式的的字段名
             tableFieldNames.push(columnsMap[item])
             // 加入该字段的值

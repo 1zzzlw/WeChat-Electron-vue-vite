@@ -1,36 +1,26 @@
 <template>
   <div class="chat-count" v-if="isDataLoaded">
-    <div class="chat-title">
-      {{ friendRemark || friendUsername }}
-      <el-button :icon="Download" @click="drawer = true" size="large" square></el-button>
-      <el-drawer v-model="drawer" title="下载文件" :with-header="true" class="download-drawer" :modal="false"
-        modal-penetrable>
-        <Downloading />
-      </el-drawer>
-    </div>
+    <ChatHeader />
     <div class="chat-content">
       <el-scrollbar ref="scrollbarRef" style="height: 100%; width: 100%">
         <div class="chat-message" v-for="(message, index) in messageArr" :key="index">
-          <div class="chat-list-left" v-if="String(message.senderId) === String(route.query.friendId)">
-            <img :src="friendAvatar" class="list-image" />
-            <div class="msg">
-              <div class="left-name">{{ friendRemark || friendUsername }}</div>
-              <div class="chat-bubble left-bubble">
-                <MessageContentManage :msgType="message.msgType" :content="message.content"
-                  :fileUrl="message.content" />
-              </div>
-            </div>
-          </div>
-          <div class="chat-list-right" v-else-if="String(message.senderId) === String(userId)">
+          <div class="chat-list-right" v-if="String(message.senderId) === String(userId)">
             <img :src="avatarUrl" class="list-image" />
             <div class="chat-bubble right-bubble">
               <MessageContentManage :msgType="message.msgType" :content="message.content" :fileUrl="message.content" />
             </div>
           </div>
           <div class="chat-list-left" v-else>
-            <img :src="groupMemberStore.getGroupMemberAvatar(message.senderId)" class="list-image" />
-            <div class="chat-bubble left-bubble">
-              <MessageContentManage :msgType="message.msgType" :content="message.content" :fileUrl="message.content" />
+            <img v-if="conversation.type === 0" :src="conversationStore.getAvatar(conversation.id)"
+              class="list-image" />
+            <img v-else :src="groupMemberStore.getGroupMemberAvatar(message.senderId)" class="list-image" />
+            <div class="msg">
+              <div class="left-name">{{ conversationStore.getRemark(conversation.id) ||
+                conversationStore.getUsername(conversation.id) }}</div>
+              <div class="chat-bubble left-bubble">
+                <MessageContentManage :msgType="message.msgType" :content="message.content"
+                  :fileUrl="message.content" />
+              </div>
             </div>
           </div>
         </div>
@@ -65,8 +55,9 @@
       <el-input v-model="message" type="textarea" :rows="4" resize="none" placeholder="请输入消息" spellcheck="false"
         clearable @keydown.enter="handleEnterMessage" />
     </form>
+
     <div class="sendButton">
-      <el-button type="primary" v-if="chatType" @click="sendPrivateMessage">发送</el-button>
+      <el-button type="primary" v-if="conversation.type === 0" @click="sendPrivateMessage">发送</el-button>
       <el-button type="primary" v-else @click="sendGroupMessage">发送</el-button>
     </div>
   </div>
@@ -79,9 +70,10 @@ import emojis from '../../emoji/emoji.js'
 import { getMessageListApi, sendMessageApi } from '../../api/Message'
 import { messageInfo } from '../../stores/MessageStore'
 import dayjs from 'dayjs'
+import { Conversation } from '../../types/conversation.js'
 import { WSManager } from '../../utils/websocket.js'
 import { conversationInfo } from '../../stores/ConversationStore'
-import { Download, Eleme, Folder, Scissor, VideoCamera } from '@element-plus/icons-vue'
+import { Eleme, Folder, Scissor, VideoCamera } from '@element-plus/icons-vue'
 import type { UploadFile } from 'element-plus'
 import { ElMessage } from 'element-plus'
 import { groupMemberInfo } from '../../stores/GroupMemberStores'
@@ -89,8 +81,9 @@ import { getGroupMemberListApi } from '../../api/Conversation'
 import { FILE_TYPE_MAP, getFileType } from '../../utils/file/filterFileKind.js'
 import MessageContentManage from '../../components/MessageContentManage.vue'
 import FilePreviewView from '../../components/FilePreviewView.vue'
-import Downloading from '../../components/Downloading.vue'
+import ChatHeader from '../../components/ChatHeader.vue'
 import { uploadFile } from '../../utils/file/fileUpload.js'
+import router from '../../router/router.js'
 
 interface fileBaseInfo {
   fileRaw: File | null
@@ -104,8 +97,7 @@ const fileUrl = ref('')
 const captureImageUrl = ref('')
 // 添加数据加载状态标记
 const isDataLoaded = ref(false)
-// true为单聊，false为群聊
-const chatType = ref(true)
+const conversation = ref()
 const route = useRoute()
 const message = ref('')
 const arr = reactive({ list: [] })
@@ -114,11 +106,9 @@ const userId = ref()
 const scrollbarRef = ref(null)
 const messageStore = messageInfo()
 const groupMemberStore = groupMemberInfo()
-const conversationStore = conversationInfo()
+const conversationStore = conversationInfo() as any
 let fileInfoList = reactive<fileBaseInfo[]>([])
 let fileList = ref<UploadFile[]>([])
-// 抽屉状态
-const drawer = ref(false)
 
 const selectFiles = (file: UploadFile) => {
   console.info(file.raw)
@@ -172,7 +162,7 @@ const handleEnterMessage = (e: KeyboardEvent) => {
     return
   }
   e.preventDefault()
-  if (chatType.value) {
+  if (conversation.value.type === 0) {
     sendPrivateMessage()
   } else {
     sendGroupMessage()
@@ -187,7 +177,7 @@ const sendPrivateMessage = async () => {
   // 处理消息类型
   console.info(
     '发送单聊消息 ===> 接收消息用户的ID:',
-    route.query.friendId,
+    conversation.value.targetId,
     '消息内容:',
     content,
     '会话id:',
@@ -209,7 +199,7 @@ const sendPrivateMessage = async () => {
   // ws发送单聊信息：会话id、接收者id、消息内容
   WSManager.sendMessage(1, 0, {
     conversationId: convId,
-    receiverId: route.query.friendId,
+    receiverId: conversation.value.targetId,
     content: content
   })
 
@@ -257,7 +247,7 @@ const sendGroupMessage = async () => {
 const sendApi = (content: string, convId: string, msgType: number) => {
   // http发送接收者id、会话id、消息内容
   sendMessageApi({
-    receiverId: route.query.friendId,
+    receiverId: conversation.value.targetId,
     conversationId: convId,
     content: content,
     msgType: msgType
@@ -270,7 +260,7 @@ const sendApi = (content: string, convId: string, msgType: number) => {
     if (res.data) {
       // 聊天记录缓存新增数据
       messageStore.addMessageMap(convId, res.data)
-      if (chatType.value) {
+      if (conversation.value.type === 0) {
         // 单聊会话缓存更新最新消息
         conversationStore.setConversationMap(convId, {
           latestMsg: res.data.content,
@@ -375,16 +365,6 @@ const messageArr = computed(() => {
   return messageStore.messageMap[convId] || []
 })
 
-const friendAvatar = computed(() =>
-  conversationStore.getAvatar(route.query.conversationId as string)
-)
-const friendUsername = computed(() =>
-  conversationStore.getUsername(route.query.conversationId as string)
-)
-const friendRemark = computed(() =>
-  conversationStore.getRemark(route.query.conversationId as string)
-)
-
 // 监听conversationId变化 - 确保会话切换
 watch(
   // 监听会话ID变化
@@ -393,8 +373,8 @@ watch(
     try {
       console.info('切换会话，新的会话id:', newConversationId, '旧的会话id:', oldConversationId)
 
-      // 切换会话时，关闭下载文件抽屉
-      drawer.value = false
+      // 初始化会话信息
+      conversation.value = conversationStore.conversationMap[newConversationId as string]
 
       // 清空文件预览列表
       fileInfoList.length = 0
@@ -403,19 +383,17 @@ watch(
       if (!isDataLoaded.value && oldConversationId === undefined) {
         // 说明是第一次加载，更新用户的头像和id
         console.info('第一次加载，更新用户的头像和id')
-        avatarUrl.value = await window.userInfoApi.storeGetUserInfo('avatar')
-        userId.value = await window.userInfoApi.storeGetUserInfo('userId')
+        avatarUrl.value = await (window as any).userInfoApi.storeGetUserInfo('avatar')
+        userId.value = await (window as any).userInfoApi.storeGetUserInfo('userId')
       }
 
       // 判断当前会话是单聊还是群聊
       await getMessageList()
-      // 默认设置为单聊
-      chatType.value = true
-      if (newConversationId.startsWith('g_')) {
+
+      if (conversation.value.type === 1) {
         // 是群聊，获取群成员列表，获取用户的头像等信息
         await getGroupMemberList()
         // 将会话类型设置为群聊
-        chatType.value = false
       }
 
       // 所有数据加载完成，允许渲染
@@ -443,24 +421,6 @@ watch(
   background-color: rgba(28, 38, 50, 0.4);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  -webkit-app-region: no-drag;
-}
-
-.chat-title {
-  position: relative;
-  height: 70px;
-  display: flex;
-  align-items: center;
-  padding: 10px;
-  border-bottom: 1px solid rgba(66, 153, 225, 0.5);
-  -webkit-app-region: drag;
-  color: #f0f0f0;
-}
-
-.chat-title button {
-  position: absolute;
-  top: 30px;
-  right: 10px;
   -webkit-app-region: no-drag;
 }
 
@@ -529,8 +489,7 @@ img {
   overflow: hidden;
 }
 
-.chat-tool button,
-.chat-title button {
+.chat-tool button {
   width: 30px;
   height: 30px;
   margin: 0;
@@ -542,8 +501,7 @@ img {
   transition: all 0.2s ease;
 }
 
-.chat-tool button:hover,
-.chat-title button:hover {
+.chat-tool button:hover {
   color: rgba(66, 153, 225, 0.9);
   text-shadow: 0 0 6px rgba(66, 153, 225, 0.3);
 }
