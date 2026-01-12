@@ -67,7 +67,7 @@ const refreshVerifyCode = async () => {
       responseType: 'blob'
     })
     // 把二进制流转成图片 URL
-    verifyCodeImg.value = URL.createObjectURL(res)
+    verifyCodeImg.value = URL.createObjectURL(res as any)
   } catch (err) {
     console.error('获取验证码失败', err)
   }
@@ -97,28 +97,44 @@ const Login = async (formEl: FormInstance | undefined) => {
     // 验证成功会进入这里，失败会直接跳去 catch
     await formEl.validate()
     const result = await loginApi(loginForm)
-    const status = result.code
+    const status = (result as any).code
     console.log(status)
     if (status === 1) {
-      window.userInfoApi.storeSetUserInfo('userId', result.data.id)
-      window.userInfoApi.storeSetUserInfo('avatar', result.data.avatar)
+      (window as any).userInfoApi.storeSetUserInfo('userId', result.data.id);
+      (window as any).userInfoApi.storeSetUserInfo('avatar', result.data.avatar);
 
-      window.api.resizeWindow('main')
-      // 需要等初始化完成在进入main窗口
+      // 判断当前登录是否需要初始化
+      const isNeed = await (window as any).loadApi.isNeedInitData()
+      console.info('是否需要初始化数据', isNeed)
+      if (!isNeed) {
+        // 不需要，直接进入main窗口
+        console.info('不需要初始化数据, 直接进入main窗口')
+        await (window as any).api.resizeWindow('main')
+        await router.push('/main')
+      }
+
+      // 等待通知在路由跳转
+      await new Promise(resolve => {
+        (window as any).loadApi.onDataInitComplete(resolve)
+      })
+
+      console.info('初始化完成, 进入main界面');
+      await (window as any).api.resizeWindow('main')
       await router.push('/main')
+
     } else {
       ElMessage.error('登录失败')
     }
   } catch (error) {
-    console.log('error submit!')
+    console.log('error submit!', error)
     ElMessage.error('登录失败')
   }
 }
 
 const Register = () => {
   console.log('注册')
-  router.push('/register')
-  window.api.resizeWindow('register')
+  router.push('/register');
+  (window as any).api.resizeWindow('register')
 }
 </script>
 

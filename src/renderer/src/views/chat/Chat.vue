@@ -393,7 +393,6 @@ watch(
       if (conversation.value.type === 1) {
         // 是群聊，获取群成员列表，获取用户的头像等信息
         await getGroupMemberList()
-        // 将会话类型设置为群聊
       }
 
       // 所有数据加载完成，允许渲染

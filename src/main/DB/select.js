@@ -24,6 +24,7 @@ const isExistUserRecord = (userId) => {
 const queryConversation = (userId) => {
     const sql = `select id, user_id, target_id, name, avatar, remark, type, is_top, unread_count, latest_msg, latest_msg_time from conversation where user_id = ? and status = 1`
     const result = queryAll(sql, userId)
+    console.log(result)
     return result
 }
 

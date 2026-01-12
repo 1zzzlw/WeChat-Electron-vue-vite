@@ -249,7 +249,7 @@ const loadConversationList = async () => {
 onMounted(() => {
   // getFriendList()
   // getGroupList()
-
+  console.info('开始查询会话列表')
   loadConversationList()
 
 })

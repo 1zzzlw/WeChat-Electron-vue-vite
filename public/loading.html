@@ -270,12 +270,53 @@
         opacity: 1;
       }
     }
+
+    .button {
+      margin-top: 40px;
+      padding: 12px 32px;
+      font-family: "Microsoft Yahei", "PingFang SC", sans-serif;
+      font-size: 18px;
+      font-weight: 600;
+      color: #b3c8ff;
+      background: transparent;
+      border: 2px solid #b3c8ff;
+      border-radius: 30px;
+      cursor: pointer;
+      opacity: 0;
+      transform: translateY(20px);
+      text-shadow: 0 0 6px rgba(179, 200, 255, 0.6);
+      transition: all 0.3s ease;
+    }
+
+    .button.show {
+      animation: buttonSlideIn 1s ease-out forwards;
+    }
+
+    .button:hover {
+      color: #f5f8ff;
+      border-color: #f5f8ff;
+      background: rgba(179, 200, 255, 0.15);
+      box-shadow: 0 0 15px rgba(120, 140, 255, 0.6), 0 4px 12px rgba(0, 0, 0, 0.2);
+      transform: translateY(0) scale(1.05);
+    }
+
+    @keyframes buttonSlideIn {
+      0% {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
   </style>
 </head>
 
 <body>
   <div class="container">
-    <span class="title">正在初始化数据...</span>
+    <span class="title">加载数据完成...</span>
     <div class="IMLoading">
       <div class="I"></div>
       <div class="M">
@@ -285,16 +326,19 @@
         <div class="slant"></div>
       </div>
     </div>
+    <div>
+      <button class="button">跳过</button>
+    </div>
   </div>
 
   <script>
-    // 监听开始数据初始化的消息
+    // 监听加载窗口准本完成可以开始从服务端拉取消息的消息
     window.loadApi.onStartDataInitialization(async () => {
       try {
         const api = 'http://localhost:8080'
         console.log('开始数据初始化...')
 
-        // 从 electron-store 获取 token
+        // 从 electron-store 获取 token 此时的短期token肯定是最新的，不需要担心过期问题
         const token = await window.userInfoApi.storeGetUserInfo('accessToken')
 
         if (!token) {
@@ -355,13 +399,12 @@
           message = messageResponseData.data === null ? [] : messageResponseData.data
         }
 
-        // 通知主进程初始化完成
+        // 通知主进程从服务端拉取数据完成
         window.loadApi.dataInitializationComplete({
           conversation,
           friend_relation,
           message
         })
-
       } catch (error) {
         console.error('数据初始化失败:', error)
         console.error('错误堆栈:', error.stack)
@@ -369,11 +412,19 @@
       }
     })
 
-    // 8S 后如果没有收到初始化消息，直接完成加载
-    setTimeout(() => {
-      console.log('8秒超时，直接完成加载')
-      window.loadApi.loadFinish()
-    }, 8000)
+    // 监听数据库加载完成的消息
+    window.loadApi.dataInitSuccessAndSkip(() => {
+      console.info('数据库加载完成')
+      const button = document.querySelector('.button')
+      // 跳过按钮显示
+      button.classList.add('show')
+      // 给跳过按钮添加点击事件
+      button.addEventListener('click', () => {
+        // 点击按钮，直接进入聊天软件
+        window.loadApi.loadFinish()  // 关闭加载窗口
+      })
+    })
+
   </script>
 </body>
 

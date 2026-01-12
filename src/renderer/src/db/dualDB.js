@@ -22,7 +22,7 @@ const getFriendList = async () => {
 /**
  * 从本地获取消息列表，如果本地数据不够或缺失，从服务端拉取
  */
-const getMessageList = () => {
+const getMessageList = async () => {
 
 }
 

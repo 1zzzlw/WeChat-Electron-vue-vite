@@ -13,3 +13,7 @@ ipcMain.handle('query:friend', (e) => {
     console.log('用户', userId, '查询好友')
     return queryFriend(userId)
 })
+
+ipcMain.handle('query:message', (e) => {
+
+})

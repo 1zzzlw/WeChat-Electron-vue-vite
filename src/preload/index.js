@@ -11,6 +11,11 @@ const userInfoApi = {
 }
 
 const loadApi = {
+  // 判断是否需要进行初始化
+  isNeedInitData: () => {
+    return ipcRenderer.invoke('loading-isNeedInit')
+  },
+  // 初始化完成，进入main界面
   loadFinish: () => {
     ipcRenderer.send('close-loading-window')
   },
@@ -22,9 +27,16 @@ const loadApi = {
   dataInitializationComplete: (data) => {
     ipcRenderer.send('data-initialization-complete', data)
   },
+  dataInitSuccessAndSkip: (callback) => {
+    ipcRenderer.on('skip', callback)
+  },
   // 发送数据初始化错误
   dataInitializationError: (error) => {
     ipcRenderer.send('data-initialization-error', error)
+  },
+  // 向渲染进程发送消息，在跳转路由，防止第一次进入消息加载不出来
+  onDataInitComplete: (callback) => {
+    ipcRenderer.once('data-init-complete', callback)
   }
 }
 
@@ -34,6 +46,9 @@ const dbApi = {
   },
   queryFriendList: () => {
     return ipcRenderer.invoke('query:friend')
+  },
+  queryMessageList: () => {
+    return ipcRenderer.invoke('query:message')
   }
 }
 
