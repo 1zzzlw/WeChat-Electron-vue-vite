@@ -30,9 +30,10 @@ ipcMain.on('update:db', async (e) => {
         multipleInsert('insert or replace', 'conversation', conversation)
     }
 
-
+    // 需要更新的会话id集合
     const conversationIds = conversation.map(c => c.id)
 
+    console.info('需要更新的会话id集合', conversationIds)
 
     // 全量更新好友表
     const friendRelationResponse = await fetch(`${api}/friend/init/list?isInit=false`, {
@@ -57,32 +58,31 @@ ipcMain.on('update:db', async (e) => {
         multipleInsert('insert or replace', 'friend_relation', friend_relation)
     }
 
-    // 清理好友表信息并插入新的数据
-
-    // 查询本地数据库最新消息的发送时间
-
-
     // 增量更新消息表，根据最新消息时间和会话id
-    // let message = []
+    let message = []
 
-    // if (conversationIds.length > 0) {
-    //     // 发送 HTTP 请求获取消息列表
-    //     const messageResponse = await fetch(`${api}/message/init/list/${conversationIds}`, {
-    //         headers: {
-    //             Authorization: token,
-    //             'Content-Type': 'application/json'
-    //         }
-    //     })
+    if (conversationIds.length > 0) {
+        // 发送 HTTP 请求获取消息列表
+        const messageResponse = await fetch(`${api}/message/init/list/${conversationIds}?isInit=false`, {
+            headers: {
+                Authorization: token,
+                'Content-Type': 'application/json'
+            }
+        })
 
-    //     if (!messageResponse.ok) {
-    //         throw new Error(`获取消息表失败: ${messageResponse.status}`)
-    //     }
+        if (!messageResponse.ok) {
+            throw new Error(`获取消息表失败: ${messageResponse.status}`)
+        }
 
-    //     const messageResponseData = await messageResponse.json()
+        const messageResponseData = await messageResponse.json()
 
-    //     message = messageResponseData.data === null ? [] : messageResponseData.data
-    // }
+        message = messageResponseData.data === null ? [] : messageResponseData.data
 
-    // 新增消息内容到数据库
+        console.info('离线期间收到的消息', message)
 
+        if (message.length > 0) {
+            // 新增离线期间收到的消息
+            multipleInsert('insert or ignore', 'message', message)
+        }
+    }
 })

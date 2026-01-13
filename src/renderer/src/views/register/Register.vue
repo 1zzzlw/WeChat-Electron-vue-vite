@@ -5,52 +5,32 @@
       <h1 class="title">注册</h1>
     </div>
     <div class="register-mid">
-      <el-form
-        @keyup.enter="handleEnterRegister"
-        class="register-form"
-        :model="registerForm"
-        ref="ruleFormRef"
-        :rules="rules"
-      >
+      <el-form @keyup.enter="handleEnterRegister" class="register-form" :model="registerForm" ref="ruleFormRef"
+        :rules="rules">
         <el-form-item prop="username">
-          <el-input
-            placeholder="输入用户名"
-            v-model="registerForm.username"
-            spellcheck="false"
-            clearable
-          >
+          <el-input placeholder="输入用户名" v-model="registerForm.username" spellcheck="false" clearable>
             <template #prepend>
-              <el-icon><User /></el-icon>
+              <el-icon>
+                <User />
+              </el-icon>
             </template>
           </el-input>
         </el-form-item>
         <el-form-item prop="phone">
-          <el-input
-            placeholder="输入手机号"
-            v-model="registerForm.phone"
-            spellcheck="false"
-            clearable
-          >
+          <el-input placeholder="输入手机号" v-model="registerForm.phone" spellcheck="false" clearable>
             <template #prepend>
-              <el-icon><Phone /></el-icon>
+              <el-icon>
+                <Phone />
+              </el-icon>
             </template>
           </el-input>
         </el-form-item>
 
         <el-form-item prop="email">
-          <el-input
-            placeholder="输入验证码"
-            v-model="registerForm.phoneCode"
-            spellcheck="false"
-            clearable
-          >
+          <el-input placeholder="输入验证码" v-model="registerForm.phoneCode" spellcheck="false" clearable>
             <template #append>
-              <el-button
-                type="primary"
-                @click="getCode(ruleFormRef, 'phone')"
-                :disabled="isCounting"
-                >{{ isCounting ? `${count}秒后重新获取` : '获取验证码' }}</el-button
-              >
+              <el-button type="primary" @click="getCode(ruleFormRef, 'phone')" :disabled="isCounting">{{ isCounting ?
+                `${count}秒后重新获取` : '获取验证码' }}</el-button>
             </template>
           </el-input>
         </el-form-item>
@@ -82,7 +62,7 @@ const isCounting = ref(false)
 const count = ref(60)
 const correctCode = ref('')
 const ruleFormRef = ref<FormInstance>()
-let timer = null
+let timer: any = null
 
 const rules = reactive<FormRules>({
   // 用户名校验
@@ -119,7 +99,7 @@ const getCode = async (formEl: FormInstance | undefined, type: 'phone') => {
     try {
       // 只校验手机号字段
       await formEl.validateField('phone')
-      const res = await sendPhoneCodeApi(registerForm.phone)
+      const res: any = await sendPhoneCodeApi(registerForm.phone)
       if (res.code === 1) {
         ElMessage.success('验证码发送成功')
         correctCode.value = res.data
@@ -148,8 +128,8 @@ const startCountdown = () => {
 }
 
 const returnLogin = () => {
-  console.info('返回登录页')
-  window.api.resizeWindow('login')
+  console.info('返回登录页');
+  (window as any).api.resizeWindow('login')
   router.push('/login')
 }
 

@@ -2,7 +2,7 @@
   <div class="chat-count" v-if="isDataLoaded">
     <ChatHeader />
     <div class="chat-content">
-      <el-scrollbar ref="scrollbarRef" style="height: 100%; width: 100%">
+      <el-scrollbar ref="scrollbarRef" @scroll="handleScroll" noresize style="height: 100%; width: 100%">
         <div class="chat-message" v-for="(message, index) in messageArr" :key="index">
           <div class="chat-list-right" v-if="String(message.senderId) === String(userId)">
             <img :src="avatarUrl" class="list-image" />
@@ -64,7 +64,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import emojis from '../../emoji/emoji.js'
 import { getMessageListApi, sendMessageApi } from '../../api/Message'
@@ -84,6 +84,7 @@ import FilePreviewView from '../../components/FilePreviewView.vue'
 import ChatHeader from '../../components/ChatHeader.vue'
 import { uploadFile } from '../../utils/file/fileUpload.js'
 import router from '../../router/router.js'
+import { getMessageList } from '../../db/dualDB.js'
 
 interface fileBaseInfo {
   fileRaw: File | null
@@ -91,6 +92,18 @@ interface fileBaseInfo {
   fileSize: number
   fileType: number
   fileUrl: string
+}
+
+// 消息分页配置
+const messagePageInfo = {
+  // 分页总数
+  pageTotal: 0,
+  // 分页页码 第1页，第2页，第3页依次累加
+  pageNO: 0,
+  // 最大消息的雪花id
+  maxMessageId: null,
+  // 当前有没有数据
+  noData: false
 }
 
 const fileUrl = ref('')
@@ -103,12 +116,14 @@ const message = ref('')
 const arr = reactive({ list: [] })
 const avatarUrl = ref('')
 const userId = ref()
-const scrollbarRef = ref(null)
+const scrollbarRef = ref()
 const messageStore = messageInfo()
 const groupMemberStore = groupMemberInfo()
 const conversationStore = conversationInfo() as any
 let fileInfoList = reactive<fileBaseInfo[]>([])
 let fileList = ref<UploadFile[]>([])
+// 加载中标志（防止重复触发）
+let isLoadingMore = false;
 
 const selectFiles = (file: UploadFile) => {
   console.info(file.raw)
@@ -289,40 +304,54 @@ function scrollToBottom() {
   }
 }
 
-const getMessageList = async () => {
-  const convId = route.query.conversationId as string
+// 滚动监听
+function handleScroll(event: any) {
+  if (isLoadingMore || event.scrollTop > 5) return;
 
-  console.info('获取消息列表，会话id:', convId)
+  isLoadingMore = true;
+  console.log('加载更多...');
 
-  if (!convId) {
-    console.info('会话id不存在')
-    return
-  }
-
-  // 此时群聊会话和单聊会话一起存储，只是格式差别比较大
-  messageStore.initMessageMap(convId)
-
-  // 再判断缓存（此时 messageMap[convId] 一定是数组，不会报错）
-  const cache = messageStore.messageMap[convId].length > 0
-  if (cache) {
-    console.info('当前会话的聊天记录缓存非空: ', messageStore.messageMap[convId])
-    return
-  }
-
-  const res = await getMessageListApi({ conversationId: convId })
-  console.info('获取消息列表成功', res.data)
-  arr.list = res.data
-  res.data.forEach((messagePcak) => {
-    messageStore.addMessageMap(messagePcak.conversationId, {
-      conversationId: messagePcak.conversationId,
-      senderId: messagePcak.senderId,
-      receiverId: messagePcak.receiverId,
-      msgType: messagePcak.msgType,
-      content: messagePcak.content,
-      sendTime: messagePcak.sendTime
-    })
-  })
+  loadMessage(conversation.value.id)
+    .finally(() => {
+      // 确保无论成功失败都释放锁
+      isLoadingMore = false;
+    });
 }
+
+// const getMessageList = async () => {
+//   const convId = route.query.conversationId as string
+
+//   console.info('获取消息列表，会话id:', convId)
+
+//   if (!convId) {
+//     console.info('会话id不存在')
+//     return
+//   }
+
+//   // 此时群聊会话和单聊会话一起存储，只是格式差别比较大
+//   messageStore.initMessageMap(convId)
+
+//   // 再判断缓存（此时 messageMap[convId] 一定是数组，不会报错）
+//   const cache = messageStore.messageMap[convId].length > 0
+//   if (cache) {
+//     console.info('当前会话的聊天记录缓存非空: ', messageStore.messageMap[convId])
+//     return
+//   }
+
+//   const res = await getMessageListApi({ conversationId: convId })
+//   console.info('获取消息列表成功', res.data)
+//   arr.list = res.data
+//   res.data.forEach((messagePcak) => {
+//     messageStore.addMessageMap(messagePcak.conversationId, {
+//       conversationId: messagePcak.conversationId,
+//       senderId: messagePcak.senderId,
+//       receiverId: messagePcak.receiverId,
+//       msgType: messagePcak.msgType,
+//       content: messagePcak.content,
+//       sendTime: messagePcak.sendTime
+//     })
+//   })
+// }
 
 const getGroupMemberList = async () => {
   const convId = route.query.conversationId as string
@@ -359,6 +388,21 @@ const getGroupMemberList = async () => {
   })
 }
 
+const loadMessage = async (newConversationId: any) => {
+  const messageList = await getMessageList(newConversationId, messagePageInfo)
+
+  messageList.forEach((messagePcak: any) => {
+    messageStore.addMessageMap(messagePcak.conversationId, {
+      conversationId: messagePcak.conversationId,
+      senderId: messagePcak.senderId,
+      receiverId: messagePcak.receiverId,
+      msgType: messagePcak.msgType,
+      content: messagePcak.content,
+      sendTime: messagePcak.sendTime
+    })
+  })
+}
+
 const messageArr = computed(() => {
   const convId = route.query.conversationId as string
   // 如果会话ID不存在，或消息列表未初始化，用空数组兜底
@@ -387,9 +431,9 @@ watch(
         userId.value = await (window as any).userInfoApi.storeGetUserInfo('userId')
       }
 
-      // 判断当前会话是单聊还是群聊
-      await getMessageList()
+      await loadMessage(newConversationId)
 
+      // 判断当前会话是单聊还是群聊
       if (conversation.value.type === 1) {
         // 是群聊，获取群成员列表，获取用户的头像等信息
         await getGroupMemberList()

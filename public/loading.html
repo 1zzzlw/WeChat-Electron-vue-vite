@@ -383,7 +383,7 @@
 
         if (conversationIds.length > 0) {
           // 发送 HTTP 请求获取消息列表
-          const messageResponse = await fetch(`${api}/message/init/list/${conversationIds}`, {
+          const messageResponse = await fetch(`${api}/message/init/list/${conversationIds}?isInit=true`, {
             headers: {
               Authorization: token,
               'Content-Type': 'application/json'

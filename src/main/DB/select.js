@@ -1,4 +1,5 @@
 import { queryAll } from './mainDB'
+import { computedOffset } from './utils'
 
 /**
  * @param userId -- 用户id 
@@ -40,11 +41,41 @@ const queryFriend = (userId) => {
 }
 
 // 查询消息列表
-
+const loadMessage = (conversationId, messagePageInfo) => {
+    const { pageNO, maxMessageId } = messagePageInfo
+    // 获得消息总数
+    let sql = `select count(*) as total from message where conversation_id = ?`
+    const totalCount = queryAll(sql, conversationId)[0].total
+    console.log(totalCount)
+    console.log(`${conversationId}会话的消息总数为${totalCount}`)
+    const params = []
+    // 根据消息总数和页码计算当前查询页码偏移量
+    const { pageTotal, pageSize, offset } = computedOffset(totalCount, pageNO)
+    sql = `select * from message where conversation_id = ?`
+    params.push(conversationId)
+    // 判断是否为第一次查询
+    if (maxMessageId) {
+        // 如果 maxMessageId 有值，就说明不是第一次查询
+        sql = sql + `and maxMessageId < ?`
+        params.push(maxMessageId)
+    }
+    sql = sql + `order by id desc limit ?, ?`
+    params.push(offset)
+    params.push(pageSize)
+    const dataList = queryAll(sql, params)
+    console.log(dataList)
+    console.log(pageNO)
+    return {
+        dataList: dataList,
+        pageTotal: pageTotal,
+        pageNO: pageNO
+    }
+}
 
 
 export {
     isExistUserRecord,
     queryConversation,
     queryFriend,
+    loadMessage
 }

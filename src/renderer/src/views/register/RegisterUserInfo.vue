@@ -5,49 +5,31 @@
       <h1 class="title">注册</h1>
     </div>
     <div class="registerUserInfo-mid">
-      <el-form
-        class="registerUserInfo-form"
-        :model="registerUserInfoForm"
-        :rules="rules"
-        ref="ruleFormRef"
-        @keyup.enter="handleEnterRegisterUserInfo"
-      >
+      <el-form class="registerUserInfo-form" :model="registerUserInfoForm" :rules="rules" ref="ruleFormRef"
+        @keyup.enter="handleEnterRegisterUserInfo">
         <el-form-item prop="password">
-          <el-input
-            placeholder="创建密码"
-            v-model="registerUserInfoForm.password"
-            spellcheck="false"
-            clearable
-          >
+          <el-input placeholder="创建密码" v-model="registerUserInfoForm.password" spellcheck="false" clearable>
             <template #prepend>
-              <el-icon><Lock /></el-icon>
+              <el-icon>
+                <Lock />
+              </el-icon>
             </template>
           </el-input>
         </el-form-item>
 
         <el-form-item prop="confirmPassword">
-          <el-input
-            placeholder="确认密码"
-            type="password"
-            v-model="confirmPassword"
-            spellcheck="false"
-            clearable
-          >
+          <el-input placeholder="确认密码" type="password" v-model="confirmPassword" spellcheck="false" clearable>
             <template #prepend>
-              <el-icon><Lock /></el-icon>
+              <el-icon>
+                <Lock />
+              </el-icon>
             </template>
           </el-input>
         </el-form-item>
 
         <el-form-item prop="sex">
-          <el-select
-            placeholder="性别"
-            v-model="registerUserInfoForm.gender"
-            size="large"
-            placement="top"
-            clearable
-            class="gender-select"
-          >
+          <el-select placeholder="性别" v-model="registerUserInfoForm.gender" size="large" placement="top" clearable
+            class="gender-select">
             <el-option label="男" value="1" />
             <el-option label="女" value="0" />
           </el-select>
@@ -86,8 +68,8 @@ onMounted(() => {
   registerUserInfoForm.password = registerTwoInfo.password || ''
   registerUserInfoForm.gender = registerTwoInfo.gender || ''
 
-  registerUserInfoForm.username = route.query?.username || ''
-  registerUserInfoForm.phone = route.query?.phone || ''
+  registerUserInfoForm.username = route.query?.username as string || '';
+  registerUserInfoForm.phone = route.query?.phone as string || '';
 })
 
 const rules = reactive({

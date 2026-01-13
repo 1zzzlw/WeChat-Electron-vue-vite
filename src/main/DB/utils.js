@@ -31,7 +31,32 @@ const toCamelCase = (item) => {
     })
 }
 
+/**
+ * 计算页码偏移量 在这里设置页码数量为 20 条
+ * @param totalCount -- 消息总数
+ * @param pageNO -- 第几页
+ * @returns pageTotal pageSize offset
+ */
+const computedOffset = (totalCount, pageNO) => {
+    const pageSize = 20
+    // 计算出分页总数
+    const pageTotal = Math.ceil(totalCount / pageSize) - 1
+    // 页码不能小于0
+    pageNO = pageNO < 0 ? 0 : pageNO
+    // 页码不能大于总页码
+    pageNO = pageNO > pageTotal ? pageTotal : pageNO
+    // 计算出偏移量
+    const offset = pageNO * pageSize > totalCount ? totalCount : pageNO * pageSize
+    console.info(pageTotal, offset)
+    return {
+        pageTotal: pageTotal,
+        pageSize: pageSize,
+        offset: offset
+    }
+}
+
 export {
     convertDBObjToCamelCase,
-    toCamelCase
+    toCamelCase,
+    computedOffset
 }

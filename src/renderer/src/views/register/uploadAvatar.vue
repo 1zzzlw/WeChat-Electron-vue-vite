@@ -53,7 +53,7 @@ const userInfo = reactive<UserInfo>({
 })
 
 const handleClick = async () => {
-  const filePath = await window.api.selectFile('avatar')
+  const filePath = await (window as any).api.selectFile('avatar')
   console.log(filePath)
   if (filePath) {
     // 预览选中的图片
@@ -71,19 +71,19 @@ const submitForm = () => {
     return
   }
   // 调用注册接口
-  registerApi(userInfo).then((res) => {
+  registerApi(userInfo).then((res: any) => {
     if (res.code === 1) {
       console.info('注册成功:', res)
-      ElMessage.success('注册成功')
+      ElMessage.success('注册成功');
       // 注册成功后，将用户头像和用户id存储到本地
-      window.userInfoApi.storeSetUserInfo('avatar', userInfo.avatar)
-      window.userInfoApi.storeSetUserInfo('userId', res.data)
+      (window as any).userInfoApi.storeSetUserInfo('avatar', userInfo.avatar)
+        (window as any).userInfoApi.storeSetUserInfo('userId', res.data)
 
       // 清空缓存的注册信息
       registerInfoStore.$reset()
 
-      router.push('/main')
-      window.api.resizeWindow('main')
+      router.push('/main');
+      (window as any).api.resizeWindow('main')
     } else {
       ElMessage.error('注册失败')
     }
@@ -110,7 +110,8 @@ onMounted(() => {
 
 .title {
   text-align: center;
-  color: #fff; /* 适配深色背景的白色文字 */
+  color: #fff;
+  /* 适配深色背景的白色文字 */
 }
 
 /* 上传区域：调整尺寸+hover效果 */
@@ -119,7 +120,8 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   -webkit-app-region: no-drag;
-  width: 180px; /* 适配头像显示尺寸 */
+  width: 180px;
+  /* 适配头像显示尺寸 */
   height: 180px;
   margin: 30px auto;
 }
@@ -128,24 +130,30 @@ onMounted(() => {
 .avatar {
   width: 100%;
   height: 100%;
-  border-radius: 8px; /* 轻微圆角更精致 */
+  border-radius: 8px;
+  /* 轻微圆角更精致 */
   transition: transform 0.2s ease;
 }
+
 .avatar:hover {
-  transform: scale(1.03); /* 头像hover轻微放大 */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); /* 增强阴影 */
+  transform: scale(1.03);
+  /* 头像hover轻微放大 */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  /* 增强阴影 */
 }
 
 /* 上传图标：调整样式+hover效果 */
 .avatar-uploader-icon {
   font-size: 40px;
-  color: rgba(255, 255, 255, 0.7); /* 浅白图标适配背景 */
+  color: rgba(255, 255, 255, 0.7);
+  /* 浅白图标适配背景 */
   cursor: pointer;
   transition: color 0.2s ease;
 }
 
 .avatar-uploader-icon:hover {
-  color: #ff76e0; /* 注册页粉紫调hover色 */
+  color: #ff76e0;
+  /* 注册页粉紫调hover色 */
 }
 
 /* 底部按钮：hover效果 */

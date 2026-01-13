@@ -11,20 +11,28 @@
         </el-popover>
         <UserOnlineStatus />
         <router-link tag="div" to="/messageList" class="left-icon">
-          <el-icon size="30"><ChatRound /></el-icon>
+          <el-icon size="30">
+            <ChatRound />
+          </el-icon>
         </router-link>
         <router-link tag="div" to="/list" class="left-icon">
-          <el-icon size="30"><UserFilled /></el-icon>
+          <el-icon size="30">
+            <UserFilled />
+          </el-icon>
         </router-link>
         <router-link tag="div" to="/collect" class="left-icon">
-          <el-icon size="30"><Star /></el-icon>
+          <el-icon size="30">
+            <Star />
+          </el-icon>
         </router-link>
         <router-link tag="div" to="/moments" class="left-icon">
           <div class="iconfont icon-pengyouquan"></div>
         </router-link>
       </div>
       <div class="main-count-left-bottom">
-        <el-icon class="left-icon" size="30" @click="openSettingView"><MoreFilled /></el-icon>
+        <el-icon class="left-icon" size="30" @click="openSettingView">
+          <MoreFilled />
+        </el-icon>
       </div>
     </div>
     <div class="main-count-right">
@@ -47,14 +55,14 @@ import Notification from '../../components/Notification.vue'
 const avatarUrl = ref('')
 
 const openSettingView = () => {
-  console.info('openSettingView')
-  window.api.createNewWindow('settingView')
+  console.info('openSettingView');
+  (window as any).api.createNewWindow('settingView')
 }
 
 onMounted(async () => {
   // 从本地存储中获取头像
-  avatarUrl.value = await window.userInfoApi.storeGetUserInfo('avatar')
-  WSManager.connect().then((r) => {})
+  avatarUrl.value = await (window as any).userInfoApi.storeGetUserInfo('avatar')
+  WSManager.connect().then((r) => { })
 })
 </script>
 
@@ -110,7 +118,7 @@ onMounted(async () => {
   border-radius: 10px;
   margin: 15px;
   box-shadow: 0 0 8px rgba(179, 200, 255, 0.6),
-  0 0 20px rgba(120, 140, 255, 0.4);
+    0 0 20px rgba(120, 140, 255, 0.4);
   transition: all 0.3s ease;
   cursor: pointer;
   border: 1px solid rgba(179, 200, 255, 0.3);
@@ -119,7 +127,7 @@ onMounted(async () => {
 .main-count-left-top-img:hover {
   opacity: 0.8;
   box-shadow: 0 0 15px rgba(179, 200, 255, 0.8),
-  0 0 30px rgba(120, 140, 255, 0.6);
+    0 0 30px rgba(120, 140, 255, 0.6);
   transform: scale(1.05);
   border-color: rgba(179, 200, 255, 0.6);
 }

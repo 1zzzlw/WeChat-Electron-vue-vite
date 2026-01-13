@@ -4,7 +4,9 @@
       <div class="location-title">存储位置</div>
       <div class="change">
         <span class="context">{{ location }}</span>
-        <el-icon @click="choose" class="icon"><More /></el-icon>
+        <el-icon @click="choose" class="icon">
+          <More />
+        </el-icon>
       </div>
     </div>
   </div>
@@ -16,20 +18,20 @@ import { onMounted, reactive, ref } from 'vue'
 const location = ref('')
 
 const choose = () => {
-  console.info('选择存储位置')
-  window.api.selectFile('storeLocation').then((filePath) => {
+  console.info('选择存储位置');
+  (window as any).api.selectFile('storeLocation').then((filePath: any) => {
     if (filePath) {
       location.value = filePath
-      console.info('选择的存储位置:', filePath)
+      console.info('选择的存储位置:', filePath);
       // 将选择的路径保存到本地
-      window.userInfoApi.storeSetUserInfo('storeLocation', filePath)
+      (window as any).userInfoApi.storeSetUserInfo('storeLocation', filePath)
       console.info('存储位置已保存')
     }
   })
 }
 
 onMounted(async () => {
-  location.value = (await window.userInfoApi.storeGetUserInfo('storeLocation')) || ''
+  location.value = (await (window as any).userInfoApi.storeGetUserInfo('storeLocation')) || ''
 })
 </script>
 

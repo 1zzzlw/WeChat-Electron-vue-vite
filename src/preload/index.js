@@ -47,8 +47,8 @@ const dbApi = {
   queryFriendList: () => {
     return ipcRenderer.invoke('query:friend')
   },
-  queryMessageList: () => {
-    return ipcRenderer.invoke('query:message')
+  loadMessage: (conversationId, messagePageInfo) => {
+    return ipcRenderer.invoke('load:message', conversationId, messagePageInfo)
   },
   // 登录时更新离线消息，会话状态，好友状态
   updateDBData: () => {

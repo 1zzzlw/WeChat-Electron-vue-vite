@@ -2,14 +2,8 @@
   <div class="friendAdd-count">
     <div class="title">添加好友</div>
     <div class="friendAdd-top">
-      <el-input
-        style="width: 240px"
-        placeholder="搜索微信号或者手机号"
-        v-model="searchInput"
-        :prefix-icon="Search"
-        spellcheck="false"
-        clearable
-      />
+      <el-input style="width: 240px" placeholder="搜索微信号或者手机号" v-model="searchInput" :prefix-icon="Search"
+        spellcheck="false" clearable />
       <el-button type="success" @click="searchUser">搜索</el-button>
     </div>
     <div class="friendAdd-bottom">
@@ -41,18 +35,8 @@
           <div>{{ userInfo.username }}</div>
         </div>
         <div class="apply-message">
-          <el-input
-            v-model="applyMessage"
-            maxlength="50"
-            style="width: 100%"
-            resize="none"
-            placeholder="请输入添加好友的消息"
-            show-word-limit
-            type="textarea"
-            :rows="4"
-            spellcheck="false"
-            clearable
-          />
+          <el-input v-model="applyMessage" maxlength="50" style="width: 100%" resize="none" placeholder="请输入添加好友的消息"
+            show-word-limit type="textarea" :rows="4" spellcheck="false" clearable />
         </div>
         <el-button type="primary" @click="sendApply">添加好友</el-button>
       </div>
@@ -106,15 +90,15 @@ const searchUser = () => {
 const sendApply = async () => {
   applyInfo.toUserId = userInfo.id
   applyInfo.applyMsg = applyMessage.value
-  const res = await sendApplyApi(applyInfo)
+  const res: any = await sendApplyApi(applyInfo)
   console.info(res)
   const applyId = res.data
   console.info(applyId)
   if (res.code === 1) {
     ElMessage.success(`发送好友申请成功`)
-    console.info('好友申请表ID：' + applyId)
+    console.info('好友申请表ID：' + applyId);
     // 发送好友申请成功后，通知对方好友申请列表更新
-    window.api.sendToMain(5, 0, {
+    (window as any).api.sendToMain(5, 0, {
       applyId: applyId,
       toUserId: applyInfo.toUserId,
       applyMsg: applyInfo.applyMsg

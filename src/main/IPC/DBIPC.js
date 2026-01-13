@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron'
 import { store } from '../index'
-import { queryConversation, queryFriend } from '../DB/select'
+import { queryConversation, queryFriend, loadMessage } from '../DB/select'
 
 ipcMain.handle('query:conversation', (e) => {
     const userId = store.get('userId')
@@ -14,6 +14,8 @@ ipcMain.handle('query:friend', (e) => {
     return queryFriend(userId)
 })
 
-ipcMain.handle('query:message', (e) => {
-
+ipcMain.handle('load:message', (e, conversationId, messagePageInfo) => {
+    console.log(`查询会话${conversationId}的分页信息`)
+    console.log(messagePageInfo)
+    return loadMessage(conversationId, messagePageInfo)
 })
