@@ -12,7 +12,7 @@ const init_table = [
     read_status       INTEGER  NOT NULL,
     send_time         TEXT     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     is_revoked        INTEGER  NOT NULL DEFAULT 0,
-    quote_msg_id      INTEGER
+    quote_msg_id      INTEGER  DEFAULT NULL
   );
   `,
   // 设备登录记录表

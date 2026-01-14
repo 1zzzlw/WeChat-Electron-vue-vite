@@ -20,8 +20,6 @@ const props = defineProps<{
 const renderMessageContent = () => {
   const { msgType = 1, content = '', fileUrl = '' } = props
   switch (msgType) {
-    case 1:
-      return h('div', content)
     case 2:
       return h(ChatImageView, { fileUrl })
     case 3:

@@ -9,7 +9,7 @@
                 <MoreFilled />
             </el-icon>
             <el-drawer v-model="drawer" title="下载文件" class="download-drawer" :modal="false" :append-to-body="true"
-                destroy-on-close="true" modal-penetrable>
+                modal-penetrable>
             </el-drawer>
         </div>
     </div>

@@ -40,7 +40,8 @@ const toCamelCase = (item) => {
 const computedOffset = (totalCount, pageNO) => {
     const pageSize = 20
     // 计算出分页总数
-    const pageTotal = Math.ceil(totalCount / pageSize) - 1
+    let pageTotal = Math.ceil(totalCount / pageSize) - 1
+    pageTotal = pageTotal < 0 ? 0 : pageTotal
     // 页码不能小于0
     pageNO = pageNO < 0 ? 0 : pageNO
     // 页码不能大于总页码

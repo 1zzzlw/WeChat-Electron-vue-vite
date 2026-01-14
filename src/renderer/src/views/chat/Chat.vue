@@ -6,19 +6,22 @@
         <div class="chat-message" v-for="message in messageArr" :key="message.id">
           <div class="chat-list-right" v-if="String(message.senderId) === String(userId)">
             <img :src="avatarUrl" class="list-image" />
-            <div class="chat-bubble right-bubble">
-              <MessageContentManage :msgType="message.msgType" :content="message.content" :fileUrl="message.content" />
+            <div v-if="message.msgType === 1" class="chat-bubble right-bubble">
+              <div> {{ message.content }} </div>
             </div>
+            <MessageContentManage v-else :msgType="message.msgType" :content="message.content"
+              :fileUrl="message.content" />
           </div>
           <div class="chat-list-left" v-else>
             <img v-if="conversation.type === 0" :src="conversation.avatar" class="list-image" />
             <img v-else :src="groupMemberStore.getGroupMemberAvatar(message.senderId)" class="list-image" />
             <div class="msg">
               <div class="left-name">{{ conversation.remark || conversation.name }}</div>
-              <div class="chat-bubble left-bubble">
-                <MessageContentManage :msgType="message.msgType" :content="message.content"
-                  :fileUrl="message.content" />
+              <div v-if="message.msgType === 1" class="chat-bubble left-bubble">
+                <div> {{ message.content }} </div>
               </div>
+              <MessageContentManage v-else :msgType="message.msgType" :content="message.content"
+                :fileUrl="message.content" />
             </div>
           </div>
         </div>
@@ -62,7 +65,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, reactive, ref, watch } from 'vue'
+import { computed, nextTick, reactive, ref, watch, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import emojis from '../../emoji/emoji.js'
 import { sendMessageApi } from '../../api/Message'
@@ -83,6 +86,8 @@ import ChatHeader from '../../components/ChatHeader.vue'
 import { uploadFile } from '../../utils/file/fileUpload.js'
 import { getMessageList } from '../../db/dualDB.js'
 import { Message } from '../../types/message.ts'
+import { Snowflake } from '@theinternetfolks/snowflake'
+
 
 interface fileBaseInfo {
   fileRaw: File | null
@@ -194,6 +199,7 @@ const sendPrivateMessage = async () => {
     '会话id:',
     convId
   )
+
   if (fileInfoList.length > 0) {
     for (const file of fileInfoList) {
       console.info(file.fileRaw)
@@ -214,11 +220,13 @@ const sendPrivateMessage = async () => {
     content: content
   })
 
+  // 发送截屏
   if (captureImageUrl.value.length > 0) {
     sendApi(captureImageUrl.value, convId, 2)
   }
 
   if (content !== '') {
+    // 发送消息
     sendApi(content, convId, 1)
   }
 }
@@ -256,37 +264,52 @@ const sendGroupMessage = async () => {
 }
 
 const sendApi = (content: string, convId: string, msgType: number) => {
-  // http发送接收者id、会话id、消息内容
-  sendMessageApi({
-    receiverId: conversation.value.targetId,
+  // 在前端生成发送消息的时间，写入本地数据库和后端MySQL数据库
+  const sendTimeStamp = dayjs().valueOf()
+  const sendTime = dayjs(sendTimeStamp).format('YYYY-MM-DD HH:mm:ss')
+
+  const snowId = Snowflake.generate()
+
+  const messagePack: Message = {
+    id: snowId,
+    receiverId: conversation.value.targetId as string,
     conversationId: convId,
+    senderId: userId.value,
+    msgType: msgType,
     content: content,
-    msgType: msgType
-  }).then(async (res) => {
+    // 0 -发送中  1 -成功  2 -失败
+    sendStatus: 0,
+    sendTime: sendTime,
+    // 0 -未读  1 -已读
+    // read_status: 0,
+  }
+
+  // 消息列表存入缓存中
+  console.info('存入缓存中')
+  messageStore.addMessageMap(convId, messagePack)
+
+  // 更新会话最新消息和时间
+  conversationStore.setConversationMap(convId, {
+    latestMsg: content,
+    latestMsgTime: dayjs(sendTimeStamp).format('HH:mm:ss')
+  })
+
+  // http发送接收者id、会话id、消息内容
+  sendMessageApi(messagePack).then(async (res) => {
     console.info('发送消息成功', res)
     // 清空输入框
     message.value = ''
+    // 清空文件预览列表
     fileUrl.value = ''
+    // 清空截图
     captureImageUrl.value = ''
     if (res.data) {
-      // 聊天记录缓存新增数据
-      messageStore.addMessageMap(convId, res.data)
-      if (conversation.value.type === 0) {
-        // 单聊会话缓存更新最新消息
-        conversationStore.setConversationMap(convId, {
-          latestMsg: res.data.content,
-          latestMsgTime: dayjs(res.data.sendTime).format('HH:mm')
-        })
-      } else {
-        // 群聊会话缓存更新最新消息
-        // conversationStore.setGroupConversationMap(convId, {
-        //   latestMsg: res.data.content,
-        //   latestMsgTime: dayjs(res.data.sendTime).format('HH:mm')
-        // })
-      }
-      if (res.data.msgType === 2) {
-        // TODO 暂时通过MySQL传来的图片路径展示
-      }
+      const message = res.data
+      // TODO 发送成功，修改发送状态为成功
+      message.sendStatus = 1
+      console.info(message)
+      // 存入本地数据库
+
       // 滚动到最底部
       await nextTick()
       scrollToBottom()
@@ -383,12 +406,20 @@ const getGroupMemberList = async () => {
 const loadMessage = async (newConversationId: any) => {
   const messageList = await getMessageList(newConversationId, messagePageInfo)
 
-  if (messageList) {
+  if (messageList.length > 0) {
     // 加入pinia缓存
     messageList.forEach((messagePcak: Message) => {
       console.info(messagePcak)
-      messageStore.addMessageMap(messagePcak.conversationId, messagePcak)
+      messageStore.loadMessageMap(messagePcak.conversationId, messagePcak)
     })
+
+    // TODO 将从服务端查来的数据写入本地数据库
+
+
+  } else {
+    // TODO 展示查询结束的消息
+
+
   }
 }
 
@@ -407,6 +438,14 @@ watch(
   async (newConversationId, oldConversationId) => {
     try {
       console.info('切换会话，新的会话id:', newConversationId, '旧的会话id:', oldConversationId)
+
+      // 进入新会话时重置
+      messagePageInfo.pageTotal = 0
+      messagePageInfo.pageNO = 0
+      messagePageInfo.maxMessageId = null
+      messagePageInfo.noData = false
+
+      console.info('重置之后的分页配置信息', messagePageInfo)
 
       // 初始化会话信息
       conversation.value = conversationStore.conversationMap[newConversationId as string]
@@ -442,6 +481,14 @@ watch(
   },
   { immediate: true }
 )
+
+// 组件卸载时重置
+onUnmounted(() => {
+  messagePageInfo.pageTotal = 0
+  messagePageInfo.pageNO = 0
+  messagePageInfo.maxMessageId = null
+  messagePageInfo.noData = false
+})
 </script>
 
 <style scoped>

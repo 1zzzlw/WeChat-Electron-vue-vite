@@ -6,8 +6,8 @@ export interface Message {
     msgType: number
     content: string
     sendStatus: number
-    readStatus: number
+    readStatus?: number
     sendTime: string
-    isRevoked: number
-    quoteMsgId: number | null
+    isRevoked?: number
+    quoteMsgId?: number | null
 }

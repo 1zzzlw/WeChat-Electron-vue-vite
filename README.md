@@ -25,3 +25,8 @@ npm install spark-md5
 
 生成照片，视频的预览压缩图 -- ffmpeg
 npm install ffmpeg
+
+雪花id生成依赖
+npm install node-snowflake
+
+npm install snowflake-id --save

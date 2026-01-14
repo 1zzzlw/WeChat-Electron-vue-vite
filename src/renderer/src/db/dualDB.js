@@ -25,14 +25,22 @@ const getFriendList = async () => {
  * @returns -- 消息结果
  */
 const getMessageList = async (conversationId, messagePageInfo) => {
-    if (messagePageInfo.noData) {
+    if (messagePageInfo.noData && messagePageInfo.maxMessageId != null) {
         // TODO 如果本地数据库中没有了数据，发送请求从服务端拉取旧数据
         console.info('没有值了')
-        await pullMessageListApi({
+        const result = await pullMessageListApi({
             conversationId: conversationId,
             maxMessageId: messagePageInfo.maxMessageId
         })
-        return null
+        console.info(result.data)
+        if (result.data.length === 0) {
+            console.info('服务端也没有数据了')
+            return []
+        } else {
+            console.info('服务端还有值')
+            messagePageInfo.maxMessageId = result.data[result.data.length - 1].id
+            return result.data
+        }
     }
     const messagePageResult = await window.dbApi.loadMessage(conversationId, {
         pageNO: messagePageInfo.pageNO,
@@ -52,13 +60,13 @@ const getMessageList = async (conversationId, messagePageInfo) => {
         // 已经到了最后一页，本地数据库中没有数据
         messagePageInfo.noData = true
         console.info('该会话的消息查询完了')
+    } else {
+        // 本地数据库内还有值，分页页码加一
+        messagePageInfo.pageNO++
+
+        // 最大id赋值
+        messagePageInfo.maxMessageId = messageList[messageList.length - 1].id
     }
-
-    // 分页页码加一
-    messagePageInfo.pageNO++
-
-    // 最大id赋值
-    messagePageInfo.maxMessageId = messageList[messageList.length - 1].id
 
     console.log('查询分页数据', messageList)
     console.log(messagePageInfo)
