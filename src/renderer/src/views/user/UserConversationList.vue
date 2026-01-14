@@ -59,23 +59,20 @@ import { getConversationList } from '../../db/dualDB'
 import dayjs from 'dayjs'
 
 const router = useRouter()
-const friendId = reactive({ arr: [] })
-const conversationId = reactive({ list: [] })
-const active = ref<string | number>('')
+const active = ref<string | undefined>('')
 const userId = ref()
-const conversationListArr = ref<Conversation[]>([])
-const conversationStore = conversationInfo() as any
+const conversationStore = conversationInfo()
 
-const starCall = async (conversation: { id: string; targetId: string | number; type: number }) => {
+const starCall = async (conversation: Conversation) => {
   active.value = conversation.targetId
-  userId.value = await (window as any).userInfoApi.storeGetUserInfo('userId')
+
   if (!userId.value) {
     console.info('获取当前用户ID失败，无法进入聊天页')
     return
   }
   console.info('消息列表时，好友id:' + conversation.targetId + ', 会话id:' + conversation.id)
   // 清除会话缓存中的未读消息数量
-  conversationStore.clearUnreadCount(conversation.id)
+  conversationStore.clearUnreadCount(conversation.id as string)
 
   // TODO 清除本地数据库中的未读消息数量
 
@@ -89,13 +86,11 @@ const starCall = async (conversation: { id: string; targetId: string | number; t
 }
 
 const createGroupChat = () => {
-  console.info('createGroupChat');
   // 打开创建群聊窗口
   (window as any).api.createNewWindow('createGroup')
 }
 
 const addFriend = () => {
-  console.info('addFriend');
   // 打开添加好友窗口
   (window as any).api.createNewWindow('addFriend')
 }
@@ -220,38 +215,35 @@ const addFriend = () => {
 // }
 
 const loadConversationList = async () => {
-  // TODO 可以判断缓存中是否存在，如果存在可以不去sqlite中加载数据
+  // 判断缓存中是否存在，存在可以不去sqlite中加载数据
+  const cache = conversationStore.initCache(userId.value as string)
 
-  const conversationList = await getConversationList()
-  console.info('从本地数据库获取的会话列表:', conversationList)
+  if (!cache) {
+    // 此时缓存为空或缓存失效
+    console.info('缓存为空或缓存失效')
 
-  conversationListArr.value = conversationList
+    const conversationList = await getConversationList()
+    console.info('从本地数据库获取的会话列表:', conversationList)
 
-  // 将会话信息存入pinia缓存中
-  conversationList.forEach((conversation: Conversation) => {
-    console.info('存储会话到pinia:', conversation.id, conversation)
-    conversationStore.setConversationMap(conversation.id, {
-      id: conversation.id,
-      targetId: conversation.targetId,
-      username: conversation.name,
-      avatar: conversation.avatar,
-      remark: conversation.remark,
-      type: conversation.type,
-      latestMsg: conversation.latestMsg,
-      latestMsgTime: conversation.latestMsgTime,
-      unreadCount: conversation.unreadCount,
-      isTop: conversation.isTop,
-      status: conversation.status
+    // 将会话信息存入pinia缓存中
+    conversationList.forEach((conversation: Conversation) => {
+      conversation.latestMsgTime = conversation.latestMsgTime !== null ? dayjs(conversation.latestMsgTime).format('HH:mm:ss') : undefined
+      console.info('存储会话到pinia:', conversation.id, conversation)
+      conversationStore.setConversationMap(conversation.id, conversation)
     })
-  })
+  }
 }
 
-onMounted(() => {
-  // getFriendList()
-  // getGroupList()
-  console.info('开始查询会话列表')
-  loadConversationList()
+// 可以检测会话的更新实时展示
+const conversationListArr = computed(() => {
+  return Object.values(conversationStore.conversationMap)
+})
 
+onMounted(async () => {
+  userId.value = await (window as any).userInfoApi.storeGetUserInfo('userId')
+
+  // 查询会话列表
+  loadConversationList()
 })
 </script>
 

@@ -11,12 +11,10 @@
             </div>
           </div>
           <div class="chat-list-left" v-else>
-            <img v-if="conversation.type === 0" :src="conversationStore.getAvatar(conversation.id)"
-              class="list-image" />
+            <img v-if="conversation.type === 0" :src="conversation.avatar" class="list-image" />
             <img v-else :src="groupMemberStore.getGroupMemberAvatar(message.senderId)" class="list-image" />
             <div class="msg">
-              <div class="left-name">{{ conversationStore.getRemark(conversation.id) ||
-                conversationStore.getUsername(conversation.id) }}</div>
+              <div class="left-name">{{ conversation.remark || conversation.name }}</div>
               <div class="chat-bubble left-bubble">
                 <MessageContentManage :msgType="message.msgType" :content="message.content"
                   :fileUrl="message.content" />
@@ -64,13 +62,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
+import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import emojis from '../../emoji/emoji.js'
-import { getMessageListApi, sendMessageApi } from '../../api/Message'
+import { sendMessageApi } from '../../api/Message'
 import { messageInfo } from '../../stores/MessageStore'
 import dayjs from 'dayjs'
-import { Conversation } from '../../types/conversation.js'
+import { Conversation, initConversation } from '../../types/conversation.ts'
 import { WSManager } from '../../utils/websocket.js'
 import { conversationInfo } from '../../stores/ConversationStore'
 import { Eleme, Folder, Scissor, VideoCamera } from '@element-plus/icons-vue'
@@ -83,8 +81,8 @@ import MessageContentManage from '../../components/MessageContentManage.vue'
 import FilePreviewView from '../../components/FilePreviewView.vue'
 import ChatHeader from '../../components/ChatHeader.vue'
 import { uploadFile } from '../../utils/file/fileUpload.js'
-import router from '../../router/router.js'
 import { getMessageList } from '../../db/dualDB.js'
+import { Message } from '../../types/message.ts'
 
 interface fileBaseInfo {
   fileRaw: File | null
@@ -110,7 +108,7 @@ const fileUrl = ref('')
 const captureImageUrl = ref('')
 // 添加数据加载状态标记
 const isDataLoaded = ref(false)
-const conversation = ref()
+let conversation = ref<Conversation>(initConversation())
 const route = useRoute()
 const message = ref('')
 const arr = reactive({ list: [] })
@@ -119,13 +117,11 @@ const userId = ref()
 const scrollbarRef = ref()
 const messageStore = messageInfo()
 const groupMemberStore = groupMemberInfo()
-const conversationStore = conversationInfo() as any
+const conversationStore = conversationInfo()
 let fileInfoList = reactive<fileBaseInfo[]>([])
 let fileList = ref<UploadFile[]>([])
-// 加载中标志（防止重复触发）
-let isLoadingMore = false;
 
-const selectFiles = (file: UploadFile) => {
+const selectFiles = (file: UploadFile | any) => {
   console.info(file.raw)
   console.info('文件名称:', file.name)
   console.info('文件大小:', file.size)
@@ -158,18 +154,18 @@ const handleExceed = () => {
 }
 
 // 处理emoji点击事件
-const handlerEmoji = (emoji) => {
+const handlerEmoji = (emoji: any) => {
   message.value += emoji
 }
 
 // 处理截图按钮点击事件
 const captureBtn = () => {
-  console.info('截图按钮点击事件')
-  window.chatToolApi.openCapture()
+  console.info('截图按钮点击事件');
+  (window as any).chatToolApi.openCapture()
 
-  window.chatToolApi.sendImageToMain((savePath) => {
-    captureImageUrl.value = savePath
-  })
+    (window as any).chatToolApi.sendImageToMain((savePath: any) => {
+      captureImageUrl.value = savePath
+    })
 }
 
 const handleEnterMessage = (e: KeyboardEvent) => {
@@ -283,10 +279,10 @@ const sendApi = (content: string, convId: string, msgType: number) => {
         })
       } else {
         // 群聊会话缓存更新最新消息
-        conversationStore.setGroupConversationMap(convId, {
-          latestMsg: res.data.content,
-          latestMsgTime: dayjs(res.data.sendTime).format('HH:mm')
-        })
+        // conversationStore.setGroupConversationMap(convId, {
+        //   latestMsg: res.data.content,
+        //   latestMsgTime: dayjs(res.data.sendTime).format('HH:mm')
+        // })
       }
       if (res.data.msgType === 2) {
         // TODO 暂时通过MySQL传来的图片路径展示
@@ -305,17 +301,13 @@ function scrollToBottom() {
 }
 
 // 滚动监听
-function handleScroll(event: any) {
-  if (isLoadingMore || event.scrollTop > 5) return;
+function handleScroll({ scrollTop }: any) {
+  // console.info(scrollTop)
 
-  isLoadingMore = true;
-  console.log('加载更多...');
-
-  loadMessage(conversation.value.id)
-    .finally(() => {
-      // 确保无论成功失败都释放锁
-      isLoadingMore = false;
-    });
+  if (scrollTop === 0) {
+    console.log('加载更多...');
+    loadMessage(conversation.value.id)
+  }
 }
 
 // const getMessageList = async () => {
@@ -375,7 +367,7 @@ const getGroupMemberList = async () => {
 
   const res = await getGroupMemberListApi(convId)
   console.info('获取群成员列表成功', res.data)
-  res.data.forEach((item) => {
+  res.data.forEach((item: any) => {
     groupMemberStore.addGroupMember(convId, {
       conversationId: convId,
       userId: item.userId,
@@ -391,21 +383,19 @@ const getGroupMemberList = async () => {
 const loadMessage = async (newConversationId: any) => {
   const messageList = await getMessageList(newConversationId, messagePageInfo)
 
-  messageList.forEach((messagePcak: any) => {
-    messageStore.addMessageMap(messagePcak.conversationId, {
-      id: messagePcak.id,
-      conversationId: messagePcak.conversationId,
-      senderId: messagePcak.senderId,
-      receiverId: messagePcak.receiverId,
-      msgType: messagePcak.msgType,
-      content: messagePcak.content,
-      sendTime: messagePcak.sendTime
+  if (messageList) {
+    // 加入pinia缓存
+    messageList.forEach((messagePcak: Message) => {
+      console.info(messagePcak)
+      messageStore.addMessageMap(messagePcak.conversationId, messagePcak)
     })
-  })
+  }
 }
 
 const messageArr = computed(() => {
   const convId = route.query.conversationId as string
+  console.info(convId)
+  console.info(messageStore.messageMap[convId])
   // 如果会话ID不存在，或消息列表未初始化，用空数组兜底
   return messageStore.messageMap[convId] || []
 })

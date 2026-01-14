@@ -23,7 +23,7 @@ const isExistUserRecord = (userId) => {
  * @returns -- 返回查询结果
  */
 const queryConversation = (userId) => {
-    const sql = `select id, user_id, target_id, name, avatar, remark, type, is_top, unread_count, latest_msg, latest_msg_time from conversation where user_id = ? and status = 1`
+    const sql = `select * from conversation where user_id = ? and status = 1`
     const result = queryAll(sql, userId)
     console.log(result)
     return result
@@ -35,7 +35,7 @@ const queryConversation = (userId) => {
  * @returns -- 返回查询结果
  */
 const queryFriend = (userId) => {
-    const sql = `select user_id, friend_id, username, avatar, remark, relation_status from friend_relation where user_id = ?`
+    const sql = `select * from friend_relation where user_id = ?`
     const result = queryAll(sql, userId)
     return result
 }
@@ -46,7 +46,6 @@ const loadMessage = (conversationId, messagePageInfo) => {
     // 获得消息总数
     let sql = `select count(*) as total from message where conversation_id = ?`
     const totalCount = queryAll(sql, conversationId)[0].total
-    console.log(totalCount)
     console.log(`${conversationId}会话的消息总数为${totalCount}`)
     const params = []
     // 根据消息总数和页码计算当前查询页码偏移量
@@ -56,12 +55,12 @@ const loadMessage = (conversationId, messagePageInfo) => {
     // 判断是否为第一次查询
     if (maxMessageId) {
         // 如果 maxMessageId 有值，就说明不是第一次查询
-        sql = sql + `and maxMessageId < ?`
+        sql = sql + `and id < ?`
         params.push(maxMessageId)
     }
-    sql = sql + `order by id desc limit ?, ?`
-    params.push(offset)
-    params.push(pageSize)
+    sql = sql + ` order by id desc limit 0, ?`
+    // params.push(Number.parseInt(offset, 10))
+    params.push(Number.parseInt(pageSize, 10))
     const dataList = queryAll(sql, params)
     console.log(dataList)
     console.log(pageNO)

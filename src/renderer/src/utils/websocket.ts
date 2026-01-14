@@ -33,7 +33,7 @@ class WebSocketManager {
     return this.instance
   }
 
-  private constructor() {}
+  private constructor() { }
 
   /** 公共方法：外部用于建立连接 */
   async connect() {
@@ -218,10 +218,10 @@ class WebSocketManager {
           console.info('收到群聊消息:', data)
           this.updateMessageStore(data)
           // 更新群聊会话的最新消息和最新消息时间展示
-          conversationInfo().setGroupConversationMap(data.conversationId, {
-            latestMsg: data.content,
-            latestMsgTime: dayjs(data.sendTime).format('HH:mm')
-          })
+          // conversationInfo().setGroupConversationMap(data.conversationId, {
+          //   latestMsg: data.content,
+          //   latestMsgTime: dayjs(data.sendTime).format('HH:mm')
+          // })
           break
         case 6:
           // 好友申请类型，将消息存储到状态管理中

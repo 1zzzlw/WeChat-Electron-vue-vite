@@ -1,22 +1,16 @@
 <template>
   <div class="window-controls">
-    <div
-      v-if="showSetTop"
-      :class="isTop ? 'iconfont icon-quxiaozhiding' : 'iconfont icon-top'"
-      @click="setTop"
-      :title="isTop ? '取消置顶' : '置顶'"
-    ></div>
+    <div v-if="showSetTop" :class="isTop ? 'iconfont icon-quxiaozhiding' : 'iconfont icon-top'" @click="setTop"
+      :title="isTop ? '取消置顶' : '置顶'"></div>
     <div class="iconfont icon-minus" v-if="showSetMiniSize" @click="miniWindow"></div>
-    <div
-      v-if="showSetFullScreen"
+    <div v-if="showSetFullScreen"
       :class="isFullScreen ? 'iconfont icon-fullscreen-shrink' : 'iconfont icon-fullscreen-expand'"
-      @click="changeScreen"
-    ></div>
+      @click="changeScreen"></div>
     <div class="iconfont icon-close" @click="closeWindow"></div>
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import '../assets/iconfont/iconfont.css'
 import { ref } from 'vue'
 
