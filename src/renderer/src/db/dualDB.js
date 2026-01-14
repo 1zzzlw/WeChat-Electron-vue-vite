@@ -52,7 +52,7 @@ const getMessageList = async (conversationId, messagePageInfo) => {
 
     // 消息进行倒叙排序
     messageList.sort((a, b) => {
-        return a.id - b.id
+        return a.id > b.id ? 1 : -1
     })
 
     console.log('查询分页数据', messageList)

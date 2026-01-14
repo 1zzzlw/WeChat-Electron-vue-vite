@@ -78,7 +78,7 @@ onMounted(async () => {
   position: absolute;
   inset: 5px;
   background-size: cover;
-  background: url('../../assets/image/7.jpg') fixed center;
+  background: url('../../assets/image/6.jpg') fixed center;
   background-size: cover;
   /* 添加模糊效果 */
   filter: blur(10px);

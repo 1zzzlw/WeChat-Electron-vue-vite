@@ -1,9 +1,9 @@
 <template>
-  <div class="chat-count" v-if="isDataLoaded">
+  <div class="chat-count" v-if=isDataLoaded>
     <ChatHeader />
     <div class="chat-content">
       <el-scrollbar ref="scrollbarRef" @scroll="handleScroll" noresize style="height: 100%; width: 100%">
-        <div class="chat-message" v-for="(message, index) in messageArr" :key="index">
+        <div class="chat-message" v-for="message in messageArr" :key="message.id">
           <div class="chat-list-right" v-if="String(message.senderId) === String(userId)">
             <img :src="avatarUrl" class="list-image" />
             <div class="chat-bubble right-bubble">
@@ -393,6 +393,7 @@ const loadMessage = async (newConversationId: any) => {
 
   messageList.forEach((messagePcak: any) => {
     messageStore.addMessageMap(messagePcak.conversationId, {
+      id: messagePcak.id,
       conversationId: messagePcak.conversationId,
       senderId: messagePcak.senderId,
       receiverId: messagePcak.receiverId,

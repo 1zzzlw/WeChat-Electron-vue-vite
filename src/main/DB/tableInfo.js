@@ -2,7 +2,7 @@ const init_table = [
   // 消息表
   `
     CREATE TABLE IF NOT EXISTS message (
-    id                INTEGER  NOT NULL PRIMARY KEY AUTOINCREMENT,
+    id                TEXT  NOT NULL PRIMARY KEY,
     sender_id         INTEGER  NOT NULL,
     conversation_id   TEXT     NOT NULL,
     receiver_id       INTEGER  NOT NULL,

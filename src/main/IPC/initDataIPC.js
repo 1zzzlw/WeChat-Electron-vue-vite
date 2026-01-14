@@ -53,7 +53,7 @@ ipcMain.on('data-initialization-complete', (e, data) => {
     console.log('数据初始化完成')
 
     const keys = Object.keys(data);
-
+    console.log(keys)
     // 将数据加载到本地数据库中
     for (const tableName of keys) {
         multipleInsert('insert or ignore', tableName, data[`${tableName}`])

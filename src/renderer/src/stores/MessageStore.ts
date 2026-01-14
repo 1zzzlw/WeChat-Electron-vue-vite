@@ -3,6 +3,7 @@ import { defineStore } from 'pinia'
 // 聊天记录存储模块
 
 interface message {
+  id: string
   conversationId: string
   senderId: string | number
   receiverId: string | number
