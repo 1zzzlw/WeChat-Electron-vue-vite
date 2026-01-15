@@ -41,18 +41,28 @@ const loadApi = {
 }
 
 const dbApi = {
+  // 查询会话列表
   queryConversationList: () => {
     return ipcRenderer.invoke('query:conversation')
   },
+  // 查询好友列表
   queryFriendList: () => {
     return ipcRenderer.invoke('query:friend')
   },
+  // 分页加载消息
   loadMessage: (conversationId, messagePageInfo) => {
     return ipcRenderer.invoke('load:message', conversationId, messagePageInfo)
   },
   // 登录时更新离线消息，会话状态，好友状态
   updateDBData: () => {
     ipcRenderer.send('update:db')
+  },
+  // 保存用户发送成功消息
+  saveSentMessage: (message) => {
+    ipcRenderer.send('save:message', message)
+  },
+  saveLoadMessage: (messageList) => {
+    ipcRenderer.send('save:loadMessage', messageList)
   }
 }
 

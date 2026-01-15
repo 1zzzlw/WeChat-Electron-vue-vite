@@ -27,13 +27,13 @@
 import { ref, reactive, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { userApplyListInfo } from '../../stores/UserApplyListStore'
-import { userListInfo } from '../../stores/ContactListStore'
+import { friendInfo } from '../../stores/ContactListStore'
 import { dealApplyApi } from '../../api/Apply'
 import { ElMessage } from 'element-plus'
 
 const route = useRoute()
 const userApplyStore = userApplyListInfo()
-const userListStore = userListInfo()
+const friendInfoStore = friendInfo()
 const applyInfo = reactive({
   applyId: null,
   fromUserId: null,

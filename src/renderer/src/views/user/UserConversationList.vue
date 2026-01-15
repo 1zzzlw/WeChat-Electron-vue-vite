@@ -220,15 +220,13 @@ const loadConversationList = async () => {
 
   if (!cache) {
     // 此时缓存为空或缓存失效
-    console.info('缓存为空或缓存失效')
+    console.info('会话缓存为空或缓存失效')
 
     const conversationList = await getConversationList()
-    console.info('从本地数据库获取的会话列表:', conversationList)
 
     // 将会话信息存入pinia缓存中
     conversationList.forEach((conversation: Conversation) => {
       conversation.latestMsgTime = conversation.latestMsgTime !== null ? dayjs(conversation.latestMsgTime).format('HH:mm:ss') : undefined
-      console.info('存储会话到pinia:', conversation.id, conversation)
       conversationStore.setConversationMap(conversation.id, conversation)
     })
   }

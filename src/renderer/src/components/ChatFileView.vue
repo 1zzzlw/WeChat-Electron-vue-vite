@@ -1,11 +1,13 @@
 <template>
   <div class="chat-file file-downloading">
-    <img class="file-icon" src="../assets/wenjian.svg" alt="" />
+    <div v-if="downloadStatus === 0">
 
+    </div>
+    <img class="file-icon" src="../assets/wenjian.svg" alt="" />
     <div class="file">
       <div class="file-content">
-        <span class="file-name">文件名称</span>
-        <span class="file-size">文件大小</span>
+        <span class="file-name">{{ fileName }}</span>
+        <span class="file-size">{{ (fileSize / 1024 / 1024).toFixed(2) }} MB</span>
       </div>
       <div class="file-process">
         <el-progress :percentage="process > 100 ? 100 : process" :status="isSuccess" />
@@ -17,11 +19,21 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { onMounted, ref } from 'vue';
 
+const props = defineProps<{
+  sendStatus: number
+  fileName: string
+  fileSize: number
+  localPath: string
+  remoteUrl: string
+  downloadStatus: number
+  receiveTime: string
+}>()
+
 const process = ref(0)
-const isSuccess = ref(null)
+const isSuccess = ref()
 
 onMounted(() => {
   setInterval(() => {

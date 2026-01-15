@@ -2,7 +2,7 @@ import { ipcMain } from "electron";
 import { store, mainWindow } from '../index'
 import { isExistUserRecord } from '../DB/select'
 import { createExtraWindow } from '../Util/createNewWindow'
-import { multipleInsert } from '../DB/insert'
+import { multipleInsert } from '../DB/mainDB'
 import { initAndUpdateUserLoginRecord } from '../DB/mainDB'
 
 let loadingWindow = null

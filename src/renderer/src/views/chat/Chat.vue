@@ -9,8 +9,7 @@
             <div v-if="message.msgType === 1" class="chat-bubble right-bubble">
               <div> {{ message.content }} </div>
             </div>
-            <MessageContentManage v-else :msgType="message.msgType" :content="message.content"
-              :fileUrl="message.content" />
+            <MessageContentManage v-else v-bind="message" />
           </div>
           <div class="chat-list-left" v-else>
             <img v-if="conversation.type === 0" :src="conversation.avatar" class="list-image" />
@@ -20,8 +19,7 @@
               <div v-if="message.msgType === 1" class="chat-bubble left-bubble">
                 <div> {{ message.content }} </div>
               </div>
-              <MessageContentManage v-else :msgType="message.msgType" :content="message.content"
-                :fileUrl="message.content" />
+              <MessageContentManage v-else v-bind="message" />
             </div>
           </div>
         </div>
@@ -84,7 +82,7 @@ import MessageContentManage from '../../components/MessageContentManage.vue'
 import FilePreviewView from '../../components/FilePreviewView.vue'
 import ChatHeader from '../../components/ChatHeader.vue'
 import { uploadFile } from '../../utils/file/fileUpload.js'
-import { getMessageList } from '../../db/dualDB.js'
+import { getMessageList, saveSentMessage, saveLoadMessage } from '../../db/dualDB.js'
 import { Message } from '../../types/message.ts'
 import { Snowflake } from '@theinternetfolks/snowflake'
 
@@ -307,9 +305,9 @@ const sendApi = (content: string, convId: string, msgType: number) => {
       const message = res.data
       // TODO 发送成功，修改发送状态为成功
       message.sendStatus = 1
-      console.info(message)
+      // console.info(message)
       // 存入本地数据库
-
+      saveSentMessage(message)
       // 滚动到最底部
       await nextTick()
       scrollToBottom()
@@ -405,22 +403,25 @@ const getGroupMemberList = async () => {
 
 const loadMessage = async (newConversationId: any) => {
   const messageList = await getMessageList(newConversationId, messagePageInfo)
+  // 本地数据库没数据，服务端数据库仍有数据时
+  const hasServerData = messageList.length > 0 && messagePageInfo.noData;
 
   if (messageList.length > 0) {
     // 加入pinia缓存
     messageList.forEach((messagePcak: Message) => {
-      console.info(messagePcak)
       messageStore.loadMessageMap(messagePcak.conversationId, messagePcak)
     })
-
-    // TODO 将从服务端查来的数据写入本地数据库
-
-
   } else {
     // TODO 展示查询结束的消息
-
+    console.info('数据查询完毕')
 
   }
+
+  if (hasServerData) {
+    // 将从服务端查来的数据写入本地数据库
+    saveLoadMessage(messageList)
+  }
+
 }
 
 const messageArr = computed(() => {

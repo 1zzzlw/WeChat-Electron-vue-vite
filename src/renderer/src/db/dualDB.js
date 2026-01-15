@@ -63,7 +63,9 @@ const getMessageList = async (conversationId, messagePageInfo) => {
     } else {
         // 本地数据库内还有值，分页页码加一
         messagePageInfo.pageNO++
+    }
 
+    if (messageList.length > 0) {
         // 最大id赋值
         messagePageInfo.maxMessageId = messageList[messageList.length - 1].id
     }
@@ -73,8 +75,26 @@ const getMessageList = async (conversationId, messagePageInfo) => {
     return messageList
 }
 
+/**
+ * 保存已经发送成功的消息到本地数据库
+ * @param message -- 单条消息 
+ */
+const saveSentMessage = async (message) => {
+    await window.dbApi.saveSentMessage(message)
+}
+
+/**
+ * 保存从服务端拉取过来的分页消息
+ * @param messageList -- 消息数组
+ */
+const saveLoadMessage = async (messageList) => {
+    await window.dbApi.saveLoadMessage(messageList)
+}
+
 export {
     getConversationList,
     getFriendList,
-    getMessageList
+    getMessageList,
+    saveSentMessage,
+    saveLoadMessage
 }

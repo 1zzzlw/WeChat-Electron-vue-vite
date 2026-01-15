@@ -1,6 +1,11 @@
 <template>
   <div class="chat-image">
-    <img :src="fileUrl" alt="聊天图片" class="chat-image-content" @click="openImage" />
+    <el-skeleton style="width: 240px">
+      <template #template>
+        <img :src="localPath + '//' + fileName" alt="聊天图片" class="chat-image-content" @click="openImage" />
+        <!-- <el-skeleton-item variant="image" style="width: 240px; height: 240px" /> -->
+      </template>
+    </el-skeleton>
   </div>
 </template>
 
@@ -9,12 +14,16 @@ const openImage = () => {
   console.log('openImage')
 }
 
-defineProps({
-  fileUrl: {
-    type: String,
-    default: ''
-  }
-})
+const props = defineProps<{
+  sendStatus: number
+  fileName: string
+  fileSize: number
+  localPath: string
+  remoteUrl: string
+  downloadStatus: number
+  receiveTime: string
+}>()
+
 </script>
 
 <style scoped>
@@ -36,6 +45,4 @@ defineProps({
   transform: scale(1.1);
   transition: transform 0.3s ease-in-out;
 }
-
-
 </style>

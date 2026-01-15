@@ -30,3 +30,11 @@ npm install ffmpeg
 npm install node-snowflake
 
 npm install snowflake-id --save
+
+vue3用这个
+npm i vue3-virtual-scroller
+
+vue2 里的
+npm install --save vue-virtual-scroller
+
+虚拟滚动

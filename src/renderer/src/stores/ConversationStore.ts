@@ -36,7 +36,7 @@ export const conversationInfo = defineStore('conversationInfo', {
         this._cacheTimestamp = Date.now()
         return false
       }
-      console.info('缓存没有过期, 仍然使用缓存内的值')
+      console.info('会话信息缓存没有过期,')
       // 缓存没有过期
       return true
     },

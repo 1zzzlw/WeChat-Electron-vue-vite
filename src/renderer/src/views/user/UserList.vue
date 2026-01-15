@@ -76,18 +76,18 @@ import { Friend } from '../../types/friend'
 import { getFriendList } from '../../db/dualDB'
 import { CollapseModelValue, ElMessage } from 'element-plus'
 import { userApplyListInfo } from '../../stores/UserApplyListStore'
-import { userListInfo } from '../../stores/ContactListStore'
+import { friendInfo } from '../../stores/ContactListStore'
 import { groupListInfo } from '../../stores/GroupListStores'
 import { groupMemberInfo } from '../../stores/GroupMemberStores'
 import AutocompleteSearch from '../../components/AutocompleteSearch.vue'
 
+const userId = ref()
 const userApplyStore = userApplyListInfo()
-const userListStore = userListInfo()
+const friendInfoStore = friendInfo()
 const groupListStore = groupListInfo()
 const groupMemberStore = groupMemberInfo()
 // 联系人列表默认展开
 const activeNames = ref(['4'])
-const friendListArr = ref<Friend[]>()
 const handleChange = (val: CollapseModelValue) => {
   console.info(val)
 }
@@ -98,22 +98,22 @@ const activeGroupApply = ref('')
 const activeGroup = ref('')
 const activeFriend = ref()
 
-const startApply = (activeApply) => {
+const startApply = (activeApply: any) => {
   console.info(activeApply.applyId)
   router.push({ path: '/friendApply', query: { applyId: activeApply.applyId } })
 }
 
-const starCall = (user) => {
+const starCall = (user: any) => {
   console.info('用户', user.id, '点击了联系人')
   activeFriend.value = user.id
   router.push({ path: '/friendInfo', query: { friendId: user.id } })
 }
 
-const joinGroup = async (activeGroupApply) => {
+const joinGroup = async (activeGroupApply: any) => {
   console.info(activeGroupApply)
-  const userId = await window.userInfoApi.storeGetUserInfo('userId')
+  const userId = await (window as any).userInfoApi.storeGetUserInfo('userId')
   console.info('用户', userId, '同意入群:')
-  dealGroupApplyApi(activeGroupApply.conversationId, activeGroupApply.userId, userId, 2).then((res) => {
+  dealGroupApplyApi(activeGroupApply.conversationId, activeGroupApply.userId, userId, 2).then((res: any) => {
     if (res.code === 1) {
       ElMessage.success('入群成功')
       userApplyStore.updateGroupApplyStatus(activeGroupApply.userId, 2)
@@ -130,11 +130,11 @@ const joinGroup = async (activeGroupApply) => {
   })
 }
 
-const ignoreGroupApply = async (apply) => {
+const ignoreGroupApply = async (apply: any) => {
   console.info(apply)
-  const userId = await window.userInfoApi.storeGetUserInfo('userId')
+  const userId = await (window as any).userInfoApi.storeGetUserInfo('userId')
   console.info('用户', userId, '忽略入群:')
-  dealGroupApplyApi(apply.conversationId, apply.userId, userId, 3).then((res) => {
+  dealGroupApplyApi(apply.conversationId, apply.userId, userId, 3).then((res: any) => {
     if (res.code === 1) {
       ElMessage.success('忽略入群成功')
       userApplyStore.updateGroupApplyStatus(apply.userId, 3)
@@ -155,7 +155,7 @@ const fetchApplyList = () => {
   // 没有缓存时，从后端获取好友申请列表
   getApplyListApi().then((res) => {
     console.info('好友申请列表:', res.data)
-    res.data.forEach((applyItem) => {
+    res.data.forEach((applyItem: any) => {
       userApplyStore.setUserApplyMap(applyItem.applyId, {
         applyId: applyItem.applyId,
         fromUserId: applyItem.fromUserId,
@@ -164,26 +164,6 @@ const fetchApplyList = () => {
         applyMsg: applyItem.applyMsg,
         isDealt: applyItem.isDealt,
         dealResult: applyItem.dealResult
-      })
-    })
-  })
-}
-
-const fetchUserList = () => {
-  const cache = Object.keys(userListStore.userMap).length > 0
-  if (cache) {
-    console.info('好友列表缓存非空:', cache)
-    return
-  }
-
-  getFriendListApi().then((res) => {
-    console.info('好友列表:', res.data)
-    res.data.forEach((userItem) => {
-      userListStore.setUserMap(userItem.id, {
-        id: userItem.id,
-        username: userItem.username,
-        avatar: userItem.avatar,
-        remark: userItem.remark
       })
     })
   })
@@ -198,7 +178,7 @@ const fetchGroupApplyList = () => {
 
   getGroupApplyListApi().then((res) => {
     console.info('群聊申请列表:', res.data)
-    res.data.forEach((applyItem) => {
+    res.data.forEach((applyItem: any) => {
       userApplyStore.setGroupApplyMap(applyItem.userId, {
         conversationId: applyItem.conversationId,
         userId: applyItem.userId,
@@ -235,24 +215,38 @@ const fetchGroupList = () => {
   // })
 }
 
-// const groupListArr = computed(() => Object.values(groupListStore.groupListMap))
+const groupListArr = computed(() => Object.values(groupListStore.groupListMap))
 
-// const groupApplyListArr = computed(() => Object.values(userApplyStore.groupApplyMap))
+const groupApplyListArr = computed(() => Object.values(userApplyStore.groupApplyMap))
 
-// const friendListArr = computed(() => Object.values(userListStore.userMap))
+const friendListArr = computed(() => Object.values(friendInfoStore.friendInfoMap))
 
 const friendApplyListArr = computed(() => {
   return userApplyStore.getAllUserApplyMap()
-
 })
 
+const loadFriendList = async () => {
+  const cache = friendInfoStore.initCache(userId.value as string)
+
+  if (!cache) {
+    // 缓存失效，重新获取
+    console.info('好友信息缓存为空或缓存失效')
+
+    const friendList = await getFriendList()
+    friendList.forEach((friendInfo: Friend) => {
+      friendInfoStore.setFriendMap(friendInfo.friendId, friendInfo)
+    })
+  }
+}
+
 onMounted(async () => {
-  // fetchUserList()
-  // fetchGroupApplyList()
-  // fetchGroupList()
+  userId.value = await (window as any).userInfoApi.storeGetUserInfo('userId')
+
+  fetchGroupApplyList()
+  fetchGroupList()
   fetchApplyList()
 
-  friendListArr.value = await getFriendList()
+  loadFriendList()
 
 })
 </script>

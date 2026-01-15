@@ -10,4 +10,10 @@ export interface Message {
     sendTime: string
     isRevoked?: number
     quoteMsgId?: number | null
+    fileName?: string | null
+    fileSize?: number
+    localPath?: string | null
+    remoteUrl?: string | null
+    downloadStatus?: number
+    receiveTime?: string
 }

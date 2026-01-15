@@ -1,16 +1,19 @@
 <template>
   <div class="chat-video">
-    <video :src="fileUrl" class="chat-video-content" controls></video>
+    <video :src="localPath" class="chat-video-content" controls></video>
   </div>
 </template>
 
 <script setup lang="ts">
-defineProps({
-  fileUrl: {
-    type: String,
-    default: ''
-  }
-})
+const props = defineProps<{
+  sendStatus: number
+  fileName: string
+  fileSize: number
+  localPath: string
+  remoteUrl: string
+  downloadStatus: number
+  receiveTime: string
+}>()
 </script>
 
 <style scoped>

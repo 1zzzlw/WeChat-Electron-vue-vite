@@ -1,6 +1,7 @@
 import { ipcMain } from 'electron'
 import { store } from '../index'
 import { queryConversation, queryFriend, loadMessage } from '../DB/select'
+import { saveSentMessage, saveLoadMessage } from '../DB/insert'
 
 ipcMain.handle('query:conversation', (e) => {
     const userId = store.get('userId')
@@ -18,4 +19,14 @@ ipcMain.handle('load:message', (e, conversationId, messagePageInfo) => {
     console.log(`查询会话${conversationId}的分页信息`)
     console.log(messagePageInfo)
     return loadMessage(conversationId, messagePageInfo)
+})
+
+ipcMain.on('save:message', (e, message) => {
+    console.log(`保存消息${message}到本地数据库`)
+    saveSentMessage(message)
+})
+
+ipcMain.on('save:loadMessage', (e, messageList) => {
+    console.log(`从服务端加载的消息为${messageList}`)
+    saveLoadMessage(messageList)
 })

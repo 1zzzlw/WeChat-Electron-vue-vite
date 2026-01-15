@@ -9,10 +9,16 @@ const init_table = [
     msg_type          INTEGER  NOT NULL,
     content           TEXT,
     send_status       INTEGER  NOT NULL,
-    read_status       INTEGER  NOT NULL,
+    read_status       INTEGER  NOT NULL DEFAULT 1,
     send_time         TEXT     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     is_revoked        INTEGER  NOT NULL DEFAULT 0,
-    quote_msg_id      INTEGER  DEFAULT NULL
+    quote_msg_id      INTEGER  DEFAULT NULL,
+    file_name TEXT DEFAULT NULL,                   -- 文件名
+    file_size INTEGER DEFAULT 0,                   -- 文件大小（B）
+    local_path TEXT DEFAULT NULL,                  -- 本地存储绝对路径（未下载时为 NULL）
+    remote_url TEXT DEFAULT NULL,                  -- 服务端 MinIO 地址
+    download_status INTEGER DEFAULT 0,             -- 下载状态：0=未下载，1=已下载
+    receive_time TEXT DEFAULT NULL                 -- 接收时间
   );
   `,
   // 设备登录记录表
@@ -55,7 +61,14 @@ const init_table = [
     relation_status INTEGER NOT NULL,       -- 关系状态: 0=未同意, 1=正常好友, 2=黑名单
     PRIMARY KEY (user_id, friend_id)        -- 用户id和好友id组成的联合主键
   );
+  `,
+  // 文件信息表
   `
+    CREATE TABLE IF NOT EXISTS file_info (
+    id TEXT PRIMARY KEY,                         -- 文件唯一ID
+
+);
+  `,
 ]
 
 const table_index = [
@@ -87,7 +100,8 @@ const table_index = [
     CREATE INDEX IF NOT EXISTS idx_conversation_user_status ON conversation(user_id, status);
   `,
   // 好友表的用户ID和好友状态的联合索引
-  `CREATE INDEX IF NOT EXISTS idx_friend_user_status ON friend_relation(user_id, relation_status);
+  `
+    CREATE INDEX IF NOT EXISTS idx_friend_user_status ON friend_relation(user_id, relation_status);
   `
 ]
 

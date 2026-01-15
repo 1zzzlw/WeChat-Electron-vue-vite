@@ -1,6 +1,6 @@
 import { ipcMain } from "electron";
 import { store } from '../index'
-import { multipleInsert } from "../DB/insert";
+import { multipleInsert } from "../DB/mainDB";
 
 // 更新在离线错过的消息到本地数据库
 ipcMain.on('update:db', async (e) => {

@@ -18,7 +18,6 @@ export const messageInfo = defineStore('messageInfo', {
       }
       // 再添加消息，需要在头部拼接消息
       this.messageMap[conversationId].unshift(message)
-      console.info(this.messageMap[conversationId])
     },
     addMessageMap(conversationId: string, message: Message) {
       // 如果该会话ID还没有数组，先初始化一个空数组
