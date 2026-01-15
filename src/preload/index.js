@@ -19,20 +19,12 @@ const loadApi = {
   loadFinish: () => {
     ipcRenderer.send('close-loading-window')
   },
-  // 监听开始数据初始化的消息
-  onStartDataInitialization: (callback) => {
-    ipcRenderer.on('start-data-initialization', callback)
-  },
   // 发送数据初始化完成
   dataInitializationComplete: (data) => {
     ipcRenderer.send('data-initialization-complete', data)
   },
   dataInitSuccessAndSkip: (callback) => {
     ipcRenderer.on('skip', callback)
-  },
-  // 发送数据初始化错误
-  dataInitializationError: (error) => {
-    ipcRenderer.send('data-initialization-error', error)
   },
   // 向渲染进程发送消息，在跳转路由，防止第一次进入消息加载不出来
   onDataInitComplete: (callback) => {
@@ -63,6 +55,15 @@ const dbApi = {
   },
   saveLoadMessage: (messageList) => {
     ipcRenderer.send('save:loadMessage', messageList)
+  }
+}
+
+const refreshTokenApi = {
+  onRefreshToken: (callback) => {
+    ipcRenderer.on('refresh-token', callback)
+  },
+  tokenFinished: (success) => {
+    ipcRenderer.send('token-refreshed', success)
   }
 }
 
@@ -134,6 +135,7 @@ if (process.contextIsolated) {
     contextBridge.exposeInMainWorld('userInfoApi', userInfoApi)
     contextBridge.exposeInMainWorld('loadApi', loadApi)
     contextBridge.exposeInMainWorld('dbApi', dbApi)
+    contextBridge.exposeInMainWorld('refreshTokenApi', refreshTokenApi)
     contextBridge.exposeInMainWorld('api', api)
     contextBridge.exposeInMainWorld('chatToolApi', chatToolApi)
   } catch (error) {
@@ -144,6 +146,7 @@ if (process.contextIsolated) {
   window.userInfoApi = userInfoApi
   window.loadApi = loadApi
   window.dbApi = dbApi
+  window.refreshTokenApi = refreshTokenApi
   window.api = api
   window.chatToolApi = chatToolApi
 }

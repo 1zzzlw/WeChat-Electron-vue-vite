@@ -141,6 +141,7 @@ const selectFiles = (file: UploadFile | any) => {
   })
 }
 
+// 删除文件预览
 const handleDeleteFile = (index: number) => {
   console.info('删除索引为', index, '的文件预览')
   if (index >= 0 && index < fileInfoList.length) {
@@ -201,6 +202,7 @@ const sendPrivateMessage = async () => {
   if (fileInfoList.length > 0) {
     for (const file of fileInfoList) {
       console.info(file.fileRaw)
+      // 上传文件
       uploadFile(file.fileRaw)
     }
     fileInfoList.length = 0

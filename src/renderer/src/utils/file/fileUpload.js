@@ -97,6 +97,13 @@ async function upload(
   }
 }
 
+/**
+ * 
+ * @param fileHash -- 文件hash 用于校验文件的完整性
+ * @param file -- 文件Blob
+ * @param fileId -- 文件id
+ * @param chunkCount -- 文件分块数量
+ */
 async function mergeFile(fileHash, file, fileId, chunkCount) {
   await mergeFileApi({
     fileHash: fileHash,

@@ -66,7 +66,12 @@ server.interceptors.response.use(
   }
 )
 
-// axios的请求 request 请求拦截器，在前端发送请求前进行预处理，获取localStorage中的token，在请求头中增加token请求头
+window.refreshTokenApi.onRefreshToken(async () => {
+  const userId = await window.userInfoApi.storeGetUserInfo('userId')
+  const success = await refreshToken(userId)
+  window.refreshTokenApi.tokenFinished(success)
+})
+
 server.interceptors.request.use(
   async (config) => {
     return config
