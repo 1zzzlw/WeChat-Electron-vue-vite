@@ -23,6 +23,7 @@ import './IPC/newWindowIPC.js'
 import './IPC/DBIPC.js'
 import './IPC/initDataIPC.js'
 import './IPC/updateNewDataIPC.js'
+import './IPC/uploadFileIPC.js'
 import { initTable, initTableColumnsMap } from './DB/mainDB.js'
 
 // 初始化store实例，指定存储文件名（会生成user-token.json文件）
@@ -168,26 +169,7 @@ app.on('window-all-closed', () => {
   }
 })
 
-// 从本地选择文件或目录
-ipcMain.handle('select-file', async (e, file) => {
-  let dialogConfig = {}
-  switch (file) {
-    case 'avatar':
-      dialogConfig = {
-        properties: ['openFile'],
-        // 限制仅能选择图片文件，避免选到其他类型
-        filters: [{ name: 'Images', extensions: ['jpg', 'png', 'jpeg', 'webp'] }]
-      }
-      break
-    case 'storeLocation':
-      dialogConfig = {
-        properties: ['openDirectory']
-      }
-      break
-  }
-  const { canceled, filePaths } = await dialog.showOpenDialog(dialogConfig)
-  return canceled ? null : filePaths[0]
-})
+
 
 ipcMain.on('ws:send', (event, { messageType, sequenceId, data }) => {
   // 把消息广播给主窗口

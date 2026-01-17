@@ -37,10 +37,11 @@
           <el-button :icon="Eleme" size="large" square></el-button>
         </template>
       </el-popover>
-      <el-upload v-model:file-list="fileList" multiple :limit="3" action="#" :show-file-list="false"
+      <!-- <el-upload v-model:file-list="fileList" multiple :limit="3" action="#" :show-file-list="false"
         :auto-upload="false" :on-exceed="handleExceed" :on-change="selectFiles" class="upload-button">
         <el-button :icon="Folder" size="large" square></el-button>
-      </el-upload>
+      </el-upload> -->
+      <el-button :icon="Folder" size="large" square @click="selectFile"></el-button>
       <el-popover placement="top" :disabled="captureImageUrl === ''"
         popper-style="display: flex; margin: 0; padding: 0; justify-content: center; align-items: center;">
         <el-image :src="captureImageUrl" fit="contain" style="width: 150px; height: 150px" />
@@ -123,6 +124,10 @@ const groupMemberStore = groupMemberInfo()
 const conversationStore = conversationInfo()
 let fileInfoList = reactive<fileBaseInfo[]>([])
 let fileList = ref<UploadFile[]>([])
+
+const selectFile = () => {
+  (window as any).uploadFileApi.selectFile('uploadFile')
+}
 
 const selectFiles = (file: UploadFile | any) => {
   console.info(file.raw)

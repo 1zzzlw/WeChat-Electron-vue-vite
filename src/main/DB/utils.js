@@ -14,9 +14,6 @@ const convertDBObjToCamelCase = (data) => {
     return convertData
 }
 
-// 驼峰命名字段转数据库命名字段
-
-
 /**
  * 将命名格式转化为驼峰命名格式
  * @param item -- 字符串

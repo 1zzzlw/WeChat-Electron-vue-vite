@@ -67,6 +67,12 @@ const refreshTokenApi = {
   }
 }
 
+const uploadFileApi = {
+  selectFile: (file) => {
+    return ipcRenderer.invoke('select-file', file)
+  },
+}
+
 const api = {
   resizeWindow: (windowType) => {
     ipcRenderer.send('window:type', windowType)
@@ -74,9 +80,7 @@ const api = {
   windowControls: (controlType, value) => {
     ipcRenderer.send('window:controls', controlType, value)
   },
-  selectFile: (file) => {
-    return ipcRenderer.invoke('select-file', file)
-  },
+
   createNewWindow: (windowType) => {
     ipcRenderer.send('create-new-window', windowType)
   },
@@ -136,6 +140,7 @@ if (process.contextIsolated) {
     contextBridge.exposeInMainWorld('loadApi', loadApi)
     contextBridge.exposeInMainWorld('dbApi', dbApi)
     contextBridge.exposeInMainWorld('refreshTokenApi', refreshTokenApi)
+    contextBridge.exposeInMainWorld('uploadFileApi', uploadFileApi)
     contextBridge.exposeInMainWorld('api', api)
     contextBridge.exposeInMainWorld('chatToolApi', chatToolApi)
   } catch (error) {
@@ -147,6 +152,7 @@ if (process.contextIsolated) {
   window.loadApi = loadApi
   window.dbApi = dbApi
   window.refreshTokenApi = refreshTokenApi
+  window.uploadFileApi = uploadFileApi
   window.api = api
   window.chatToolApi = chatToolApi
 }
