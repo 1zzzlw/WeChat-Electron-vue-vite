@@ -66,12 +66,6 @@ server.interceptors.response.use(
   }
 )
 
-window.refreshTokenApi.onRefreshToken(async () => {
-  const userId = await window.userInfoApi.storeGetUserInfo('userId')
-  const success = await refreshToken(userId)
-  window.refreshTokenApi.tokenFinished(success)
-})
-
 server.interceptors.request.use(
   async (config) => {
     return config

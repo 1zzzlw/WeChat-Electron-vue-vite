@@ -169,8 +169,6 @@ app.on('window-all-closed', () => {
   }
 })
 
-
-
 ipcMain.on('ws:send', (event, { messageType, sequenceId, data }) => {
   // 把消息广播给主窗口
   if (mainWindow) {

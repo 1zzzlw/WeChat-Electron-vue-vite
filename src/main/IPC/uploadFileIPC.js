@@ -1,7 +1,9 @@
 import { ipcMain, dialog } from "electron";
+import { getFileInfo } from '../File/fileUpload'
 
 // 从本地选择文件或目录
 ipcMain.handle('select-file', async (e, file) => {
+    let fileInfo = {}
     let dialogConfig = {}
     switch (file) {
         case 'avatar':
@@ -27,8 +29,8 @@ ipcMain.handle('select-file', async (e, file) => {
 
     const { canceled, filePaths } = await dialog.showOpenDialog(dialogConfig)
 
-    return canceled ? null : filePaths[0]
+    fileInfo = getFileInfo(filePaths[0])
+
+    // 返回文件信息给渲染进程
+    return canceled ? null : fileInfo
 })
-
-
-

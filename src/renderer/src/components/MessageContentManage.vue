@@ -27,6 +27,8 @@ const renderMessageContent = () => {
     receiveTime: props.receiveTime || ''
   }))
 
+  console.log(fileProps)
+
   switch (msgType) {
     case 2:
       return h(ChatImageView, fileProps.value)

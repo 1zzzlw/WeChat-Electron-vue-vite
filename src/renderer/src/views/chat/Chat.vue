@@ -125,8 +125,50 @@ const conversationStore = conversationInfo()
 let fileInfoList = reactive<fileBaseInfo[]>([])
 let fileList = ref<UploadFile[]>([])
 
-const selectFile = () => {
-  (window as any).uploadFileApi.selectFile('uploadFile')
+const selectFile = async () => {
+  // 获取文件的信息
+  const file = await (window as any).uploadFileApi.selectFile('uploadFile')
+  console.log(file)
+
+  // 在前端生成发送消息的时间，写入本地数据库和后端MySQL数据库
+  const sendTimeStamp = dayjs().valueOf()
+  const sendTime = dayjs(sendTimeStamp).format('YYYY-MM-DD HH:mm:ss')
+  const convId = route.query.conversationId as string
+  const snowId = Snowflake.generate()
+  const msgType = file.fileType
+  const content = file.content
+  const fileName = file.fileName
+  const fileSize = file.fileSize
+  const fileId = file.fileId
+  const localPath = file.localPath
+  const messagePack: Message = {
+    id: snowId,
+    receiverId: conversation.value.targetId as string,
+    conversationId: convId,
+    senderId: userId.value,
+    msgType: msgType,
+    content: content,
+    // 0 -发送中  1 -成功  2 -失败
+    sendStatus: 0,
+    sendTime: sendTime,
+    // 0 -未读  1 -已读
+    // read_status: 0,
+    fileId: fileId,
+    fileName: fileName,
+    fileSize: fileSize,
+    localPath: localPath
+  }
+
+  // 消息列表存入缓存中
+  console.info('存入缓存中')
+  messageStore.addMessageMap(convId, messagePack)
+
+  // 更新会话最新消息和时间
+  conversationStore.setConversationMap(convId, {
+    latestMsg: content,
+    latestMsgTime: dayjs(sendTimeStamp).format('HH:mm:ss')
+  })
+
 }
 
 const selectFiles = (file: UploadFile | any) => {
@@ -181,19 +223,33 @@ const handleEnterMessage = (e: KeyboardEvent) => {
   if (e.shiftKey) {
     return
   }
+
   e.preventDefault()
+
   if (conversation.value.type === 0) {
-    sendPrivateMessage()
+    sendPrivateMessage(null)
   } else {
-    sendGroupMessage()
+    sendGroupMessage(null)
   }
 }
 
 // 发送单聊消息
-const sendPrivateMessage = async () => {
+const sendPrivateMessage = async (otherData: any) => {
   // 获取会话id
   const convId = route.query.conversationId as string
-  const content = message.value
+  let content = ''
+  // 默认为文本消息
+  let msgType = 1
+
+  if (otherData == null) {
+    // 文本消息
+    content = message.value
+  } else {
+    // 非文本消息
+    content = otherData.content
+    msgType = otherData.fileType
+  }
+
   // 处理消息类型
   console.info(
     '发送单聊消息 ===> 接收消息用户的ID:',
@@ -204,15 +260,15 @@ const sendPrivateMessage = async () => {
     convId
   )
 
-  if (fileInfoList.length > 0) {
-    for (const file of fileInfoList) {
-      console.info(file.fileRaw)
-      // 上传文件
-      uploadFile(file.fileRaw)
-    }
-    fileInfoList.length = 0
-    fileList.value = []
-  }
+  // if (fileInfoList.length > 0) {
+  //   for (const file of fileInfoList) {
+  //     console.info(file.fileRaw)
+  //     // 上传文件
+  //     uploadFile(file.fileRaw)
+  //   }
+  //   fileInfoList.length = 0
+  //   fileList.value = []
+  // }
 
   if (content === '') {
     return
@@ -227,17 +283,17 @@ const sendPrivateMessage = async () => {
 
   // 发送截屏
   if (captureImageUrl.value.length > 0) {
-    sendApi(captureImageUrl.value, convId, 2)
+    sendApi(captureImageUrl.value, convId, 2, otherData)
   }
 
   if (content !== '') {
     // 发送消息
-    sendApi(content, convId, 1)
+    sendApi(content, convId, msgType, otherData)
   }
 }
 
 // 发送群聊消息
-const sendGroupMessage = async () => {
+const sendGroupMessage = async (otherData: any) => {
   // 获取会话id
   const convId = route.query.conversationId as string
   const content = message.value
@@ -260,15 +316,15 @@ const sendGroupMessage = async () => {
   })
 
   if (captureImageUrl.value.length > 0) {
-    sendApi(captureImageUrl.value, convId, 2)
+    sendApi(captureImageUrl.value, convId, 2, otherData)
   }
 
   if (message.value !== '') {
-    sendApi(message.value, convId, 1)
+    sendApi(message.value, convId, 1, otherData)
   }
 }
 
-const sendApi = (content: string, convId: string, msgType: number) => {
+const sendApi = (content: string, convId: string, msgType: number, otherData: any) => {
   // 在前端生成发送消息的时间，写入本地数据库和后端MySQL数据库
   const sendTimeStamp = dayjs().valueOf()
   const sendTime = dayjs(sendTimeStamp).format('YYYY-MM-DD HH:mm:ss')

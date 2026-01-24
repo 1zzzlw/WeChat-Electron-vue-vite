@@ -1,12 +1,12 @@
 import { join } from 'path'
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
-import vue from '@vitejs/plugin-vue'
+import vue from '@vitejs/plugin-vue' // 让 Vite 支持 Vue 单文件组件
 
 export default defineConfig({
   main: {
     plugins: [
       externalizeDepsPlugin({
-        exclude: ['electron-store']
+        exclude: ['electron-store'] // 排除 electron-store，把它打包进主进程
       })
     ]
   },
@@ -21,12 +21,15 @@ export default defineConfig({
         '@': join(__dirname, 'src/renderer/src')
       }
     },
+    // 启用 Vue 插件，支持 .vue 文件
     plugins: [vue()],
     server: {
       proxy: {
         '/api': {
           target: 'http://localhost:8080',
+          // 设置为 false 表示代理请求使用 HTTP 协议，true 则使用 HTTPS 协议
           secure: false,
+          // 设置为 true 可以解决因跨域时 Origin 不一致导致的访问被拒绝问题
           changeOrigin: true,
           // 路径重写规则，将api替换成空字符串
           rewrite: (path) => path.replace(/^\/api/, '')

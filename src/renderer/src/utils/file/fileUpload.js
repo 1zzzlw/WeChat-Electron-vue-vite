@@ -45,6 +45,7 @@ async function dealFile(file, fileId) {
     }
     const { chunkIndex, chunkHash, chunkBlob } = e.fileTask
     const isNeedMerge = e.isNeedMerge
+    // 将文件的唯一id存入缓存
     fileBaseListInfo().updateFileHash(fileId, fileHash)
     upload(file, fileId, chunkIndex, chunkHash, chunkBlob, fileHash, isNeedMerge, chunkCount)
   })

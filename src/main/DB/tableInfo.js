@@ -13,6 +13,7 @@ const init_table = [
     send_time         TEXT     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     is_revoked        INTEGER  NOT NULL DEFAULT 0,
     quote_msg_id      INTEGER  DEFAULT NULL,
+    file_id   TEXT DEFAULT NULL,                   -- 文件的唯一id
     file_name TEXT DEFAULT NULL,                   -- 文件名
     file_size INTEGER DEFAULT 0,                   -- 文件大小（B）
     local_path TEXT DEFAULT NULL,                  -- 本地存储绝对路径（未下载时为 NULL）
@@ -81,6 +82,10 @@ const table_index = [
   `
     CREATE INDEX IF NOT EXISTS idx_msg_user_conv 
     ON message (sender_id, conversation_id);
+  `,
+  `
+    CREATE INDEX IF NOT EXISTS idx_file_id 
+    ON message (file_id);
   `,
   // 消息表中消息发送时间的索引
   `

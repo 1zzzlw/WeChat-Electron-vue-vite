@@ -58,15 +58,6 @@ const dbApi = {
   }
 }
 
-const refreshTokenApi = {
-  onRefreshToken: (callback) => {
-    ipcRenderer.on('refresh-token', callback)
-  },
-  tokenFinished: (success) => {
-    ipcRenderer.send('token-refreshed', success)
-  }
-}
-
 const uploadFileApi = {
   selectFile: (file) => {
     return ipcRenderer.invoke('select-file', file)
@@ -139,7 +130,6 @@ if (process.contextIsolated) {
     contextBridge.exposeInMainWorld('userInfoApi', userInfoApi)
     contextBridge.exposeInMainWorld('loadApi', loadApi)
     contextBridge.exposeInMainWorld('dbApi', dbApi)
-    contextBridge.exposeInMainWorld('refreshTokenApi', refreshTokenApi)
     contextBridge.exposeInMainWorld('uploadFileApi', uploadFileApi)
     contextBridge.exposeInMainWorld('api', api)
     contextBridge.exposeInMainWorld('chatToolApi', chatToolApi)
@@ -151,7 +141,6 @@ if (process.contextIsolated) {
   window.userInfoApi = userInfoApi
   window.loadApi = loadApi
   window.dbApi = dbApi
-  window.refreshTokenApi = refreshTokenApi
   window.uploadFileApi = uploadFileApi
   window.api = api
   window.chatToolApi = chatToolApi
