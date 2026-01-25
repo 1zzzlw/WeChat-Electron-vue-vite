@@ -38,6 +38,19 @@ const getFileInfo = async (path) => {
 
     }
 
+    // 返回文件信息
+    return {
+        content: content,
+        fileId: fileId,
+        fileName: fileName,
+        fileSize: fileSize,
+        fileType: fileType,
+        localPath: path
+    }
+}
+
+const uploadFile = async (file) => {
+    const { fileId, fileName, fileSize, fileType, localPath } = file
     // 先获取上传凭证
     let verify
     await verifyFileUpload(fileId).then((res) => {
@@ -52,17 +65,7 @@ const getFileInfo = async (path) => {
     const chunksList = res.data
 
     // 分片上传
-    fileUpload(path, fileSize, fileId, fileName, fileType, verify, chunksList)
-
-    // 返回文件信息
-    return {
-        content: content,
-        fileId: fileId,
-        fileName: fileName,
-        fileSize: fileSize,
-        fileType: fileType,
-        localPath: path
-    }
+    fileUpload(localPath, fileSize, fileId, fileName, fileType, verify, chunksList)
 }
 
 /**
@@ -70,8 +73,9 @@ const getFileInfo = async (path) => {
  *  @param arrayBuffer -- 文件buffer信息，进行分片上传
  *  @param fileSize -- 文件大小
  */
-const fileUpload = async (path, fileSize, fileId, fileName, fileType, verify, chunksList) => {
-    createWorkerProcess(path, fileSize, fileId, chunksList, (e) => {
+const fileUpload = async (localPath, fileSize, fileId, fileName, fileType, verify, chunksList) => {
+    console.log(localPath, fileSize, fileId, chunksList)
+    createWorkerProcess(localPath, fileSize, fileId, chunksList, (e) => {
         const { fileId, currentFileIndex, chunkHash, blob, chunkCount } = e.task
         const formData = new FormData()
         formData.append('chunkBlob', blob)
@@ -127,6 +131,7 @@ const generateFileId = (fileName, fileSize, fileMtimeMs, fileIno) => {
 }
 
 export {
-    getFileInfo
+    getFileInfo,
+    uploadFile
 }
 

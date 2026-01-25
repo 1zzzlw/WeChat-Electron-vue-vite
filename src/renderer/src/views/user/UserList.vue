@@ -19,7 +19,7 @@
               </el-collapse-item>
               <el-collapse-item title="群聊申请" name="2">
                 <div class="left-list-group" v-for="(apply, index) in groupApplyListArr" :key="index"
-                  :class="{ 'left-groupApplyList-bg': activeGroupApply == apply.id }">
+                  :class="{ 'left-groupApplyList-bg': activeGroupApply == apply.conversationId }">
                   <div class="left-image">
                     <img :src="apply.userAvatar" alt="头像" class="left-list-img" />
                   </div>

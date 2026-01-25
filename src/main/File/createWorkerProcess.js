@@ -6,7 +6,7 @@ const CHUNK_SIZE = 1024 * 1024 * 5
 // 根据文件id创建一个管理分块状态的集合
 const fileChunkStatusMap = new Map()
 
-const createWorkerProcess = (filePath, fileSize, fileId, chunksList, callback, onComplete) => {
+const createWorkerProcess = (localPath, fileSize, fileId, chunksList, callback, onComplete) => {
     // 计算分块数量
     const chunkCount = Math.ceil(fileSize / CHUNK_SIZE)
     // 计算每个线程处理的分块数量
@@ -33,7 +33,7 @@ const createWorkerProcess = (filePath, fileSize, fileId, chunksList, callback, o
     // 获得当前上传文件的分块上传情况
     const chunkStatus = fileChunkStatusMap.get(fileId)
     // 创建流式读取器
-    const readStream = fs.createReadStream(filePath, {
+    const readStream = fs.createReadStream(localPath, {
         // 不指定encoding，或显式设为null，返回Buffer
         encoding: null,
         // 每块大小

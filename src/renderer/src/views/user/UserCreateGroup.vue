@@ -4,18 +4,14 @@
       <div class="title">联系人</div>
       <div class="contact-list">
         <el-scrollbar>
-          <div v-for="(friend, index) in friendList.list" :key="index" class="scrollbar-demo-item">
+          <div v-for="friend in friendList.list" :key="friend.friendId" class="scrollbar-demo-item">
             <div class="left-info">
               <img :src="friend.avatar" alt="头像" class="left-list-img" />
               <div class="friend-name">{{ friend.username }}</div>
             </div>
             <div class="right-btn">
-              <el-button type="primary" class="invite-btn" @click="inviteBtn(friend)"
-                >添加</el-button
-              >
-              <el-button type="danger" class="remove-btn" @click="removeBtn(friend)"
-                >移除</el-button
-              >
+              <el-button type="primary" class="invite-btn" @click="inviteBtn(friend)">添加</el-button>
+              <el-button type="danger" class="remove-btn" @click="removeBtn(friend)">移除</el-button>
             </div>
           </div>
         </el-scrollbar>
@@ -25,11 +21,7 @@
       <div class="title">选择联系人: {{ count }}</div>
       <div class="invited-list">
         <el-scrollbar>
-          <div
-            v-for="(friend, index) in invitedList.list"
-            :key="index"
-            class="scrollbar-right-item"
-          >
+          <div v-for="(friend, index) in invitedList.list" :key="index" class="scrollbar-right-item">
             <div class="left-info">
               <img :src="friend.avatar" alt="头像" class="left-list-img" />
               <div class="friend-name">{{ friend.username }}</div>
@@ -47,7 +39,7 @@
 
 <script setup>
 import { ref, onMounted, reactive } from 'vue'
-import { getFriendListApi } from '../../api/Friend'
+import { getFriendList } from '../../db/dualDB'
 import { sendGroupApplyApi } from '../../api/Apply'
 import { ElMessage } from 'element-plus'
 
@@ -60,7 +52,7 @@ const groupName = ref('')
 const userAvatar = ref('')
 
 const inviteBtn = (friend) => {
-  if (invitedIds.value.has(friend.id)) {
+  if (invitedIds.value.has(friend.friendId)) {
     ElMessage.error('该用户已被邀请')
     return
   }
@@ -68,13 +60,13 @@ const inviteBtn = (friend) => {
     count.value++
   }
   // 加入已邀请用户 ID 集合
-  invitedIds.value.add(friend.id)
+  invitedIds.value.add(friend.friendId)
   invitedList.list.push(friend)
   ElMessage.success('添加成功')
 }
 
 const removeBtn = (friend) => {
-  if (!invitedIds.value.has(friend.id)) {
+  if (!invitedIds.value.has(friend.friendId)) {
     ElMessage.error('该用户未被邀请')
     return
   }
@@ -83,8 +75,8 @@ const removeBtn = (friend) => {
   }
   // 从已邀请列表中移除
   // 从已邀请用户 ID 集合中移除
-  invitedIds.value.delete(friend.id)
-  invitedList.list = invitedList.list.filter((item) => item.id !== friend.id)
+  invitedIds.value.delete(friend.friendId)
+  invitedList.list = invitedList.list.filter((item) => item.friendId !== friend.friendId)
   ElMessage.success('已移除该用户')
 }
 
@@ -124,8 +116,8 @@ const createGroup = async () => {
 }
 
 onMounted(() => {
-  getFriendListApi().then((res) => {
-    friendList.list = res.data
+  getFriendList().then((res) => {
+    friendList.list = res
   })
 })
 </script>

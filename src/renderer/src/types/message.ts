@@ -12,7 +12,7 @@ export interface Message {
     quoteMsgId?: number | null
     fileId?: string | null
     fileName?: string | null
-    fileSize?: number
+    fileSize?: number | null
     localPath?: string | null
     remoteUrl?: string | null
     downloadStatus?: number

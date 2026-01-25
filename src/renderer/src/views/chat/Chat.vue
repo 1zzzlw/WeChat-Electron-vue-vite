@@ -1,5 +1,5 @@
 <template>
-  <div class="chat-count" v-if=isDataLoaded>
+  <div class="chat-count">
     <ChatHeader />
     <div class="chat-content">
       <el-scrollbar ref="scrollbarRef" @scroll="handleScroll" noresize style="height: 100%; width: 100%">
@@ -37,10 +37,6 @@
           <el-button :icon="Eleme" size="large" square></el-button>
         </template>
       </el-popover>
-      <!-- <el-upload v-model:file-list="fileList" multiple :limit="3" action="#" :show-file-list="false"
-        :auto-upload="false" :on-exceed="handleExceed" :on-change="selectFiles" class="upload-button">
-        <el-button :icon="Folder" size="large" square></el-button>
-      </el-upload> -->
       <el-button :icon="Folder" size="large" square @click="selectFile"></el-button>
       <el-popover placement="top" :disabled="captureImageUrl === ''"
         popper-style="display: flex; margin: 0; padding: 0; justify-content: center; align-items: center;">
@@ -64,7 +60,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, reactive, ref, watch, onUnmounted } from 'vue'
+import { computed, nextTick, ref, watch, onUnmounted, toRaw } from 'vue'
 import { useRoute } from 'vue-router'
 import emojis from '../../emoji/emoji.js'
 import { sendMessageApi } from '../../api/Message'
@@ -74,26 +70,23 @@ import { Conversation, initConversation } from '../../types/conversation.ts'
 import { WSManager } from '../../utils/websocket.js'
 import { conversationInfo } from '../../stores/ConversationStore'
 import { Eleme, Folder, Scissor, VideoCamera } from '@element-plus/icons-vue'
-import type { UploadFile } from 'element-plus'
 import { ElMessage } from 'element-plus'
 import { groupMemberInfo } from '../../stores/GroupMemberStores'
 import { getGroupMemberListApi } from '../../api/Conversation'
-import { FILE_TYPE_MAP, getFileType } from '../../utils/file/filterFileKind.js'
 import MessageContentManage from '../../components/MessageContentManage.vue'
 import FilePreviewView from '../../components/FilePreviewView.vue'
 import ChatHeader from '../../components/ChatHeader.vue'
-import { uploadFile } from '../../utils/file/fileUpload.js'
 import { getMessageList, saveSentMessage, saveLoadMessage } from '../../db/dualDB.js'
 import { Message } from '../../types/message.ts'
 import { Snowflake } from '@theinternetfolks/snowflake'
 
-
 interface fileBaseInfo {
-  fileRaw: File | null
+  fileId: string
   fileName: string
   fileSize: number
   fileType: number
-  fileUrl: string
+  content: string
+  localPath: string
 }
 
 // 消息分页配置
@@ -110,98 +103,42 @@ const messagePageInfo = {
 
 const fileUrl = ref('')
 const captureImageUrl = ref('')
-// 添加数据加载状态标记
-const isDataLoaded = ref(false)
 let conversation = ref<Conversation>(initConversation())
 const route = useRoute()
 const message = ref('')
-const arr = reactive({ list: [] })
 const avatarUrl = ref('')
 const userId = ref()
 const scrollbarRef = ref()
 const messageStore = messageInfo()
 const groupMemberStore = groupMemberInfo()
 const conversationStore = conversationInfo()
-let fileInfoList = reactive<fileBaseInfo[]>([])
-let fileList = ref<UploadFile[]>([])
+let fileInfoList = ref<fileBaseInfo[]>([])
 
+// 选择文件
 const selectFile = async () => {
   // 获取文件的信息
   const file = await (window as any).uploadFileApi.selectFile('uploadFile')
   console.log(file)
-
-  // 在前端生成发送消息的时间，写入本地数据库和后端MySQL数据库
-  const sendTimeStamp = dayjs().valueOf()
-  const sendTime = dayjs(sendTimeStamp).format('YYYY-MM-DD HH:mm:ss')
-  const convId = route.query.conversationId as string
-  const snowId = Snowflake.generate()
-  const msgType = file.fileType
-  const content = file.content
-  const fileName = file.fileName
-  const fileSize = file.fileSize
-  const fileId = file.fileId
-  const localPath = file.localPath
-  const messagePack: Message = {
-    id: snowId,
-    receiverId: conversation.value.targetId as string,
-    conversationId: convId,
-    senderId: userId.value,
-    msgType: msgType,
-    content: content,
-    // 0 -发送中  1 -成功  2 -失败
-    sendStatus: 0,
-    sendTime: sendTime,
-    // 0 -未读  1 -已读
-    // read_status: 0,
-    fileId: fileId,
-    fileName: fileName,
-    fileSize: fileSize,
-    localPath: localPath
+  if (fileInfoList.value.length >= 3) {
+    ElMessage.error('最多3个文件')
+    return
   }
-
-  // 消息列表存入缓存中
-  console.info('存入缓存中')
-  messageStore.addMessageMap(convId, messagePack)
-
-  // 更新会话最新消息和时间
-  conversationStore.setConversationMap(convId, {
-    latestMsg: content,
-    latestMsgTime: dayjs(sendTimeStamp).format('HH:mm:ss')
-  })
-
-}
-
-const selectFiles = (file: UploadFile | any) => {
-  console.info(file.raw)
-  console.info('文件名称:', file.name)
-  console.info('文件大小:', file.size)
-  console.info('文件类型:', file.raw.type)
-  console.info('文件URL:', URL.createObjectURL(file.raw))
-  const fileType = getFileType(file.raw)
-  fileInfoList.push({
-    // 包含文件名，文件大小，文件流
-    fileRaw: file.raw,
-    fileName: file.name,
-    fileSize: file.size,
-    fileType: fileType,
-    fileUrl: URL.createObjectURL(file.raw)
+  fileInfoList.value.push({
+    fileId: file.fileId,
+    fileName: file.fileName,
+    fileSize: file.fileSize,
+    fileType: file.fileType,
+    content: file.content,
+    localPath: file.localPath
   })
 }
 
-// 删除文件预览
-const handleDeleteFile = (index: number) => {
-  console.info('删除索引为', index, '的文件预览')
-  if (index >= 0 && index < fileInfoList.length) {
-    fileInfoList.splice(index, 1)
-    fileList.value.splice(index, 1)
-  }
+// 删除预览框中的文件
+const handleDeleteFile = (fileId: string) => {
+  console.info('删除索引为', fileId, '的文件预览')
+  fileInfoList.value = fileInfoList.value.filter(file => file.fileId != fileId)
   console.info('删除后的文件预览列表:', fileInfoList)
-  console.log('删除后长度：', fileInfoList.length)
-}
-
-// 处理上传文件超出限制
-const handleExceed = () => {
-  ElMessage.warning('最多只能上传3个文件')
+  console.log('删除后长度：', fileInfoList.value.length)
 }
 
 // 处理emoji点击事件
@@ -227,29 +164,18 @@ const handleEnterMessage = (e: KeyboardEvent) => {
   e.preventDefault()
 
   if (conversation.value.type === 0) {
-    sendPrivateMessage(null)
+    sendPrivateMessage()
   } else {
-    sendGroupMessage(null)
+    sendGroupMessage()
   }
 }
 
 // 发送单聊消息
-const sendPrivateMessage = async (otherData: any) => {
+const sendPrivateMessage = async () => {
   // 获取会话id
   const convId = route.query.conversationId as string
-  let content = ''
-  // 默认为文本消息
-  let msgType = 1
-
-  if (otherData == null) {
-    // 文本消息
-    content = message.value
-  } else {
-    // 非文本消息
-    content = otherData.content
-    msgType = otherData.fileType
-  }
-
+  const receiverId = conversation.value.targetId as string
+  const content = message.value
   // 处理消息类型
   console.info(
     '发送单聊消息 ===> 接收消息用户的ID:',
@@ -260,15 +186,15 @@ const sendPrivateMessage = async (otherData: any) => {
     convId
   )
 
-  // if (fileInfoList.length > 0) {
-  //   for (const file of fileInfoList) {
-  //     console.info(file.fileRaw)
-  //     // 上传文件
-  //     uploadFile(file.fileRaw)
-  //   }
-  //   fileInfoList.length = 0
-  //   fileList.value = []
-  // }
+  if (fileInfoList.value.length > 0) {
+    for (const file of fileInfoList.value) {
+      // 需要去掉响应式
+      (window as any).uploadFileApi.uploadFile(toRaw(file))
+      const messagePack = createMessagePack(receiverId, convId, file.fileType, file.content, file.fileId, file.fileName, file.fileSize, file.localPath)
+      sendApi(messagePack)
+    }
+    fileInfoList.value.length = 0
+  }
 
   if (content === '') {
     return
@@ -283,19 +209,21 @@ const sendPrivateMessage = async (otherData: any) => {
 
   // 发送截屏
   if (captureImageUrl.value.length > 0) {
-    sendApi(captureImageUrl.value, convId, 2, otherData)
+    // sendApi(captureImageUrl.value, convId, 2)
   }
 
   if (content !== '') {
     // 发送消息
-    sendApi(content, convId, msgType, otherData)
+    const messagePack = createMessagePack(receiverId, convId, 1, content, null, null, null, null)
+    sendApi(messagePack)
   }
 }
 
 // 发送群聊消息
-const sendGroupMessage = async (otherData: any) => {
+const sendGroupMessage = async () => {
   // 获取会话id
   const convId = route.query.conversationId as string
+  const receiverId = conversation.value.targetId as string
   const content = message.value
   console.info('发送群聊消息 ===> 群聊ID:', convId, '消息内容:', content)
   if (content === '') {
@@ -316,43 +244,24 @@ const sendGroupMessage = async (otherData: any) => {
   })
 
   if (captureImageUrl.value.length > 0) {
-    sendApi(captureImageUrl.value, convId, 2, otherData)
+    // sendApi(captureImageUrl.value, convId, 2)
   }
 
   if (message.value !== '') {
-    sendApi(message.value, convId, 1, otherData)
+    const messagePack = createMessagePack(receiverId, convId, 1, content, null, null, null, null)
+    sendApi(messagePack)
   }
 }
 
-const sendApi = (content: string, convId: string, msgType: number, otherData: any) => {
-  // 在前端生成发送消息的时间，写入本地数据库和后端MySQL数据库
-  const sendTimeStamp = dayjs().valueOf()
-  const sendTime = dayjs(sendTimeStamp).format('YYYY-MM-DD HH:mm:ss')
-
-  const snowId = Snowflake.generate()
-
-  const messagePack: Message = {
-    id: snowId,
-    receiverId: conversation.value.targetId as string,
-    conversationId: convId,
-    senderId: userId.value,
-    msgType: msgType,
-    content: content,
-    // 0 -发送中  1 -成功  2 -失败
-    sendStatus: 0,
-    sendTime: sendTime,
-    // 0 -未读  1 -已读
-    // read_status: 0,
-  }
-
+const sendApi = (messagePack: Message) => {
   // 消息列表存入缓存中
   console.info('存入缓存中')
-  messageStore.addMessageMap(convId, messagePack)
+  messageStore.addMessageMap(messagePack.conversationId, messagePack)
 
   // 更新会话最新消息和时间
-  conversationStore.setConversationMap(convId, {
-    latestMsg: content,
-    latestMsgTime: dayjs(sendTimeStamp).format('HH:mm:ss')
+  conversationStore.setConversationMap(messagePack.conversationId, {
+    latestMsg: messagePack.content,
+    latestMsgTime: dayjs(messagePack.sendTime).format('HH:mm:ss')
   })
 
   // http发送接收者id、会话id、消息内容
@@ -378,6 +287,35 @@ const sendApi = (content: string, convId: string, msgType: number, otherData: an
   })
 }
 
+// 生成消息的包装
+function createMessagePack(receiverId: string | number, convId: string, msgType: number, content: string, fileId: string | null, fileName: string | null, fileSize: number | null, localPath: string | null) {
+  // 在前端生成发送消息的时间，写入本地数据库和后端MySQL数据库
+  const sendTimeStamp = dayjs().valueOf()
+  const sendTime = dayjs(sendTimeStamp).format('YYYY-MM-DD HH:mm:ss')
+
+  const snowId = Snowflake.generate()
+
+  const messagePack: Message = {
+    id: snowId,
+    senderId: userId.value,
+    conversationId: convId,
+    receiverId: receiverId,
+    msgType: msgType,
+    content: content,
+    // 0 -发送中  1 -成功  2 -失败
+    sendStatus: 0,
+    // 0 -未读  1 -已读
+    // read_status: 0,
+    sendTime: sendTime,
+    fileId: fileId,
+    fileName: fileName,
+    fileSize: fileSize,
+    localPath: localPath
+  }
+
+  return messagePack
+}
+
 function scrollToBottom() {
   if (scrollbarRef.value) {
     scrollbarRef.value.setScrollTop(1000000)
@@ -386,48 +324,11 @@ function scrollToBottom() {
 
 // 滚动监听
 function handleScroll({ scrollTop }: any) {
-  // console.info(scrollTop)
-
   if (scrollTop === 0) {
     console.log('加载更多...');
     loadMessage(conversation.value.id)
   }
 }
-
-// const getMessageList = async () => {
-//   const convId = route.query.conversationId as string
-
-//   console.info('获取消息列表，会话id:', convId)
-
-//   if (!convId) {
-//     console.info('会话id不存在')
-//     return
-//   }
-
-//   // 此时群聊会话和单聊会话一起存储，只是格式差别比较大
-//   messageStore.initMessageMap(convId)
-
-//   // 再判断缓存（此时 messageMap[convId] 一定是数组，不会报错）
-//   const cache = messageStore.messageMap[convId].length > 0
-//   if (cache) {
-//     console.info('当前会话的聊天记录缓存非空: ', messageStore.messageMap[convId])
-//     return
-//   }
-
-//   const res = await getMessageListApi({ conversationId: convId })
-//   console.info('获取消息列表成功', res.data)
-//   arr.list = res.data
-//   res.data.forEach((messagePcak) => {
-//     messageStore.addMessageMap(messagePcak.conversationId, {
-//       conversationId: messagePcak.conversationId,
-//       senderId: messagePcak.senderId,
-//       receiverId: messagePcak.receiverId,
-//       msgType: messagePcak.msgType,
-//       content: messagePcak.content,
-//       sendTime: messagePcak.sendTime
-//     })
-//   })
-// }
 
 const getGroupMemberList = async () => {
   const convId = route.query.conversationId as string
@@ -515,10 +416,9 @@ watch(
       conversation.value = conversationStore.conversationMap[newConversationId as string]
 
       // 清空文件预览列表
-      fileInfoList.length = 0
-      fileList.value = []
+      fileInfoList.value.length = 0
 
-      if (!isDataLoaded.value && oldConversationId === undefined) {
+      if (oldConversationId === undefined) {
         // 说明是第一次加载，更新用户的头像和id
         console.info('第一次加载，更新用户的头像和id')
         avatarUrl.value = await (window as any).userInfoApi.storeGetUserInfo('avatar')
@@ -533,14 +433,10 @@ watch(
         await getGroupMemberList()
       }
 
-      // 所有数据加载完成，允许渲染
-      isDataLoaded.value = true
-
       await nextTick()
       scrollToBottom()
     } catch (error) {
       console.error('加载新会话消息失败', error)
-      isDataLoaded.value = true
     }
   },
   { immediate: true }

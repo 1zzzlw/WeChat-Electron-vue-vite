@@ -30,7 +30,7 @@ const WINDOW_CONFIGS = {
  * @returns 创建的窗口实例
  */
 export function createExtraWindow(windowType, options = {}, loadType = 'vue') {
-    console.log(11 + windowType)
+    console.log('打开', windowType)
     const defaultOptions = {
         icon: icon,
         // 窗口创建后默认不显示

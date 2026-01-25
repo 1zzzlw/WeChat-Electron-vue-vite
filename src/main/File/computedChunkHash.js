@@ -1,11 +1,11 @@
-import { createHash } from 'crypto';
+const crypto = require('crypto');
 
 const computedFileChunkHash = (data) => {
     const { fileId, currentFileIndex, arrayBuffer, chunkCount } = data
 
     const buffer = Buffer.from(arrayBuffer);
 
-    const chunkHash = createHash('md5').update(buffer).digest('hex')
+    const chunkHash = crypto.createHash('md5').update(buffer).digest('hex')
 
     const blob = new Blob([buffer])
 
@@ -19,6 +19,6 @@ const computedFileChunkHash = (data) => {
 
 }
 
-export {
+module.exports = {
     computedFileChunkHash
 }

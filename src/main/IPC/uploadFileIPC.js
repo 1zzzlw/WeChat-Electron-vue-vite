@@ -1,5 +1,5 @@
 import { ipcMain, dialog } from "electron";
-import { getFileInfo } from '../File/fileUpload'
+import { getFileInfo, uploadFile } from '../File/fileUpload'
 
 // 从本地选择文件或目录
 ipcMain.handle('select-file', async (e, file) => {
@@ -21,7 +21,7 @@ ipcMain.handle('select-file', async (e, file) => {
             break
         case 'uploadFile':
             dialogConfig = {
-                //multiSelections 允许多选，只选择文件，
+                //multiSelections 允许多选，只选择文件
                 properties: ['openFile']
             }
             break
@@ -33,4 +33,11 @@ ipcMain.handle('select-file', async (e, file) => {
 
     // 返回文件信息给渲染进程
     return canceled ? null : fileInfo
+})
+
+// 监听发送文件的事件
+ipcMain.on('upload-file', (e, file) => {
+    // 接收到需要上传的文件，开始上传文件
+    console.log(file)
+    uploadFile(file)
 })

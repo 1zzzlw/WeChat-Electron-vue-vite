@@ -1,6 +1,6 @@
 import { createWorker } from './createWorker'
-import { uploadFileApi, checkUploadedApi, mergeFileApi } from '../../api/Message'
-import { fileBaseListInfo } from '../../stores/FileBaseInfoStore'
+import { uploadFileApi, checkUploadedApi, mergeFileApi } from '../../src/renderer/src/api/Message'
+import { fileBaseListInfo } from '../../src/renderer/src/stores/FileBaseInfoStore'
 import { getFileType } from './filterFileKind'
 
 export function uploadFile(file) {

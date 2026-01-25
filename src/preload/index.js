@@ -62,6 +62,9 @@ const uploadFileApi = {
   selectFile: (file) => {
     return ipcRenderer.invoke('select-file', file)
   },
+  uploadFile: (file) => {
+    ipcRenderer.send('upload-file', file)
+  },
   updateProgress: (callback) => {
     ipcRenderer.on('upload-progress', callback)
   }
@@ -74,7 +77,6 @@ const api = {
   windowControls: (controlType, value) => {
     ipcRenderer.send('window:controls', controlType, value)
   },
-
   createNewWindow: (windowType) => {
     ipcRenderer.send('create-new-window', windowType)
   },

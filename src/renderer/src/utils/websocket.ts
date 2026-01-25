@@ -327,6 +327,7 @@ class WebSocketManager {
 
     this.isConnect = false
   }
+
 }
 
 export const WSManager = WebSocketManager.getInstance()

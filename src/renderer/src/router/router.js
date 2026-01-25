@@ -144,16 +144,17 @@ const router = createRouter({
 
 // 全局前置守卫：处理所有路由跳转的权限判断
 router.beforeEach(async (to, from, next) => {
-  // 1. 获取token（调用主进程的IPC接口）
-  const token = await window.userInfoApi.storeGetUserInfo('token')
-
-  if (to.path === '/friendAdd') {
+  if (to.path === '/friendAdd' || to.path === '/createGroup') {
     next()
     return
   }
 
+  // 1. 获取token（调用主进程的IPC接口）
+  const token = await window.userInfoApi.storeGetUserInfo('token')
+
   // 2. 根路径 '/'：根据token动态跳转
   if (to.path === '/') {
+    console.log(123)
     if (token) {
       console.log('有登录信息，跳转待登录页')
       next('/pendingLogin') // 有token→待登录页

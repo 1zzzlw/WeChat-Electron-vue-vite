@@ -1,35 +1,30 @@
 <template>
   <div class="file-preview-view">
     <div class="content">
-      <div class="content-main" v-for="(fileInfo, index) in fileList" :key="index">
+      <div class="content-main" v-for="fileInfo in fileList" :key="fileInfo.fileId">
         <div class="file-item" v-if="fileInfo.fileType === 2">
-          <el-icon class="close-icon" @click="closePreview(index)"><Close /></el-icon>
-          <img
-            class="file-image"
-            style="width: 100px; height: 100px"
-            :src="fileInfo.fileUrl"
-            alt=""
-          />
+          <el-icon class="close-icon" @click="closePreview(fileInfo.fileId)">
+            <Close />
+          </el-icon>
+          <img class="file-image" style="width: 100px; height: 100px" :src="fileInfo.localPath" alt="" />
         </div>
         <div class="file-item" v-else-if="fileInfo.fileType === 3">
-          <el-icon class="close-icon" @click="closePreview(index)"><Close /></el-icon>
-          <video
-            class="file-video"
-            style="width: 100px; height: 100px"
-            :src="fileInfo.fileUrl"
-          ></video>
+          <el-icon class="close-icon" @click="closePreview(fileInfo.fileId)">
+            <Close />
+          </el-icon>
+          <video class="file-video" style="width: 100px; height: 100px" :src="fileInfo.localPath"></video>
         </div>
         <div class="file-item" v-else-if="fileInfo.fileType === 4">
-          <el-icon class="close-icon" @click="closePreview(index)"><Close /></el-icon>
-          <audio
-            class="file-audio"
-            style="width: 100px; height: 100px"
-            :src="fileInfo.fileUrl"
-          ></audio>
+          <el-icon class="close-icon" @click="closePreview(fileInfo.fileId)">
+            <Close />
+          </el-icon>
+          <audio class="file-audio" style="width: 100px; height: 100px" :src="fileInfo.localPath"></audio>
         </div>
         <div class="file-item" v-else>
           <div class="file">
-            <el-icon class="close-icon" @click="closePreview(index)"><Close /></el-icon>
+            <el-icon class="close-icon" @click="closePreview(fileInfo.fileId)">
+              <Close />
+            </el-icon>
             <img style="width: 80px; height: 80px" src="../assets/wenjian.svg" alt="" />
             <div class="file-content">
               <div class="file-name">名称：{{ fileInfo.fileName }}</div>
@@ -46,11 +41,11 @@
 import { reactive, watch } from 'vue'
 
 interface fileBaseInfo {
+  fileId: string
   fileName: string
-  fileSize: number | string
+  fileSize: number
   fileType: number
-  fileRaw: File | null
-  fileUrl: string
+  localPath: string
 }
 
 const props = defineProps({
@@ -63,12 +58,9 @@ const props = defineProps({
 const emit = defineEmits(['delete-file'])
 const fileList = reactive([...props.fileInfoList])
 
-const closePreview = (index: number) => {
-  console.info('删除索引为', index, '的文件预览')
-  if (index >= 0 && index < fileList.length) {
-    fileList.splice(index, 1)
-    emit('delete-file', index)
-  }
+const closePreview = (fileId: string) => {
+  console.info('删除索引为', fileId, '的文件预览')
+  emit('delete-file', fileId)
 }
 
 watch(
