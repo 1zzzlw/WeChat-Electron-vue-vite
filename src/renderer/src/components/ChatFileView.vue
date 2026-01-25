@@ -36,14 +36,19 @@ const process = ref(0)
 const isSuccess = ref()
 
 onMounted(() => {
-  setInterval(() => {
-    process.value++
-    if (process.value === 100) {
-      console.info(process.value)
-      isSuccess.value = 'success'
-      return
-    }
-  }, 10)
+  (window as any).uploadFileApi.updateProgress((e: any, data: any) => {
+    console.log(props.fileSize)
+    console.log(data.totalCount)
+  })
+
+  // setInterval(() => {
+  //   process.value++
+  //   if (process.value === 100) {
+  //     console.info(process.value)
+  //     isSuccess.value = 'success'
+  //     return
+  //   }
+  // }, 10)
 })
 </script>
 

@@ -1,12 +1,13 @@
 import { computedFileChunkHash } from './computedChunkHash.js'
 
 // Piscina 要求导出一个函数，接收任务数据，返回结果
-export default ({ arrayBuffer, fileIndex, fileId }) => {
-
+export default ({ arrayBuffer, currentFileIndex, fileId, chunkCount }) => {
+    console.log(chunkCount)
     const chunkData = computedFileChunkHash({
         fileId,
-        fileIndex,
-        arrayBuffer
+        currentFileIndex,
+        arrayBuffer,
+        chunkCount
     })
 
     return chunkData

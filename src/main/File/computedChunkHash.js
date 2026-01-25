@@ -1,7 +1,7 @@
 import { createHash } from 'crypto';
 
 const computedFileChunkHash = (data) => {
-    const { fileId, fileIndex, arrayBuffer } = data
+    const { fileId, currentFileIndex, arrayBuffer, chunkCount } = data
 
     const buffer = Buffer.from(arrayBuffer);
 
@@ -11,9 +11,10 @@ const computedFileChunkHash = (data) => {
 
     return {
         fileId,
-        fileIndex,
+        currentFileIndex,
         chunkHash,
-        blob
+        blob,
+        chunkCount
     }
 
 }

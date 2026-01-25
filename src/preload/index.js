@@ -62,6 +62,9 @@ const uploadFileApi = {
   selectFile: (file) => {
     return ipcRenderer.invoke('select-file', file)
   },
+  updateProgress: (callback) => {
+    ipcRenderer.on('upload-progress', callback)
+  }
 }
 
 const api = {

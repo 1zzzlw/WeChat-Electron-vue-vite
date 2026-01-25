@@ -1,5 +1,5 @@
 import fs from 'fs/promises'
-import { store } from '../index'
+import { store, mainWindow } from '../index'
 import { createHash } from 'crypto'
 import { FILE_TYPE_MAP, getFileName, getFileType } from './filterFileKind'
 import { createWorkerProcess } from './createWorkerProcess'
@@ -18,6 +18,8 @@ const getFileInfo = async (path) => {
     const fileMtimeMs = fileInfo.mtimeMs
     const fileIno = fileInfo.ino
     const content = FILE_TYPE_MAP.get(fileType)
+
+    console.log('文件大小', fileSize)
 
     // 文件的唯一标识，相当于文件的唯一id
     const fileId = generateFileId(fileName, fileSize, fileMtimeMs, fileIno)
@@ -50,7 +52,7 @@ const getFileInfo = async (path) => {
     const chunksList = res.data
 
     // 分片上传
-    fileUpload(path, fileSize, fileId, verify, chunksList)
+    fileUpload(path, fileSize, fileId, fileName, fileType, verify, chunksList)
 
     // 返回文件信息
     return {
@@ -68,21 +70,46 @@ const getFileInfo = async (path) => {
  *  @param arrayBuffer -- 文件buffer信息，进行分片上传
  *  @param fileSize -- 文件大小
  */
-const fileUpload = async (path, fileSize, fileId, verify, chunksList) => {
-    const results = await createWorkerProcess(path, fileSize, fileId, chunksList)
-
-    for (const result of results) {
-        const { fileId, fileIndex, chunkHash, blob } = result
-        console.log(fileId, fileIndex, chunkHash, blob)
+const fileUpload = async (path, fileSize, fileId, fileName, fileType, verify, chunksList) => {
+    createWorkerProcess(path, fileSize, fileId, chunksList, (e) => {
+        const { fileId, currentFileIndex, chunkHash, blob, chunkCount } = e.task
         const formData = new FormData()
         formData.append('chunkBlob', blob)
-        formData.append('chunkIndex', fileIndex)
+        formData.append('chunkIndex', currentFileIndex)
         formData.append('chunkHash', chunkHash)
         formData.append('fileId', fileId)
         formData.append('verify', verify)
 
-        uploadFileChunk(formData)
-    }
+        // 配置监听传输的进程
+        const config = {
+            onUploadProgress: (e) => {
+                // 如果文件大小未知，直接退出
+                if (!e.lengthComputable) return
+                if (e.loaded === e.total) {
+                    mainWindow.webContents.send('upload-progress', {
+                        uploadProgress: e.loaded,
+                        fileId: fileId,
+                        totalCount: chunkCount
+                    });
+                }
+            }
+        }
+
+        uploadFileChunk(formData, config).then(() => {
+            // 上传成功
+            e.updateStatus(currentFileIndex)
+        })
+    },
+        (fileIndex) => {
+            console.log('合并')
+            mergeFile({
+                fileHash: fileId,
+                fileName: fileName,
+                fileType: fileType,
+                chunkCount: fileIndex
+            })
+        }
+    )
 }
 
 /**
