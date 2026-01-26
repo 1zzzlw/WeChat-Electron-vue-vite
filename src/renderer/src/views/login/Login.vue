@@ -112,7 +112,7 @@ const Login = async (formEl: FormInstance | undefined) => {
         // 等待更新成功的通知
         await (window as any).dbApi.updateDBData()
         await router.push('/main')
-        await (window as any).api.resizeWindow('main')
+        await (window as any).windowToolApi.resizeWindow('main')
       } else {
         // 等待通知在路由跳转
         await new Promise(resolve => {
@@ -120,7 +120,7 @@ const Login = async (formEl: FormInstance | undefined) => {
         })
         console.info('初始化完成, 进入main界面');
         await router.push('/main')
-        await (window as any).api.resizeWindow('main')
+        await (window as any).windowToolApi.resizeWindow('main')
       }
 
     } else {
@@ -135,7 +135,7 @@ const Login = async (formEl: FormInstance | undefined) => {
 const Register = () => {
   console.log('注册')
   router.push('/register');
-  (window as any).api.resizeWindow('register')
+  (window as any).windowToolApi.resizeWindow('register')
 }
 </script>
 

@@ -34,20 +34,20 @@ defineProps({
 
 const setTop = () => {
   isTop.value = !isTop.value
-  window.api.windowControls('setTop', isTop.value)
+  window.windowToolApi.windowControls('setTop', isTop.value)
 }
 
 const miniWindow = () => {
-  window.api.windowControls('miniWindow')
+  window.windowToolApi.windowControls('miniWindow')
 }
 
 const changeScreen = () => {
   isFullScreen.value = !isFullScreen.value
-  window.api.windowControls('changeScreen', isFullScreen.value)
+  window.windowToolApi.windowControls('changeScreen', isFullScreen.value)
 }
 
 const closeWindow = () => {
-  window.api.windowControls('closeWindow')
+  window.windowToolApi.windowControls('closeWindow')
 }
 </script>
 

@@ -83,7 +83,7 @@ const submitForm = () => {
       registerInfoStore.$reset()
 
       router.push('/main');
-      (window as any).api.resizeWindow('main')
+      (window as any).windowToolApi.resizeWindow('main')
     } else {
       ElMessage.error('注册失败')
     }

@@ -24,6 +24,7 @@ import './IPC/DBIPC.js'
 import './IPC/initDataIPC.js'
 import './IPC/updateNewDataIPC.js'
 import './IPC/uploadFileIPC.js'
+import './IPC/websocketIPC.js'
 import { initTable, initTableColumnsMap } from './DB/mainDB.js'
 
 // 初始化store实例，指定存储文件名（会生成user-token.json文件）
@@ -169,12 +170,12 @@ app.on('window-all-closed', () => {
   }
 })
 
-ipcMain.on('ws:send', (event, { messageType, sequenceId, data }) => {
-  // 把消息广播给主窗口
-  if (mainWindow) {
-    mainWindow.webContents.send('ws:forward', { messageType, sequenceId, data })
-  }
-})
+// ipcMain.on('ws:send', (event, { messageType, sequenceId, data }) => {
+//   // 把消息广播给主窗口
+//   if (mainWindow) {
+//     mainWindow.webContents.send('ws:forward', { messageType, sequenceId, data })
+//   }
+// })
 
 async function createCaptureWindow() {
   const { screen, desktopCapturer } = require('electron')

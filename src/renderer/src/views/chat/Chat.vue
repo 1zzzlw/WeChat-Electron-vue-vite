@@ -67,7 +67,6 @@ import { sendMessageApi } from '../../api/Message'
 import { messageInfo } from '../../stores/MessageStore'
 import dayjs from 'dayjs'
 import { Conversation, initConversation } from '../../types/conversation.ts'
-import { WSManager } from '../../utils/websocket.js'
 import { conversationInfo } from '../../stores/ConversationStore'
 import { Eleme, Folder, Scissor, VideoCamera } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
@@ -201,11 +200,17 @@ const sendPrivateMessage = async () => {
   }
 
   // ws发送单聊信息：会话id、接收者id、消息内容
-  WSManager.sendMessage(1, 0, {
+  (window as any).wsApi.sendMessage(1, 0, {
     conversationId: convId,
     receiverId: conversation.value.targetId,
     content: content
   })
+
+  // WSManager.sendMessage(1, 0, {
+  //   conversationId: convId,
+  //   receiverId: conversation.value.targetId,
+  //   content: content
+  // })
 
   // 发送截屏
   if (captureImageUrl.value.length > 0) {
@@ -237,11 +242,11 @@ const sendGroupMessage = async () => {
     groupMemberStore.groupMemberMap[convId].map((item) => item.userId)
   )
 
-  WSManager.sendMessage(3, 0, {
-    conversationId: convId,
-    receiverIds: groupMemberStore.groupMemberMap[convId].map((item) => item.userId),
-    content: content
-  })
+  // WSManager.sendMessage(3, 0, {
+  //   conversationId: convId,
+  //   receiverIds: groupMemberStore.groupMemberMap[convId].map((item) => item.userId),
+  //   content: content
+  // })
 
   if (captureImageUrl.value.length > 0) {
     // sendApi(captureImageUrl.value, convId, 2)
@@ -280,6 +285,8 @@ const sendApi = (messagePack: Message) => {
       // console.info(message)
       // 存入本地数据库
       saveSentMessage(message)
+      // 更新本地会话列表的最新消息
+
       // 滚动到最底部
       await nextTick()
       scrollToBottom()

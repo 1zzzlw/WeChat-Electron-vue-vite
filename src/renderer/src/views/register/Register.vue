@@ -129,7 +129,7 @@ const startCountdown = () => {
 
 const returnLogin = () => {
   console.info('返回登录页');
-  (window as any).api.resizeWindow('login')
+  (window as any).windowToolApi.resizeWindow('login')
   router.push('/login')
 }
 

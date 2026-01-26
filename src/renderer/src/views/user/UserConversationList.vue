@@ -87,12 +87,12 @@ const starCall = async (conversation: Conversation) => {
 
 const createGroupChat = () => {
   // 打开创建群聊窗口
-  (window as any).api.createNewWindow('createGroup')
+  (window as any).windowToolApi.createNewWindow('createGroup')
 }
 
 const addFriend = () => {
   // 打开添加好友窗口
-  (window as any).api.createNewWindow('addFriend')
+  (window as any).windowToolApi.createNewWindow('addFriend')
 }
 
 // TODO 过滤出状态为1的单聊会话列表 后面可以修改为在pinia中的getter函数中筛选

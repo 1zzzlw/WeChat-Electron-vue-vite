@@ -1,5 +1,6 @@
 import { mainWindow } from '../index'
 import { ipcMain } from 'electron'
+import websocket from '../websocket'
 
 const login_width = 300
 const login_height = 370
@@ -60,6 +61,8 @@ const enterMain = () => {
   // 开启窗口尺寸改变
   mainWindow.setResizable(true)
   mainWindow.setMinimumSize(main_width, main_height)
+  // 建立ws连接
+  websocket.connect()
   mainWindow.show()
 }
 
