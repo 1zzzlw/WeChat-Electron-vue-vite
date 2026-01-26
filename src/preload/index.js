@@ -55,6 +55,9 @@ const dbApi = {
   },
   saveLoadMessage: (messageList) => {
     ipcRenderer.send('save:loadMessage', messageList)
+  },
+  updateConversation: (condition, data) => {
+    ipcRenderer.send('update:conversation', condition, data)
   }
 }
 
@@ -120,8 +123,8 @@ const wsApi = {
     })
   },
   // 接收消息
-  onMessage: () => {
-    ipcRenderer.on('ws:receive', (data) => callback(data))
+  onMessage: (callback) => {
+    ipcRenderer.on('ws:receive', (event, data) => callback(data))
   }
 }
 

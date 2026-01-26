@@ -91,10 +91,19 @@ const saveLoadMessage = async (messageList) => {
     await window.dbApi.saveLoadMessage(messageList)
 }
 
+/**
+ * 更新会话表中的字段信息
+ * @param data -- 消息表的更新字段 
+ */
+const updateConversation = async (condition, data) => {
+    await window.dbApi.updateConversation(condition, data)
+}
+
 export {
     getConversationList,
     getFriendList,
     getMessageList,
     saveSentMessage,
-    saveLoadMessage
+    saveLoadMessage,
+    updateConversation
 }

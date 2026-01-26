@@ -2,6 +2,7 @@ import { ipcMain } from 'electron'
 import { store } from '../index'
 import { queryConversation, queryFriend, loadMessage } from '../DB/select'
 import { saveSentMessage, saveLoadMessage } from '../DB/insert'
+import { updateConversation } from '../DB/update'
 
 ipcMain.handle('query:conversation', (e) => {
     const userId = store.get('userId')
@@ -29,4 +30,9 @@ ipcMain.on('save:message', (e, message) => {
 ipcMain.on('save:loadMessage', (e, messageList) => {
     console.log(`从服务端加载的消息为${messageList}`)
     saveLoadMessage(messageList)
+})
+
+ipcMain.on('update:conversation', (e, condition, data) => {
+    console.log(`会话列表更新数据`, condition, data)
+    updateConversation(condition, data)
 })

@@ -135,6 +135,7 @@ const multipleInsert = (insertPrefix, tableName, data) => {
 const insert = (tableName, data) => {
     // 获得该表的字段映射关系
     const columnsMap = globalColumnsMap[tableName]
+    // 数据库字段名数组
     const tableFieldNames = []
     const params = []
     for (let item in data) {
@@ -151,6 +152,43 @@ const insert = (tableName, data) => {
     return run(sql, params)
 }
 
+/**
+ * 更新表中字段的数据
+ * @param tableName -- 表名 
+ * @param condition -- 条件
+ * @param data -- 更新数据
+ */
+const update = (tableName, condition, data) => {
+    // 获得该表的字段映射关系
+    const columnsMap = globalColumnsMap[tableName]
+    // 数据库字段名数组
+    const dataTableFieldNames = []
+    const conditionTableFieldNames = []
+    const params = []
+    // 拼接修改值的sql语句
+    for (let item in data) {
+        if (data[item] != undefined && columnsMap[item] != undefined) {
+            // 加入数据库格式的的字段名
+            dataTableFieldNames.push(`${columnsMap[item]} = ?`)
+            // 加入该字段的值
+            params.push(data[item])
+        }
+    }
+    // 拼接条件的sql语句
+    for (let item in condition) {
+        if (condition[item] != undefined && columnsMap[item] != undefined) {
+            conditionTableFieldNames.push(`${columnsMap[item]} = ?`)
+            // 加入该字段的值
+            params.push(condition[item])
+        }
+    }
+    // 将字段名数组拼接成字符串
+    const dataPlaceholder = dataTableFieldNames.join(',')
+    const conditionPlaceholder = conditionTableFieldNames.join(' and ')
+    const sql = `update ${tableName} set ${dataPlaceholder} where ${conditionPlaceholder}`
+    console.log(sql)
+    return run(sql, params)
+}
 
 /**
  * 执行sql语句
@@ -177,5 +215,6 @@ export {
     queryAll,
     multipleInsert,
     insert,
+    update,
     run
 }

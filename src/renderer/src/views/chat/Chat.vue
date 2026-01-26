@@ -75,7 +75,7 @@ import { getGroupMemberListApi } from '../../api/Conversation'
 import MessageContentManage from '../../components/MessageContentManage.vue'
 import FilePreviewView from '../../components/FilePreviewView.vue'
 import ChatHeader from '../../components/ChatHeader.vue'
-import { getMessageList, saveSentMessage, saveLoadMessage } from '../../db/dualDB.js'
+import { getMessageList, saveSentMessage, saveLoadMessage, updateConversation } from '../../db/dualDB.js'
 import { Message } from '../../types/message.ts'
 import { Snowflake } from '@theinternetfolks/snowflake'
 
@@ -286,7 +286,14 @@ const sendApi = (messagePack: Message) => {
       // 存入本地数据库
       saveSentMessage(message)
       // 更新本地会话列表的最新消息
-
+      const condition = {
+        id: messagePack.conversationId
+      }
+      const data = {
+        latestMsg: messagePack.content,
+        latestMsgTime: messagePack.sendTime
+      }
+      updateConversation(condition, data)
       // 滚动到最底部
       await nextTick()
       scrollToBottom()
