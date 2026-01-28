@@ -199,12 +199,10 @@ const sendPrivateMessage = async () => {
     return
   }
 
+  const messagePack = createMessagePack(receiverId, convId, 1, content, null, null, null, null);
+
   // ws发送单聊信息：会话id、接收者id、消息内容
-  (window as any).wsApi.sendMessage(1, 0, {
-    conversationId: convId,
-    receiverId: conversation.value.targetId,
-    content: content
-  })
+  (window as any).wsApi.sendMessage(1, 0, messagePack)
 
   // WSManager.sendMessage(1, 0, {
   //   conversationId: convId,
@@ -219,7 +217,6 @@ const sendPrivateMessage = async () => {
 
   if (content !== '') {
     // 发送消息
-    const messagePack = createMessagePack(receiverId, convId, 1, content, null, null, null, null)
     sendApi(messagePack)
   }
 }
