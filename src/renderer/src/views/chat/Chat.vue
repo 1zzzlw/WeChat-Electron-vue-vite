@@ -299,6 +299,7 @@ const sendApi = (messagePack: Message) => {
       scrollToBottom()
     }
   })
+
 }
 
 // 生成消息的包装
@@ -392,14 +393,12 @@ const loadMessage = async (newConversationId: any) => {
   } else {
     // TODO 展示查询结束的消息
     console.info('数据查询完毕')
-
   }
 
   if (hasServerData) {
     // 将从服务端查来的数据写入本地数据库
     saveLoadMessage(messageList)
   }
-
 }
 
 const messageArr = computed(() => {
@@ -417,6 +416,9 @@ watch(
   async (newConversationId, oldConversationId) => {
     try {
       console.info('切换会话，新的会话id:', newConversationId, '旧的会话id:', oldConversationId)
+
+      // 清空消息缓存
+      messageStore.clearConversationMessages(newConversationId as string)
 
       // 进入新会话时重置
       messagePageInfo.pageTotal = 0

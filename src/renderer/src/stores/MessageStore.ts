@@ -27,6 +27,9 @@ export const messageInfo = defineStore('messageInfo', {
       // 再添加消息，需要在头部拼接消息
       this.messageMap[conversationId].push(message)
       console.info(this.messageMap[conversationId])
+    },
+    clearConversationMessages(conversationId: string) {
+      delete this.messageMap[conversationId]
     }
   }
 })

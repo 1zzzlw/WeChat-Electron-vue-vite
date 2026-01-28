@@ -20,6 +20,17 @@ pinia缓存多窗口共享的理解，代码不小心清空了，但是思路也
 以后有机会的话，会继续完善这个前端多窗口缓存共享的。
 ![img.png](img.png)
 
+git 拉取最新修改代码
+第一步：先暂存当前设备修改的代码
+    git stash push -m "暂存本地修改的路径代码"
+第二步：拉取最新代码
+    git pull --tags origin master
+第三步：恢复暂存的修改，并尝试合并
+    git stash pop
+
+清理所有更改的代码，回到仓库的最新状态
+git reset --hard origin/master
+
 计算md5值的依赖
 npm install spark-md5
 

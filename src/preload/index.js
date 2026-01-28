@@ -124,7 +124,7 @@ const wsApi = {
   },
   // 接收消息
   onMessage: (callback) => {
-    ipcRenderer.on('ws:receive', (event, data) => callback(data))
+    ipcRenderer.on('ws:receive', (event, messageType, data) => callback(messageType, data))
   }
 }
 

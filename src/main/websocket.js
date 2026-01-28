@@ -1,4 +1,5 @@
 import { store, mainWindow } from './index'
+import { saveSentMessage } from './DB/insert'
 
 class WebSocketManager {
     constructor() {
@@ -122,39 +123,35 @@ class WebSocketManager {
             switch (messageType) {
                 case 2:
                     console.info('收到私聊消息:', data)
-                    // this.updateMessageStore(data)
-                    // // 更新会话的最新消息和最新消息时间展示
-                    // conversationInfo().setConversationMap(data.conversationId, {
-                    //     latestMsg: data.content,
-                    //     latestMsgTime: dayjs(data.sendTime).format('HH:mm')
-                    // })
-                    mainWindow.webContents.send('ws:receive', data)
+                    mainWindow.webContents.send('ws:receive', messageType, data)
+                    // 将收到的消息存入本地数据库中
+                    saveSentMessage(data)
                     break
                 case 4:
                     // 群聊类型，将消息存储到状态管理中
                     console.info('收到群聊消息:', data)
-                    // this.updateMessageStore(data)
-                    // 更新群聊会话的最新消息和最新消息时间展示
-                    // conversationInfo().setGroupConversationMap(data.conversationId, {
-                    //   latestMsg: data.content,
-                    //   latestMsgTime: dayjs(data.sendTime).format('HH:mm')
-                    // })
+                    mainWindow.webContents.send('ws:receive', messageType, data)
+                    // 将收到的消息存入本地数据库中
+                    saveSentMessage(data)
                     break
                 case 6:
                     // 好友申请类型，将消息存储到状态管理中
                     console.info('收到好友申请:', data)
                     // userApplyListInfo().setUserApplyMap(data.applyId, data)
+
                     break
                 case 8:
                     // 群聊申请类型，将消息存储到状态管理中
                     console.info('收到群聊加入邀请:', data)
                     // userApplyListInfo().setGroupApplyMap(data.userId, data)
+
                     break
                 case 9:
                     // 收到好友上线消息
                     console.info('收到好友上线消息:', data)
                     // 触发好友上线事件
                     // emitter.emit('friendOnline', data)
+
                     break
             }
         } catch (e) {
@@ -243,7 +240,6 @@ class WebSocketManager {
             this.ws.websocket.send(buffer)
         }
     }
-
 
     // 开启重连计时器，尝试重连
     tryRecoonectTimer() {

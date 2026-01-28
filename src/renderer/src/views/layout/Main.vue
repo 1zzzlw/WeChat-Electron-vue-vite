@@ -56,7 +56,7 @@ const avatarUrl = ref('')
 
 const openSettingView = () => {
   console.info('openSettingView');
-  (window as any).api.createNewWindow('settingView')
+  (window as any).windowToolApi.createNewWindow('settingView')
 }
 
 onMounted(async () => {

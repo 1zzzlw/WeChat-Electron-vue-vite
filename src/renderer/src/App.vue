@@ -30,7 +30,7 @@ function updateMessageStore(data) {
 onMounted(() => {
   console.log('开启ws的监听事件')
 
-  window.wsApi.onMessage((data) => {
+  window.wsApi.onMessage((messageType, data) => {
     updateMessageStore(data)
 
     // 更新会话的最新消息和最新消息时间展示
