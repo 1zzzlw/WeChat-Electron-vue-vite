@@ -21,10 +21,10 @@ const choose = () => {
   console.info('选择存储位置');
   (window as any).uploadFileApi.selectFile('storeLocation').then((filePath: any) => {
     if (filePath) {
-      location.value = filePath
-      console.info('选择的存储位置:', filePath);
+      location.value = filePath.localPath
+      console.info('选择的存储位置:', filePath.localPath);
       // 将选择的路径保存到本地
-      (window as any).userInfoApi.storeSetUserInfo('storeLocation', filePath)
+      (window as any).userInfoApi.storeSetUserInfo('storeLocation', filePath.localPath)
       console.info('存储位置已保存')
     }
   })

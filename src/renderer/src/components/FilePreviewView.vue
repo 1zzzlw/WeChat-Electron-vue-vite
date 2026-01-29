@@ -6,15 +6,15 @@
           <el-icon class="close-icon" @click="closePreview(fileInfo.fileId)">
             <Close />
           </el-icon>
-          <img class="file-image" style="width: 100px; height: 100px" :src="fileInfo.localPath" alt="" />
+          <img class="file-image" style="width: 100px; height: 100px" :src="fileInfo.base64" alt="" />
         </div>
         <div class="file-item" v-else-if="fileInfo.fileType === 3">
           <el-icon class="close-icon" @click="closePreview(fileInfo.fileId)">
             <Close />
           </el-icon>
-          <video class="file-video" style="width: 100px; height: 100px" :src="fileInfo.localPath"></video>
+          <img class="file-video" style="width: 100px; height: 100px" :src="fileInfo.base64"></img>
         </div>
-        <div class="file-item" v-else-if="fileInfo.fileType === 4">
+        <div class=" file-item" v-else-if="fileInfo.fileType === 4">
           <el-icon class="close-icon" @click="closePreview(fileInfo.fileId)">
             <Close />
           </el-icon>
@@ -41,6 +41,7 @@
 import { reactive, watch } from 'vue'
 
 interface fileBaseInfo {
+  base64: string
   fileId: string
   fileName: string
   fileSize: number

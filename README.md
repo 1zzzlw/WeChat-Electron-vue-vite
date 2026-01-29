@@ -36,6 +36,15 @@ npm install spark-md5
 
 生成照片，视频的预览压缩图 -- ffmpeg
 npm install ffmpeg
+这个只是封装ffmpeg的命令的库
+ 
+下载ffmpeg的二进制文件 npm i ffmpeg-static
+下载这个以来需要注意配置一个临时的环境变量
+$env:FFMPEG_BINARIES_URL = "https://cdn.npmmirror.com/binaries/ffmpeg-static"
+npm install ffmpeg-static --save
+
+还需要下载它的二进制文件
+npm install ffprobe-static
 
 FFmpeg 的主要功能和特性：
 格式转换：FFmpeg 可以将一个媒体文件从一种格式转换为另一种格式，支持几乎所有常见的音频和视频格式，包括 MP4、AVI、MKV、MOV、FLV、MP3、AAC 等。

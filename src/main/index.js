@@ -31,7 +31,8 @@ import { initTable, initTableColumnsMap } from './DB/mainDB.js'
 export const store = new Store({
   name: 'user-token', // 存储文件名称，避免和其他存储冲突
   fileExtension: 'json', // 文件后缀
-  cwd: 'E:\\JavaWeb\\zzz-IM-web\\src\\store' // 存储目录（用自定义路径的目录）
+  // cwd: 'E:\\JavaWeb\\zzz-IM-web\\src\\store' // 存储目录（用自定义路径的目录）
+  cwd: join(__dirname, '../store/user-token.json') // 存储目录（用自定义路径的目录）
 })
 
 export let mainWindow = null

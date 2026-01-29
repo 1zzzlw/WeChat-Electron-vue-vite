@@ -2,12 +2,16 @@ const fs = require('fs')
 const Database = require('better-sqlite3')
 import { init_table, table_index } from './tableInfo'
 import { toCamelCase, convertDBObjToCamelCase } from './utils'
+import { join } from 'path'
 
 // 自定义DB文件存储路径
-const userDir = 'E:\\JavaWeb\\zzz-IM-web\\db\\'
+// const userDir = 'E:\\JavaWeb\\zzz-IM-web\\db\\'
+const userDir = join(__dirname, '../../db')
+
+console.log(userDir)
 
 // 把 SQLite 内部执行的每一条 SQL 语句和相关信息输出到控制台，便于开发阶段调试。
-const db = new Database(userDir + 'local.db', { verbose: console.log })
+const db = new Database(userDir + '\\local.db', { verbose: console.log })
 
 // 全局的所有表结构的字段映射关系
 let globalColumnsMap = []
@@ -37,7 +41,7 @@ const initTable = () => {
         try {
             db.exec(index.trim())
         } catch (error) {
-            console.error('表索引初始化失败', err.message)
+            console.error('表索引初始化失败', error.message)
         }
     }
 }

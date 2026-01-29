@@ -1,8 +1,8 @@
 <template>
   <div class="chat-image">
-    <el-skeleton style="width: 240px">
+    <el-skeleton style="width: 180px">
       <template #template>
-        <img :src="localPath" alt="聊天图片" class="chat-image-content" @click="openImage" />
+        <img :src=base64 alt="聊天图片" class="chat-image-content" @click="openImage" />
         <!-- <el-skeleton-item variant="image" style="width: 240px; height: 240px" /> -->
       </template>
     </el-skeleton>
@@ -15,6 +15,7 @@ const openImage = () => {
 }
 
 const props = defineProps<{
+  base64: string
   sendStatus: number
   fileName: string
   fileSize: number
@@ -41,8 +42,8 @@ const props = defineProps<{
   image-rendering: high-quality;
 }
 
-.chat-image-content:hover {
+/* .chat-image-content:hover {
   transform: scale(1.1);
   transition: transform 0.3s ease-in-out;
-}
+} */
 </style>

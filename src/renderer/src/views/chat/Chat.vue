@@ -80,6 +80,7 @@ import { Message } from '../../types/message.ts'
 import { Snowflake } from '@theinternetfolks/snowflake'
 
 interface fileBaseInfo {
+  base64: string,
   fileId: string
   fileName: string
   fileSize: number
@@ -122,7 +123,9 @@ const selectFile = async () => {
     ElMessage.error('最多3个文件')
     return
   }
+  console.log(file.base64)
   fileInfoList.value.push({
+    base64: file.base64,
     fileId: file.fileId,
     fileName: file.fileName,
     fileSize: file.fileSize,
@@ -378,9 +381,11 @@ const getGroupMemberList = async () => {
 }
 
 const loadMessage = async (newConversationId: any) => {
-  const messageList = await getMessageList(newConversationId, messagePageInfo)
+  const result = await getMessageList(newConversationId, messagePageInfo)
+  const messageList = result.messageList
+  const isFromServer = result.isFromServer
   // 本地数据库没数据，服务端数据库仍有数据时
-  const hasServerData = messageList.length > 0 && messagePageInfo.noData;
+  // const hasServerData = messageList.length > 0 && messagePageInfo.noData
 
   if (messageList.length > 0) {
     // 加入pinia缓存
@@ -392,7 +397,8 @@ const loadMessage = async (newConversationId: any) => {
     console.info('数据查询完毕')
   }
 
-  if (hasServerData) {
+  if (isFromServer && messageList.length > 0) {
+    console.log('服务端数据写入')
     // 将从服务端查来的数据写入本地数据库
     saveLoadMessage(messageList)
   }
@@ -414,8 +420,10 @@ watch(
     try {
       console.info('切换会话，新的会话id:', newConversationId, '旧的会话id:', oldConversationId)
 
-      // 清空消息缓存
-      messageStore.clearConversationMessages(newConversationId as string)
+      // 清空旧会话的消息缓存
+      if (oldConversationId) {
+        messageStore.clearConversationMessages(oldConversationId as string)
+      }
 
       // 进入新会话时重置
       messagePageInfo.pageTotal = 0

@@ -12,7 +12,6 @@ import { userApplyListInfo } from '../src/stores/UserApplyListStore'
 import { conversationInfo } from '../src/stores/ConversationStore'
 import dayjs from 'dayjs'
 
-
 function updateMessageStore(data) {
   // 私信类型，将消息存储到状态管理中
   const path = router.currentRoute.value.path
@@ -31,13 +30,25 @@ onMounted(() => {
   console.log('开启ws的监听事件')
 
   window.wsApi.onMessage((messageType, data) => {
-    updateMessageStore(data)
 
-    // 更新会话的最新消息和最新消息时间展示
-    conversationInfo().setConversationMap(data.conversationId, {
-      latestMsg: data.content,
-      latestMsgTime: dayjs(data.sendTime).format('HH:mm')
-    })
+    switch (messageType) {
+      case 2:
+      case 4:
+        updateMessageStore(data)
+
+        // 更新会话的最新消息和最新消息时间展示
+        conversationInfo().setConversationMap(data.conversationId, {
+          latestMsg: data.content,
+          latestMsgTime: dayjs(data.sendTime).format('HH:mm')
+        })
+        break
+      case 6:
+        userApplyListInfo().setUserApplyMap(data.applyId, data)
+        break
+      case 8:
+        userApplyListInfo().setGroupApplyMap(data.userId, data)
+        break
+    }
   })
 })
 

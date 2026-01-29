@@ -29,7 +29,15 @@ export const messageInfo = defineStore('messageInfo', {
       console.info(this.messageMap[conversationId])
     },
     clearConversationMessages(conversationId: string) {
-      delete this.messageMap[conversationId]
+      if (this.messageMap[conversationId]) {
+        delete this.messageMap[conversationId]
+        console.info(`已清空会话 ${conversationId} 的消息缓存`)
+      }
+    },
+    // 清空所有消息缓存
+    clearAllMessages() {
+      this.messageMap = {}
+      console.info('已清空所有消息缓存')
     }
   }
 })

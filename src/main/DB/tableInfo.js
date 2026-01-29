@@ -62,14 +62,7 @@ const init_table = [
     relation_status INTEGER NOT NULL,       -- 关系状态: 0=未同意, 1=正常好友, 2=黑名单
     PRIMARY KEY (user_id, friend_id)        -- 用户id和好友id组成的联合主键
   );
-  `,
-  // 文件信息表
   `
-    CREATE TABLE IF NOT EXISTS file_info (
-    id TEXT PRIMARY KEY,                         -- 文件唯一ID
-
-);
-  `,
 ]
 
 const table_index = [
