@@ -2,7 +2,7 @@
   <div class="chat-image">
     <el-skeleton style="width: 180px">
       <template #template>
-        <img :src=base64 alt="聊天图片" class="chat-image-content" @click="openImage" />
+        <img :src=previewBase64 alt="聊天图片" class="chat-image-content" @click="openImage" />
         <!-- <el-skeleton-item variant="image" style="width: 240px; height: 240px" /> -->
       </template>
     </el-skeleton>
@@ -15,12 +15,12 @@ const openImage = () => {
 }
 
 const props = defineProps<{
-  base64: string
   sendStatus: number
   fileName: string
   fileSize: number
   localPath: string
   remoteUrl: string
+  previewBase64: string
   downloadStatus: number
   receiveTime: string
 }>()

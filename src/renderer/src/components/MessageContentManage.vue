@@ -23,6 +23,7 @@ const renderMessageContent = () => {
     fileSize: props.fileSize || 0,
     localPath: props.localPath || '',
     remoteUrl: props.remoteUrl || '',
+    previewBase64: props.previewBase64 || '',
     downloadStatus: props.downloadStatus || 0,
     receiveTime: props.receiveTime || ''
   }))

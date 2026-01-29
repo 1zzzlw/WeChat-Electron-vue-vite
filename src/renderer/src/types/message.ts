@@ -13,8 +13,10 @@ export interface Message {
     fileId?: string | null
     fileName?: string | null
     fileSize?: number | null
+    remotePath?: string | null
     localPath?: string | null
     remoteUrl?: string | null
+    previewBase64?: string | null
     downloadStatus?: number
     receiveTime?: string
 }

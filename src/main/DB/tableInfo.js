@@ -13,13 +13,16 @@ const init_table = [
     send_time         TEXT     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     is_revoked        INTEGER  NOT NULL DEFAULT 0,
     quote_msg_id      INTEGER  DEFAULT NULL,
-    file_id   TEXT DEFAULT NULL,                   -- 文件的唯一id
-    file_name TEXT DEFAULT NULL,                   -- 文件名
-    file_size INTEGER DEFAULT 0,                   -- 文件大小（B）
-    local_path TEXT DEFAULT NULL,                  -- 本地存储绝对路径（未下载时为 NULL）
-    remote_url TEXT DEFAULT NULL,                  -- 服务端 MinIO 地址
-    download_status INTEGER DEFAULT 0,             -- 下载状态：0=未下载，1=已下载
-    receive_time TEXT DEFAULT NULL                 -- 接收时间
+    file_id           TEXT DEFAULT NULL,                   -- 文件的唯一id
+    file_name         TEXT DEFAULT NULL,                   -- 文件名
+    file_size         INTEGER DEFAULT 0,                   -- 文件大小（B）
+    bucket            TEXT DEFAULT NULL,                   -- 桶名称
+    remote_path       TEXT DEFAULT NULL,                   -- 远程存储文件路径
+    local_path        TEXT DEFAULT NULL,                   -- 本地存储绝对路径（未下载时为 NULL）
+    remote_url        TEXT DEFAULT NULL,                   -- 服务端 MinIO 地址
+    preview_base64    TEXT DEFAULT NULL,                   -- 图片和视频的预览图
+    download_status   INTEGER DEFAULT 0,                   -- 下载状态：0=未下载，1=已下载
+    receive_time      TEXT DEFAULT NULL                    -- 接收时间
   );
   `,
   // 设备登录记录表

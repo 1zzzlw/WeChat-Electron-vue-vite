@@ -12,6 +12,7 @@
           <el-icon class="close-icon" @click="closePreview(fileInfo.fileId)">
             <Close />
           </el-icon>
+          <span class="pause"></span>
           <img class="file-video" style="width: 100px; height: 100px" :src="fileInfo.base64"></img>
         </div>
         <div class=" file-item" v-else-if="fileInfo.fileType === 4">
@@ -142,13 +143,6 @@ watch(
   align-items: center;
 }
 
-.file-image,
-.file-video,
-.file-audio .file {
-  width: 100px;
-  height: 100px;
-}
-
 .file {
   display: flex;
   justify-content: center;
@@ -167,5 +161,23 @@ watch(
   /* 行内块级，适配行内元素 */
   display: inline-block;
   text-align: center;
+}
+
+.pause {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 0;
+  height: 0;
+  border-style: solid;
+  /* 适配100x100px视频预览图的三角形尺寸，比例协调 */
+  border-width: 18px 0 18px 30px;
+  /* 半透明黑色三角形，可按需调整颜色/透明度 */
+  border-color: transparent transparent transparent rgba(0, 0, 0, 0.6);
+  /* 关键：防止遮挡关闭按钮的点击事件 */
+  pointer-events: none;
+  /* 层级：在视频图上方、关闭图标（z-index:10）下方 */
+  z-index: 5;
 }
 </style>

@@ -87,6 +87,7 @@ interface fileBaseInfo {
   fileType: number
   content: string
   localPath: string
+  remotePath?: string
 }
 
 // 消息分页配置
@@ -112,6 +113,7 @@ const scrollbarRef = ref()
 const messageStore = messageInfo()
 const groupMemberStore = groupMemberInfo()
 const conversationStore = conversationInfo()
+// 主要用于展示预览文件
 let fileInfoList = ref<fileBaseInfo[]>([])
 
 // 选择文件
@@ -123,7 +125,7 @@ const selectFile = async () => {
     ElMessage.error('最多3个文件')
     return
   }
-  console.log(file.base64)
+  // 预览文件展示的集合
   fileInfoList.value.push({
     base64: file.base64,
     fileId: file.fileId,
@@ -191,8 +193,11 @@ const sendPrivateMessage = async () => {
   if (fileInfoList.value.length > 0) {
     for (const file of fileInfoList.value) {
       // 需要去掉响应式
-      (window as any).uploadFileApi.uploadFile(toRaw(file))
-      const messagePack = createMessagePack(receiverId, convId, file.fileType, file.content, file.fileId, file.fileName, file.fileSize, file.localPath)
+      const minioFilePath = await (window as any).uploadFileApi.uploadFile(toRaw(file))
+      file.remotePath = minioFilePath
+      const messagePack = createMessagePack(receiverId, convId, file.fileType, file.content, file)
+      console.log(messagePack);
+
       sendApi(messagePack)
     }
     fileInfoList.value.length = 0
@@ -202,7 +207,8 @@ const sendPrivateMessage = async () => {
     return
   }
 
-  const messagePack = createMessagePack(receiverId, convId, 1, content, null, null, null, null);
+  const messagePack = createMessagePack(receiverId, convId, 1, content, null);
+
 
   // ws发送单聊信息：会话id、接收者id、消息内容
   (window as any).wsApi.sendMessage(1, 0, messagePack)
@@ -253,7 +259,7 @@ const sendGroupMessage = async () => {
   }
 
   if (message.value !== '') {
-    const messagePack = createMessagePack(receiverId, convId, 1, content, null, null, null, null)
+    const messagePack = createMessagePack(receiverId, convId, 1, content, null)
     sendApi(messagePack)
   }
 }
@@ -299,11 +305,19 @@ const sendApi = (messagePack: Message) => {
       scrollToBottom()
     }
   })
-
 }
 
 // 生成消息的包装
-function createMessagePack(receiverId: string | number, convId: string, msgType: number, content: string, fileId: string | null, fileName: string | null, fileSize: number | null, localPath: string | null) {
+function createMessagePack(receiverId: string | number, convId: string, msgType: number, content: string, file: any) {
+  let fileId = ''
+  let fileName = ''
+  let fileSize = 0
+  let localPath = ''
+  let base64 = ''
+  let remotePath = ''
+  if (file != null) {
+    ({ fileId, fileName, fileSize, localPath, base64, remotePath } = file)
+  }
   // 在前端生成发送消息的时间，写入本地数据库和后端MySQL数据库
   const sendTimeStamp = dayjs().valueOf()
   const sendTime = dayjs(sendTimeStamp).format('YYYY-MM-DD HH:mm:ss')
@@ -325,7 +339,9 @@ function createMessagePack(receiverId: string | number, convId: string, msgType:
     fileId: fileId,
     fileName: fileName,
     fileSize: fileSize,
-    localPath: localPath
+    localPath: localPath,
+    previewBase64: base64,
+    remotePath: remotePath
   }
 
   return messagePack
@@ -421,8 +437,8 @@ watch(
       console.info('切换会话，新的会话id:', newConversationId, '旧的会话id:', oldConversationId)
 
       // 清空旧会话的消息缓存
-      if (oldConversationId) {
-        messageStore.clearConversationMessages(oldConversationId as string)
+      if (newConversationId) {
+        messageStore.clearConversationMessages(newConversationId as string)
       }
 
       // 进入新会话时重置

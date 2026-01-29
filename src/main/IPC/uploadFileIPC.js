@@ -36,8 +36,9 @@ ipcMain.handle('select-file', async (e, file) => {
 })
 
 // 监听发送文件的事件
-ipcMain.on('upload-file', (e, file) => {
+ipcMain.handle('upload-file', async (e, file) => {
     // 接收到需要上传的文件，开始上传文件
     console.log(file)
-    uploadFile(file)
+    const minioFilePath = await uploadFile(file)
+    return minioFilePath
 })
