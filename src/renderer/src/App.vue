@@ -10,6 +10,7 @@ import router from '../src/router/router'
 import { messageInfo } from '../src/stores/MessageStore'
 import { userApplyListInfo } from '../src/stores/UserApplyListStore'
 import { conversationInfo } from '../src/stores/ConversationStore'
+import emitter from '../src/utils/mitt'
 import dayjs from 'dayjs'
 
 function updateMessageStore(data) {
@@ -47,6 +48,10 @@ onMounted(() => {
         break
       case 8:
         userApplyListInfo().setGroupApplyMap(data.userId, data)
+        break
+      case 9:
+        console.log('好友上线信息')
+        emitter.emit('friendOnline', data)
         break
     }
   })

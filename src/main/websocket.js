@@ -120,40 +120,13 @@ class WebSocketManager {
             // 10.解析 JSON 字符串为对象
             const data = JSON.parse(jsonString)
 
-            switch (messageType) {
-                case 2:
-                    console.info('收到私聊消息:', data)
-                    mainWindow.webContents.send('ws:receive', messageType, data)
-                    // 将收到的消息存入本地数据库中
-                    saveSentMessage(data)
-                    break
-                case 4:
-                    // 群聊类型，将消息存储到状态管理中
-                    console.info('收到群聊消息:', data)
-                    mainWindow.webContents.send('ws:receive', messageType, data)
-                    // 将收到的消息存入本地数据库中
-                    saveSentMessage(data)
-                    break
-                case 6:
-                    // 好友申请类型，将消息存储到状态管理中
-                    console.info('收到好友申请:', data)
-                    // userApplyListInfo().setUserApplyMap(data.applyId, data)
+            console.info(`收到WS消息-类型${messageType}:`, data);
 
-                    break
-                case 8:
-                    // 群聊申请类型，将消息存储到状态管理中
-                    console.info('收到群聊加入邀请:', data)
-                    // userApplyListInfo().setGroupApplyMap(data.userId, data)
-
-                    break
-                case 9:
-                    // 收到好友上线消息
-                    console.info('收到好友上线消息:', data)
-                    // 触发好友上线事件
-                    // emitter.emit('friendOnline', data)
-
-                    break
+            if (messageType === 2 || messageType === 4) {
+                // 保存到数据库里
+                saveSentMessage(data)
             }
+            mainWindow.webContents.send('ws:receive', messageType, data)
         } catch (e) {
             console.warn('消息解析失败', e)
         }

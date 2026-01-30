@@ -16,7 +16,16 @@ const saveLoadMessage = (messageList) => {
     multipleInsert(`insert`, 'message', messageList)
 }
 
+/**
+ * 插入新的会话列表
+ * @param conversationPack -- 会话信息
+ */
+const addConversation = (conversationPack) => {
+    insert('conversation', conversationPack)
+}
+
 export {
     saveSentMessage,
-    saveLoadMessage
+    saveLoadMessage,
+    addConversation
 }

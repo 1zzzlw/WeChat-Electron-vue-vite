@@ -4,11 +4,8 @@ import { createHash } from 'crypto'
 import { FILE_TYPE_MAP, getFileName, getFileType } from './filterFileKind'
 import { createWorkerProcess } from './createWorkerProcess'
 import { verifyFileUpload, uploadFileChunk, checkUploaded, mergeFile } from '../API/message'
-import dayjs from 'dayjs'
-import pathToFfmpeg from 'ffmpeg-static'
-import ffmprobe from 'ffprobe-static'
-import { exec } from 'child_process'
-import path from 'path'
+import { generateImagePreview, generateVideoPreview, getImageMimeType } from '../Util/mediaHandle'
+
 /**
  * 根据文件路径获取文件的信息
  * @param path -- 文件路径 
@@ -145,95 +142,8 @@ const generateFileId = (fileName, fileSize, fileMtimeMs, fileIno) => {
     return createHash('md5').update(fileIdentifier).digest('hex')
 }
 
-/**
- * 限制图片尺寸，生成图片预览图用于展示头像，聊天内容的照片
- * @param path 
- */
-const generateImagePreview = async (fileSize, fileName, path) => {
-    if (fileSize <= 30720) {
-        // 照片尺寸小于30KB，直接生成blob返回给前端展示
-        const buffer = await fs.readFile(path)
-        const base64 = `data:image/jpeg;base64,${buffer.toString('base64')}`
-        return base64
-    }
-    const targetPath = generatePath(fileName)
-    const cmd = pathToFfmpeg + ` -y -i "${path}" -vf scale=200:-1 -q:v 30 -compression_level 9 "${targetPath}"`
-    await execCommand(cmd)
-    const buffer = await fs.readFile(targetPath)
-    const getImageMimeType = (buffer) => {
-        const header = buffer.toString('hex', 0, 4)
-        if (header.startsWith('ffd8')) return 'image/jpeg'
-        if (header.startsWith('8950')) return 'image/png'
-        if (header.startsWith('4749')) return 'image/gif'
-        if (header.startsWith('5249')) return 'image/webp'
-        return 'image/jpeg' // 默认
-    }
-    const mimeType = getImageMimeType(buffer)
-    const base64 = `data:${mimeType};base64,${buffer.toString('base64')}`
-    // 删除临时预览照片
-    // await fs.unlink(targetPath)
-    return base64
-}
-
-/**
- * 生成视频的预览图，展示在聊天窗口内
- * @param videoPath 
- */
-const generateVideoPreview = async (fileName, videoPath) => {
-    let command = ffmprobe.path + ` -v error -select_streams v:0 -show_entries stream=codec_name "${videoPath}"`
-    let result = await execCommand(command)
-    // 去掉空格
-    result = result.replaceAll("\r\n", "")
-    let targetPath
-    // 按照等号分割
-    result = result.substring(result.indexOf('=') + 1)
-    const codec = result.substring(0, result.indexOf('['))
-    if ('hevc' === codec) {
-        targetPath = generatePath(fileName)
-        command = pathToFfmpeg + ` -y -i "${videoPath}" -c:v libx264 -crf 20 ${targetPath}`
-        await execCommand(command)
-    }
-    // 生成缩略图
-    const baseName = fileName.replace(path.extname(fileName), '') + '_thumb.jpg'
-    targetPath = generatePath(baseName)
-    command = pathToFfmpeg + ` -y -ss 2 -i "${videoPath}" -vframes 1 -vf "scale=min(300\\,iw):min(300\\,ih):force_original_aspect_ratio=decrease" -q:v 8 -f mjpeg "${targetPath}"`
-    await execCommand(command)
-    // 生成缩略图的base64
-    const buffer = await fs.readFile(targetPath)
-    const base64 = `data:image/jpeg;base64,${buffer.toString('base64')}`
-    // 删除临时预览照片
-    await fs.unlink(targetPath)
-    return base64
-}
-
-/**
- *  根据日期生成存储路径
- */
-const generatePath = (fileName) => {
-    // 获得当前时间
-    const currentTime = dayjs().format('YYYY-MM-DD')
-    // 获得存储文件路径
-    const savePath = store.get('storeLocation') + '\\' + currentTime
-    // 根据当前日期创建文件夹
-    fs.mkdir(savePath, { recursive: true })
-    const filePath = savePath + '\\' + fileName
-    return filePath
-}
-
-const execCommand = (command) => {
-    return new Promise((resolve, reject) => {
-        exec(command, (error, stdout, stderr) => {
-            // console.log('ffmpeg的命令:', command)
-            if (error) {
-                console.log('错误', error)
-            }
-            resolve(stdout)
-        })
-    })
-}
-
 export {
     getFileInfo,
-    uploadFile
+    uploadFile,
 }
 

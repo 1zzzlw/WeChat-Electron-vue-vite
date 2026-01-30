@@ -1,7 +1,7 @@
 import { ipcMain } from 'electron'
 import { store } from '../index'
 import { queryConversation, queryFriend, loadMessage } from '../DB/select'
-import { saveSentMessage, saveLoadMessage } from '../DB/insert'
+import { saveSentMessage, saveLoadMessage, addConversation } from '../DB/insert'
 import { updateConversation } from '../DB/update'
 
 ipcMain.handle('query:conversation', (e) => {
@@ -35,4 +35,9 @@ ipcMain.on('save:loadMessage', (e, messageList) => {
 ipcMain.on('update:conversation', (e, condition, data) => {
     console.log(`会话列表更新数据`, condition, data)
     updateConversation(condition, data)
+})
+
+ipcMain.on('add:conversation', (e, conversationPack) => {
+    console.log(`新增会话${conversationPack}`)
+    addConversation(conversationPack)
 })

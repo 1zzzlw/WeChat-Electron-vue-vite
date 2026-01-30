@@ -25,6 +25,7 @@ import './IPC/initDataIPC.js'
 import './IPC/updateNewDataIPC.js'
 import './IPC/uploadFileIPC.js'
 import './IPC/websocketIPC.js'
+import './IPC/mediaHandleIPC.js'
 import { initTable, initTableColumnsMap } from './DB/mainDB.js'
 
 // 初始化store实例，指定存储文件名（会生成user-token.json文件）

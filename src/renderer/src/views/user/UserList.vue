@@ -70,7 +70,6 @@
 <script lang="ts" setup>
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { getFriendListApi } from '../../api/Friend'
 import { getApplyListApi, getGroupApplyListApi, dealGroupApplyApi } from '../../api/Apply'
 import { Friend } from '../../types/friend'
 import { getFriendList } from '../../db/dualDB'
@@ -79,6 +78,7 @@ import { userApplyListInfo } from '../../stores/UserApplyListStore'
 import { friendInfo } from '../../stores/ContactListStore'
 import { groupListInfo } from '../../stores/GroupListStores'
 import { groupMemberInfo } from '../../stores/GroupMemberStores'
+import { getGroupMemberListApi } from '../../api/Conversation'
 import AutocompleteSearch from '../../components/AutocompleteSearch.vue'
 
 const userId = ref()
@@ -112,8 +112,27 @@ const starCall = (user: any) => {
 const joinGroup = async (activeGroupApply: any) => {
   console.info(activeGroupApply)
   const userId = await (window as any).userInfoApi.storeGetUserInfo('userId')
-  console.info('用户', userId, '同意入群:')
-  dealGroupApplyApi(activeGroupApply.conversationId, activeGroupApply.userId, userId, 2).then((res: any) => {
+  console.info('用户', userId, '同意入群');
+
+  // 获取群成员信息列表
+  const groupMemberList: any = await getGroupMemberListApi(activeGroupApply.conversationId)
+
+  const avatarUrlList = groupMemberList.data.map((userInfo: any) => userInfo.avatar)
+
+  console.log(avatarUrlList)
+
+  // 更新群聊头像
+  const groupAvatar = await (window as any).mediaHandleApi.updateGroupAvatar(avatarUrlList)
+  const groupAvatarBlob = new Blob([groupAvatar])
+
+  const formData = new FormData()
+  formData.append('groupAvatarBlob', groupAvatarBlob)
+  formData.append('conversationId', activeGroupApply.conversationId)
+  formData.append('userId', activeGroupApply.userId)
+  formData.append('memberId', userId)
+  formData.append('status', '2')
+
+  dealGroupApplyApi(formData).then((res: any) => {
     if (res.code === 1) {
       ElMessage.success('入群成功')
       userApplyStore.updateGroupApplyStatus(activeGroupApply.userId, 2)

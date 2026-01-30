@@ -12,6 +12,7 @@
       <el-icon v-else class="avatar-uploader-icon" @click="handleClick">
         <Plus />
       </el-icon>
+      <input ref="fileInput" style="display: none" type="file" accept="image/*" @change="handleFileChange">
     </div>
     <div class="uploadAvatar-bottom">
       <el-button type="primary" @click="returnStep">返回</el-button>
@@ -21,7 +22,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, toRaw } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { registerApi } from '../../api/Register'
 import { Plus } from '@element-plus/icons-vue'
@@ -33,8 +34,6 @@ interface UserInfo {
   phone: string
   password: string
   gender: string
-  // 缓存选中的文件对象
-  avatar: string
 }
 
 const registerInfoStore = useRegisterInfoStore()
@@ -42,42 +41,50 @@ const router = useRouter()
 const route = useRoute()
 // 存储预览图片的临时URL
 const imageUrl = ref('')
+const fileInput = ref<any>(null);
+const avatar = ref<File | null>(null)
 
 const userInfo = reactive<UserInfo>({
   username: '',
   phone: '',
   password: '',
   gender: '',
-  // 缓存选中的文件对象（用于后续上传）
-  avatar: ''
 })
 
 const handleClick = async () => {
-  const filePath = await (window as any).uploadFileApi.selectFile('avatar')
-  console.log(filePath)
-  if (filePath) {
-    // 预览选中的图片
-    imageUrl.value = filePath
-    console.log(imageUrl.value)
-    // 缓存文件对象，后续上传时使用
-    userInfo.avatar = filePath
-  }
+  fileInput.value?.click();
 }
 
-const submitForm = () => {
+const handleFileChange = (e: any) => {
+  const file = e.target.files[0]
+  imageUrl.value = URL.createObjectURL(file)
+  avatar.value = file
+}
+
+const submitForm = async () => {
   // 检查是否有文件选中
-  if (!userInfo.avatar) {
+  if (avatar.value === null) {
     ElMessage.warning('请选择照片')
     return
   }
+
+  const formData = new FormData()
+
+  formData.append('username', userInfo.username)
+  formData.append('phone', userInfo.phone)
+  formData.append('password', userInfo.password)
+  formData.append('gender', userInfo.gender)
+  formData.append('avatarFile', avatar.value)
+
   // 调用注册接口
-  registerApi(userInfo).then((res: any) => {
+  registerApi(formData).then((res: any) => {
     if (res.code === 1) {
       console.info('注册成功:', res)
       ElMessage.success('注册成功');
-      // 注册成功后，将用户头像和用户id存储到本地
-      (window as any).userInfoApi.storeSetUserInfo('avatar', userInfo.avatar)
-        (window as any).userInfoApi.storeSetUserInfo('userId', res.data)
+      const userBaseInfo: any = res.data;
+      // 注册成功后，将用户id保存到本地
+      (window as any).userInfoApi.storeSetUserInfo('userId', userBaseInfo.userId);
+      (window as any).userInfoApi.storeSetUserInfo('avatar', userBaseInfo.avatar);
 
       // 清空缓存的注册信息
       registerInfoStore.$reset()

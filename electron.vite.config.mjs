@@ -41,7 +41,7 @@ export default defineConfig({
           "default-src 'self'; " +
           "script-src 'self'; " +
           "style-src 'self' 'unsafe-inline'; " +
-          "img-src 'self' data: blob: file:; " +
+          "img-src 'self' data: blob: file: *; " +
           "media-src 'self' blob: data: file:; " +
           "connect-src 'self' ws://localhost:8000;"
       }

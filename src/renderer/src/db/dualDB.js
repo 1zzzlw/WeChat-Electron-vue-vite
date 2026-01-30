@@ -108,11 +108,20 @@ const updateConversation = async (condition, data) => {
     await window.dbApi.updateConversation(condition, data)
 }
 
+/**
+ * 新增会话数据
+ * @param conversationPack -- 会话信息包 
+ */
+const addConversation = async (conversationPack) => {
+    await window.dbApi.addConversation(conversationPack)
+}
+
 export {
     getConversationList,
     getFriendList,
     getMessageList,
     saveSentMessage,
     saveLoadMessage,
-    updateConversation
+    updateConversation,
+    addConversation,
 }

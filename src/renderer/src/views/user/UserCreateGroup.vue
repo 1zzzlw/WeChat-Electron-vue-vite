@@ -37,21 +37,23 @@
   </div>
 </template>
 
-<script setup>
+<script lang="ts" setup>
 import { ref, onMounted, reactive } from 'vue'
-import { getFriendList } from '../../db/dualDB'
+import { getFriendList, addConversation } from '../../db/dualDB'
 import { sendGroupApplyApi } from '../../api/Apply'
 import { ElMessage } from 'element-plus'
+import { Conversation } from '../../types/conversation'
+import { conversationInfo } from '../../stores/ConversationStore'
 
 const count = ref(0)
-const friendList = reactive({ list: [] })
-const invitedList = reactive({ list: [] })
+const friendList = reactive<any>({ list: [] })
+const invitedList = reactive<any>({ list: [] })
+const conversationStore = conversationInfo()
 // hash 集合，用于存储已邀请用户的 ID
 const invitedIds = ref(new Set())
 const groupName = ref('')
-const userAvatar = ref('')
 
-const inviteBtn = (friend) => {
+const inviteBtn = (friend: any) => {
   if (invitedIds.value.has(friend.friendId)) {
     ElMessage.error('该用户已被邀请')
     return
@@ -65,7 +67,7 @@ const inviteBtn = (friend) => {
   ElMessage.success('添加成功')
 }
 
-const removeBtn = (friend) => {
+const removeBtn = (friend: any) => {
   if (!invitedIds.value.has(friend.friendId)) {
     ElMessage.error('该用户未被邀请')
     return
@@ -76,7 +78,7 @@ const removeBtn = (friend) => {
   // 从已邀请列表中移除
   // 从已邀请用户 ID 集合中移除
   invitedIds.value.delete(friend.friendId)
-  invitedList.list = invitedList.list.filter((item) => item.friendId !== friend.friendId)
+  invitedList.list = invitedList.list.filter((item: any) => item.friendId !== friend.friendId)
   ElMessage.success('已移除该用户')
 }
 
@@ -89,30 +91,43 @@ const createGroup = async () => {
     ElMessage.error('请输入群聊名称')
     return
   }
-  // 获取当前用户头像
-  userAvatar.value = await window.userInfoApi.storeGetUserInfo('avatar')
+
+  // 制作群聊头像
+  const arrayBuffer = await (window as any).mediaHandleApi.generateGroupAvatar()
+  const avatarBlob = new Blob([arrayBuffer])
+
   // 将 Set 转换为数组
   const invitedIdsArray = [...invitedIds.value]
-  console.info(invitedIdsArray)
-  sendGroupApplyApi(invitedIdsArray, groupName.value)
-    .then((res) => {
-      if (res.code === 1) {
-        ElMessage.success('创建群聊成功, 群聊会话 ID: ' + res.data)
-        // ws 发送创建群聊成功消息
-        window.api.sendToMain(7, 0, {
-          conversationId: res.data,
-          userAvatar: userAvatar.value,
-          groupName: groupName.value,
-          invitedIds: invitedIdsArray
-        })
-        window.api.destroyNewWindow('createGroup')
-      } else {
-        ElMessage.error(res.msg)
-      }
-    })
-    .catch((err) => {
-      ElMessage.error('创建群聊失败')
-    })
+
+  const formData = new FormData()
+
+  formData.append('groupAvatar', avatarBlob)
+  formData.append('groupName', groupName.value)
+
+  invitedIdsArray.forEach(id => formData.append('invitedIds', id as string));
+
+  const result: any = await sendGroupApplyApi(formData)
+  if (result.code === 1) {
+    ElMessage.success('创建群聊成功')
+    const conversationInfo: Conversation = result.data
+    console.log(conversationInfo)
+    // TODO 后面学习多窗口的缓存同步更新添加到会话缓存中
+    conversationStore.setConversationMap(conversationInfo.id, conversationInfo)
+    // 将创建的群会话列表存入本地
+    addConversation(conversationInfo);
+    // (window as any).api.destroyNewWindow('createGroup')
+  } else {
+    ElMessage.error(result.msg)
+  }
+
+  // // ws 发送创建群聊成功消息
+  // window.api.sendToMain(7, 0, {
+  //   conversationId: res.data,
+  //   userAvatar: userAvatar.value,
+  //   groupName: groupName.value,
+  //   invitedIds: invitedIdsArray
+  // })
+
 }
 
 onMounted(() => {

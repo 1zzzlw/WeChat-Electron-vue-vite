@@ -42,9 +42,12 @@ export const conversationInfo = defineStore('conversationInfo', {
     },
     // 会话id为键，传入部分数据进行更新
     setConversationMap(conversationId: string, partialInfo: Partial<Conversation>) {
-      this.conversationMap[conversationId] = {
-        ...this.conversationMap[conversationId],
-        ...partialInfo
+      this.conversationMap = {
+        ...this.conversationMap,
+        [conversationId]: {
+          ...this.conversationMap[conversationId],
+          ...partialInfo
+        }
       }
     },
     getConversationMap(conversationId: string) {

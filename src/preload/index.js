@@ -58,7 +58,10 @@ const dbApi = {
   },
   updateConversation: (condition, data) => {
     ipcRenderer.send('update:conversation', condition, data)
-  }
+  },
+  addConversation: (conversationPack) => {
+    ipcRenderer.send('add:conversation', conversationPack)
+  },
 }
 
 const uploadFileApi = {
@@ -128,6 +131,17 @@ const wsApi = {
   }
 }
 
+const mediaHandleApi = {
+  // 生成群聊头像
+  generateGroupAvatar: () => {
+    return ipcRenderer.invoke('generate-groupAvatar')
+  },
+  // 更新群聊头像
+  updateGroupAvatar: (avatarUrlList) => {
+    return ipcRenderer.invoke('update-groupAvatar', avatarUrlList)
+  }
+}
+
 const api = {
   // 发送给主进程，主进程会把消息广播给所有窗口
   // sendToMain: (messageType, sequenceId, data) => {
@@ -159,6 +173,7 @@ if (process.contextIsolated) {
     contextBridge.exposeInMainWorld('uploadFileApi', uploadFileApi)
     contextBridge.exposeInMainWorld('windowToolApi', windowToolApi)
     contextBridge.exposeInMainWorld('wsApi', wsApi)
+    contextBridge.exposeInMainWorld('mediaHandleApi', mediaHandleApi)
     contextBridge.exposeInMainWorld('api', api)
     contextBridge.exposeInMainWorld('chatToolApi', chatToolApi)
   } catch (error) {
@@ -172,6 +187,7 @@ if (process.contextIsolated) {
   window.uploadFileApi = uploadFileApi
   window.windowToolApi = windowToolApi
   window.wsApi = wsApi
+  window.mediaHandleApi = mediaHandleApi
   window.api = api
   window.chatToolApi = chatToolApi
 }

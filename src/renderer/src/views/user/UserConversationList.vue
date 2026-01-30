@@ -21,7 +21,7 @@
             :class="{ 'left-list-bg': active === conversation.id }" @click="starCall(conversation)">
             <div class="left-image">
               <UnreadCounts :unreadCounts="conversation.unreadCount" />
-              <img :src="conversation.avatar" alt="头像" class="left-list-img" />
+              <img :src=conversation.avatar alt="头像" class="left-list-img" />
             </div>
             <div class="mid-message">
               <h1 class="friend-name">{{ conversation.name }}</h1>
@@ -51,8 +51,6 @@ import { useRouter } from 'vue-router'
 import { conversationInfo } from '../../stores/ConversationStore'
 import { Plus } from '@element-plus/icons-vue'
 import { Conversation } from '../../types/conversation'
-import { getFriendListApi } from '../../api/Friend'
-import { getConversationListApi } from '../../api/Conversation'
 import AutocompleteSearch from '../../components/AutocompleteSearch.vue'
 import UnreadCounts from '../../components/UnreadCounts.vue'
 import { getConversationList } from '../../db/dualDB'
