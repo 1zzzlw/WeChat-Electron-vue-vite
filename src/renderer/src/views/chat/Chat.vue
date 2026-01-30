@@ -197,6 +197,7 @@ const sendPrivateMessage = async () => {
       file.remotePath = minioFilePath
       const messagePack = createMessagePack(receiverId, convId, file.fileType, file.content, file)
       console.log(messagePack);
+      (window as any).wsApi.sendMessage(1, 0, messagePack)
 
       sendApi(messagePack)
     }
@@ -208,7 +209,6 @@ const sendPrivateMessage = async () => {
   }
 
   const messagePack = createMessagePack(receiverId, convId, 1, content, null);
-
 
   // ws发送单聊信息：会话id、接收者id、消息内容
   (window as any).wsApi.sendMessage(1, 0, messagePack)

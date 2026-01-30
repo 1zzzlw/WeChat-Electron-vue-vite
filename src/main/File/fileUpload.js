@@ -150,14 +150,14 @@ const generateFileId = (fileName, fileSize, fileMtimeMs, fileIno) => {
  * @param path 
  */
 const generateImagePreview = async (fileSize, fileName, path) => {
-    if (fileSize <= 204800) {
-        // 照片尺寸小于100KB，直接生成blob返回给前端展示
+    if (fileSize <= 30720) {
+        // 照片尺寸小于30KB，直接生成blob返回给前端展示
         const buffer = await fs.readFile(path)
         const base64 = `data:image/jpeg;base64,${buffer.toString('base64')}`
         return base64
     }
     const targetPath = generatePath(fileName)
-    const cmd = pathToFfmpeg + ` -y -i "${path}" -vf scale=300:-1 -q:v 12 -compression_level 9 -fs 200k -preset medium "${targetPath}"`
+    const cmd = pathToFfmpeg + ` -y -i "${path}" -vf scale=200:-1 -q:v 30 -compression_level 9 "${targetPath}"`
     await execCommand(cmd)
     const buffer = await fs.readFile(targetPath)
     const getImageMimeType = (buffer) => {
@@ -171,7 +171,7 @@ const generateImagePreview = async (fileSize, fileName, path) => {
     const mimeType = getImageMimeType(buffer)
     const base64 = `data:${mimeType};base64,${buffer.toString('base64')}`
     // 删除临时预览照片
-    await fs.unlink(targetPath)
+    // await fs.unlink(targetPath)
     return base64
 }
 
