@@ -128,6 +128,7 @@ const multipleInsert = (insertPrefix, tableName, data) => {
     // 根据单条占位符的数量，生成多条占位符
     const batchPlaceholder = data.map(() => `(${singlePlaceholder})`).join(',');
     const sql = `${insertPrefix} into ${tableName} (${tableFieldNames.join(",")}) values ${batchPlaceholder}`
+    console.log(sql)
     return run(sql, allParams)
 }
 

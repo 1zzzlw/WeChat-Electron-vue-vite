@@ -55,10 +55,12 @@ const initializationData = async () => {
 
     const keys = Object.keys(data);
     console.info(keys)
-
     // 将数据加载到本地数据库中
     for (const tableName of keys) {
-        multipleInsert('insert or ignore', tableName, data[`${tableName}`])
+        console.log(data[tableName])
+        if (data[tableName].length != 0) {
+            multipleInsert('insert or ignore', tableName, data[`${tableName}`])
+        }
     }
 
     const userId = store.get('userId');

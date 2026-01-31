@@ -24,8 +24,17 @@ const addConversation = (conversationPack) => {
     insert('conversation', conversationPack)
 }
 
+/**
+ * 插入新的好友列表
+ * @param friendPack -- 好友信息 
+ */
+const addFriendRelation = (friendPack) => {
+    insert('friend_relation', friendPack)
+}
+
 export {
     saveSentMessage,
     saveLoadMessage,
-    addConversation
+    addConversation,
+    addFriendRelation
 }

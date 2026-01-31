@@ -62,6 +62,9 @@ const dbApi = {
   addConversation: (conversationPack) => {
     ipcRenderer.send('add:conversation', conversationPack)
   },
+  addFriendRelation: (friendPack) => {
+    ipcRenderer.send('add:friendRelation', friendPack)
+  }
 }
 
 const uploadFileApi = {

@@ -72,13 +72,14 @@ import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { getApplyListApi, getGroupApplyListApi, dealGroupApplyApi } from '../../api/Apply'
 import { Friend } from '../../types/friend'
-import { getFriendList } from '../../db/dualDB'
+import { addConversation, getFriendList } from '../../db/dualDB'
 import { CollapseModelValue, ElMessage } from 'element-plus'
 import { userApplyListInfo } from '../../stores/UserApplyListStore'
 import { friendInfo } from '../../stores/ContactListStore'
 import { groupListInfo } from '../../stores/GroupListStores'
 import { groupMemberInfo } from '../../stores/GroupMemberStores'
 import { getGroupMemberListApi } from '../../api/Conversation'
+import { conversationInfo } from '../../stores/ConversationStore'
 import AutocompleteSearch from '../../components/AutocompleteSearch.vue'
 
 const userId = ref()
@@ -86,6 +87,7 @@ const userApplyStore = userApplyListInfo()
 const friendInfoStore = friendInfo()
 const groupListStore = groupListInfo()
 const groupMemberStore = groupMemberInfo()
+const conversationStore = conversationInfo()
 // 联系人列表默认展开
 const activeNames = ref(['4'])
 const handleChange = (val: CollapseModelValue) => {
@@ -132,35 +134,42 @@ const joinGroup = async (activeGroupApply: any) => {
   formData.append('memberId', userId)
   formData.append('status', '2')
 
-  dealGroupApplyApi(formData).then((res: any) => {
-    if (res.code === 1) {
-      ElMessage.success('入群成功')
-      userApplyStore.updateGroupApplyStatus(activeGroupApply.userId, 2)
-      groupMemberStore.addGroupMember(activeGroupApply.conversationId, {
-        conversationId: activeGroupApply.conversationId,
-        userId: activeGroupApply.userId,
-        username: activeGroupApply.username,
-        role: 0,
-        avatar: activeGroupApply.avatar
-      })
-    } else {
-      ElMessage.error('入群失败')
-    }
-  })
+  const conversationRes: any = await dealGroupApplyApi(formData)
+  console.log(conversationRes)
+  if (conversationRes.code === 1) {
+    ElMessage.success('入群成功')
+    // 更新群聊申请状态
+    userApplyStore.updateGroupApplyStatus(activeGroupApply.userId, 2)
+    // 添加到群成员缓存中
+    groupMemberStore.addGroupMember(activeGroupApply.conversationId, {
+      conversationId: activeGroupApply.conversationId,
+      userId: activeGroupApply.userId,
+      username: activeGroupApply.username,
+      role: 0,
+      avatar: activeGroupApply.avatar
+    })
+    const conversationPack = conversationRes.data
+    // 将群聊会话添加到本地数据库
+    addConversation(conversationPack)
+    // 群会话添加到缓存
+    conversationStore.setConversationMap(conversationPack.id, conversationPack)
+  } else {
+    ElMessage.error('入群失败')
+  }
 }
 
 const ignoreGroupApply = async (apply: any) => {
   console.info(apply)
   const userId = await (window as any).userInfoApi.storeGetUserInfo('userId')
   console.info('用户', userId, '忽略入群:')
-  dealGroupApplyApi(apply.conversationId, apply.userId, userId, 3).then((res: any) => {
-    if (res.code === 1) {
-      ElMessage.success('忽略入群成功')
-      userApplyStore.updateGroupApplyStatus(apply.userId, 3)
-    } else {
-      ElMessage.error('忽略入群失败')
-    }
-  })
+  // dealGroupApplyApi(apply.conversationId, apply.userId, userId, 3).then((res: any) => {
+  //   if (res.code === 1) {
+  //     ElMessage.success('忽略入群成功')
+  //     userApplyStore.updateGroupApplyStatus(apply.userId, 3)
+  //   } else {
+  //     ElMessage.error('忽略入群失败')
+  //   }
+  // })
 }
 
 const fetchApplyList = () => {

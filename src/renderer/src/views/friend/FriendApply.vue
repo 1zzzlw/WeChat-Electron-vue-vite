@@ -24,28 +24,45 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, onMounted, watch } from 'vue'
+import { ref, reactive, toRaw, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { userApplyListInfo } from '../../stores/UserApplyListStore'
 import { friendInfo } from '../../stores/ContactListStore'
+import { conversationInfo } from '../../stores/ConversationStore'
 import { dealApplyApi } from '../../api/Apply'
 import { ElMessage } from 'element-plus'
+import { Friend } from '../../types/friend'
+import { Conversation } from '../../types/conversation'
+import { addConversation, addFriendRelation } from '../../db/dualDB'
+
+interface ApplyInfo {
+  applyId: number
+  fromUserId: number
+  username: string
+  avatar: string
+  applyMsg: string
+  isDealt: number
+  dealResult: number
+}
 
 const route = useRoute()
 const userApplyStore = userApplyListInfo()
 const friendInfoStore = friendInfo()
-const applyInfo = reactive({
-  applyId: null,
-  fromUserId: null,
+const conversationStore = conversationInfo()
+const applyInfo = reactive<ApplyInfo>({
+  applyId: 0,
+  fromUserId: 0,
   username: '',
   avatar: '',
   applyMsg: '',
-  isDealt: null,
-  dealResult: null
+  isDealt: 0,
+  dealResult: 0
 })
+let firendPack = <Friend>({})
+let conversationPack = <Conversation>({})
 
 const agreeButton = () => {
-  dealApplyApi(applyInfo.applyId, 1, applyInfo.fromUserId).then((res) => {
+  dealApplyApi(applyInfo.applyId, 1, applyInfo.fromUserId).then(async (res: any) => {
     if (res.code === 1) {
       ElMessage.success('同意成功')
       applyInfo.isDealt = 1
@@ -54,12 +71,32 @@ const agreeButton = () => {
         isDealt: 1,
         dealResult: 1
       })
-      userListStore.setUserMap(applyInfo.fromUserId, {
-        id: applyInfo.fromUserId,
+      const userId = await (window as any).userInfoApi.storeGetUserInfo('userId')
+      firendPack = {
+        userId: userId,
+        friendId: applyInfo.fromUserId,
         username: applyInfo.username,
         avatar: applyInfo.avatar,
-        remark: ''
-      })
+        remark: '',
+        relationStatus: 1
+      }
+      conversationPack = {
+        id: res.data,
+        userId: userId,
+        targetId: String(applyInfo.fromUserId),
+        name: applyInfo.username,
+        avatar: applyInfo.avatar,
+        remark: '',
+        type: 0
+      }
+      // 加入好友关系缓存
+      friendInfoStore.setFriendMap(applyInfo.fromUserId, firendPack)
+      // 将好友关系加入本地数据库
+      addFriendRelation(firendPack)
+      // 将会话关系加入本地数据库
+      addConversation(conversationPack)
+      // 将会话关系加入缓存
+      conversationStore.setConversationMap(conversationPack.id, conversationPack)
     } else {
       ElMessage.error('同意失败')
     }
@@ -67,7 +104,7 @@ const agreeButton = () => {
 }
 
 const refuseButton = () => {
-  dealApplyApi(applyInfo.applyId, 0, applyInfo.fromUserId).then((res) => {
+  dealApplyApi(applyInfo.applyId, 0, applyInfo.fromUserId).then((res: any) => {
     if (res.code === 1) {
       ElMessage.success('拒绝成功')
       applyInfo.isDealt = 1
@@ -85,19 +122,13 @@ const refuseButton = () => {
 watch(
   // 第一个参数：要监听的“源”（可以是响应式变量、计算属性、路由参数等）
   () => route.query.applyId,
-  // 变化时执行的回调函数（newVal是新值，oldVal是旧值）
-  (newVal, oldVal) => {
+  (newVal: any, oldVal) => {
     applyInfo.applyId = newVal
     Object.assign(applyInfo, userApplyStore.getUserApplyMap(applyInfo.applyId))
     console.log(applyInfo)
   },
-  // 初始化时也执行一次回调函数，可以替代 onMounted 钩子
   { immediate: true }
 )
-
-// onMounted(() => {
-//   applyInfo.applyId = route.query.applyId
-// })
 </script>
 
 <style scoped>

@@ -116,6 +116,15 @@ const addConversation = async (conversationPack) => {
     await window.dbApi.addConversation(conversationPack)
 }
 
+/**
+ * 插入新的好友列表
+ * @param friendPack -- 好友信息 
+ */
+const addFriendRelation = async (friendPack) => {
+    console.log(friendPack)
+    await window.dbApi.addFriendRelation(friendPack)
+}
+
 export {
     getConversationList,
     getFriendList,
@@ -124,4 +133,5 @@ export {
     saveLoadMessage,
     updateConversation,
     addConversation,
+    addFriendRelation,
 }
