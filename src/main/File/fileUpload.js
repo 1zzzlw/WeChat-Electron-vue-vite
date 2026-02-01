@@ -2,9 +2,9 @@ import fs from 'fs/promises'
 import { store, mainWindow } from '../index'
 import { createHash } from 'crypto'
 import { FILE_TYPE_MAP, getFileName, getFileType } from './filterFileKind'
-import { createWorkerProcess } from './createWorkerProcess'
+import { createWorkerProcess, CHUNK_SIZE } from './createWorkerProcess'
 import { verifyFileUpload, uploadFileChunk, checkUploaded, mergeFile } from '../API/message'
-import { generateImagePreview, generateVideoPreview, getImageMimeType } from '../Util/mediaHandle'
+import { generateImagePreview, generateVideoPreview } from '../Util/mediaHandle'
 
 /**
  * 根据文件路径获取文件的信息
@@ -38,14 +38,14 @@ const getFileInfo = async (path) => {
         // 文件，对文件的相关操作
     }
 
-    // 返回文件信息
+    // 返回用于展示的文件信息
     return {
         base64: base64,
-        content: content,
         fileId: fileId,
         fileName: fileName,
         fileSize: fileSize,
         fileType: fileType,
+        content: content,
         localPath: path
     }
 }
@@ -75,7 +75,14 @@ const uploadFile = async (file) => {
     // 分片上传
     fileUpload(localPath, fileSize, fileId, fileName, fileType, verify, minioFilePath, chunksList)
 
-    return minioFilePath
+    // 分块数量
+    const chunkCount = Math.ceil(fileSize / CHUNK_SIZE)
+
+    // 返回上传进行中的文件信息
+    return {
+        minioFilePath: minioFilePath,
+        chunkCount: chunkCount
+    }
 }
 
 /**
@@ -84,6 +91,8 @@ const uploadFile = async (file) => {
  *  @param fileSize -- 文件大小
  */
 const fileUpload = async (localPath, fileSize, fileId, fileName, fileType, verify, minioFilePath, chunksList) => {
+    let startTime = Date.now()
+
     // console.log(localPath, fileSize, fileId, chunksList)
     createWorkerProcess(localPath, fileSize, fileId, chunksList, (e) => {
         const { fileId, currentFileIndex, chunkHash, blob, chunkCount } = e.task
@@ -95,18 +104,27 @@ const fileUpload = async (localPath, fileSize, fileId, fileName, fileType, verif
         formData.append('fileType', fileType)
         formData.append('verify', verify)
 
+
         // 配置监听传输的进程
         const config = {
             onUploadProgress: (e) => {
                 // 如果文件大小未知，直接退出
                 if (!e.lengthComputable) return
-                if (e.loaded === e.total) {
-                    mainWindow.webContents.send('upload-progress', {
-                        uploadProgress: e.loaded,
-                        fileId: fileId,
-                        totalCount: chunkCount
-                    });
-                }
+
+                const uploadedBytes = currentFileIndex * CHUNK_SIZE + e.loaded
+                const progress = Math.floor((uploadedBytes / fileSize) * 100)
+
+                // 计算上传速度
+                const currentTime = Date.now()
+                const timeElapsed = Math.max((currentTime - startTime) / 1000, 0.1) // 秒
+                const speed = uploadedBytes / timeElapsed // 字节/秒
+                const speedMB = (speed / 1024 / 1024).toFixed(2) // MB/s
+
+                mainWindow.webContents.send('upload-progress', {
+                    fileId: fileId,
+                    uploadProgress: progress,
+                    uploadSpeed: speedMB
+                });
             }
         }
 
@@ -123,6 +141,20 @@ const fileUpload = async (localPath, fileSize, fileId, fileName, fileType, verif
                 fileType: fileType,
                 minioFilePath: minioFilePath,
                 chunkCount: fileIndex
+            }).then(() => {
+                console.log('文件上传成功')
+                // 上传成功，修改发送状态
+                mainWindow.webContents.send('update-loadStatus', {
+                    fileId: fileId,
+                    status: 1
+                })
+            }).catch(() => {
+                console.log('文件上传失败')
+                // 上传失败，修改发送状态
+                mainWindow.webContents.send('update-loadStatus', {
+                    fileId: fileId,
+                    status: 2
+                })
             })
         }
     )

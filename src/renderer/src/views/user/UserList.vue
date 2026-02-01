@@ -271,7 +271,9 @@ onMounted(async () => {
   userId.value = await (window as any).userInfoApi.storeGetUserInfo('userId')
 
   fetchGroupApplyList()
+
   fetchGroupList()
+
   fetchApplyList()
 
   loadFriendList()

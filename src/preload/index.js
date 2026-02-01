@@ -76,6 +76,15 @@ const uploadFileApi = {
   },
   updateProgress: (callback) => {
     ipcRenderer.on('upload-progress', callback)
+  },
+  updateLoadStatus: (callback) => {
+    ipcRenderer.on('update-loadStatus', callback)
+  },
+  stopFileUpload: () => {
+
+  },
+  startFileUplaod: () => {
+
   }
 }
 

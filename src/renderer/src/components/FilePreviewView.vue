@@ -40,19 +40,11 @@
 
 <script setup lang="ts">
 import { reactive, watch } from 'vue'
-
-interface fileBaseInfo {
-  base64: string
-  fileId: string
-  fileName: string
-  fileSize: number
-  fileType: number
-  localPath: string
-}
+import { FileBaseInfo } from '../types/fileBaseInfo'
 
 const props = defineProps({
   fileInfoList: {
-    type: Array as () => fileBaseInfo[],
+    type: Array as () => FileBaseInfo[],
     default: () => []
   }
 })

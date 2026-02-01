@@ -85,5 +85,6 @@ const createWorkerProcess = (localPath, fileSize, fileId, chunksList, callback, 
 }
 
 export {
+    CHUNK_SIZE,
     createWorkerProcess
 }

@@ -19,6 +19,7 @@ const renderMessageContent = () => {
 
   const fileProps = computed(() => ({
     sendStatus: props.sendStatus || 0,
+    fileId: props.fileId || '',
     fileName: props.fileName || '',
     fileSize: props.fileSize || 0,
     localPath: props.localPath || '',
@@ -27,8 +28,6 @@ const renderMessageContent = () => {
     downloadStatus: props.downloadStatus || 0,
     receiveTime: props.receiveTime || ''
   }))
-
-  console.log(fileProps)
 
   switch (msgType) {
     case 2:

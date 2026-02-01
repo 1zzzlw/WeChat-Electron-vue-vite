@@ -67,7 +67,9 @@ import { sendMessageApi } from '../../api/Message'
 import { messageInfo } from '../../stores/MessageStore'
 import dayjs from 'dayjs'
 import { Conversation, initConversation } from '../../types/conversation.ts'
+import { FileBaseInfo, FileStatusInfo, statusMap } from '../../types/fileBaseInfo.ts'
 import { conversationInfo } from '../../stores/ConversationStore'
+import { fileStatusListInfo } from '../../stores/FileStatusInfoStore.ts'
 import { Eleme, Folder, Scissor, VideoCamera } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { groupMemberInfo } from '../../stores/GroupMemberStores'
@@ -78,17 +80,6 @@ import ChatHeader from '../../components/ChatHeader.vue'
 import { getMessageList, saveSentMessage, saveLoadMessage, updateConversation } from '../../db/dualDB.js'
 import { Message } from '../../types/message.ts'
 import { Snowflake } from '@theinternetfolks/snowflake'
-
-interface fileBaseInfo {
-  base64: string,
-  fileId: string
-  fileName: string
-  fileSize: number
-  fileType: number
-  content: string
-  localPath: string
-  remotePath?: string
-}
 
 // 消息分页配置
 const messagePageInfo = {
@@ -113,14 +104,18 @@ const scrollbarRef = ref()
 const messageStore = messageInfo()
 const groupMemberStore = groupMemberInfo()
 const conversationStore = conversationInfo()
+const fileStatusListInfoStore = fileStatusListInfo()
 // 主要用于展示预览文件
-let fileInfoList = ref<fileBaseInfo[]>([])
+let fileInfoList = ref<FileBaseInfo[]>([])
 
 // 选择文件
 const selectFile = async () => {
   // 获取文件的信息
   const file = await (window as any).uploadFileApi.selectFile('uploadFile')
   console.log(file)
+  if (!file) {
+    return
+  }
   if (fileInfoList.value.length >= 3) {
     ElMessage.error('最多3个文件')
     return
@@ -133,7 +128,8 @@ const selectFile = async () => {
     fileSize: file.fileSize,
     fileType: file.fileType,
     content: file.content,
-    localPath: file.localPath
+    localPath: file.localPath,
+    remotePath: '',
   })
 }
 
@@ -193,8 +189,20 @@ const sendPrivateMessage = async () => {
   if (fileInfoList.value.length > 0) {
     for (const file of fileInfoList.value) {
       // 需要去掉响应式
-      const minioFilePath = await (window as any).uploadFileApi.uploadFile(toRaw(file))
+      const { minioFilePath, chunkCount } = await (window as any).uploadFileApi.uploadFile(toRaw(file))
       file.remotePath = minioFilePath
+      const fileStatusInfo: FileStatusInfo = {
+        fileId: file.fileId,
+        chunkCount: chunkCount,
+        uploadStatus: statusMap.uploading.value,
+        uploadProgress: 0,
+        uploadSpeed: 0,
+        pause: false
+      }
+      // 将文件上传信息存入缓存中
+      fileStatusListInfoStore.addFileUpdateInfo(file.fileId, fileStatusInfo)
+      console.log(fileStatusListInfoStore)
+      // 打包文件信息
       const messagePack = createMessagePack(receiverId, convId, file.fileType, file.content, file)
       console.log(messagePack);
       (window as any).wsApi.sendMessage(1, 0, messagePack)
@@ -422,8 +430,6 @@ const loadMessage = async (newConversationId: any) => {
 
 const messageArr = computed(() => {
   const convId = route.query.conversationId as string
-  console.info(convId)
-  console.info(messageStore.messageMap[convId])
   // 如果会话ID不存在，或消息列表未初始化，用空数组兜底
   return messageStore.messageMap[convId] || []
 })
