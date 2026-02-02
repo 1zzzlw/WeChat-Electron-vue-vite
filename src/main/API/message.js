@@ -2,7 +2,7 @@ import request from '../Util/request'
 
 export const verifyFileUpload = (fileId) => request.get(`/message/verifyUploadToken/${fileId}`)
 
-export const uploadFileChunk = (formData, config) => request.post('/message/uploadChunk', formData, config)
+export const uploadFileChunk = (formData) => request.post('/message/uploadChunk', formData)
 
 export const checkUploaded = (data) => request.get(`/message/checkUploaded`, { params: data })
 

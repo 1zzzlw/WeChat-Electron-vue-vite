@@ -8,7 +8,6 @@ import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate';
-import { WSManager } from './utils/websocket'
 
 const app = createApp(App)
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
@@ -18,10 +17,6 @@ const pinia = createPinia()
 
 pinia.use(piniaPluginPersistedstate)
 
-window.api.onForwardWS((messageType, sequenceId, data) => {
-  WSManager.sendMessage(messageType, sequenceId, data)
-})
-
 app.use(pinia)
 app.use(router)
 app.use(ElementPlus)
@@ -29,8 +24,3 @@ app.use(ElementPlus)
 // 把 Vue 应用挂载到 HTML 中的 <div id="app"> 上
 // 此时 App 组件的内容会替换 <div id="app">，并渲染到页面
 app.mount('#app')
-
-// 应用关闭时移除监听，防止内存泄漏
-window.addEventListener('unload', () => {
-  window.api.removeWsConnectListener()
-})

@@ -1,29 +1,51 @@
 <template>
   <div class="chat-file file-downloading">
-    <div v-if="downloadStatus === 0">
-    </div>
     <img class="file-icon" src="../assets/wenjian.svg" alt="" />
     <div class="file">
       <div class="file-content">
         <span class="file-name">{{ fileName }}</span>
         <span class="file-size">{{ (fileSize / 1024 / 1024).toFixed(2) }} MB</span>
       </div>
-      <div v-if="sendStatus === 0 && uploadStatus === statusMap.uploading.value">
-        <div class="file-process">
-          <!-- :status="uploadStatus" -->
-          <el-progress :percentage="uploadProgress > 100 ? 100 : uploadProgress" />
+      <!-- 下载 -->
+      <div v-if="!isUpload">
+        <el-button class="download-button" @click="downloadFile">下载</el-button>
+        <div v-if="downloadStatus === 0 && nowDownloadStatus === statusMap.downloading.value">
+          <div class="file-process">
+            <el-progress :percentage="downloadProgress > 100 ? 100 : downloadProgress" />
+          </div>
+          <div class="upload-speed">
+            <span>下载进度 {{ downloadSpeed }} MB/s</span>
+            <el-button v-if="!pause" class="pause-button" @click="pauseDownload">暂停</el-button>
+            <el-button v-else class="pause-button" @click="startDownload">开始</el-button>
+          </div>
         </div>
-        <div class="upload-speed">
-          <span>上传进度 {{ uploadSpeed }} MB/s</span>
-          <el-button v-if="!pause" class="pause-button" @click="pauseUpload">暂停</el-button>
-          <el-button v-else class="pause-button" @click="startUpload">开始</el-button>
+        <div class="file-status complete"
+          v-else-if="downloadStatus === 1 || nowDownloadStatus === statusMap.download_finish.value">
+          <span>下载完成</span>
+        </div>
+        <div class="file-status fail" v-else-if="downloadStatus === 2 || nowDownloadStatus === statusMap.fail.value">
+          <span>下载失败</span>
         </div>
       </div>
-      <div class="file-status complete" v-else-if="sendStatus === 1 || uploadStatus === statusMap.upload_finish.value">
-        <span>上传完成</span>
-      </div>
-      <div class="file-status fail" v-else-if="sendStatus === 2 || uploadStatus === statusMap.fail.value">
-        <span>上传失败</span>
+      <!-- 上传 -->
+      <div v-else>
+        <div v-if="sendStatus === 0 && uploadStatus === statusMap.uploading.value">
+          <div class="file-process">
+            <el-progress :percentage="uploadProgress > 100 ? 100 : uploadProgress" />
+          </div>
+          <div class="upload-speed">
+            <span>上传进度 {{ uploadSpeed }} MB/s</span>
+            <el-button v-if="!pause" class="pause-button" @click="pauseUpload">暂停</el-button>
+            <el-button v-else class="pause-button" @click="startUpload">开始</el-button>
+          </div>
+        </div>
+        <div class="file-status complete"
+          v-else-if="sendStatus === 1 || uploadStatus === statusMap.upload_finish.value">
+          <span>上传完成</span>
+        </div>
+        <div class="file-status fail" v-else-if="sendStatus === 2 || uploadStatus === statusMap.fail.value">
+          <span>上传失败</span>
+        </div>
       </div>
     </div>
   </div>
@@ -31,7 +53,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref, computed } from 'vue';
-import { FileStatusInfo, statusMap } from '../types/fileBaseInfo';
+import { FileUploadStatusInfo, statusMap, FileDownloadStatusInfo } from '../types/fileBaseInfo';
 import { fileStatusListInfo } from '../stores/FileStatusInfoStore';
 
 const props = defineProps<{
@@ -43,37 +65,77 @@ const props = defineProps<{
   remoteUrl: string
   downloadStatus: number
   receiveTime: string
+  isUpload: boolean
 }>()
 
 const fileStatusListInfoStore = fileStatusListInfo()
 
-const fileStatusInfo = computed<FileStatusInfo | undefined>(() => {
+const fileStatusInfo = computed<FileUploadStatusInfo | undefined>(() => {
   const fileId = props.fileId;
   // 调用Pinia仓库方法，返回对应文件状态
-  return fileStatusListInfoStore.getFileUpdateInfo(fileId);
+  return fileStatusListInfoStore.getFileUploadUpdateInfo(fileId);
 });
+
+const fileDownloadStatusInfo = computed<FileDownloadStatusInfo | undefined>(() => {
+  const fileId = props.fileId;
+  // 调用Pinia仓库方法，返回对应文件状态
+  return fileStatusListInfoStore.getFileDownloadInfo(fileId);
+});
+
+
 
 const uploadProgress = computed(() => fileStatusInfo.value?.uploadProgress || 0);
 const pause = computed(() => fileStatusInfo.value?.pause || false);
 const uploadStatus = computed(() => fileStatusInfo.value?.uploadStatus || statusMap.uploading.value);
 const uploadSpeed = computed(() => fileStatusInfo.value?.uploadSpeed || 0)
+const nowDownloadStatus = computed(() => fileDownloadStatusInfo.value?.downloadStatus || statusMap.preview.value)
+const downloadProgress = computed(() => fileDownloadStatusInfo.value?.downloadProgress || 0);
+const downloadSpeed = computed(() => fileDownloadStatusInfo.value?.downloadSpeed || 0)
+
+const downloadFile = () => {
+  const fileId = props.fileId
+  fileStatusListInfoStore.addFileDownlaodInfo(fileId, {
+    fileId: fileId,
+    downloadStatus: statusMap.downloading.value,
+    downloadProgress: 0,
+    downloadSpeed: 0,
+    pause: false
+  });
+  (window as any).uploadFileApi.startDownloadFile(fileId, props.fileName, props.remoteUrl)
+}
+
+const pauseDownload = () => {
+
+}
+
+const startDownload = () => {
+
+}
 
 const pauseUpload = () => {
   // 修改状态
-
+  fileStatusListInfoStore.updateFileUploadPauseStatus(props.fileId, true)
   // 向主进程发送停止上传的通知
-
-
+  const file = {
+    fileId: props.fileId
+  };
+  (window as any).uploadFileApi.updateFileUploadPauseStatus(file, true)
 }
 
 const startUpload = () => {
   // 修改状态
-
-
+  fileStatusListInfoStore.updateFileUploadPauseStatus(props.fileId, false)
   // 向主进程发送开始上传的通知
-
-
+  const file = {
+    fileId: props.fileId,
+    fileName: props.fileName,
+    fileSize: props.fileSize,
+    fileType: 5,
+    localPath: props.localPath
+  };
+  (window as any).uploadFileApi.updateFileUploadPauseStatus(file, false)
 }
+
 </script>
 
 <style scoped>
@@ -241,6 +303,7 @@ const startUpload = () => {
   }
 }
 
+.download-button,
 .pause-button {
   height: 25px;
   padding: 4px 12px;
@@ -253,6 +316,7 @@ const startUpload = () => {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
 
+.download-button:hover,
 .pause-button:hover {
   background: rgba(74, 144, 226, 0.25);
   border-color: rgba(74, 144, 226, 0.4);
@@ -261,7 +325,7 @@ const startUpload = () => {
   box-shadow: 0 2px 4px rgba(74, 144, 226, 0.15);
 }
 
-.pause-button:active {
+.download-button:active .pause-button:active {
   background: rgba(74, 144, 226, 0.35);
   border-color: rgba(74, 144, 226, 0.5);
   transform: translateY(0);

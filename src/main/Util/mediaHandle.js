@@ -183,6 +183,7 @@ const execCommand = (command) => {
 }
 
 export {
+    generatePath,
     getImageMimeType,
     generateImagePreview,
     generateVideoPreview,

@@ -9,7 +9,7 @@
             <div v-if="message.msgType === 1" class="chat-bubble right-bubble">
               <div> {{ message.content }} </div>
             </div>
-            <MessageContentManage v-else v-bind="message" />
+            <MessageContentManage v-else v-bind="message" :isUpload="true" />
           </div>
           <div class="chat-list-left" v-else>
             <img v-if="conversation.type === 0" :src="conversation.avatar" class="list-image" />
@@ -19,7 +19,7 @@
               <div v-if="message.msgType === 1" class="chat-bubble left-bubble">
                 <div> {{ message.content }} </div>
               </div>
-              <MessageContentManage v-else v-bind="message" />
+              <MessageContentManage v-else v-bind="message" :isUpload="false" />
             </div>
           </div>
         </div>
@@ -67,7 +67,7 @@ import { sendMessageApi } from '../../api/Message'
 import { messageInfo } from '../../stores/MessageStore'
 import dayjs from 'dayjs'
 import { Conversation, initConversation } from '../../types/conversation.ts'
-import { FileBaseInfo, FileStatusInfo, statusMap } from '../../types/fileBaseInfo.ts'
+import { FileBaseInfo, FileUploadStatusInfo, statusMap } from '../../types/fileBaseInfo.ts'
 import { conversationInfo } from '../../stores/ConversationStore'
 import { fileStatusListInfo } from '../../stores/FileStatusInfoStore.ts'
 import { Eleme, Folder, Scissor, VideoCamera } from '@element-plus/icons-vue'
@@ -191,7 +191,7 @@ const sendPrivateMessage = async () => {
       // 需要去掉响应式
       const { minioFilePath, chunkCount } = await (window as any).uploadFileApi.uploadFile(toRaw(file))
       file.remotePath = minioFilePath
-      const fileStatusInfo: FileStatusInfo = {
+      const fileStatusInfo: FileUploadStatusInfo = {
         fileId: file.fileId,
         chunkCount: chunkCount,
         uploadStatus: statusMap.uploading.value,
@@ -200,7 +200,7 @@ const sendPrivateMessage = async () => {
         pause: false
       }
       // 将文件上传信息存入缓存中
-      fileStatusListInfoStore.addFileUpdateInfo(file.fileId, fileStatusInfo)
+      fileStatusListInfoStore.addFileUploadUpdateInfo(file.fileId, fileStatusInfo)
       console.log(fileStatusListInfoStore)
       // 打包文件信息
       const messagePack = createMessagePack(receiverId, convId, file.fileType, file.content, file)
@@ -294,8 +294,9 @@ const sendApi = (messagePack: Message) => {
     captureImageUrl.value = ''
     if (res.data) {
       const message = res.data
-      // TODO 发送成功，修改发送状态为成功
-      message.sendStatus = 1
+      console.log(message)
+      // 合并成功的时候才将状态修改为1
+      message.sendStatus = 0
       // console.info(message)
       // 存入本地数据库
       saveSentMessage(message)
@@ -443,9 +444,9 @@ watch(
       console.info('切换会话，新的会话id:', newConversationId, '旧的会话id:', oldConversationId)
 
       // 清空旧会话的消息缓存
-      if (newConversationId) {
-        messageStore.clearConversationMessages(newConversationId as string)
-      }
+      // if (newConversationId) {
+      //   messageStore.clearConversationMessages(newConversationId as string)
+      // }
 
       // 进入新会话时重置
       messagePageInfo.pageTotal = 0

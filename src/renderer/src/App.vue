@@ -12,6 +12,7 @@ import { userApplyListInfo } from '../src/stores/UserApplyListStore'
 import { conversationInfo } from '../src/stores/ConversationStore'
 import { fileStatusListInfo } from './stores/FileStatusInfoStore'
 import { statusMap } from './types/fileBaseInfo'
+import { updateMessage } from './db/dualDB'
 import emitter from '../src/utils/mitt'
 import dayjs from 'dayjs'
 
@@ -30,7 +31,6 @@ function updateMessageStore(data) {
 }
 
 onMounted(() => {
-  console.log('开启ws的监听事件')
   // ws消息接收的全局监听器
   window.wsApi.onMessage((messageType, data) => {
 
@@ -58,25 +58,70 @@ onMounted(() => {
     }
   })
 
-  console.log('开启文件上传的监听事件')
   // 文件上传状态的全局监听器
-  window.uploadFileApi.updateProgress((e, uploadStatus) => {
+  window.uploadFileApi.updateUploadProgress((e, uploadStatus) => {
     const { fileId, uploadProgress, uploadSpeed } = uploadStatus
-    fileStatusListInfo().updateFileProgressStatus(fileId, uploadProgress, uploadSpeed)
+    fileStatusListInfo().updateFileUploadProgressStatus(fileId, uploadProgress, uploadSpeed)
   })
 
-  window.uploadFileApi.updateLoadStatus((e, uploadStatus) => {
-    const { fileId, status } = uploadStatus
-    console.log(fileId, status)
+  // 文件合并成功的监听器
+  window.uploadFileApi.updateUploadStatus(async (e, uploadStatus) => {
+    const { fileId, status } = await uploadStatus
+    const condition = {
+      fileId: fileId
+    }
+    let data = {};
     if (status === 1) {
       // 上传成功
       console.log('上传成功')
-      fileStatusListInfo().updateFileStatus(fileId, statusMap.upload_finish.value, 100)
+      fileStatusListInfo().updateFileUploadStatus(fileId, statusMap.upload_finish.value, 100)
+      // 修改本地文件上传状态
+      data = {
+        sendStatus: 1
+      }
     } else {
       // 上传失败
       console.log('上传失败')
-      fileStatusListInfo().updateFileStatus(fileId, statusMap.fail.value, 0)
+      fileStatusListInfo().updateFileUploadStatus(fileId, statusMap.fail.value, 0)
+      // 修改本地文件上传状态
+      data = {
+        sendStatus: 2
+      }
     }
+    updateMessage(condition, data)
+  })
+
+  // 下载进度监听器
+  window.uploadFileApi.updateDownloadProgress((e, downloadStatus) => {
+    const { fileId, downloadProgress, downloadSpeed } = downloadStatus
+    fileStatusListInfo().updateFileDownloadProgressStatus(fileId, downloadProgress, downloadSpeed)
+  })
+
+  // 下载是否成功的监听器
+  window.uploadFileApi.updateDownloadStatus((e, downloadStatus) => {
+    const { fileId, status } = downloadStatus
+    const condition = {
+      fileId: fileId
+    }
+    let data = {};
+    if (status === 1) {
+      // 上传成功
+      console.log('下载成功')
+      fileStatusListInfo().updateFileDownloadStatus(fileId, statusMap.download_finish.value, 100)
+      // 修改本地文件上传状态
+      data = {
+        downloadStatus: 1
+      }
+    } else {
+      // 上传失败
+      console.log('上传失败')
+      fileStatusListInfo().updateFileDownloadStatus(fileId, statusMap.fail.value, 0)
+      // 修改本地文件上传状态
+      data = {
+        downloadStatus: 2
+      }
+    }
+    updateMessage(condition, data)
   })
 })
 

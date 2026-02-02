@@ -102,7 +102,7 @@ const saveLoadMessage = async (messageList) => {
 
 /**
  * 更新会话表中的字段信息
- * @param data -- 消息表的更新字段 
+ * @param data -- 会话表的更新字段 
  */
 const updateConversation = async (condition, data) => {
     await window.dbApi.updateConversation(condition, data)
@@ -121,8 +121,16 @@ const addConversation = async (conversationPack) => {
  * @param friendPack -- 好友信息 
  */
 const addFriendRelation = async (friendPack) => {
-    console.log(friendPack)
     await window.dbApi.addFriendRelation(friendPack)
+}
+
+/**
+ * 更新消息表中的字段信息
+ * @param data -- 消息表的更新字段 
+ */
+const updateMessage = async (condition, data) => {
+    console.log(condition, data)
+    await window.dbApi.updateMessageInfo(condition, data)
 }
 
 export {
@@ -134,4 +142,5 @@ export {
     updateConversation,
     addConversation,
     addFriendRelation,
+    updateMessage
 }

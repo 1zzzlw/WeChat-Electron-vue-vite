@@ -64,6 +64,9 @@ const dbApi = {
   },
   addFriendRelation: (friendPack) => {
     ipcRenderer.send('add:friendRelation', friendPack)
+  },
+  updateMessageInfo: (condition, data) => {
+    ipcRenderer.send('update:message', condition, data)
   }
 }
 
@@ -74,16 +77,25 @@ const uploadFileApi = {
   uploadFile: (file) => {
     return ipcRenderer.invoke('upload-file', file)
   },
-  updateProgress: (callback) => {
+  updateUploadProgress: (callback) => {
     ipcRenderer.on('upload-progress', callback)
   },
-  updateLoadStatus: (callback) => {
-    ipcRenderer.on('update-loadStatus', callback)
+  updateUploadStatus: (callback) => {
+    ipcRenderer.on('upload-loadStatus', callback)
   },
-  stopFileUpload: () => {
-
+  updateFileUploadPauseStatus: (file, isPause) => {
+    ipcRenderer.send('update-pauseStatus', file, isPause)
   },
-  startFileUplaod: () => {
+  startDownloadFile: (fileId, fileName, remoteUrl) => {
+    ipcRenderer.send('start-download', fileId, fileName, remoteUrl)
+  },
+  updateDownloadProgress: (callback) => {
+    ipcRenderer.on('download-progress', callback)
+  },
+  updateDownloadStatus: (callback) => {
+    ipcRenderer.on('download-loadStatus', callback)
+  },
+  updateFileDownloadPauseStatus: () => {
 
   }
 }
@@ -154,27 +166,6 @@ const mediaHandleApi = {
   }
 }
 
-const api = {
-  // 发送给主进程，主进程会把消息广播给所有窗口
-  // sendToMain: (messageType, sequenceId, data) => {
-  //   ipcRenderer.send('ws:send', {
-  //     messageType,
-  //     sequenceId,
-  //     data
-  //   })
-  // },
-  // 主进程转发回渲染进程
-  onForwardWS: (callback) => {
-    ipcRenderer.on('ws:forward', (event, { messageType, sequenceId, data }) =>
-      callback(messageType, sequenceId, data)
-    )
-  },
-  // 移除监听，防止内存泄漏
-  removeWsConnectListener: () => {
-    ipcRenderer.removeAllListeners('ws:connect')
-  }
-}
-
 // 只有在启用上下文隔离的情况下，才使用contextBridge API 向渲染器暴露 Electron API；否则，只需将其添加到 DOM 全局变量中。
 if (process.contextIsolated) {
   try {
@@ -186,7 +177,6 @@ if (process.contextIsolated) {
     contextBridge.exposeInMainWorld('windowToolApi', windowToolApi)
     contextBridge.exposeInMainWorld('wsApi', wsApi)
     contextBridge.exposeInMainWorld('mediaHandleApi', mediaHandleApi)
-    contextBridge.exposeInMainWorld('api', api)
     contextBridge.exposeInMainWorld('chatToolApi', chatToolApi)
   } catch (error) {
     console.error(error)
@@ -200,6 +190,5 @@ if (process.contextIsolated) {
   window.windowToolApi = windowToolApi
   window.wsApi = wsApi
   window.mediaHandleApi = mediaHandleApi
-  window.api = api
   window.chatToolApi = chatToolApi
 }

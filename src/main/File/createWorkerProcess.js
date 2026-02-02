@@ -12,6 +12,12 @@ const createWorkerProcess = (localPath, fileSize, fileId, chunksList, callback, 
     // 计算每个线程处理的分块数量
     const threadChunkCount = Math.ceil(chunkCount / THREAD_NUMBER)
 
+    let isMerging = false
+    let fileIndex = 0
+    let isReadComplete = false
+
+    console.log(`该文件需要分${chunkCount}块，每个线程需要处理${threadChunkCount}块`)
+
     fileChunkStatusMap.set(fileId, {
         // 设置固定的长度和默认值，固定长度为块的数量，默认值为0表示未上传
         chunkStatusArray: Array.from({ length: chunkCount }, (_, index) => {
@@ -22,16 +28,12 @@ const createWorkerProcess = (localPath, fileSize, fileId, chunksList, callback, 
             // } else {
             //     return chunksList.includes(index) ? 1 : 0
             // }
-        })
+        }),
     })
-
-    let fileIndex = 0
-    let isReadComplete = false
-
-    console.log(`该文件需要分${chunkCount}块，每个线程需要处理${threadChunkCount}块`)
 
     // 获得当前上传文件的分块上传情况
     const chunkStatus = fileChunkStatusMap.get(fileId)
+
     // 创建流式读取器
     const readStream = fs.createReadStream(localPath, {
         // 不指定encoding，或显式设为null，返回Buffer
@@ -52,7 +54,7 @@ const createWorkerProcess = (localPath, fileSize, fileId, chunksList, callback, 
         // 分块读取数据
         const arrayBuffer = chunk.buffer
         // 将分块文件推入线程中进行计算
-        const task = await pool.run({ arrayBuffer, currentFileIndex, fileId, chunkCount })
+        const task = await pool.run({ arrayBuffer, currentFileIndex, fileId })
         callback({
             task, updateStatus: (chunkIndex) => {
                 chunkStatus.chunkStatusArray[chunkIndex] = 1
@@ -76,9 +78,11 @@ const createWorkerProcess = (localPath, fileSize, fileId, chunksList, callback, 
     });
 
     const checkAndMerge = () => {
-        // console.log(chunkStatus)
+        if (isMerging) return
+
         if (isReadComplete && !chunkStatus.chunkStatusArray.includes(0)) {
             // 通知外层可以合并了
+            isMerging = true
             onComplete(fileIndex)
         }
     }
@@ -86,5 +90,5 @@ const createWorkerProcess = (localPath, fileSize, fileId, chunksList, callback, 
 
 export {
     CHUNK_SIZE,
-    createWorkerProcess
+    createWorkerProcess,
 }

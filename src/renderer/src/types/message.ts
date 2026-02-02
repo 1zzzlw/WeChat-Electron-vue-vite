@@ -20,3 +20,7 @@ export interface Message {
     downloadStatus?: number
     receiveTime?: string
 }
+
+export interface MessageContentManageProps extends Message {
+    isUpload?: boolean;
+}

@@ -13,10 +13,8 @@ const computedFileChunkHash = (data) => {
         fileId,
         currentFileIndex,
         chunkHash,
-        blob,
-        chunkCount
+        blob
     }
-
 }
 
 module.exports = {

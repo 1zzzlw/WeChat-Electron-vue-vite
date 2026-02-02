@@ -1,5 +1,6 @@
 import { ipcMain, dialog } from "electron";
-import { getFileInfo, uploadFile } from '../File/fileUpload'
+import { getFileInfo, uploadFile, stopUpload } from '../File/fileUpload'
+import { downloadFile } from '../File/downloadFile'
 // 从本地选择文件或目录
 ipcMain.handle('select-file', async (e, file) => {
     let fileInfo = {}
@@ -33,4 +34,18 @@ ipcMain.handle('upload-file', async (e, file) => {
     console.log(file)
     const minioFilePath = await uploadFile(file)
     return minioFilePath
+})
+
+ipcMain.on('update-pauseStatus', (e, file, isPause) => {
+    if (isPause) {
+        // 是暂停
+        stopUpload(file.fileId)
+    } else {
+        // 重新上传
+        uploadFile(file)
+    }
+})
+
+ipcMain.on('start-download', (e, fileId, fileName, remoteUrl) => {
+    downloadFile(fileId, fileName, remoteUrl)
 })

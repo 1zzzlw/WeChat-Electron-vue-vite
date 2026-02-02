@@ -10,9 +10,9 @@ import ChatImageView from './ChatImageView.vue'
 import ChatVideoView from './ChatVideoView.vue'
 import ChatAudioView from './ChatAudioView.vue'
 import ChatFileView from './ChatFileView.vue'
-import { Message } from '../types/message'
+import { MessageContentManageProps } from '../types/message'
 
-const props = defineProps<Message>()
+const props = defineProps<MessageContentManageProps>()
 
 const renderMessageContent = () => {
   const { msgType = 1 } = props
@@ -26,7 +26,8 @@ const renderMessageContent = () => {
     remoteUrl: props.remoteUrl || '',
     previewBase64: props.previewBase64 || '',
     downloadStatus: props.downloadStatus || 0,
-    receiveTime: props.receiveTime || ''
+    receiveTime: props.receiveTime || '',
+    isUpload: props.isUpload || false
   }))
 
   switch (msgType) {

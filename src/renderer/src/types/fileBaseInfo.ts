@@ -2,7 +2,7 @@
 export const statusMap = {
     fail: {
         value: 'fail',
-        desc: '上传失败',
+        desc: '失败',
         icon: 'close'
     },
     preview: {
@@ -24,6 +24,16 @@ export const statusMap = {
         value: 'upload_seconds',
         desc: '秒传',
         icon: 'success'
+    },
+    downloading: {
+        value: 'downloading',
+        desc: '下载中',
+        icon: 'success'
+    },
+    download_finish: {
+        value: 'download_finish',
+        desc: '下载完成',
+        icon: 'success'
     }
 } as const
 
@@ -41,7 +51,7 @@ export interface FileBaseInfo {
     remotePath?: string
 }
 
-export interface FileStatusInfo {
+export interface FileUploadStatusInfo {
     fileId: string
     // 分块数量
     chunkCount: number
@@ -52,5 +62,13 @@ export interface FileStatusInfo {
     // 上传速度
     uploadSpeed: number
     // 暂停状态
+    pause: boolean
+}
+
+export interface FileDownloadStatusInfo {
+    fileId: string
+    downloadStatus: UploadStatus
+    downloadProgress: number
+    downloadSpeed: number
     pause: boolean
 }
