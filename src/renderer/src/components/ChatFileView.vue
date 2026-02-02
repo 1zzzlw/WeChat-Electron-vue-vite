@@ -52,7 +52,8 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, computed } from 'vue';
+import { ref, computed, onMounted, watch, nextTick } from 'vue';
+import { useRoute } from 'vue-router'
 import { FileUploadStatusInfo, statusMap, FileDownloadStatusInfo } from '../types/fileBaseInfo';
 import { fileStatusListInfo } from '../stores/FileStatusInfoStore';
 
@@ -69,25 +70,21 @@ const props = defineProps<{
 }>()
 
 const fileStatusListInfoStore = fileStatusListInfo()
+const route = useRoute()
 
-const fileStatusInfo = computed<FileUploadStatusInfo | undefined>(() => {
-  const fileId = props.fileId;
-  // 调用Pinia仓库方法，返回对应文件状态
-  return fileStatusListInfoStore.getFileUploadUpdateInfo(fileId);
-});
+const fileUploadStatusInfo = ref<FileUploadStatusInfo | undefined>()
+const fileDownloadStatusInfo = ref<FileDownloadStatusInfo | undefined>()
 
-const fileDownloadStatusInfo = computed<FileDownloadStatusInfo | undefined>(() => {
-  const fileId = props.fileId;
-  // 调用Pinia仓库方法，返回对应文件状态
-  return fileStatusListInfoStore.getFileDownloadInfo(fileId);
-});
+const refreshFileStatus = () => {
+  fileUploadStatusInfo.value = fileStatusListInfoStore.getFileUploadUpdateInfo(props.fileId)
+  fileDownloadStatusInfo.value = fileStatusListInfoStore.getFileDownloadInfo(props.fileId)
+}
 
 
-
-const uploadProgress = computed(() => fileStatusInfo.value?.uploadProgress || 0);
-const pause = computed(() => fileStatusInfo.value?.pause || false);
-const uploadStatus = computed(() => fileStatusInfo.value?.uploadStatus || statusMap.uploading.value);
-const uploadSpeed = computed(() => fileStatusInfo.value?.uploadSpeed || 0)
+const uploadProgress = computed(() => fileUploadStatusInfo.value?.uploadProgress || 0);
+const pause = computed(() => fileUploadStatusInfo.value?.pause || false);
+const uploadStatus = computed(() => fileUploadStatusInfo.value?.uploadStatus || statusMap.uploading.value);
+const uploadSpeed = computed(() => fileUploadStatusInfo.value?.uploadSpeed || 0)
 const nowDownloadStatus = computed(() => fileDownloadStatusInfo.value?.downloadStatus || statusMap.preview.value)
 const downloadProgress = computed(() => fileDownloadStatusInfo.value?.downloadProgress || 0);
 const downloadSpeed = computed(() => fileDownloadStatusInfo.value?.downloadSpeed || 0)
@@ -136,6 +133,21 @@ const startUpload = () => {
   (window as any).uploadFileApi.updateFileUploadPauseStatus(file, false)
 }
 
+// 在文件组件的 onMounted 中
+onMounted(() => {
+  refreshFileStatus()
+})
+
+// 监听路由变化，强制刷新状态
+watch(
+  () => route.query.conversationId,
+  () => {
+    // 路由切换时重新获取文件状态
+    nextTick(() => {
+      refreshFileStatus()
+    })
+  }
+)
 </script>
 
 <style scoped>

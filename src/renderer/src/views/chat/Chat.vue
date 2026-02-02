@@ -221,12 +221,6 @@ const sendPrivateMessage = async () => {
   // ws发送单聊信息：会话id、接收者id、消息内容
   (window as any).wsApi.sendMessage(1, 0, messagePack)
 
-  // WSManager.sendMessage(1, 0, {
-  //   conversationId: convId,
-  //   receiverId: conversation.value.targetId,
-  //   content: content
-  // })
-
   // 发送截屏
   if (captureImageUrl.value.length > 0) {
     // sendApi(captureImageUrl.value, convId, 2)
@@ -242,32 +236,63 @@ const sendPrivateMessage = async () => {
 const sendGroupMessage = async () => {
   // 获取会话id
   const convId = route.query.conversationId as string
-  const receiverId = conversation.value.targetId as string
   const content = message.value
   console.info('发送群聊消息 ===> 群聊ID:', convId, '消息内容:', content)
-  if (content === '') {
-    return
-  }
+  const receiverIds = groupMemberStore.groupMemberMap[convId].map((item) => item.userId)
   // 处理消息类型
   // ws发送群聊信息：群聊id、消息内容、接收者数组
   console.info('群成员列表:', groupMemberStore.groupMemberMap[convId])
-  console.info(
-    '群成员ID列表:',
-    groupMemberStore.groupMemberMap[convId].map((item) => item.userId)
-  )
+  console.info('群成员ID列表:', receiverIds)
 
-  // WSManager.sendMessage(3, 0, {
-  //   conversationId: convId,
-  //   receiverIds: groupMemberStore.groupMemberMap[convId].map((item) => item.userId),
-  //   content: content
-  // })
+  if (fileInfoList.value.length > 0) {
+    for (const file of fileInfoList.value) {
+      // 需要去掉响应式
+      const { minioFilePath, chunkCount } = await (window as any).uploadFileApi.uploadFile(toRaw(file))
+      file.remotePath = minioFilePath
+      const fileStatusInfo: FileUploadStatusInfo = {
+        fileId: file.fileId,
+        chunkCount: chunkCount,
+        uploadStatus: statusMap.uploading.value,
+        uploadProgress: 0,
+        uploadSpeed: 0,
+        pause: false
+      }
+      // 将文件上传信息存入缓存中
+      fileStatusListInfoStore.addFileUploadUpdateInfo(file.fileId, fileStatusInfo)
+      console.log(fileStatusListInfoStore)
+      // 打包文件信息
+      const messagePack = createMessagePack(convId, convId, file.fileType, file.content, file)
+      console.log(messagePack);
+      (window as any).wsApi.sendMessage(1, 0, {
+        ...messagePack,
+        receiverIds
+      })
 
+      sendApi(messagePack)
+    }
+    fileInfoList.value.length = 0
+  }
+
+  if (content === '') {
+    return
+  }
+
+  // 接收者id为群聊会话id
+  const messagePack = createMessagePack(convId, convId, 1, content, null);
+
+  (window as any).wsApi.sendMessage(3, 0, {
+    ...messagePack,
+    receiverIds
+  })
+
+  // 发送截屏
   if (captureImageUrl.value.length > 0) {
     // sendApi(captureImageUrl.value, convId, 2)
   }
 
+  // 发送文本消息
   if (message.value !== '') {
-    const messagePack = createMessagePack(receiverId, convId, 1, content, null)
+    const messagePack = createMessagePack(convId, convId, 1, content, null)
     sendApi(messagePack)
   }
 }
@@ -444,9 +469,9 @@ watch(
       console.info('切换会话，新的会话id:', newConversationId, '旧的会话id:', oldConversationId)
 
       // 清空旧会话的消息缓存
-      // if (newConversationId) {
-      //   messageStore.clearConversationMessages(newConversationId as string)
-      // }
+      if (newConversationId) {
+        messageStore.clearConversationMessages(newConversationId as string)
+      }
 
       // 进入新会话时重置
       messagePageInfo.pageTotal = 0

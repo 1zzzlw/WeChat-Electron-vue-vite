@@ -26,6 +26,13 @@ export const fileStatusListInfo = defineStore('fileStatusListInfo', {
     getFileUploadUpdateInfo(fileId: string) {
       return this.fileUploadListMap[fileId]
     },
+    getFileUplaodProgressInfo(fileId: string) {
+      return {
+        uploadProgress: this.fileUploadListMap[fileId].uploadProgress,
+        uploadSpeed: this.fileUploadListMap[fileId].uploadProgress,
+        uploadStatus: this.fileUploadListMap[fileId].uploadStatus
+      }
+    },
     updateFileUploadProgressStatus(fileId: string, uploadProgress: number, uploadSpeed: number) {
       this.fileUploadListMap[fileId].uploadProgress = uploadProgress
       this.fileUploadListMap[fileId].uploadSpeed = uploadSpeed
