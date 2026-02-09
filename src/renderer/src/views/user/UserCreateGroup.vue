@@ -34,6 +34,7 @@
         </div>
       </div>
     </div>
+    <WindowControls windowType="createGroup" />
   </div>
 </template>
 
@@ -44,6 +45,7 @@ import { sendGroupApplyApi } from '../../api/Apply'
 import { ElMessage } from 'element-plus'
 import { Conversation } from '../../types/conversation'
 import { conversationInfo } from '../../stores/ConversationStore'
+import WindowControls from '../../components/WindowControls.vue'
 
 const count = ref(0)
 const friendList = reactive<any>({ list: [] })

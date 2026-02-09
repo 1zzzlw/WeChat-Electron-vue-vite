@@ -1,7 +1,7 @@
 <template>
   <div class="account-count">
     <div class="account-info">
-      <img class="avatar" :src="imageUrl" alt="" />
+      <img class="avatar" :src="avatarUrl" alt="" />
       <div class="account-info-item">
         <div>
           账号:
@@ -22,8 +22,16 @@
       </div>
     </div>
     <div class="wallpaper">
-      <div>当前壁纸预览</div>
-      <div>切换壁纸</div>
+      <div class="preview">
+        <el-carousel type="card" height="220px" trigger="click" :autoplay="false" @change="selectWallpaper">
+          <el-carousel-item v-for="item in imageList" :key="item">
+            <img :src=item alt="">
+          </el-carousel-item>
+        </el-carousel>
+      </div>
+      <div style="display: flex; justify-content: center;">
+        <el-button @click="changeWallpaper">切换壁纸</el-button>
+      </div>
     </div>
   </div>
 </template>
@@ -31,10 +39,30 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 
-const imageUrl = ref('')
+const avatarUrl = ref('')
+const imagePath = ref('/wallpaper/1.jpg')
+
+const imageList = ref([
+  '/wallpaper/1.jpg',
+  '/wallpaper/2.jpg',
+  '/wallpaper/3.jpg',
+  '/wallpaper/4.jpg',
+  '/wallpaper/5.jpg',
+  '/wallpaper/6.jpg',
+])
+
+const selectWallpaper = (current, prev) => {
+  imagePath.value = imageList.value[current]
+}
+
+const changeWallpaper = () => {
+  console.log(imagePath.value)
+  document.body.style.backgroundImage = `url(${imagePath.value})`
+  window.windowToolApi.sendWindowWallpaper(imagePath.value)
+}
 
 onMounted(async () => {
-  imageUrl.value = await window.userInfoApi.storeGetUserInfo('avatar')
+  avatarUrl.value = await window.userInfoApi.storeGetUserInfo('avatar')
 })
 </script>
 
@@ -56,13 +84,14 @@ onMounted(async () => {
   width: 100%;
   height: 250px;
   padding: 60px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .avatar {
   width: 150px;
   height: 150px;
   border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
 .account-info-item {
@@ -76,5 +105,59 @@ onMounted(async () => {
 
 .wallpaper {
   flex: 1;
+  width: 100%;
+}
+
+.preview {
+  width: 100%;
+  height: 250px;
+}
+
+:deep(.el-carousel__indicators) {
+  display: none
+}
+
+:deep(.el-carousel__item) {
+  background-color: transparent;
+}
+
+:deep(.el-carousel__item--card) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+:deep(.el-carousel__mask) {
+  display: none;
+}
+
+.preview img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+:deep(.el-button) {
+  background-color: #6b7c8c;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 24px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  box-shadow: none;
+}
+
+:deep(.el-button:hover) {
+  background-color: #5a6a7a;
+  color: #ffffff;
+}
+
+:deep(.el-button:active) {
+  background-color: #4e5c6a;
+  color: #ffffff;
 }
 </style>

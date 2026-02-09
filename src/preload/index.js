@@ -104,8 +104,8 @@ const windowToolApi = {
   resizeWindow: (windowType) => {
     ipcRenderer.send('window:type', windowType)
   },
-  windowControls: (controlType, value) => {
-    ipcRenderer.send('window:controls', controlType, value)
+  windowControls: (windowType, controlType, value) => {
+    ipcRenderer.send('window:controls', windowType, controlType, value)
   },
   createNewWindow: (windowType) => {
     ipcRenderer.send('create-new-window', windowType)
@@ -113,6 +113,12 @@ const windowToolApi = {
   destroyNewWindow: (windowType) => {
     ipcRenderer.send('destroy-new-window', windowType)
   },
+  sendWindowWallpaper: (imagePath) => {
+    ipcRenderer.send('send:wallpaper', imagePath)
+  },
+  onWindowWallpaper: (callback) => {
+    ipcRenderer.on('on:wallpaper', callback)
+  }
 }
 
 const chatToolApi = {

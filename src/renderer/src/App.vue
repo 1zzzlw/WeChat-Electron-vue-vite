@@ -30,15 +30,18 @@ function updateMessageStore(data) {
   messageInfo().addMessageMap(data.conversationId, data)
 }
 
-onMounted(() => {
+onMounted(async () => {
+  // 壁纸初始化
+  window.userInfoApi.storeGetUserInfo('wallpaperPath').then((imagePath) => {
+    document.body.style.backgroundImage = `url(${imagePath})`
+  })
+
   // ws消息接收的全局监听器
   window.wsApi.onMessage((messageType, data) => {
-
     switch (messageType) {
       case 2:
       case 4:
         updateMessageStore(data)
-
         // 更新会话的最新消息和最新消息时间展示
         conversationInfo().setConversationMap(data.conversationId, {
           latestMsg: data.content,
@@ -122,6 +125,12 @@ onMounted(() => {
       }
     }
     updateMessage(condition, data)
+  })
+
+  // 切换壁纸监听器
+  window.windowToolApi.onWindowWallpaper((e, imagePath) => {
+    document.body.style.backgroundImage = `url(${imagePath})`
+    window.userInfoApi.storeSetUserInfo('wallpaperPath', imagePath)
   })
 })
 

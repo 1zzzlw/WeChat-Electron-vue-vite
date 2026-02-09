@@ -17,7 +17,7 @@ import { ref } from 'vue'
 let isTop = ref(false)
 let isFullScreen = ref(false)
 
-defineProps({
+const props = defineProps({
   showSetTop: {
     type: Boolean,
     default: true
@@ -29,25 +29,29 @@ defineProps({
   showSetFullScreen: {
     type: Boolean,
     default: true
+  },
+  windowType: {
+    type: String,
+    default: ''
   }
 })
 
 const setTop = () => {
   isTop.value = !isTop.value
-  window.windowToolApi.windowControls('setTop', isTop.value)
+  window.windowToolApi.windowControls(props.windowType, 'setTop', isTop.value)
 }
 
 const miniWindow = () => {
-  window.windowToolApi.windowControls('miniWindow')
+  window.windowToolApi.windowControls(props.windowType, 'miniWindow')
 }
 
 const changeScreen = () => {
   isFullScreen.value = !isFullScreen.value
-  window.windowToolApi.windowControls('changeScreen', isFullScreen.value)
+  window.windowToolApi.windowControls(props.windowType, 'changeScreen', isFullScreen.value)
 }
 
 const closeWindow = () => {
-  window.windowToolApi.windowControls('closeWindow')
+  window.windowToolApi.windowControls(props.windowType, 'closeWindow')
 }
 </script>
 
@@ -58,6 +62,7 @@ const closeWindow = () => {
   top: 10px;
   right: 10px;
   -webkit-app-region: no-drag;
+  z-index: 999;
 }
 
 .iconfont {

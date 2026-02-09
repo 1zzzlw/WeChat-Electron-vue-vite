@@ -21,6 +21,12 @@ ipcMain.handle('window:setUserInfo', (e, userInfoType, userInfo) => {
     case 'storeLocation':
       store.set('storeLocation', userInfo)
       break
+    case 'wallpaper':
+      store.set('wallpaper', userInfo)
+      break
+    case 'wallpaperPath':
+      store.set('wallpaperPath', userInfo)
+      break
   }
   return true
 })
@@ -40,6 +46,10 @@ ipcMain.handle('window:getUserInfo', (e, userInfoType) => {
         return store.get('userId')
       case 'storeLocation':
         return store.get('storeLocation')
+      case 'wallpaper':
+        return store.get('wallpaper')
+      case 'wallpaperPath':
+        return store.get('wallpaperPath')
       default:
         return null
     }

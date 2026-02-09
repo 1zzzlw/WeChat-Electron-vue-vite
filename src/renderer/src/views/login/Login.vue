@@ -40,7 +40,7 @@
       <router-link to="/" class="login-bottom-reset">重置密码</router-link>
     </div>
   </div>
-  <WindowControls :showSetTop="false" :showSetMiniSize="false" :showSetFullScreen="false" />
+  <WindowControls :showSetTop="false" :showSetMiniSize="false" :showSetFullScreen="false" windowType="mainWindow" />
 </template>
 
 <script lang="ts" setup>

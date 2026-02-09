@@ -36,8 +36,8 @@ const confirmLogin = async () => {
     // 等待更新成功的通知
     console.info('响应成功')
     await window.dbApi.updateDBData()
-    await window.windowToolApi.resizeWindow('main')
     await router.push('/main')
+    await window.windowToolApi.resizeWindow('main')
   } else {
     ElMessage.error('登录过期，重新登录')
   }

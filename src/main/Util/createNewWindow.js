@@ -1,7 +1,11 @@
 import { BrowserWindow, shell } from 'electron'
 import { join } from 'path'
+import { mainWindow } from '../index'
 import icon from '../../../resources/icon.png?asset'
 import { is } from '@electron-toolkit/utils'
+
+// 管理窗口的集合
+const windowPool = new Map()
 
 /**
  * 窗口加载器配置
@@ -29,8 +33,12 @@ const WINDOW_CONFIGS = {
  * @param loadType - 加载类型 ('standalone': 独立的HTML文件，'vue'(默认): 渲染进程中的vue页面)
  * @returns 创建的窗口实例
  */
-export function createExtraWindow(windowType, options = {}, loadType = 'vue') {
+function createExtraWindow(windowType, options = {}, loadType = 'vue') {
     console.log('打开', windowType)
+    if (windowPool.get(windowType) != null) {
+        console.log('该窗口已存在')
+        return
+    }
     const defaultOptions = {
         icon: icon,
         // 窗口创建后默认不显示
@@ -40,9 +48,13 @@ export function createExtraWindow(windowType, options = {}, loadType = 'vue') {
         // 隐藏窗口默认的标题栏和边框
         frame: false,
         // 始终置顶
-        alwaysOnTop: true,
+        // alwaysOnTop: true,
         // 使窗口背景透明（窗口区域会显示桌面或下层窗口的内容）
-        transparent: true,
+        // transparent: true,
+        backgroundColor: '#00000000',
+        opacity: 0.98,
+        // 设置父窗口
+        // parent: mainWindow,
         ...(process.platform === 'linux' ? { icon } : {}),
         webPreferences: {
             // 关闭网页安全限制（允许加载本地文件）
@@ -72,6 +84,8 @@ export function createExtraWindow(windowType, options = {}, loadType = 'vue') {
         shell.openExternal(details.url)
         return { action: 'deny' }
     })
+
+    windowPool.set(windowType, window)
 
     return window
 }
@@ -150,4 +164,9 @@ function getWindowLoadConfig(windowType, loadType = 'vue') {
             }
         }
     }
+}
+
+export {
+    windowPool,
+    createExtraWindow
 }

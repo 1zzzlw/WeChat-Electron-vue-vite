@@ -5,12 +5,7 @@ import {
   ipcMain,
   Tray,
   Menu,
-  dialog,
   globalShortcut,
-  screen,
-  desktopCapturer,
-  nativeImage,
-  clipboard
 } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
@@ -171,13 +166,6 @@ app.on('window-all-closed', () => {
     app.quit()
   }
 })
-
-// ipcMain.on('ws:send', (event, { messageType, sequenceId, data }) => {
-//   // 把消息广播给主窗口
-//   if (mainWindow) {
-//     mainWindow.webContents.send('ws:forward', { messageType, sequenceId, data })
-//   }
-// })
 
 async function createCaptureWindow() {
   const { screen, desktopCapturer } = require('electron')

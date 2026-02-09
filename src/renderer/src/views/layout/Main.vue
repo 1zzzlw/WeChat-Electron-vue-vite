@@ -1,6 +1,5 @@
 <template>
   <div class="main-count">
-    <span ref="countSpan"></span>
     <div class="main-count-left">
       <div class="main-count-left-top">
         <el-popover popper-style="width: 400px; height: 300px; padding: 0;" show-after="500">
@@ -39,13 +38,12 @@
       <router-view></router-view>
     </div>
   </div>
-  <WindowControls />
+  <WindowControls windowType="mainWindow" />
   <Notification />
 </template>
 
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue'
-import { WSManager } from '../../utils/websocket'
 import WindowControls from '../../components/WindowControls.vue'
 import UserOnlineStatus from '../../components/UserOnlineStatus.vue'
 import UserInfoCart from '../../components/UserInfoCart.vue'
@@ -71,18 +69,6 @@ onMounted(async () => {
   display: flex;
   width: 100%;
   height: 100%;
-}
-
-.main-count span::before {
-  content: '';
-  position: absolute;
-  inset: 5px;
-  background-size: cover;
-  background: url('../../assets/image/6.jpg') fixed center;
-  background-size: cover;
-  /* 添加模糊效果 */
-  filter: blur(10px);
-  z-index: -1;
 }
 
 .main-count-left {

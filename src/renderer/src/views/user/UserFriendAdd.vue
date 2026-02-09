@@ -41,6 +41,7 @@
         <el-button type="primary" @click="sendApply">添加好友</el-button>
       </div>
     </div>
+    <WindowControls windowType="friendAdd" />
   </div>
 </template>
 
@@ -50,6 +51,7 @@ import { sendApplyApi } from '../../api/Apply'
 import { searchFriendApi } from '../../api/Friend'
 import { Search } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import WindowControls from '../../components/WindowControls.vue'
 
 const applyMessage = ref('')
 const searchInput = ref('')

@@ -1,5 +1,6 @@
 import { mainWindow } from '../index'
-import { ipcMain } from 'electron'
+import { ipcMain, app } from 'electron'
+import { windowPool } from '../Util/createNewWindow'
 import websocket from '../websocket'
 
 const login_width = 300
@@ -9,27 +10,38 @@ const main_height = 700
 const register_height = 490
 
 // 控制窗口相关操作
-ipcMain.on('window:controls', (e, controlType, value) => {
+ipcMain.on('window:controls', (e, windowType, controlType, value) => {
+  let window = windowPool.get(windowType)
+  if (windowType === 'mainWindow' || window === undefined) {
+    window = mainWindow
+  }
   switch (controlType) {
     case 'setTop':
       if (value) {
-        mainWindow.setAlwaysOnTop(true)
+        window.setAlwaysOnTop(true)
       } else {
-        mainWindow.setAlwaysOnTop(false)
+        window.setAlwaysOnTop(false)
       }
       break
     case 'miniWindow':
-      mainWindow.hide()
+      window.minimize()
       break
     case 'changeScreen':
       if (value) {
-        mainWindow.maximize()
+        window.maximize()
       } else {
-        mainWindow.unmaximize()
+        window.unmaximize()
       }
       break
     case 'closeWindow':
-      mainWindow.close()
+      if (window === mainWindow) {
+        mainWindow.destroy()
+        app.quit()
+      } else {
+        // 子窗口：从池中移除并关闭
+        windowPool.delete(windowType)
+        window.close()
+      }
       break
   }
 })
@@ -65,6 +77,11 @@ const enterMain = () => {
   websocket.connect()
   mainWindow.show()
 }
+
+// 更新窗口壁纸
+ipcMain.on('send:wallpaper', (e, imagePath) => {
+  mainWindow.webContents.send('on:wallpaper', imagePath)
+})
 
 export {
   enterMain
