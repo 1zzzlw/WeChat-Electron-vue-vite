@@ -31,7 +31,7 @@
           <img :src="verifyCodeImg" alt="验证码" class="login-verifyImg" @click="refreshVerifyCode" />
         </el-form-item>
         <div class="login-form-button">
-          <el-button type="primary" @click="Login(ruleFormRef)">登录</el-button>
+          <el-button type="primary" @click="Login(ruleFormRef)" :loading="isLoading">登录</el-button>
           <el-button type="primary" @click="Register">注册</el-button>
         </div>
       </el-form>
@@ -56,7 +56,7 @@ onMounted(() => {
 
 const router = useRouter()
 const ruleFormRef = ref<FormInstance>()
-
+const isLoading = ref(false)
 const verifyCodeImg = ref('')
 
 const refreshVerifyCode = async () => {
@@ -96,6 +96,7 @@ const Login = async (formEl: FormInstance | undefined) => {
   try {
     // 验证成功会进入这里，失败会直接跳去 catch
     await formEl.validate()
+    isLoading.value = true
     const result = await loginApi(loginForm)
     const status = (result as any).code
     console.log(status)
@@ -122,7 +123,6 @@ const Login = async (formEl: FormInstance | undefined) => {
         await router.push('/main')
         await (window as any).windowToolApi.resizeWindow('main')
       }
-
     } else {
       ElMessage.error('登录失败')
     }

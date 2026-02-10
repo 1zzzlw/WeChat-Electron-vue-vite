@@ -51,8 +51,6 @@ function createExtraWindow(windowType, options = {}, loadType = 'vue') {
         // alwaysOnTop: true,
         // 使窗口背景透明（窗口区域会显示桌面或下层窗口的内容）
         // transparent: true,
-        backgroundColor: '#00000000',
-        opacity: 0.98,
         // 设置父窗口
         // parent: mainWindow,
         ...(process.platform === 'linux' ? { icon } : {}),

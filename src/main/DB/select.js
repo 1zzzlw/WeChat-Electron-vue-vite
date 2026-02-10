@@ -71,10 +71,17 @@ const loadMessage = (conversationId, messagePageInfo) => {
     }
 }
 
+const getFriendInfoById = (userId, friendId) => {
+    const sql = `select * from friend_relation where user_id = ? and friend_id = ?`
+    const params = [userId, friendId]
+    const result = queryAll(sql, params)
+    return result
+}
 
 export {
     isExistUserRecord,
     queryConversation,
     queryFriend,
-    loadMessage
+    loadMessage,
+    getFriendInfoById
 }

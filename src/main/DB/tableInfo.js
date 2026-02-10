@@ -60,7 +60,13 @@ const init_table = [
     user_id INTEGER NOT NULL,               -- 用户ID
     friend_id INTEGER NOT NULL,             -- 好友的用户ID
     username TEXT NOT NULL,                 -- 好友用户名
+    account TEXT NOT NULL,                  -- 好友账号
     avatar TEXT NOT NULL,                   -- 头像URL
+    gender TEXT NOT NULL,                   -- 好友性别
+    phone TEXT NOT NULL,                    -- 好友手机号
+    email TEXT,                             -- 好友邮箱
+    birthday INTEGER,                       -- 好友生日
+    address TEXT,                           -- 好友地址 
     remark TEXT,                            -- 当前用户给该好友设置的备注
     relation_status INTEGER NOT NULL,       -- 关系状态: 0=未同意, 1=正常好友, 2=黑名单
     PRIMARY KEY (user_id, friend_id)        -- 用户id和好友id组成的联合主键

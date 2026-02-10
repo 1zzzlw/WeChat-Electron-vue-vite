@@ -9,7 +9,7 @@
     </div>
     <div class="pending-login-bottom">
       <el-button type="primary" @click="returnLogin">返回登录</el-button>
-      <el-button type="primary" @click="confirmLogin">确认登录</el-button>
+      <el-button type="primary" @click="confirmLogin" :loading="isLoading">确认登录</el-button>
     </div>
   </div>
 </template>
@@ -21,7 +21,7 @@ import { PendingLoginApi } from '../../api/Login'
 import { ElMessage } from 'element-plus'
 
 const router = useRouter()
-
+const isLoading = ref(false)
 const avatarUrl = ref('')
 
 const returnLogin = () => {
@@ -29,6 +29,7 @@ const returnLogin = () => {
 }
 
 const confirmLogin = async () => {
+  isLoading.value = true
   const token = await window.userInfoApi.storeGetUserInfo('token')
   const userId = await window.userInfoApi.storeGetUserInfo('userId')
   const res = await PendingLoginApi(token, userId)

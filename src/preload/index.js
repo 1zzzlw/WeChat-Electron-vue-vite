@@ -67,6 +67,9 @@ const dbApi = {
   },
   updateMessageInfo: (condition, data) => {
     ipcRenderer.send('update:message', condition, data)
+  },
+  getFriendInfoById: (friendId) => {
+    return ipcRenderer.invoke('query:friendInfo', friendId)
   }
 }
 

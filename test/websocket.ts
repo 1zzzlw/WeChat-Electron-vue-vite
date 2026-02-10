@@ -1,9 +1,9 @@
-import { messageInfo } from '../stores/MessageStore'
-import { userApplyListInfo } from '../stores/UserApplyListStore'
-import { conversationInfo } from '../stores/ConversationStore'
-import emitter from '../utils/mitt'
+import { messageInfo } from '../src/renderer/src/stores/MessageStore'
+import { userApplyListInfo } from '../src/renderer/src/stores/UserApplyListStore'
+import { conversationInfo } from '../src/renderer/src/stores/ConversationStore'
+import emitter from '../src/renderer/src/utils/mitt'
 import dayjs from 'dayjs'
-import router from '../router/router'
+import router from '../src/renderer/src/router/router'
 
 interface socket {
   // 用来存储websocket实例

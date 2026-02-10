@@ -129,8 +129,13 @@ const addFriendRelation = async (friendPack) => {
  * @param data -- 消息表的更新字段 
  */
 const updateMessage = async (condition, data) => {
-    console.log(condition, data)
     await window.dbApi.updateMessageInfo(condition, data)
+}
+
+const getFriendInfoById = async (friendId) => {
+    const friendInfo = await window.dbApi.getFriendInfoById(friendId)
+    console.log(friendInfo[0])
+    return friendInfo
 }
 
 export {
@@ -142,5 +147,6 @@ export {
     updateConversation,
     addConversation,
     addFriendRelation,
-    updateMessage
+    updateMessage,
+    getFriendInfoById
 }

@@ -21,7 +21,8 @@ ipcMain.handle('loading-isNeedInit', (e) => {
         // 展示加载动画界面
         const options = {
             width: loading_width,
-            height: loading_height
+            height: loading_height,
+            transparent: true,
         }
         loadingWindow = createExtraWindow('loading', options, 'standalone')
 

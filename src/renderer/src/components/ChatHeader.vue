@@ -1,8 +1,7 @@
 <template>
     <div class="chat-header">
         <div class="title">
-            <!-- {{ friendRemark || friendUsername }} -->
-            标题
+            {{ friendRemark || friendUsername }}
         </div>
         <div class="chat-set">
             <el-icon class="left-icon" size="25" @click="drawer = true">
@@ -24,6 +23,11 @@ const drawer = ref(false)
 const openSetting = () => {
 
 }
+
+const props = defineProps({
+    friendRemark: String,
+    friendUsername: String
+})
 
 </script>
 

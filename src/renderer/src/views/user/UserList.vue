@@ -51,8 +51,12 @@
                   <div class="left-image">
                     <img :src="friend.avatar" alt="头像" class="left-list-img" />
                   </div>
-                  <h1 class="friend-name" v-if="friend.remark === ''">{{ friend.username }}</h1>
-                  <h1 class="friend-name" v-else>{{ friend.remark }}</h1>
+                  <div>
+                    <h1 class="friend-name" v-if="friend.remark === ''">{{ friend.username }}</h1>
+                    <h1 class="friend-name" v-else>{{ friend.remark }}</h1>
+                    <!-- <div class="online-status">在线</div> -->
+                    <div class="offline-status">离线</div>
+                  </div>
                 </div>
               </el-collapse-item>
             </el-collapse>
@@ -106,9 +110,9 @@ const startApply = (activeApply: any) => {
 }
 
 const starCall = (user: any) => {
-  console.info('用户', user.id, '点击了联系人')
-  activeFriend.value = user.id
-  router.push({ path: '/friendInfo', query: { friendId: user.id } })
+  console.info('用户', user.friendId, '点击了联系人')
+  activeFriend.value = user.friendId
+  router.push({ path: '/friendInfo', query: { friendId: user.friendId } })
 }
 
 const joinGroup = async (activeGroupApply: any) => {
@@ -283,6 +287,49 @@ onMounted(async () => {
 
 <style scoped>
 @import "../../css/layout.css";
+
+.online-status {
+  color: rgba(102, 217, 102, 0.9);
+  font-weight: 500;
+  position: relative;
+  padding-left: 16px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.online-status::before {
+  content: '';
+  background-color: rgba(102, 217, 102, 0.95);
+  border-radius: 50%;
+  width: 10px;
+  height: 10px;
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  box-shadow: 0 0 4px rgba(102, 217, 102, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.offline-status {
+  color: rgba(150, 150, 150, 0.9);
+  font-weight: 500;
+  position: relative;
+  padding-left: 16px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.offline-status::before {
+  content: '';
+  background-color: rgba(150, 150, 150, 0.95);
+  border-radius: 50%;
+  width: 10px;
+  height: 10px;
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
 
 .left-list-group {
   /* 固定高度确保所有项目一致 */

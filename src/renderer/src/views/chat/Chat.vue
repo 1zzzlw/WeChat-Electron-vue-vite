@@ -1,6 +1,6 @@
 <template>
   <div class="chat-count">
-    <ChatHeader />
+    <ChatHeader :friendRemark="conversation.remark" :friendUsername="conversation.name" />
     <div class="chat-content">
       <el-scrollbar ref="scrollbarRef" @scroll="handleScroll" noresize style="height: 100%; width: 100%">
         <div class="chat-message" v-for="message in messageArr" :key="message.id">
