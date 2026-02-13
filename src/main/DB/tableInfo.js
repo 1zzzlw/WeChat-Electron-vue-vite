@@ -46,6 +46,7 @@ const init_table = [
     remark TEXT,                                -- 会话备注（用户自定义）
     type INTEGER NOT NULL,                      -- 0-私聊, 1-群聊
     is_top INTEGER DEFAULT 0,                   -- 是否置顶: 0-否, 1-是
+    is_mute INTEGER DEFAULT 0,                  -- 是否免打扰: 0-否, 1-是
     unread_count INTEGER DEFAULT 0,
     latest_msg TEXT,
     latest_msg_time INTEGER,                    -- 最后一条消息的发送时间

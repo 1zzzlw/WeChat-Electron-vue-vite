@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron'
 import { store } from '../index'
-import { queryConversation, queryFriend, loadMessage, getFriendInfoById } from '../DB/select'
+import { queryConversation, queryFriend, loadMessage, getFriendInfoById, getConversationInfoById } from '../DB/select'
 import { saveSentMessage, saveLoadMessage, addConversation, addFriendRelation } from '../DB/insert'
 import { updateConversation, updateMessage } from '../DB/update'
 
@@ -57,4 +57,10 @@ ipcMain.handle('query:friendInfo', (e, friendId) => {
     console.log(`查询好友${friendId}的信息`)
     const userId = store.get('userId')
     return getFriendInfoById(userId, friendId)
+})
+
+ipcMain.handle('query:conversationInfo', (e, conversationId) => {
+    console.log(`查询会话${conversationId}的信息`)
+    const userId = store.get('userId')
+    return getConversationInfoById(userId, conversationId)
 })

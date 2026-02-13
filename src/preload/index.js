@@ -70,6 +70,9 @@ const dbApi = {
   },
   getFriendInfoById: (friendId) => {
     return ipcRenderer.invoke('query:friendInfo', friendId)
+  },
+  getConversationInfoById: (conversationId) => {
+    return ipcRenderer.invoke('query:conversationInfo', conversationId)
   }
 }
 

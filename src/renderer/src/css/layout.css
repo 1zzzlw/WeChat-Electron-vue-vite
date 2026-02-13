@@ -40,9 +40,11 @@
 
 /* 输入框文字 */
 :deep(.el-input__inner) {
-  color: #f0f0f0; /* 保留浅白文字，匹配整体文字色 */
+  color: #f0f0f0;
+  /* 保留浅白文字，匹配整体文字色 */
   background: transparent;
   border: none;
+
   &::placeholder {
     color: rgba(240, 240, 240, 0.5);
   }

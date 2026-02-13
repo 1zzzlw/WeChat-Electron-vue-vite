@@ -6,8 +6,8 @@
         <div class="accountInfo-info">
           <p>用户名: {{ friendBaseInfo?.username }}</p>
           <span>账号: {{ friendBaseInfo?.account }} </span>
-          <!-- <div class="online-status">在线</div> -->
-          <div class="offline-status">离线</div>
+          <div v-show="userOnlineStatus" class="online-status">在线</div>
+          <div v-show="!userOnlineStatus" class="offline-status">离线</div>
         </div>
       </div>
       <div class="baseInfo">
@@ -33,11 +33,17 @@
 <script lang="ts" setup>
 import { watch, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { friendInfo } from '../../stores/ContactListStore'
+import { conversationInfo } from '../../stores/ConversationStore'
 import { Friend } from '../../types/friend'
-import { getFriendInfoById } from '../../db/dualDB'
+import { getFriendInfoById, getConversationInfoById, updateConversation } from '../../db/dualDB'
+import dayjs from 'dayjs'
 
 const route = useRoute()
 const router = useRouter()
+const userOnlineStatus = ref(false)
+const friendInfoStore = friendInfo()
+const conversationStore = conversationInfo()
 let friendBaseInfo = ref<Friend>()
 
 const sendMessage = async () => {
@@ -46,6 +52,18 @@ const sendMessage = async () => {
   const conversationId = userId > frinedId
     ? userId + '_' + frinedId
     : frinedId + '_' + userId
+  const conversationInfo = await getConversationInfoById(conversationId)
+  conversationInfo.latestMsgTime = conversationInfo.latestMsgTime !== null ? dayjs(conversationInfo.latestMsgTime).format('HH:mm:ss') : undefined
+  // 将信息添加到会话缓存中
+  conversationStore.setConversationMap(conversationId, conversationInfo)
+  // 修改会话的显示状态为1
+  const condition = {
+    id: conversationId
+  }
+  const data = {
+    status: 1
+  }
+  updateConversation(condition, data)
   router.push({
     name: 'chat',
     // 传递会话id
@@ -54,8 +72,10 @@ const sendMessage = async () => {
 }
 
 const loadFriendInfo = async (friendId: any) => {
-  const result = await getFriendInfoById(friendId)
-  friendBaseInfo.value = result[0]
+  // 获得好友的信息
+  friendBaseInfo.value = await getFriendInfoById(friendId)
+  // 好友是否在线
+  userOnlineStatus.value = friendInfoStore.isUserOnline(friendId)
 }
 
 watch(

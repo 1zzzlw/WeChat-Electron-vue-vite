@@ -54,8 +54,8 @@
                   <div>
                     <h1 class="friend-name" v-if="friend.remark === ''">{{ friend.username }}</h1>
                     <h1 class="friend-name" v-else>{{ friend.remark }}</h1>
-                    <!-- <div class="online-status">在线</div> -->
-                    <div class="offline-status">离线</div>
+                    <div v-show="friend.isOnline" class="online-status">在线</div>
+                    <div v-show="!friend.isOnline" class="offline-status">离线</div>
                   </div>
                 </div>
               </el-collapse-item>
@@ -268,6 +268,7 @@ const loadFriendList = async () => {
     friendList.forEach((friendInfo: Friend) => {
       friendInfoStore.setFriendMap(friendInfo.friendId, friendInfo)
     })
+    friendInfoStore.restoreOnlineStatus()
   }
 }
 
@@ -281,7 +282,6 @@ onMounted(async () => {
   fetchApplyList()
 
   loadFriendList()
-
 })
 </script>
 

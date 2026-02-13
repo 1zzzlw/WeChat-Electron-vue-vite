@@ -66,6 +66,11 @@ export const conversationInfo = defineStore('conversationInfo', {
       this.setConversationMap(conversationId, {
         unreadCount: currentUnreadCount + 1
       })
+    },
+    removeConversation(conversationId: string) {
+      if (this.conversationMap[conversationId]) {
+        delete this.conversationMap[conversationId]
+      }
     }
   }
 })

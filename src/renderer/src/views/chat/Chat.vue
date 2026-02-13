@@ -4,22 +4,26 @@
     <div class="chat-content">
       <el-scrollbar ref="scrollbarRef" @scroll="handleScroll" noresize style="height: 100%; width: 100%">
         <div class="chat-message" v-for="message in messageArr" :key="message.id">
-          <div class="chat-list-right" v-if="String(message.senderId) === String(userId)">
-            <img :src="avatarUrl" class="list-image" />
-            <div v-if="message.msgType === 1" class="chat-bubble right-bubble">
-              <div> {{ message.content }} </div>
-            </div>
-            <MessageContentManage v-else v-bind="message" :isUpload="true" />
-          </div>
-          <div class="chat-list-left" v-else>
-            <img v-if="conversation.type === 0" :src="conversation.avatar" class="list-image" />
-            <img v-else :src="groupMemberStore.getGroupMemberAvatar(message.senderId)" class="list-image" />
-            <div class="msg">
-              <div class="left-name">{{ conversation.remark || conversation.name }}</div>
-              <div v-if="message.msgType === 1" class="chat-bubble left-bubble">
+          <div v-if="String(message.senderId) === String(userId)">
+            <div class="chat-list-right">
+              <img :src="avatarUrl" class="list-image" />
+              <div v-if="message.msgType === 1" class="chat-bubble right-bubble">
                 <div> {{ message.content }} </div>
               </div>
-              <MessageContentManage v-else v-bind="message" :isUpload="false" />
+              <MessageContentManage v-else v-bind="message" :isUpload="true" />
+            </div>
+          </div>
+          <div v-else>
+            <div class="chat-list-left">
+              <img v-if="conversation.type === 0" :src="conversation.avatar" class="list-image" />
+              <img v-else :src="groupMemberStore.getGroupMemberAvatar(message.senderId)" class="list-image" />
+              <div class="msg">
+                <div class="left-name">{{ conversation.remark || conversation.name }}</div>
+                <div v-if="message.msgType === 1" class="chat-bubble left-bubble">
+                  <div> {{ message.content }} </div>
+                </div>
+                <MessageContentManage v-else v-bind="message" :isUpload="false" />
+              </div>
             </div>
           </div>
         </div>
@@ -80,6 +84,7 @@ import ChatHeader from '../../components/ChatHeader.vue'
 import { getMessageList, saveSentMessage, saveLoadMessage, updateConversation } from '../../db/dualDB.js'
 import { Message } from '../../types/message.ts'
 import { Snowflake } from '@theinternetfolks/snowflake'
+import ContextMenu from '../../components/ContextMenu.vue'
 
 // 消息分页配置
 const messagePageInfo = {

@@ -71,9 +71,18 @@ const loadMessage = (conversationId, messagePageInfo) => {
     }
 }
 
+// 根据好友id查询好友信息
 const getFriendInfoById = (userId, friendId) => {
     const sql = `select * from friend_relation where user_id = ? and friend_id = ?`
     const params = [userId, friendId]
+    const result = queryAll(sql, params)
+    return result
+}
+
+// 根据会话id查询会话信息
+const getConversationInfoById = (userId, conversationId) => {
+    const sql = `select * from conversation where user_id = ? and id = ?`
+    const params = [userId, conversationId]
     const result = queryAll(sql, params)
     return result
 }
@@ -83,5 +92,6 @@ export {
     queryConversation,
     queryFriend,
     loadMessage,
-    getFriendInfoById
+    getFriendInfoById,
+    getConversationInfoById
 }

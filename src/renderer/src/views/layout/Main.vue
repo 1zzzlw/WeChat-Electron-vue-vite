@@ -51,6 +51,7 @@ import '../../assets/iconfont/iconfont.css'
 import Notification from '../../components/Notification.vue'
 
 const avatarUrl = ref('')
+const containerRef = ref(null)
 
 const openSettingView = () => {
   console.info('openSettingView');
@@ -60,7 +61,6 @@ const openSettingView = () => {
 onMounted(async () => {
   // 从本地存储中获取头像
   avatarUrl.value = await (window as any).userInfoApi.storeGetUserInfo('avatar')
-  // WSManager.connect().then((r) => { })
 })
 </script>
 

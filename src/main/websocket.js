@@ -1,5 +1,6 @@
 import { store, mainWindow } from './index'
 import { saveSentMessage } from './DB/insert'
+import { updateConversation } from './DB/update'
 
 class WebSocketManager {
     constructor() {
@@ -125,6 +126,15 @@ class WebSocketManager {
             if (messageType === 2 || messageType === 4) {
                 // 保存到数据库里
                 saveSentMessage(data)
+                // 更新会话列表
+                const condition = {
+                    id: data.conversationId
+                }
+                const messageData = {
+                    latestMsg: data.content,
+                    latestMsgTime: data.receiveTime
+                }
+                updateConversation(condition, messageData)
             }
             mainWindow.webContents.send('ws:receive', messageType, data)
         } catch (e) {

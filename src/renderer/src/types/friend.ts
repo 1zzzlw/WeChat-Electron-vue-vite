@@ -11,4 +11,5 @@ export interface Friend {
     birthday?: string
     address?: string
     relationStatus: number
+    isOnline?: boolean
 }

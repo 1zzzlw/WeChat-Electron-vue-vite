@@ -8,6 +8,7 @@ export const friendInfo = defineStore('friendListInfo', {
     return {
       // Record<键类型, 值类型>：键是string/number，值是userInfo
       friendInfoMap: {} as Record<string | number, Friend>,
+      onlineUserIds: new Set<string>(),
       // 缓存版本号
       _cacheVersion: '',
       // 缓存时间戳  
@@ -18,8 +19,25 @@ export const friendInfo = defineStore('friendListInfo', {
     // 存储位置：localStorage 
     storage: localStorage,
     key: 'friendInfo-store',
-    // 只持久化指定状态
-    pick: ['friendInfoMap', '_cacheVersion', '_cacheTimestamp']
+    serializer: {
+      serialize: (state) => {
+        return JSON.stringify({
+          friendInfoMap: state.friendInfoMap,
+          onlineUserIds: Array.from(state.onlineUserIds),  // Set 转 Array
+          _cacheVersion: state._cacheVersion,
+          _cacheTimestamp: state._cacheTimestamp
+        })
+      },
+      deserialize: (value) => {
+        const data = JSON.parse(value)
+        return {
+          friendInfoMap: data.friendInfoMap || {},
+          onlineUserIds: new Set(data.onlineUserIds || []),  // Array 转 Set
+          _cacheVersion: data._cacheVersion || '',
+          _cacheTimestamp: data._cacheTimestamp || 0
+        }
+      }
+    }
   },
   actions: {
     initCache(userId: string) {
@@ -42,11 +60,39 @@ export const friendInfo = defineStore('friendListInfo', {
         ...partialInfo
       }
     },
+    addUserOnline(friendId: string) {
+      this.onlineUserIds.add(friendId)
+      this.friendInfoMap[friendId].isOnline = true
+    },
+    addUserListOnline(friendIds: Array<string>) {
+      for (const friendId of friendIds) {
+        this.onlineUserIds.add(friendId)
+        this.friendInfoMap[friendId].isOnline = true
+      }
+    },
+    isUserOnline(friendId: string) {
+      if (this.friendInfoMap[friendId].isOnline === undefined) {
+        this.friendInfoMap[friendId].isOnline = false
+      }
+      if (this.onlineUserIds.has(friendId)) {
+        this.friendInfoMap[friendId].isOnline = true
+      }
+      return this.friendInfoMap[friendId].isOnline
+    },
+    removeUserOnline(friendId: string) {
+      this.onlineUserIds.delete(friendId)
+      this.friendInfoMap[friendId].isOnline = false
+    },
     getFriendMap(friendId: string | number): Friend | undefined {
       return this.friendInfoMap[friendId]
     },
-    // Partial<UserInfo> 是 TypeScript 的工具类型，作用是把 userInfo 接口的所有字段都变成 “可选的”
-    // 比如原本 UserInfo 要求必须有 id、name、avatar，用 Partial 后，传其中一个或几个字段都合法
+    restoreOnlineStatus() {
+      this.onlineUserIds.forEach(friendId => {
+        if (this.friendInfoMap[friendId]) {
+          this.friendInfoMap[friendId].isOnline = true
+        }
+      })
+    },
     updateFriendMap(friendId: string | number, partialInfo: Partial<Friend>) {
       // 获得未修改前的用户信息
       const existingUser = this.friendInfoMap[friendId]

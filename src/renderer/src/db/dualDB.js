@@ -132,10 +132,25 @@ const updateMessage = async (condition, data) => {
     await window.dbApi.updateMessageInfo(condition, data)
 }
 
+/**
+ * 获取好友信息用于展示
+ * @param friendId -- 好友id
+ * @returns 
+ */
 const getFriendInfoById = async (friendId) => {
     const friendInfo = await window.dbApi.getFriendInfoById(friendId)
     console.log(friendInfo[0])
-    return friendInfo
+    return friendInfo[0]
+}
+
+/**
+ * 获得会话信息
+ * @param conversationId -- 会话id 
+ */
+const getConversationInfoById = async (conversationId) => {
+    const conversationInfo = await window.dbApi.getConversationInfoById(conversationId)
+    console.log(conversationInfo[0])
+    return conversationInfo[0]
 }
 
 export {
@@ -148,5 +163,6 @@ export {
     addConversation,
     addFriendRelation,
     updateMessage,
-    getFriendInfoById
+    getFriendInfoById,
+    getConversationInfoById
 }

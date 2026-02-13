@@ -17,23 +17,35 @@
 
       <div class="message-list-bottom">
         <el-scrollbar>
-          <div class="left-list" v-for="conversation in conversationListArr" :key="conversation.id"
+          <div v-for="conversation in conversationListArr" :key="conversation.id"
             :class="{ 'left-list-bg': active === conversation.id }" @click="starCall(conversation)">
-            <div class="left-image">
-              <UnreadCounts :unreadCounts="conversation.unreadCount" />
-              <img :src=conversation.avatar alt="头像" class="left-list-img" />
-            </div>
-            <div class="mid-message">
-              <h1 class="friend-name">{{ conversation.name }}</h1>
-              <div class="friend-message">{{ conversation.latestMsg }}</div>
-            </div>
-            <div class="right-count">
-              <div class="left-list-time" v-if="conversation.latestMsgTime !== 'Invalid Date'">
-                {{ conversation.latestMsgTime }}
+            <ContextMenu :menu="[
+              { label: '置顶聊天' },
+              { label: '标为未读' },
+              { divider: true },
+              { label: '消息免打扰' },
+              { label: '独立窗口显示' },
+              { divider: true },
+              { label: '删除' },
+            ]" @select="(item) => handleChoice(item, conversation.id)">
+              <div class="left-list">
+                <div class="left-image">
+                  <UnreadCounts :unreadCounts="conversation.unreadCount" />
+                  <img :src=conversation.avatar alt="头像" class="left-list-img" />
+                </div>
+                <div class="mid-message">
+                  <h1 class="friend-name">{{ conversation.name }}</h1>
+                  <div class="friend-message">{{ conversation.latestMsg }}</div>
+                </div>
+                <div class="right-count">
+                  <div class="left-list-time" v-if="conversation.latestMsgTime !== 'Invalid Date'">
+                    {{ conversation.latestMsgTime }}
+                  </div>
+                  <div class="left-list-count"></div>
+                  <div class="conversation-status"></div>
+                </div>
               </div>
-              <div class="left-list-count"></div>
-              <div class="conversation-status"></div>
-            </div>
+            </ContextMenu>
           </div>
         </el-scrollbar>
       </div>
@@ -46,14 +58,15 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { conversationInfo } from '../../stores/ConversationStore'
 import { Plus } from '@element-plus/icons-vue'
 import { Conversation } from '../../types/conversation'
 import AutocompleteSearch from '../../components/AutocompleteSearch.vue'
 import UnreadCounts from '../../components/UnreadCounts.vue'
-import { getConversationList } from '../../db/dualDB'
+import ContextMenu from '../../components/ContextMenu.vue';
+import { getConversationList, updateConversation } from '../../db/dualDB'
 import dayjs from 'dayjs'
 
 const router = useRouter()
@@ -86,6 +99,36 @@ const starCall = async (conversation: Conversation) => {
 const createGroupChat = () => {
   // 打开创建群聊窗口
   (window as any).windowToolApi.createNewWindow('createGroup')
+}
+
+const handleChoice = (item: any, conversationId: string) => {
+  switch (item.label) {
+    case '置顶聊天': {
+      break
+    }
+    case '标为未读': {
+      break
+    }
+    case '消息免打扰': {
+      break
+    }
+    case '独立窗口显示': {
+      break
+    }
+    case '删除': {
+      // 更新会话状态为不显示
+      const condition = {
+        id: conversationId
+      }
+      const data = {
+        status: 0
+      }
+      updateConversation(condition, data)
+      // 从会话缓存中清除
+      conversationStore.removeConversation(conversationId)
+      break
+    }
+  }
 }
 
 const addFriend = () => {

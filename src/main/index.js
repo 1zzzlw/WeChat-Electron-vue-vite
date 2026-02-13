@@ -87,6 +87,11 @@ function createMainWindow() {
     mainWindow.setTitle('EasyChat')
   })
 
+  // 禁用右键事件
+  mainWindow.on('system-context-menu', (event) => {
+    event.preventDefault()
+  })
+
   // 控制窗口内 “链接打开行为” 的核心逻辑，作用是：禁止在当前应用内打开新窗口，强制所有外部链接通过系统默认的浏览器打开。
   mainWindow.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url)

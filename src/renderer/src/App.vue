@@ -10,6 +10,7 @@ import router from '../src/router/router'
 import { messageInfo } from '../src/stores/MessageStore'
 import { userApplyListInfo } from '../src/stores/UserApplyListStore'
 import { conversationInfo } from '../src/stores/ConversationStore'
+import { friendInfo } from './stores/ContactListStore'
 import { fileStatusListInfo } from './stores/FileStatusInfoStore'
 import { statusMap } from './types/fileBaseInfo'
 import { updateMessage } from './db/dualDB'
@@ -55,8 +56,16 @@ onMounted(async () => {
         userApplyListInfo().setGroupApplyMap(data.userId, data)
         break
       case 9:
-        console.log('好友上线信息')
+        console.log('好友上线信息', data)
         emitter.emit('friendOnline', data)
+        friendInfo().addUserOnline(data.userId)
+        break
+      case 10:
+        console.log('登录成功，在线好友列表', data.friendIdList)
+        // 先清空缓存中的旧数据
+        localStorage.removeItem('friendInfo-store')
+        localStorage.removeItem('conversation-store')
+        friendInfo().addUserListOnline(data.friendIdList)
         break
     }
   })
