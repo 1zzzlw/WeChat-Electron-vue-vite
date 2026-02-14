@@ -7,10 +7,20 @@
           <div v-if="String(message.senderId) === String(userId)">
             <div class="chat-list-right">
               <img :src="avatarUrl" class="list-image" />
-              <div v-if="message.msgType === 1" class="chat-bubble right-bubble">
-                <div> {{ message.content }} </div>
-              </div>
-              <MessageContentManage v-else v-bind="message" :isUpload="true" />
+              <ContextMenu :menu="[
+                { label: '复制' },
+                { divider: true },
+                { label: '收藏' },
+                { label: '撤回' },
+                { label: '引用' },
+                { divider: true },
+                { label: '删除' },
+              ]" @select="(item) => handleChoice(item, message.id)">
+                <div v-if="message.msgType === 1" class="chat-bubble right-bubble">
+                  <div> {{ message.content }} </div>
+                </div>
+                <MessageContentManage v-else v-bind="message" :isUpload="true" />
+              </ContextMenu>
             </div>
           </div>
           <div v-else>
@@ -19,10 +29,19 @@
               <img v-else :src="groupMemberStore.getGroupMemberAvatar(message.senderId)" class="list-image" />
               <div class="msg">
                 <div class="left-name">{{ conversation.remark || conversation.name }}</div>
-                <div v-if="message.msgType === 1" class="chat-bubble left-bubble">
-                  <div> {{ message.content }} </div>
-                </div>
-                <MessageContentManage v-else v-bind="message" :isUpload="false" />
+                <ContextMenu :menu="[
+                  { label: '复制' },
+                  { divider: true },
+                  { label: '收藏' },
+                  { label: '引用' },
+                  { divider: true },
+                  { label: '删除' },
+                ]" @select="(item) => handleChoice(item, message.id)">
+                  <div v-if="message.msgType === 1" class="chat-bubble left-bubble">
+                    <div> {{ message.content }} </div>
+                  </div>
+                  <MessageContentManage v-else v-bind="message" :isUpload="false" />
+                </ContextMenu>
               </div>
             </div>
           </div>
@@ -384,6 +403,10 @@ function createMessagePack(receiverId: string | number, convId: string, msgType:
   }
 
   return messagePack
+}
+
+const handleChoice = (item: any, messageId: string) => {
+
 }
 
 function scrollToBottom() {

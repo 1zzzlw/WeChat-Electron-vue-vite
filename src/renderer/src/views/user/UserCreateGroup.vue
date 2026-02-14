@@ -34,7 +34,7 @@
         </div>
       </div>
     </div>
-    <WindowControls windowType="createGroup" />
+    <WindowControls :showSetFullScreen="false" windowType="createGroup" />
   </div>
 </template>
 
@@ -121,15 +121,6 @@ const createGroup = async () => {
   } else {
     ElMessage.error(result.msg)
   }
-
-  // // ws 发送创建群聊成功消息
-  // window.api.sendToMain(7, 0, {
-  //   conversationId: res.data,
-  //   userAvatar: userAvatar.value,
-  //   groupName: groupName.value,
-  //   invitedIds: invitedIdsArray
-  // })
-
 }
 
 onMounted(() => {
@@ -142,6 +133,10 @@ onMounted(() => {
 <style scoped>
 .title {
   -webkit-app-region: drag;
+  color: #f0f4f8;
+  font-size: 16px;
+  font-weight: 600;
+  margin: 16px 0;
 }
 
 .createGroup-count {
@@ -150,7 +145,12 @@ onMounted(() => {
   display: flex;
   flex-direction: row;
   justify-content: flex-start;
-  background-color: #2b3e49;
+  background: rgba(43, 62, 73, 0.85);
+  backdrop-filter: blur(20px);
+  color: #e0e6ed;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .count-left {
@@ -160,16 +160,19 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  border-right: 1px solid #ffffff;
+  border-right: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 0 16px;
 }
 
 .contact-list {
   width: 85%;
   height: 85%;
-  background-color: #67c23a;
-  border-radius: 5px;
+  background: rgba(135, 206, 235, 0.15);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
   margin-bottom: 30px;
   overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .scrollbar-demo-item {
@@ -177,7 +180,14 @@ onMounted(() => {
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  margin: 10px;
+  margin: 12px;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.scrollbar-demo-item:hover {
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .left-info {
@@ -190,11 +200,49 @@ onMounted(() => {
   width: 50px;
   height: 50px;
   border-radius: 5px;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .friend-name {
   font-size: 16px;
-  margin-left: 10px;
+  margin-left: 12px;
+  color: #e0e6ed;
+  font-weight: 500;
+}
+
+.right-btn {
+  display: flex;
+  gap: 8px;
+}
+
+/* 添加按钮：适配淡蓝色半透明风格，与添加好友界面一致 */
+.invite-btn {
+  background: rgba(100, 181, 246, 0.2);
+  border: 1px solid rgba(100, 181, 246, 0.3);
+  color: #e0e6ed;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.invite-btn:hover {
+  background: rgba(100, 181, 246, 0.3);
+  border-color: rgba(100, 181, 246, 0.5);
+  color: #fff;
+}
+
+.remove-btn {
+  background: rgba(245, 108, 108, 0.2);
+  border: 1px solid rgba(245, 108, 108, 0.3);
+  color: #e0e6ed;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.remove-btn:hover {
+  background: rgba(245, 108, 108, 0.3);
+  border-color: rgba(245, 108, 108, 0.5);
+  color: #fff;
 }
 
 .count-right {
@@ -204,6 +252,7 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
+  padding: 0 16px;
 }
 
 .invited-list {
@@ -213,10 +262,12 @@ onMounted(() => {
   flex-direction: column;
   align-items: stretch;
   justify-content: space-between;
-  background-color: #67c23a;
-  border-radius: 5px;
+  background: rgba(135, 206, 235, 0.15);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
   margin-bottom: 30px;
   overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .scrollbar-right-item {
@@ -224,7 +275,14 @@ onMounted(() => {
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  margin: 10px;
+  margin: 12px;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.scrollbar-right-item:hover {
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .create-group-btn {
@@ -234,5 +292,46 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   margin-bottom: 20px;
+  gap: 12px;
+  padding: 0 16px;
+}
+
+/* 输入框：适配毛玻璃背景 */
+.create-group-btn :deep(.el-input__wrapper) {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  box-shadow: none;
+  transition: all 0.2s ease;
+}
+
+.create-group-btn :deep(.el-input__wrapper):hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.create-group-btn :deep(.el-input__wrapper.is-focus) {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(100, 181, 246, 0.6);
+  box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.15);
+}
+
+.create-group-btn :deep(.el-input__inner) {
+  color: #e0e6ed;
+}
+
+/* 创建群聊按钮：适配淡蓝色半透明风格，与添加好友界面一致 */
+.create-btn {
+  background: rgba(100, 181, 246, 0.2);
+  border: 1px solid rgba(100, 181, 246, 0.3);
+  color: #e0e6ed;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.create-btn:hover {
+  background: rgba(100, 181, 246, 0.3);
+  border-color: rgba(100, 181, 246, 0.5);
+  color: #fff;
 }
 </style>

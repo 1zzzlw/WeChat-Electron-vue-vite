@@ -23,6 +23,7 @@ export default function (containerRef) {
         if (divElement) {
             divElement.addEventListener('contextmenu', handleContextMenu);
         }
+        window.addEventListener('scroll', closeMenu, true);
         window.addEventListener('click', closeMenu, true);
         window.addEventListener('contextmenu', closeMenu, true);
     })
@@ -32,6 +33,7 @@ export default function (containerRef) {
         if (divElement) {
             divElement.removeEventListener('contextmenu', handleContextMenu);
         }
+        window.removeEventListener('scroll', closeMenu, true);
         window.removeEventListener('click', closeMenu, true);
         window.removeEventListener('contextmenu', closeMenu, true);
     })

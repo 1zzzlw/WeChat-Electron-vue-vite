@@ -41,7 +41,7 @@
         <el-button type="primary" @click="sendApply">添加好友</el-button>
       </div>
     </div>
-    <WindowControls windowType="friendAdd" />
+    <WindowControls :showSetFullScreen="false" windowType="friendAdd" />
   </div>
 </template>
 
@@ -121,7 +121,7 @@ watch(searchInput, (newValue) => {
 
 <style scoped>
 .title {
-  font-weight: bold;
+  font-weight: 600;
   text-align: center;
   -webkit-app-region: drag;
 }
@@ -133,15 +133,65 @@ watch(searchInput, (newValue) => {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  background-color: #2b3e49;
   padding: 20px;
+  background: rgba(43, 62, 73, 0.85);
+  backdrop-filter: blur(20px);
+  color: #e0e6ed;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
 .friendAdd-top {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   margin-top: 10px;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
+}
+
+.friendAdd-top :deep(.el-input__wrapper) {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  box-shadow: none;
+  transition: all 0.2s ease;
+}
+
+.friendAdd-top :deep(.el-input__wrapper):hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.friendAdd-top :deep(.el-input__wrapper.is-focus) {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(100, 181, 246, 0.6);
+  box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.15);
+}
+
+.friendAdd-top :deep(.el-input__inner) {
+  color: #e0e6ed;
+}
+
+.friendAdd-top :deep(.el-input__prefix) {
+  color: rgba(224, 230, 237, 0.6);
+}
+
+.friendAdd-top .el-button {
+  background: rgba(100, 181, 246, 0.8);
+  border: 1px solid rgba(100, 181, 246, 0.4);
+  color: #fff;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.friendAdd-top .el-button:hover {
+  background: rgba(100, 181, 246, 0.9);
+  border-color: rgba(100, 181, 246, 0.6);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(100, 181, 246, 0.3);
+}
+
+.friendAdd-top .el-button:active {
+  transform: translateY(0);
 }
 
 .friendAdd-bottom {
@@ -156,20 +206,23 @@ watch(searchInput, (newValue) => {
   height: 95%;
   margin-top: 20px;
   padding: 20px;
-  background-color: skyblue;
+  background: rgba(135, 206, 235, 0.15);
   border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
 }
 
 .friend-info-top {
   width: 100%;
   height: 70px;
   display: flex;
-  gap: 30px;
+  gap: 20px;
   border-bottom: 1px solid #ffffff;
 }
 
 .friend-info {
   font-size: 14px;
+  white-space: nowrap;
 }
 
 .friend-name {
@@ -187,7 +240,21 @@ watch(searchInput, (newValue) => {
 
 .friend-button {
   display: flex;
-  margin-top: 20px;
+  margin-top: 24px;
+}
+
+.friend-button .el-button {
+  background: rgba(100, 181, 246, 0.2);
+  border: 1px solid rgba(100, 181, 246, 0.3);
+  color: #e0e6ed;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.friend-button .el-button:hover {
+  background: rgba(100, 181, 246, 0.3);
+  border-color: rgba(100, 181, 246, 0.5);
+  color: #fff;
 }
 
 .newFriend {
@@ -200,6 +267,8 @@ watch(searchInput, (newValue) => {
 .newFriend-baseInfo {
   display: flex;
   gap: 20px;
+  align-items: center;
+  font-size: 16px;
   margin-bottom: 50px;
 }
 
@@ -207,10 +276,45 @@ img {
   width: 60px;
   height: 60px;
   border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.newFriend button {
+.apply-message :deep(.el-textarea__inner) {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: #e0e6ed;
+  resize: none;
+  transition: all 0.2s ease;
+}
+
+.apply-message :deep(.el-textarea__inner):focus {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(100, 181, 246, 0.6);
+  box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.15);
+}
+
+.apply-message :deep(.el-input__count) {
+  color: rgba(224, 230, 237, 0.6);
+  background: none;
+
+}
+
+.newFriend .el-button {
   height: 40px;
   margin-top: 40px;
+  background: rgba(100, 181, 246, 0.2);
+  border: 1px solid rgba(100, 181, 246, 0.3);
+  color: #fff;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.newFriend .el-button:hover {
+  background: rgba(100, 181, 246, 0.3);
+  border-color: rgba(100, 181, 246, 0.5);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(100, 181, 246, 0.3);
 }
 </style>
