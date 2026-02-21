@@ -8,6 +8,7 @@ import UploadAvatarView from '../views/register/uploadAvatar.vue'
 import LayoutView from '../views/layout/Main.vue'
 import UserConversationListView from '../views/user/UserConversationList.vue'
 import UserListView from '../views/user/UserList.vue'
+import CollectList from '../views/user/CollectList.vue'
 import CollectView from '../views/collect/Collect.vue'
 import ChatView from '../views/chat/Chat.vue'
 import FriendAddView from '../views/user/UserFriendAdd.vue'
@@ -128,9 +129,9 @@ const router = createRouter({
           ]
         },
         {
-          path: '/collect',
-          name: 'collect',
-          component: CollectView
+          path: '/collectList',
+          name: 'collectList',
+          component: CollectList
         },
         {
           path: '/moments',

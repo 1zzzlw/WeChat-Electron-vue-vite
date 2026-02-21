@@ -72,6 +72,18 @@ const init_table = [
     relation_status INTEGER NOT NULL,       -- 关系状态: 0=未同意, 1=正常好友, 2=黑名单
     PRIMARY KEY (user_id, friend_id)        -- 用户id和好友id组成的联合主键
   );
+  `,
+  // 收藏表
+  `
+    CREATE TABLE IF NOT EXISTS favorites (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id TEXT NOT NULL,
+    title TEXT,
+    content TEXT NOT NULL,
+    source_username TEXT,
+    created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000),
+    updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000)
+  );
   `
 ]
 
@@ -110,6 +122,14 @@ const table_index = [
   // 好友表的用户ID和好友状态的联合索引
   `
     CREATE INDEX IF NOT EXISTS idx_friend_user_status ON friend_relation(user_id, relation_status);
+  `,
+  // 收藏表的用户id索引
+  `
+    CREATE INDEX IF NOT EXISTS idx_user_id ON favorites(user_id);
+  `,
+  // 收藏表的创建时间索引
+  `
+    CREATE INDEX IF NOT EXISTS idx_created_at ON favorites(created_at);
   `
 ]
 

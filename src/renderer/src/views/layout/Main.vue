@@ -19,7 +19,7 @@
             <UserFilled />
           </el-icon>
         </router-link>
-        <router-link tag="div" to="/collect" class="left-icon">
+        <router-link tag="div" to="/collectList" class="left-icon">
           <el-icon size="30">
             <Star />
           </el-icon>
