@@ -87,11 +87,19 @@ const getConversationInfoById = (userId, conversationId) => {
     return result
 }
 
+const getImageUrlList = () => {
+    const sql = `select file_id, file_name, file_size, remote_url from message where msg_type = 2 order by send_time`
+    const params = []
+    const result = queryAll(sql, params)
+    return result
+}
+
 export {
     isExistUserRecord,
     queryConversation,
     queryFriend,
     loadMessage,
     getFriendInfoById,
-    getConversationInfoById
+    getConversationInfoById,
+    getImageUrlList
 }

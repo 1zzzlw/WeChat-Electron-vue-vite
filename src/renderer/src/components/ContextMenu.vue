@@ -12,7 +12,8 @@
                     <div v-if="!item.divider" class="menu-list" @click.stop="handleClick(item)">
                         {{ item.label }}
                     </div>
-                    <div v-else class="menu-divider"></div>
+                    <div v-else class="menu-divider">
+                    </div>
                 </div>
             </div>
         </Teleport>

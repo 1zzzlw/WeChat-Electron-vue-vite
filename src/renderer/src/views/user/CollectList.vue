@@ -6,12 +6,16 @@
             </div>
             <div class="collect-mid">
                 <el-button>新建笔记</el-button>
-                <div class="all-collect-item">
-                    <span class=""> 全部收藏 </span>
-                </div>
-                <div class="all-collect-item">
-                    <span class=""> 笔记 </span>
-                </div>
+                <router-link to="/allCollectView">
+                    <div class="all-collect-item">
+                        <span class=""> 全部收藏 </span>
+                    </div>
+                </router-link>
+                <router-link to="/note">
+                    <div class="all-collect-item">
+                        <span class=""> 笔记 </span>
+                    </div>
+                </router-link>
             </div>
             <div class="collect-bottom">
                 <el-collapse :expand-icon-position="'left'">
@@ -29,18 +33,48 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import AutocompleteSearch from '../../components/AutocompleteSearch.vue';
-import { CollapseModelValue } from 'element-plus'
-
-const handleChange = (val: CollapseModelValue) => {
-    console.info(val)
-}
 
 </script>
 <style scoped>
 @import "../../css/layout.css";
 
 .collect-mid {
-    border-bottom: 1px solid black;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+    padding-bottom: 12px;
+    margin-bottom: 12px;
+}
+
+.collect-mid .el-button {
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin-bottom: 12px;
+    transition: all 0.2s ease;
+}
+
+.collect-mid .el-button:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.all-collect-item {
+    padding: 10px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    margin-bottom: 4px;
+}
+
+.all-collect-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.all-collect-item span {
+    font-size: 14px;
+    color: #e0e0e0;
 }
 
 :deep(.el-collapse) {
@@ -58,5 +92,9 @@ const handleChange = (val: CollapseModelValue) => {
 
 :deep(.el-collapse-item__header) {
     color: #ffffff;
+}
+
+.collect-list-right {
+    flex: 1;
 }
 </style>

@@ -1,18 +1,23 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport"
-        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <style>
     body {
       margin: 0;
       padding: 0;
-      overflow: hidden; /* 禁止滚动 */
-      height: 100vh; /* 设置高度为视口高度 */
-      width: 100vw; /* 设置宽度为视口宽度 */
-      position: relative; /* 确保子元素的绝对定位基于body */
+      overflow: hidden;
+      /* 禁止滚动 */
+      height: 100vh;
+      /* 设置高度为视口高度 */
+      width: 100vw;
+      /* 设置宽度为视口宽度 */
+      position: relative;
+      /* 确保子元素的绝对定位基于body */
     }
 
     .source {
@@ -53,163 +58,177 @@
     }
   </style>
 </head>
+
 <body>
-<!--从main进程中获得整个屏幕的图片展示在source块内-->
-<div class="source"></div>
-<!--为整个页面添加一个遮罩层，显示黑色背景，提示进入了截屏模式-->
-<div class="mask"></div>
-<canvas class="preview"></canvas>
-<div class="size"></div>
-<div class="tool">
-  <button class="confirm-btn">确定</button>
-  <button class="cancel-btn">取消</button>
-</div>
-<script>
-  let sourceContext = null;
-  let scaleFactorInfo = null;
-  const selection = { flag: false, x: 0, y: 0 };
-  const $source = document.querySelector(".source");
-  const $preview = document.querySelector(".preview");
-  const $size = document.querySelector(".size");
-  const $tool = document.querySelector(".tool");
+  <!--从main进程中获得整个屏幕的图片展示在source块内-->
+  <div class="source"></div>
+  <!--为整个页面添加一个遮罩层，显示黑色背景，提示进入了截屏模式-->
+  <div class="mask"></div>
+  <canvas class="preview"></canvas>
+  <div class="size"></div>
+  <div class="tool">
+    <button class="confirm-btn">确定</button>
+    <button class="cancel-btn">取消</button>
+  </div>
+  <script>
+    let sourceContext = null;
+    let scaleFactorInfo = null;
+    let isReady = false;
+    const selection = { flag: false, x: 0, y: 0 };
+    const $source = document.querySelector(".source");
+    const $preview = document.querySelector(".preview");
+    const $size = document.querySelector(".size");
+    const $tool = document.querySelector(".tool");
 
-  // 接收来自main发来的base64缩略图
-  window.chatToolApi.getCapturePngBuffer("window:get-capture-pngBuffer", ({ pngBuffer, scaleFactor }) => {
-    $source.style.backgroundImage = `url(${pngBuffer})`;
-    scaleFactorInfo = scaleFactor;
+    // 接收来自main发来的base64缩略图
+    window.chatToolApi.getCapturePngBuffer("window:get-capture-pngBuffer", ({ pngBuffer, scaleFactor }) => {
+      $source.style.backgroundImage = `url(${pngBuffer})`;
+      scaleFactorInfo = scaleFactor;
 
-    const image = new Image();
+      const image = new Image();
 
-    // 将Node Buffer转换为浏览器的Blob对象
-    // Blob接收的是ArrayBuffer/Uint8Array，需先将Buffer转Uint8Array
-    const uint8Array = new Uint8Array(pngBuffer);
-    const blob = new Blob([uint8Array], { type: "image/png" });
+      // 将Node Buffer转换为浏览器的Blob对象
+      // Blob接收的是ArrayBuffer/Uint8Array，需先将Buffer转Uint8Array
+      const uint8Array = new Uint8Array(pngBuffer);
+      const blob = new Blob([uint8Array], { type: "image/png" });
 
-    // 生成Blob URL，赋值给img.src
-    const blobUrl = URL.createObjectURL(blob);
+      // 生成Blob URL，赋值给img.src
+      const blobUrl = URL.createObjectURL(blob);
 
-    image.src = blobUrl;
+      image.src = blobUrl;
 
-    // 等待加载完成
-    image.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = image.width;
-      canvas.height = image.height;
-      const context = canvas.getContext("2d");
-      context.drawImage(image, 0, 0);
-      sourceContext = context;
-    };
-  });
-
-  // 鼠标点击事件
-  document.addEventListener("mousedown", (e) => {
-    // 记录点击位置
-    const { x, y } = e;
-    // 将初始点击位置设为当前位置
-    selection.x = x;
-    selection.y = y;
-    selection.flag = true;
-  });
-
-  document.addEventListener("mousemove", (e) => {
-    if (!selection.flag) return;
-    const { x, y } = e;
-
-    const left = Math.min(x, selection.x);
-    const top = Math.min(y, selection.y);
-    const width = Math.abs(x - selection.x);
-    const height = Math.abs(y - selection.y);
-
-    $preview.style.left = `${left}px`;
-    $preview.style.top = `${top}px`;
-    $preview.style.width = `${width}px`;
-    $preview.style.height = `${height}px`;
-    $preview.width = width;
-    $preview.height = height;
-
-    // 绘制预览图
-    const context = $preview.getContext("2d");
-
-    // 考虑缩放因子，调整从sourceContext获取图像数据的坐标和尺寸
-    const scaledLeft = Math.floor(left * scaleFactorInfo);
-    const scaledTop = Math.floor(top * scaleFactorInfo);
-    const scaledWidth = Math.floor(width * scaleFactorInfo);
-    const scaledHeight = Math.floor(height * scaleFactorInfo);
-
-    const imageData = sourceContext.getImageData(scaledLeft, scaledTop, scaledWidth, scaledHeight);
-    context.clearRect(0, 0, width, height);
-    const tempCanvas = document.createElement("canvas");
-    tempCanvas.width = scaledWidth;
-    tempCanvas.height = scaledHeight;
-    tempCanvas.getContext("2d").putImageData(imageData, 0, 0);
-    context.drawImage(tempCanvas, 0, 0, width, height);
-    $preview.style.display = "block";
-
-    $size.innerHTML = `${width}px * ${height}px`;
-    $size.style.left = `${left}px`;
-    $size.style.top = `${top}px`;
-    $size.style.display = "block";
-
-    // 将工具按钮放在预览框内部的的右下角
-    $tool.style.left = `${left + width}px`;
-    $tool.style.top = `${top + height}px`;
-    $tool.style.display = "block";
-
-  });
-
-  document.addEventListener("mouseup", () => {
-    selection.flag = false;
-  });
-
-  // 检查Canvas是否绘制完成的工具函数
-  function checkCanvasReady(canvas, timeout = 3000, interval = 100) {
-    return new Promise((resolve, reject) => {
-      const startTime = Date.now();
-      // 轮询检查
-      const timer = setInterval(() => {
-        const ctx = canvas.getContext("2d");
-        const pixelData = ctx.getImageData(0, 0, 1, 1).data;
-        const isReady = !pixelData.every(p => p === 0); // 非全黑则认为绘制完成
-
-        if (isReady) {
-          clearInterval(timer);
-          resolve(true);
-        } else if (Date.now() - startTime > timeout) {
-          clearInterval(timer);
-          reject(new Error("截图绘制超时（3秒）"));
-        }
-      }, interval);
+      // 等待加载完成
+      image.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = image.width;
+        canvas.height = image.height;
+        const context = canvas.getContext("2d");
+        context.drawImage(image, 0, 0);
+        sourceContext = context;
+        isReady = true;
+      };
     });
-  }
 
-  const $confirmBtn = document.querySelector(".confirm-btn");
-  const $cancelBtn = document.querySelector(".cancel-btn");
+    // 鼠标点击事件
+    document.addEventListener("mousedown", (e) => {
+      // 记录点击位置
+      const { x, y } = e;
+      // 将初始点击位置设为当前位置
+      selection.x = x;
+      selection.y = y;
+      selection.flag = true;
+    });
 
-  // 确认截图
-  $confirmBtn.addEventListener("click", async () => {
-    try {
-      // 智能等待Canvas绘制完成（最多等3秒）
-      await checkCanvasReady($preview);
+    document.addEventListener("mousemove", (e) => {
+      if (!selection.flag || !isReady || !sourceContext) return;
+      console.log(123)
+      console.log(sourceContext)
+      const { x, y } = e;
 
-      // 绘制完成后生成Base64
-      const base64 = $preview.toDataURL("image/png");
-      window.chatToolApi.saveCapture(base64);
-      console.log("截图已发送");
-    } catch (err) {
-      console.error("截图失败：", err);
-      alert(err.message);
-    } finally {
-      $confirmBtn.disabled = false;
-      $loadingTip.style.display = "none";
+      const left = Math.min(x, selection.x);
+      const top = Math.min(y, selection.y);
+      const width = Math.abs(x - selection.x);
+      const height = Math.abs(y - selection.y);
+
+      $preview.style.left = `${left}px`;
+      $preview.style.top = `${top}px`;
+      $preview.style.width = `${width}px`;
+      $preview.style.height = `${height}px`;
+      $preview.width = width;
+      $preview.height = height;
+
+      if (width === 0 || height === 0) return;
+
+      // 绘制预览图
+      const context = $preview.getContext("2d");
+
+      // 考虑缩放因子，调整从sourceContext获取图像数据的坐标和尺寸
+      const scaledLeft = Math.floor(left * scaleFactorInfo);
+      const scaledTop = Math.floor(top * scaleFactorInfo);
+      const scaledWidth = Math.floor(width * scaleFactorInfo);
+      const scaledHeight = Math.floor(height * scaleFactorInfo);
+
+      const imageData = sourceContext.getImageData(scaledLeft, scaledTop, scaledWidth, scaledHeight);
+      context.clearRect(0, 0, width, height);
+      const tempCanvas = document.createElement("canvas");
+      tempCanvas.width = scaledWidth;
+      tempCanvas.height = scaledHeight;
+      tempCanvas.getContext("2d").putImageData(imageData, 0, 0);
+      context.drawImage(tempCanvas, 0, 0, width, height);
+      $preview.style.display = "block";
+
+      $size.innerHTML = `${width}px * ${height}px`;
+      $size.style.left = `${left}px`;
+      $size.style.top = `${top}px`;
+      $size.style.display = "block";
+
+      // 将工具按钮放在预览框内部的的右下角
+      $tool.style.left = `${left + width}px`;
+      $tool.style.top = `${top + height}px`;
+      $tool.style.display = "block";
+
+    });
+
+    document.addEventListener("mouseup", () => {
+      selection.flag = false;
+    });
+
+    // 检查Canvas是否绘制完成的工具函数
+    function checkCanvasReady(canvas, timeout = 3000, interval = 100) {
+      return new Promise((resolve, reject) => {
+        const startTime = Date.now();
+        // 轮询检查
+        const timer = setInterval(() => {
+          const ctx = canvas.getContext("2d");
+          const pixelData = ctx.getImageData(0, 0, 1, 1).data;
+          const isReady = !pixelData.every(p => p === 0); // 非全黑则认为绘制完成
+
+          if (isReady) {
+            clearInterval(timer);
+            resolve(true);
+          } else if (Date.now() - startTime > timeout) {
+            clearInterval(timer);
+            reject(new Error("截图绘制超时（3秒）"));
+          }
+        }, interval);
+      });
     }
-  });
 
-  // 取消截图
-  $cancelBtn.addEventListener("click", () => {
-    window.chatToolApi.closeCapture();
-  });
+    const $confirmBtn = document.querySelector(".confirm-btn");
+    const $cancelBtn = document.querySelector(".cancel-btn");
 
-</script>
+    // 确认截图
+    $confirmBtn.addEventListener("click", async () => {
+      try {
+        // 智能等待Canvas绘制完成（最多等3秒）
+        await checkCanvasReady($preview);
+
+        // 绘制完成后生成Base64
+        const base64 = $preview.toDataURL("image/png");
+        const base64Data = base64.replace(/^data:image\/png;base64,/, '');
+        // 转成 ArrayBuffer
+        const binaryString = atob(base64Data);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        window.chatToolApi.saveCapture(bytes);
+        console.log("截图已发送");
+      } catch (err) {
+        console.error("截图失败：", err);
+        alert(err.message);
+      } finally {
+        $confirmBtn.disabled = false;
+        $loadingTip.style.display = "none";
+      }
+    });
+
+    // 取消截图
+    $cancelBtn.addEventListener("click", () => {
+      window.chatToolApi.closeCapture();
+    });
+
+  </script>
 </body>
 
 </html>

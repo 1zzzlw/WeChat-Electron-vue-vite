@@ -1,13 +1,19 @@
 <template>
   <div class="chat-video">
     <span class="pause"></span>
-    <img :src=previewBase64 alt="视频预览图片" class="chat-video-content"></img>
+    <img :src=previewBase64 alt="视频预览图片" class="chat-video-content" @click="openVideo"></img>
   </div>
 </template>
 
 <script setup lang="ts">
+const openVideo = () => {
+  console.log('openVideo');
+  (window as any).windowToolApi.createNewWindow('videoPreview')
+}
+
 const props = defineProps<{
   sendStatus: number
+  fileId: string
   fileName: string
   fileSize: number
   localPath: string

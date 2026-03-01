@@ -153,6 +153,14 @@ const getConversationInfoById = async (conversationId) => {
     return conversationInfo[0]
 }
 
+/**
+ * 获得所有图片路径
+ */
+const getImageUrlList = async () => {
+    const imageUrlList = await window.dbApi.getImageUrlList()
+    return imageUrlList
+}
+
 export {
     getConversationList,
     getFriendList,
@@ -164,5 +172,6 @@ export {
     addFriendRelation,
     updateMessage,
     getFriendInfoById,
-    getConversationInfoById
+    getConversationInfoById,
+    getImageUrlList
 }

@@ -7,20 +7,29 @@
     </div>
 
   </div>
-
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { getImageUrlList } from '../db/dualDB'
 
 const loading = ref()
 
-const openImage = () => {
-  console.log('openImage')
+const openImage = async () => {
+  console.log('openImage');
+
+  const imageUrlList = await getImageUrlList();
+
+  (window as any).windowToolApi.createNewWindow('imagePreview', {
+    currentImageId: props.fileId,
+    remoteUrl: props.remoteUrl,
+    imageUrlList: imageUrlList
+  })
 }
 
 const props = defineProps<{
   sendStatus: number
+  fileId: string
   fileName: string
   fileSize: number
   localPath: string
@@ -32,12 +41,6 @@ const props = defineProps<{
 
 onMounted(() => {
   loading.value = props.sendStatus === 1 ? false : true;
-
-  // (window as any).uploadFileApi.updateLoadStatus((e: any, status: any) => {
-  //   console.log(status)
-  //   loading.value = status === 1 ? false : true;
-  //   console.log(loading.value)
-  // })
 })
 
 </script>

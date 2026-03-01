@@ -142,6 +142,8 @@ const Register = () => {
 <style scoped>
 @import '../../css/account.css';
 
+
+
 .login-mid {
   -webkit-app-region: no-drag;
 }

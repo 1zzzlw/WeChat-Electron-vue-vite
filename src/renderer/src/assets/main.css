@@ -1,17 +1,15 @@
 /* 全局样式重置：放在 CSS 文件最顶部 */
 * {
   margin: 0;
-  /* 清除所有元素的默认外边距 */
   padding: 0;
-  /* 清除所有元素的默认内边距 */
-  box-sizing: border-box;
   /* 统一盒模型（宽度包含边框/内边距） */
-  border: none;
+  box-sizing: border-box;
   /* 清除默认边框（如按钮、输入框） */
-  outline: none;
+  border: none;
   /* 清除默认焦点轮廓（可选，可自定义） */
-  background: none;
+  outline: none;
   /* 清除默认背景（如按钮、body） */
+  background: none;
 }
 
 html,
@@ -20,7 +18,6 @@ body {
   height: 100%;
   /* 禁止用户选中body内的文本内容（避免误操作选中文字影响体验） */
   user-select: none;
-
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

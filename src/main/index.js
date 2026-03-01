@@ -21,6 +21,7 @@ import './IPC/updateNewDataIPC.js'
 import './IPC/uploadFileIPC.js'
 import './IPC/websocketIPC.js'
 import './IPC/mediaHandleIPC.js'
+import { createCaptureWindow } from './IPC/chatToolIPC.js';
 import { initTable, initTableColumnsMap } from './DB/mainDB.js'
 
 // 初始化store实例，指定存储文件名（会生成user-token.json文件）
@@ -32,7 +33,6 @@ export const store = new Store({
 })
 
 export let mainWindow = null
-let captureWindow = null
 let tray = null
 const login_width = 300
 const login_height = 370
@@ -170,126 +170,6 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
   }
-})
-
-async function createCaptureWindow() {
-  const { screen, desktopCapturer } = require('electron')
-  // 获取主屏幕的宽度和高度和缩放因子
-  const {
-    bounds: { width, height },
-    scaleFactor
-  } = screen.getPrimaryDisplay()
-  console.info(width, height, scaleFactor)
-
-  const sources = await desktopCapturer.getSources({
-    types: ['screen'],
-    thumbnailSize: {
-      width: Math.round(width * scaleFactor),
-      height: Math.round(height * scaleFactor)
-    }
-  })
-
-  //选择第一个屏幕，转为base64的缩略图
-  const pngBuffer = sources[0].thumbnail.toPNG()
-
-  const options = {
-    // 全屏窗口
-    fullscreen: true,
-    // 窗口无标题栏
-    frame: false,
-    // 窗口透明
-    transparent: true,
-    // 窗口不在任务栏显示
-    skipTaskbar: true,
-    // 窗口无菜单栏
-    autoHideMenuBar: true,
-    // 窗口不可移动
-    movable: false,
-    // 窗口不可调整大小
-    resizable: false,
-    // 窗口可超出屏幕边界
-    enableLargerThanScreen: true,
-    // 窗口无阴影
-    hasShadow: false,
-    show: false
-  }
-  //截屏窗口
-  captureWindow = createExtraWindow(null, options, true)
-
-  captureWindow.on('show', () => {
-    // 窗口显示后，把图片的base64字符串发送给渲染进程
-    captureWindow.webContents.send('window:get-capture-pngBuffer', {
-      pngBuffer,
-      scaleFactor
-    })
-
-    // 注册全局快捷键
-    globalShortcut.register('Esc', () => {
-      captureWindow.close()
-    })
-  })
-
-  captureWindow.on('close', () => {
-    mainWindow.show()
-
-    // 注销全局快捷键
-    globalShortcut.unregister('Esc')
-  })
-}
-
-ipcMain.on('window:capture-open', (e) => {
-  mainWindow.hide()
-  createCaptureWindow()
-})
-
-function writeToFile(savePath, data) {
-  const fs = require('fs')
-  // 判断传入的是Base64字符串还是Buffer
-  if (typeof data === 'string' && data.startsWith('data:image/')) {
-    // 1. 剔除Base64头部，提取纯编码数据
-    const base64Data = data.replace(/^data:image\/\w+;base64,/, '')
-    // 2. 转换为二进制Buffer
-    const buffer = Buffer.from(base64Data, 'base64')
-    // 3. 写入Buffer
-    fs.writeFile(savePath, buffer, (err) => {
-      if (err) throw err
-      console.info('图片已保存到', savePath)
-    })
-  } else if (data instanceof Buffer) {
-    // 若传入的是Buffer，直接写入
-    fs.writeFile(savePath, data, (err) => {
-      if (err) throw err
-      console.info('图片已保存到', savePath)
-    })
-  } else {
-    console.error('传入的数据不是Base64字符串或Buffer')
-  }
-}
-
-ipcMain.on('window:save-capture', (e, data) => {
-  const { nativeImage, clipboard } = require('electron')
-  console.info(data)
-  const image = nativeImage.createFromDataURL(data)
-  // 复制图片到剪贴板
-  clipboard.writeImage(image)
-  // 保存图片到指定路径
-  const fileName = `screenshot_${Date.now()}.png`
-  const savePath = 'E:\\JavaWeb\\zzz-IM-web\\imageScreen\\' + fileName
-  writeToFile(savePath, data)
-
-  captureWindow.close()
-
-  if (mainWindow) {
-    mainWindow.webContents.send('capture:image', savePath)
-  }
-})
-
-ipcMain.on('window:close-capture', () => {
-  if (captureWindow) {
-    captureWindow.close()
-    captureWindow = null
-  }
-  mainWindow.show()
 })
 
 ipcMain.handle('window:create-file', async (e, arrayBuffer, fileName) => {

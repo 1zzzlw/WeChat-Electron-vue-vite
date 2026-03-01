@@ -66,3 +66,6 @@ vue2 里的
 npm install --save vue-virtual-scroller
 
 虚拟滚动
+
+图片的滚动，放大，缩小等处理的组件库
+npm install v-viewer viewerjs

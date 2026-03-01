@@ -1,6 +1,5 @@
 import { BrowserWindow, shell } from 'electron'
 import { join } from 'path'
-import { mainWindow } from '../index'
 import icon from '../../../resources/icon.png?asset'
 import { is } from '@electron-toolkit/utils'
 
@@ -21,7 +20,9 @@ const WINDOW_CONFIGS = {
     vue: {
         friendAdd: '/friendAdd',
         createGroup: '/createGroup',
-        setting: '/setting'
+        setting: '/setting',
+        imagePreview: '/imagePreview',
+        videoPreview: '/videoPreview'
         // TODO 可以继续添加其他路由页面
     }
 }
@@ -33,7 +34,7 @@ const WINDOW_CONFIGS = {
  * @param loadType - 加载类型 ('standalone': 独立的HTML文件，'vue'(默认): 渲染进程中的vue页面)
  * @returns 创建的窗口实例
  */
-function createExtraWindow(windowType, options = {}, loadType = 'vue') {
+function createExtraWindow(windowType, options = {}, loadType = 'vue', data) {
     console.log('打开', windowType)
     if (windowPool.get(windowType) != null) {
         console.log('该窗口已存在')
@@ -76,6 +77,17 @@ function createExtraWindow(windowType, options = {}, loadType = 'vue') {
         window.show()
         window.setTitle('EasyChat')
     })
+
+    window.on('closed', () => {
+        windowPool.delete(windowType)
+    })
+
+    if (data != null) {
+        // 向渲染进程发送数据
+        window.once('show', () => {
+            window.webContents.send('newWindowInfo', data)
+        })
+    }
 
     // 控制窗口内链接打开行为
     window.webContents.setWindowOpenHandler((details) => {

@@ -73,6 +73,9 @@ const dbApi = {
   },
   getConversationInfoById: (conversationId) => {
     return ipcRenderer.invoke('query:conversationInfo', conversationId)
+  },
+  getImageUrlList: () => {
+    return ipcRenderer.invoke('query:imageUrlList')
   }
 }
 
@@ -113,8 +116,12 @@ const windowToolApi = {
   windowControls: (windowType, controlType, value) => {
     ipcRenderer.send('window:controls', windowType, controlType, value)
   },
-  createNewWindow: (windowType) => {
-    ipcRenderer.send('create-new-window', windowType)
+  createNewWindow: (windowType, data) => {
+    ipcRenderer.send('create-new-window', windowType, data)
+  },
+  // 向新建窗口发送窗口信息
+  sendWindowInfo: (windowInfo) => {
+    ipcRenderer.on('newWindowInfo', windowInfo)
   },
   destroyNewWindow: (windowType) => {
     ipcRenderer.send('destroy-new-window', windowType)

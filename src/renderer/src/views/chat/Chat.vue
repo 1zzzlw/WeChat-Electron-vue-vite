@@ -173,11 +173,11 @@ const handlerEmoji = (emoji: any) => {
 // 处理截图按钮点击事件
 const captureBtn = () => {
   console.info('截图按钮点击事件');
-  (window as any).chatToolApi.openCapture()
+  (window as any).chatToolApi.openCapture();
 
-    (window as any).chatToolApi.sendImageToMain((savePath: any) => {
-      captureImageUrl.value = savePath
-    })
+  (window as any).chatToolApi.sendImageToMain((savePath: any) => {
+    captureImageUrl.value = savePath
+  })
 }
 
 const handleEnterMessage = (e: KeyboardEvent) => {
@@ -322,16 +322,6 @@ const sendGroupMessage = async () => {
 }
 
 const sendApi = (messagePack: Message) => {
-  // 消息列表存入缓存中
-  console.info('存入缓存中')
-  messageStore.addMessageMap(messagePack.conversationId, messagePack)
-
-  // 更新会话最新消息和时间
-  conversationStore.setConversationMap(messagePack.conversationId, {
-    latestMsg: messagePack.content,
-    latestMsgTime: dayjs(messagePack.sendTime).format('HH:mm:ss')
-  })
-
   // http发送接收者id、会话id、消息内容
   sendMessageApi(messagePack).then(async (res) => {
     console.info('发送消息成功', res)
@@ -344,6 +334,20 @@ const sendApi = (messagePack: Message) => {
     if (res.data) {
       const message = res.data
       console.log(message)
+
+      // 消息列表存入缓存中
+      console.info('存入缓存中')
+
+      messagePack.remoteUrl = message.remoteUrl
+
+      messageStore.addMessageMap(messagePack.conversationId, messagePack)
+
+      // 更新会话最新消息和时间
+      conversationStore.setConversationMap(messagePack.conversationId, {
+        latestMsg: messagePack.content,
+        latestMsgTime: dayjs(messagePack.sendTime).format('HH:mm:ss')
+      })
+
       // 合并成功的时候才将状态修改为1
       message.sendStatus = 0
       // console.info(message)

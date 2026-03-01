@@ -9,7 +9,8 @@ import LayoutView from '../views/layout/Main.vue'
 import UserConversationListView from '../views/user/UserConversationList.vue'
 import UserListView from '../views/user/UserList.vue'
 import CollectList from '../views/user/CollectList.vue'
-import CollectView from '../views/collect/Collect.vue'
+import AllCollectView from '../views/collect/AllCollect.vue'
+import NoteView from '../views/collect/Note.vue'
 import ChatView from '../views/chat/Chat.vue'
 import FriendAddView from '../views/user/UserFriendAdd.vue'
 import FriendApplyView from '../views/friend/FriendApply.vue'
@@ -22,6 +23,8 @@ import StoreLocationView from '../views/setting/StoreLocation.vue'
 import ShortcutKeyVue from '../views/setting/ShortcutKey.vue'
 import InformSetVue from '../views/setting/InformSet.vue'
 import AboutVue from '../views/setting/About.vue'
+import ImagePreviewView from '../views/media/imagePreview.vue'
+import VideoPreviewView from '../views/media/videoPreview.vue'
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -94,6 +97,16 @@ const router = createRouter({
       ]
     },
     {
+      path: '/imagePreview',
+      name: 'imagePreview',
+      component: ImagePreviewView
+    },
+    {
+      path: '/videoPreview',
+      name: 'videoPreview',
+      component: VideoPreviewView
+    },
+    {
       path: '/main',
       name: 'layout',
       redirect: '/messageList',
@@ -131,7 +144,19 @@ const router = createRouter({
         {
           path: '/collectList',
           name: 'collectList',
-          component: CollectList
+          component: CollectList,
+          children: [
+            {
+              path: '/allCollectView',
+              name: 'allCollectView',
+              component: AllCollectView
+            },
+            {
+              path: '/note',
+              name: 'note',
+              component: NoteView
+            }
+          ]
         },
         {
           path: '/moments',

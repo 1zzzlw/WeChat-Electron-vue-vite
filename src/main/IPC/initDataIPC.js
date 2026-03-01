@@ -24,7 +24,7 @@ ipcMain.handle('loading-isNeedInit', (e) => {
             height: loading_height,
             transparent: true,
         }
-        loadingWindow = createExtraWindow('loading', options, 'standalone')
+        loadingWindow = createExtraWindow('loading', options, 'standalone', null)
 
         // 等待加载窗口准备就绪后，通知开始数据初始化
         loadingWindow.webContents.once('ready-to-show', () => {
