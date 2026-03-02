@@ -1,6 +1,6 @@
 import { ipcMain, dialog } from "electron";
 import { getFileInfo, uploadFile, stopUpload } from '../File/fileUpload'
-import { downloadFile } from '../File/downloadFile'
+import { downloadFile, saveAsMedia } from '../File/downloadFile'
 // 从本地选择文件或目录
 ipcMain.handle('select-file', async (e, file) => {
     let fileInfo = {}
@@ -48,4 +48,19 @@ ipcMain.on('update-pauseStatus', (e, file, isPause) => {
 
 ipcMain.on('start-download', (e, fileId, fileName, remoteUrl) => {
     downloadFile(fileId, fileName, remoteUrl)
+})
+
+ipcMain.on('saveAs-media', async (e, fileInfo) => {
+    const dialogConfig = {
+        title: '保存文件',
+        defaultPath: fileInfo.fileName
+    }
+    let result = await dialog.showSaveDialog(dialogConfig)
+    if (result.canceled || result.filePath === '') {
+        return
+    }
+    const filePath = result.filePath
+    const remoteUrl = fileInfo.remoteUrl
+    console.log(filePath)
+    saveAsMedia(remoteUrl, filePath)
 })

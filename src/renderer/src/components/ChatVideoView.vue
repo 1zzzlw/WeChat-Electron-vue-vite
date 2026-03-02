@@ -6,9 +6,15 @@
 </template>
 
 <script setup lang="ts">
-const openVideo = () => {
-  console.log('openVideo');
-  (window as any).windowToolApi.createNewWindow('videoPreview')
+import { getVideoUrlList } from '../db/dualDB'
+
+const openVideo = async () => {
+  const videoUrlList = await getVideoUrlList();
+  (window as any).windowToolApi.createNewWindow('videoPreview', {
+    currentVideoId: props.fileId,
+    remoteUrl: props.remoteUrl,
+    videoUrlList: videoUrlList
+  })
 }
 
 const props = defineProps<{

@@ -76,6 +76,9 @@ const dbApi = {
   },
   getImageUrlList: () => {
     return ipcRenderer.invoke('query:imageUrlList')
+  },
+  getVideoUrlList: () => {
+    return ipcRenderer.invoke('query:videoUrlList')
   }
 }
 
@@ -106,6 +109,9 @@ const uploadFileApi = {
   },
   updateFileDownloadPauseStatus: () => {
 
+  },
+  saveAsMedia: (fileInfo) => {
+    ipcRenderer.send('saveAs-media', fileInfo)
   }
 }
 

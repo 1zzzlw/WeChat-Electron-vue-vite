@@ -9,7 +9,7 @@
             <div class="iconfont icon-yuanshidaxiao" @click="resize" title="还原"></div>
             <el-divider direction="vertical" />
             <div class="iconfont icon-xuanzhuan" @click="rotate" title="旋转"></div>
-            <div class="iconfont icon-xiazai1" title="下载"></div>
+            <div class="iconfont icon-xiazai" @click="dowload" title="下载"></div>
         </div>
         <div class="image-content">
             <viewer :images="imageUrl" :options="options" @inited="inited">
@@ -22,6 +22,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import WindowControls from '../../components/WindowControls.vue'
+import { ElMessage } from 'element-plus';
 import { component as Viewer } from 'v-viewer';
 import 'viewerjs/dist/viewer.css';
 
@@ -48,6 +49,12 @@ const imageUrl = ref()
 const imageList = ref<any>([])
 const currImageIndex = ref()
 const myViewer = ref()
+const fileInfo = ref({
+    fileId: '',
+    fileName: '',
+    fileSize: '',
+    remoteUrl: ''
+})
 
 const inited = (e: any) => {
     myViewer.value = e
@@ -59,20 +66,21 @@ const prev = () => {
     if (currImageIndex.value > 0) {
         currImageIndex.value--
         imageUrl.value = imageList.value[currImageIndex.value].remoteUrl
-        console.log(imageUrl.value)
+        getCurrentFileInfo(imageList.value[currImageIndex.value])
     } else {
         // 提示没有图片
+        ElMessage.info('已没有图片')
     }
 }
 
 const next = () => {
     if (!myViewer.value) return
-    if (currImageIndex.value < imageList.value.length) {
+    if (currImageIndex.value < imageList.value.length - 1) {
         currImageIndex.value++
         imageUrl.value = imageList.value[currImageIndex.value].remoteUrl
-        console.log(imageUrl.value)
+        getCurrentFileInfo(imageList.value[currImageIndex.value])
     } else {
-
+        ElMessage.info('已没有图片')
     }
 }
 
@@ -105,12 +113,31 @@ const onWheel = (e: any) => {
     }
 }
 
+const dowload = () => {
+    console.log(fileInfo.value)
+    const downloadParams = {
+        fileId: fileInfo.value.fileId,
+        fileName: fileInfo.value.fileName,
+        fileSize: fileInfo.value.fileSize,
+        remoteUrl: fileInfo.value.remoteUrl,
+    };
+    (window as any).uploadFileApi.saveAsMedia(downloadParams)
+}
+
+const getCurrentFileInfo = (fileBaseInfo: any) => {
+    fileInfo.value.fileId = fileBaseInfo.fileId
+    fileInfo.value.fileName = fileBaseInfo.fileName
+    fileInfo.value.fileSize = fileBaseInfo.fileSize
+    fileInfo.value.remoteUrl = fileBaseInfo.remoteUrl
+}
+
 onMounted(() => {
     (window as any).windowToolApi.sendWindowInfo((e: any, data: any) => {
         console.log(data)
         imageUrl.value = data.remoteUrl
         imageList.value = data.imageUrlList
         currImageIndex.value = data.imageUrlList.findIndex((item: any) => item.fileId === data.currentImageId)
+        getCurrentFileInfo(imageList.value[currImageIndex.value])
     })
     // 添加滚轮事件监听
     window.addEventListener('wheel', onWheel)

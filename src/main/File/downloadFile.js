@@ -60,6 +60,23 @@ const downloadFile = (fileId, fileName, remoteUrl) => {
     })
 }
 
+/**
+ * 下载图片，视频另存为
+ */
+const saveAsMedia = (remoteUrl, filePath) => {
+    return new Promise((resolve) => {
+        http.get(remoteUrl, (res) => {
+            const stream = fs.createWriteStream(filePath)
+            res.pipe(stream)
+            stream.on('finish', () => {
+                stream.close()
+                resolve(filePath)
+            })
+        })
+    })
+}
+
 export {
-    downloadFile
+    downloadFile,
+    saveAsMedia
 }

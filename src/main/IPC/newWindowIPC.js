@@ -23,7 +23,7 @@ ipcMain.on('create-new-window', (e, windowType, data) => {
                 width: friendAdd_width,
                 height: friendAdd_height
             }
-            addFriendWindow = createExtraWindow('friendAdd', options, 'vue', null)
+            addFriendWindow = createExtraWindow('friendAdd', options, 'vue', data)
             break
         }
         case 'createGroup': {
@@ -31,7 +31,7 @@ ipcMain.on('create-new-window', (e, windowType, data) => {
                 width: createGroup_width,
                 height: createGroup_height
             }
-            createGroupWindow = createExtraWindow('createGroup', options, 'vue', null)
+            createGroupWindow = createExtraWindow('createGroup', options, 'vue', data)
             break
         }
         case 'settingView': {
@@ -39,7 +39,7 @@ ipcMain.on('create-new-window', (e, windowType, data) => {
                 width: settingView_width,
                 height: settingView_height
             }
-            settingViewWindow = createExtraWindow('setting', options, 'vue', null)
+            settingViewWindow = createExtraWindow('setting', options, 'vue', data)
             break
         }
         case 'imagePreview': {
@@ -47,8 +47,7 @@ ipcMain.on('create-new-window', (e, windowType, data) => {
                 width: mediaPreview_width,
                 height: mediaPreview_height,
             }
-            const currentImageId = data
-            mediaPreviewWindow = createExtraWindow('imagePreview', options, 'vue', currentImageId)
+            mediaPreviewWindow = createExtraWindow('imagePreview', options, 'vue', data)
             break
         }
         case 'videoPreview': {
@@ -56,7 +55,7 @@ ipcMain.on('create-new-window', (e, windowType, data) => {
                 width: mediaPreview_width,
                 height: mediaPreview_height,
             }
-            mediaPreviewWindow = createExtraWindow('videoPreview', options, 'vue', null)
+            mediaPreviewWindow = createExtraWindow('videoPreview', options, 'vue', data)
             break
         }
     }

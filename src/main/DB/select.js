@@ -94,6 +94,13 @@ const getImageUrlList = () => {
     return result
 }
 
+const getVideoUrlList = () => {
+    const sql = `select file_id, file_name, file_size, remote_url from message where msg_type = 3 order by send_time`
+    const params = []
+    const result = queryAll(sql, params)
+    return result
+}
+
 export {
     isExistUserRecord,
     queryConversation,
@@ -101,5 +108,6 @@ export {
     loadMessage,
     getFriendInfoById,
     getConversationInfoById,
-    getImageUrlList
+    getImageUrlList,
+    getVideoUrlList
 }

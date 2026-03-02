@@ -99,14 +99,12 @@ const Login = async (formEl: FormInstance | undefined) => {
     isLoading.value = true
     const result = await loginApi(loginForm)
     const status = (result as any).code
-    console.log(status)
     if (status === 1) {
       (window as any).userInfoApi.storeSetUserInfo('userId', result.data.id);
       (window as any).userInfoApi.storeSetUserInfo('avatar', result.data.avatar);
 
       // 判断当前登录是否需要初始化
       const isNeed = await (window as any).loadApi.isNeedInitData()
-      console.info('是否需要初始化数据', isNeed)
       if (!isNeed) {
         // 不需要，更新离线数据
         console.info('更新离线数据')

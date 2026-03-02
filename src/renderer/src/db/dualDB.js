@@ -161,6 +161,14 @@ const getImageUrlList = async () => {
     return imageUrlList
 }
 
+/**
+ * 获得所有视频路径
+ */
+const getVideoUrlList = async () => {
+    const videoUrlList = await window.dbApi.getVideoUrlList()
+    return videoUrlList
+}
+
 export {
     getConversationList,
     getFriendList,
@@ -173,5 +181,6 @@ export {
     updateMessage,
     getFriendInfoById,
     getConversationInfoById,
-    getImageUrlList
+    getImageUrlList,
+    getVideoUrlList
 }

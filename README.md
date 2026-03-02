@@ -69,3 +69,6 @@ npm install --save vue-virtual-scroller
 
 图片的滚动，放大，缩小等处理的组件库
 npm install v-viewer viewerjs
+
+视频播放编辑库
+npm install dplayer

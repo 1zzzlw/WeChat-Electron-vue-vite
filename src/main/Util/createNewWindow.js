@@ -82,9 +82,10 @@ function createExtraWindow(windowType, options = {}, loadType = 'vue', data) {
         windowPool.delete(windowType)
     })
 
-    if (data != null) {
+    if (data != undefined) {
         // 向渲染进程发送数据
         window.once('show', () => {
+            console.log(data)
             window.webContents.send('newWindowInfo', data)
         })
     }

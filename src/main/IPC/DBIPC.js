@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron'
 import { store } from '../index'
-import { queryConversation, queryFriend, loadMessage, getFriendInfoById, getConversationInfoById, getImageUrlList } from '../DB/select'
+import { queryConversation, queryFriend, loadMessage, getFriendInfoById, getConversationInfoById, getImageUrlList, getVideoUrlList } from '../DB/select'
 import { saveSentMessage, saveLoadMessage, addConversation, addFriendRelation } from '../DB/insert'
 import { updateConversation, updateMessage } from '../DB/update'
 
@@ -68,4 +68,9 @@ ipcMain.handle('query:conversationInfo', (e, conversationId) => {
 ipcMain.handle('query:imageUrlList', () => {
     console.log(`查询所有的照片路径`)
     return getImageUrlList()
+})
+
+ipcMain.handle('query:videoUrlList', () => {
+    console.log(`查询所有的视频路径`)
+    return getVideoUrlList()
 })

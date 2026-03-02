@@ -77,7 +77,7 @@ const submitForm = async () => {
   formData.append('avatarFile', avatar.value)
 
   // 调用注册接口
-  registerApi(formData).then((res: any) => {
+  registerApi(formData).then(async (res: any) => {
     if (res.code === 1) {
       console.info('注册成功:', res)
       ElMessage.success('注册成功');
@@ -89,8 +89,16 @@ const submitForm = async () => {
       // 清空缓存的注册信息
       registerInfoStore.$reset()
 
-      router.push('/main');
-      (window as any).windowToolApi.resizeWindow('main')
+      // 判断并初始化
+      await (window as any).loadApi.isNeedInitData()
+
+      // 等待通知在路由跳转
+      await new Promise(resolve => {
+        (window as any).loadApi.onDataInitComplete(resolve)
+      })
+      console.info('初始化完成, 进入main界面');
+      await router.push('/main')
+      await (window as any).windowToolApi.resizeWindow('main')
     } else {
       ElMessage.error('注册失败')
     }

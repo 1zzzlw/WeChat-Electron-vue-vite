@@ -16,8 +16,6 @@ import { getImageUrlList } from '../db/dualDB'
 const loading = ref()
 
 const openImage = async () => {
-  console.log('openImage');
-
   const imageUrlList = await getImageUrlList();
 
   (window as any).windowToolApi.createNewWindow('imagePreview', {
