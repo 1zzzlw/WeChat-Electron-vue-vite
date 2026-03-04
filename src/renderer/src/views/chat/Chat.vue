@@ -3,7 +3,12 @@
     <ChatHeader :friendRemark="conversation.remark" :friendUsername="conversation.name" />
     <div class="chat-content">
       <el-scrollbar ref="scrollbarRef" @scroll="handleScroll" noresize style="height: 100%; width: 100%">
-        <div class="chat-message" v-for="message in messageArr" :key="message.id">
+        <div class="chat-message" v-for="(message, index) in messageArr" :key="message.id" :id="`message${message.id}`">
+          <!-- 展示时间 -->
+          <ChatMessageTime :dataTime="message.sendTime"
+            v-if="index > 0 && dayjs(message.sendTime).diff(dayjs(messageArr[index - 1].sendTime)) >= 300000">
+          </ChatMessageTime>
+          <!-- 展示系统消息 -->
           <div v-if="String(message.senderId) === String(userId)">
             <div class="chat-list-right">
               <img :src="avatarUrl" class="list-image" />
@@ -104,6 +109,7 @@ import { getMessageList, saveSentMessage, saveLoadMessage, updateConversation } 
 import { Message } from '../../types/message.ts'
 import { Snowflake } from '@theinternetfolks/snowflake'
 import ContextMenu from '../../components/ContextMenu.vue'
+import ChatMessageTime from '../../components/ChatMessageTime.vue'
 
 // 消息分页配置
 const messagePageInfo = {
@@ -420,10 +426,18 @@ function scrollToBottom() {
 }
 
 // 滚动监听
-function handleScroll({ scrollTop }: any) {
-  if (scrollTop === 0) {
+async function handleScroll({ scrollTop }: any) {
+  if (scrollTop === 0 && messagePageInfo.pageNO > 0) {
     console.log('加载更多...');
-    loadMessage(conversation.value.id)
+    const lastMessageId = messageArr.value.at(0)?.id
+
+    await loadMessage(conversation.value.id)
+
+    // 等待 DOM 更新
+    await nextTick()
+
+    // 滚动到之前的第一条消息
+    document.querySelector('#message' + lastMessageId)?.scrollIntoView()
   }
 }
 
@@ -564,28 +578,6 @@ onUnmounted(() => {
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   -webkit-app-region: no-drag;
-}
-
-/* 2. 修改抽屉头部*/
-:deep(.download-drawer .el-drawer__header) {
-  background-color: #e8f4ff;
-  /* 头部背景 */
-  padding: 15px 20px;
-  /* 头部内边距 */
-  border-bottom: 1px solid #dcdfe6;
-  /* 头部下边框 */
-}
-
-/* 3. 修改抽屉内容区 */
-:deep(.download-drawer .el-drawer__body) {
-  padding: 0;
-  /* 内容区内边距 */
-  background-color: #f8f9fa;
-  /* 内容区背景 */
-  height: calc(100% - 60px);
-  /* 自适应高度（减去头部高度） */
-  overflow-y: auto;
-  /* 内容超出滚动 */
 }
 
 .chat-content {

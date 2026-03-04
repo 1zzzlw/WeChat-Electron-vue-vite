@@ -1,24 +1,6 @@
 import { defineStore } from 'pinia'
+import { userApplyInfo, groupApplyInfo } from '../types/applyInfo'
 
-// 用来临时存储好友申请列表
-
-interface userApplyInfo {
-  applyId: string | number
-  fromUserId: string | number
-  username: string
-  avatar: string
-  applyMsg: string
-  isDealt: 0 | 1
-  dealResult: 0 | 1
-}
-
-interface groupApplyInfo {
-  conversationId: string
-  userId: string | number
-  userAvatar: string
-  groupName: string
-  status: number
-}
 
 export const userApplyListInfo = defineStore('userApplyListInfo', {
   state: () => {

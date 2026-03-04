@@ -35,25 +35,24 @@ import { Friend } from '../../types/friend'
 import { Conversation } from '../../types/conversation'
 import { addConversation, addFriendRelation } from '../../db/dualDB'
 
-interface ApplyInfo {
-  applyId: number
-  fromUserId: number
-  username: string
-  avatar: string
-  applyMsg: string
-  isDealt: number
-  dealResult: number
-}
+import { userApplyInfo, groupApplyInfo } from '../../types/applyInfo'
+
 
 const route = useRoute()
 const userApplyStore = userApplyListInfo()
 const friendInfoStore = friendInfo()
 const conversationStore = conversationInfo()
-const applyInfo = reactive<ApplyInfo>({
+const applyInfo = reactive<userApplyInfo>({
   applyId: 0,
   fromUserId: 0,
   username: '',
   avatar: '',
+  account: '',
+  gender: '',
+  phone: '',
+  email: '',
+  birthday: '',
+  address: '',
   applyMsg: '',
   isDealt: 0,
   dealResult: 0
@@ -77,6 +76,12 @@ const agreeButton = () => {
         friendId: applyInfo.fromUserId,
         username: applyInfo.username,
         avatar: applyInfo.avatar,
+        account: applyInfo.account,
+        gender: applyInfo.gender,
+        phone: applyInfo.phone,
+        email: applyInfo.email,
+        birthday: applyInfo.birthday,
+        address: applyInfo.address,
         remark: '',
         relationStatus: 1
       }

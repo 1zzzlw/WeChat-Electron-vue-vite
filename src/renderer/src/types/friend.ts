@@ -2,7 +2,7 @@ export interface Friend {
     userId: number
     username: string
     account?: string
-    friendId: number
+    friendId: number | string
     avatar: string
     remark?: string
     gender?: string

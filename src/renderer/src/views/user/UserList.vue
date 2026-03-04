@@ -193,6 +193,12 @@ const fetchApplyList = () => {
         fromUserId: applyItem.fromUserId,
         username: applyItem.username,
         avatar: applyItem.avatar,
+        account: applyItem.account,
+        gender: applyItem.gender,
+        phone: applyItem.phone,
+        email: applyItem.email,
+        birthday: applyItem.birthday,
+        address: applyItem.address,
         applyMsg: applyItem.applyMsg,
         isDealt: applyItem.isDealt,
         dealResult: applyItem.dealResult

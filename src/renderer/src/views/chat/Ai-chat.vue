@@ -1,9 +1,290 @@
 <template>
-    <div>
-        ai聊天界面
+    <div class="chat-count">
+        <ChatHeader :friendRemark="conversation.remark" :friendUsername="conversation.name" />
+        <div class="chat-content">
+            <el-scrollbar ref="scrollbarRef" @scroll="handleScroll" noresize style="height: 100%; width: 100%">
+                <div class="chat-message" v-for="message in messageArr" :key="message.id">
+                    <div v-if="String(message.senderId) === String(userId)">
+                        <div class="chat-list-right">
+                            <img :src="avatarUrl" class="list-image" />
+                            <div v-if="message.msgType === 1" class="chat-bubble right-bubble">
+                                <div> {{ message.content }} </div>
+                            </div>
+                            <MessageContentManage v-else v-bind="message" :isUpload="true" />
+                        </div>
+                    </div>
+                    <div v-else>
+                        <div class="chat-list-left">
+                            <div class="iconfont icon-ai-chat list-image" />
+                            <div class="msg">
+                                <div class="left-name">{{ conversation.remark || conversation.name }}</div>
+                                <ContextMenu :menu="[
+                                    { label: '复制' },
+                                    { divider: true },
+                                    { label: '收藏' },
+                                    { label: '引用' },
+                                    { divider: true },
+                                    { label: '删除' },
+                                ]" @select="(item: any) => handleChoice(item, message.id)">
+                                    <div v-if="message.msgType === 1" class="chat-bubble left-bubble">
+                                        <div> {{ message.content }} </div>
+                                    </div>
+                                    <MessageContentManage v-else v-bind="message" :isUpload="false" />
+                                </ContextMenu>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </el-scrollbar>
+        </div>
+        <div class="chat-tool">
+        </div>
+        <form class="chat-input">
+            <el-input v-model="message" type="textarea" :rows="4" resize="none" placeholder="请输入消息" spellcheck="false"
+                clearable @keydown.enter="handleEnterMessage" />
+        </form>
+        <div class="sendButton">
+            <el-button type="primary" @click="sendMessage">发送</el-button>
+        </div>
     </div>
 </template>
 <script setup lang="ts">
+import { ref, computed, watch } from 'vue';
+import { Conversation, initConversation } from '../../types/conversation.ts'
+import ChatHeader from '../../components/ChatHeader.vue'
+import ContextMenu from '../../components/ContextMenu.vue'
+
+const avatarUrl = ref('')
+const message = ref('')
+const userId = ref()
+
+let conversation = ref<Conversation>(initConversation())
+
+function handleScroll({ scrollTop }: any) {
+    if (scrollTop === 0) {
+        console.log('加载更多...');
+        // loadMessage(conversation.value.id)
+    }
+}
+
+const sendMessage = () => {
+
+}
+
+const handleEnterMessage = (e: KeyboardEvent) => {
+    if (e.shiftKey) {
+        return
+    }
+
+    e.preventDefault()
+
+    sendMessage()
+}
+
+const handleChoice = (item: any, messageId: string) => {
+
+}
+
+const messageArr = computed(() => {
+})
 
 </script>
-<style scoped></style>
+
+<style scoped>
+.chat-count {
+    /* 设置宽度和高度，确保有足够空间展示居中效果 */
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background-color: rgba(28, 38, 50, 0.4);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    -webkit-app-region: no-drag;
+}
+
+.chat-content {
+    flex: 1;
+    overflow: hidden;
+}
+
+img {
+    width: 50px;
+    height: 50px;
+    border-radius: 10px;
+}
+
+.chat-list-left {
+    padding: 20px;
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+}
+
+.msg {
+    display: flex;
+    flex-direction: column;
+}
+
+.left-name {
+    font-size: 14px;
+    color: #ffffff;
+}
+
+.chat-list-right {
+    padding: 20px;
+    display: flex;
+    flex-direction: row-reverse;
+    gap: 10px;
+}
+
+.chat-tool {
+    height: 30px;
+    display: flex;
+    align-items: center;
+    border-top: 1px solid rgba(3, 32, 120, 0.5);
+    overflow: hidden;
+}
+
+.chat-tool button {
+    width: 30px;
+    height: 30px;
+    margin: 0;
+    font-size: 20px;
+    background-color: transparent;
+    border: none;
+    color: rgba(240, 240, 240, 0.8);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.chat-tool button:hover {
+    color: rgba(66, 153, 225, 0.9);
+    text-shadow: 0 0 6px rgba(66, 153, 225, 0.3);
+}
+
+.chat-input {
+    margin: 0 auto;
+    height: 120px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    padding: 0 10px;
+}
+
+.chat-input :deep(.el-textarea__inner) {
+    background-color: rgba(28, 38, 50, 1);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: #f0f0f0;
+    box-shadow: none;
+    border: 1px solid rgba(66, 153, 225, 0.2);
+
+    &::placeholder {
+        color: rgba(240, 240, 240, 0.5);
+    }
+}
+
+.sendButton {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+:deep(.el-button--primary) {
+    background: rgba(66, 153, 225, 0.2);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: none;
+    border-radius: 6px;
+    box-shadow:
+        0 2px 6px rgba(0, 0, 0, 0.2),
+        inset 0 1px 2px rgba(255, 255, 255, 0.08);
+    color: #f0f0f0;
+    font-size: 14px;
+    padding: 8px 24px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+:deep(.el-button--primary:hover),
+:deep(.el-button--primary:focus) {
+    background: rgba(66, 153, 225, 0.3);
+    box-shadow:
+        0 3px 8px rgba(0, 0, 0, 0.25),
+        inset 0 1px 3px rgba(255, 255, 255, 0.1);
+    transform: translateY(-1px);
+}
+
+:deep(.el-button--primary:active) {
+    transform: translateY(0);
+    background: rgba(66, 153, 225, 0.15);
+    box-shadow:
+        0 1px 4px rgba(0, 0, 0, 0.15),
+        inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.el-button {
+    width: 100px;
+    margin: 0 10px 5px 0;
+}
+
+/* 聊天气泡样式 */
+.chat-bubble {
+    padding: 8px 12px;
+    border-radius: 8px;
+    max-width: 400px;
+    word-break: break-all;
+    /* 定位三角箭头 */
+    position: relative;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+/* 左侧好友气泡 */
+.left-bubble {
+    background: rgba(45, 55, 70, 0.85);
+    color: #f0f0f0;
+    /* 左侧气泡左下角无圆角，贴合箭头 */
+    border-bottom-left-radius: 0;
+    border: 1px solid rgba(66, 153, 225, 0.1);
+}
+
+/* 左侧箭头 */
+.left-bubble::before {
+    content: '';
+    position: absolute;
+    left: -8px;
+    top: 10px;
+    width: 0;
+    height: 0;
+    border-top: 8px solid transparent;
+    border-right: 8px solid rgba(45, 55, 70, 0.85);
+    border-bottom: 8px solid transparent;
+}
+
+/* 右侧自己的气泡 */
+.right-bubble {
+    background: rgba(66, 153, 225, 0.35);
+    color: #ffffff;
+    border-bottom-right-radius: 0;
+    border: 1px solid rgba(66, 153, 225, 0.2);
+}
+
+/* 右侧箭头 */
+.right-bubble::after {
+    content: '';
+    position: absolute;
+    right: -8px;
+    top: 10px;
+    width: 0;
+    height: 0;
+    border-top: 8px solid transparent;
+    border-left: 8px solid rgba(66, 153, 225, 0.35);
+    border-bottom: 8px solid transparent;
+}
+</style>

@@ -12,6 +12,7 @@ import CollectList from '../views/user/CollectList.vue'
 import AllCollectView from '../views/collect/AllCollect.vue'
 import NoteView from '../views/collect/Note.vue'
 import ChatView from '../views/chat/Chat.vue'
+import AiChatView from '../views/chat/Ai-chat.vue'
 import FriendAddView from '../views/user/UserFriendAdd.vue'
 import FriendApplyView from '../views/friend/FriendApply.vue'
 import FriendInfoView from '../views/friend/FriendInfo.vue'
@@ -138,6 +139,11 @@ const router = createRouter({
               path: '/chat',
               name: 'chat',
               component: ChatView
+            },
+            {
+              path: '/aiChat',
+              name: 'aiChat',
+              component: AiChatView
             }
           ]
         },

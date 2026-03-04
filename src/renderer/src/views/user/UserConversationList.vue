@@ -31,7 +31,8 @@
               <div class="left-list">
                 <div class="left-image">
                   <UnreadCounts :unreadCounts="conversation.unreadCount" />
-                  <img :src=conversation.avatar alt="头像" class="left-list-img" />
+                  <div v-if="conversation.type === 2" class="iconfont icon-ai-chat"></div>
+                  <img v-else :src=conversation.avatar alt="头像" class="left-list-img" />
                 </div>
                 <div class="mid-message">
                   <h1 class="friend-name">{{ conversation.name }}</h1>
@@ -41,7 +42,6 @@
                   <div class="left-list-time" v-if="conversation.latestMsgTime !== 'Invalid Date'">
                     {{ conversation.latestMsgTime }}
                   </div>
-                  <div class="left-list-count"></div>
                   <div class="conversation-status"></div>
                 </div>
               </div>
@@ -67,7 +67,7 @@ import AutocompleteSearch from '../../components/AutocompleteSearch.vue'
 import UnreadCounts from '../../components/UnreadCounts.vue'
 import ContextMenu from '../../components/ContextMenu.vue';
 import { getConversationList, updateConversation } from '../../db/dualDB'
-import dayjs from 'dayjs'
+import { formatMessageTime } from '../../utils/utils.js'
 
 const router = useRouter()
 const active = ref<string | undefined>('')
@@ -87,13 +87,24 @@ const starCall = async (conversation: Conversation) => {
 
   // TODO 清除本地数据库中的未读消息数量
 
-  await router.push({
-    path: '/chat',
-    // 传递会话id
-    query: { conversationId: conversation.id }
-  })
+  if (conversation.type === 2) {
+    // 进入ai聊天窗口
+    await router.push({
+      path: '/aiChat',
+      // 传递会话id
+      query: { conversationId: conversation.id }
+    })
+  } else {
+    // 进入好友聊天窗口
+    await router.push({
+      path: '/chat',
+      // 传递会话id
+      query: { conversationId: conversation.id }
+    })
+  }
 
   // TODO 像后端发送消息已读状态更新请求
+
 }
 
 const createGroupChat = () => {
@@ -267,7 +278,7 @@ const loadConversationList = async () => {
 
     // 将会话信息存入pinia缓存中
     conversationList.forEach((conversation: Conversation) => {
-      conversation.latestMsgTime = conversation.latestMsgTime !== null ? dayjs(conversation.latestMsgTime).format('HH:mm:ss') : undefined
+      conversation.latestMsgTime = formatMessageTime(conversation.latestMsgTime)
       conversationStore.setConversationMap(conversation.id, conversation)
     })
   }
@@ -310,19 +321,19 @@ onMounted(async () => {
   overflow: hidden;
   /*文字移除的时候，显示省略号*/
   text-overflow: ellipsis;
+  line-height: 1.4;
 }
 
 .friend-message {
   font-size: 13px;
-  color: black;
-  margin-bottom: 5px;
+  color: #e0e0e0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.3;
 }
 
 .right-count {
-  /* 防止被压缩 */
   flex-shrink: 0;
   margin-left: 40px;
   position: relative;
@@ -331,15 +342,10 @@ onMounted(async () => {
 
 .left-list-time {
   position: absolute;
-  top: 0;
+  top: 2px;
   right: 0;
-  font-size: 14px;
-}
-
-.left-list-count {
-  position: absolute;
-  top: 10px;
-  right: 0;
+  white-space: nowrap;
+  font-size: 10px;
 }
 
 .user-status {
@@ -359,5 +365,17 @@ onMounted(async () => {
 .user-chat-list-right {
   flex: 1;
   -webkit-app-region: drag;
+}
+
+.icon-ai-chat {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 24px;
+  width: 50px;
+  height: 50px;
+  border-radius: 10px;
+  background-color: rgba(35, 45, 60, 0.7);
+  color: #409eff;
 }
 </style>
