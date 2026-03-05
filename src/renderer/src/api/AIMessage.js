@@ -5,6 +5,8 @@ import { refreshToken, isRefreshToken } from '../utils/axios/refreshToken'
 
 export const loadMessage = () => request.get('/ai-message/loadMessage')
 
+export const listPersonality = () => request.get('/ai-message/listPersonality')
+
 // AI流式请求
 export async function sendAIMessageApi(data) {
     const baseURL = server.defaults.baseURL || window.location.origin

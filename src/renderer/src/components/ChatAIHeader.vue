@@ -16,19 +16,19 @@
                         <div v-else class="iconfont icon-ai-chat avatar" />
                     </div>
                     <el-scrollbar noresize style="height: 400PX; width: 100%">
-                        <el-descriptions @click="editAIInfo = true" direction="vertical" border>
-                            <el-descriptions-item label="角色" align="center" label-class-name="my-label"
-                                class-name="my-content">
-                                <el-image class="avatar"
-                                    src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png" />
-                                <div>zhangsan</div>
-                            </el-descriptions-item>
-                            <el-descriptions-item label="个性化介绍" align="center" label-class-name="my-label"
-                                class-name="my-content">
-                                No.1188, Wuzhong Avenue, Wuzhong District, Suzhou, Jiangsu Province
-                                No.1188, Wuzhong Avenue, Wuzhong District, Suzhou, Jiangsu Province
-                            </el-descriptions-item>
-                        </el-descriptions>
+                        <div v-for="personalityInfo in personalityArr">
+                            <el-descriptions @click="editAIInfo = true" direction="vertical" border>
+                                <el-descriptions-item label="角色" align="center" label-class-name="my-label"
+                                    class-name="my-content">
+                                    <el-image class="avatar" :src="personalityInfo.avatar" />
+                                    <div>{{ personalityInfo.name }}</div>
+                                </el-descriptions-item>
+                                <el-descriptions-item label="个性化介绍" align="center" label-class-name="my-label"
+                                    class-name="my-content">
+                                    {{ personalityInfo.systemPrompt }}
+                                </el-descriptions-item>
+                            </el-descriptions>
+                        </div>
                     </el-scrollbar>
                     <div class="button">
                         <a @click="addAIInfo = true">创建新的个性化标签</a>
@@ -47,8 +47,8 @@
                     <el-form-item label="角色">
                         <el-input v-model="form.name"></el-input>
                     </el-form-item>
-                    <el-form-item label="个性化内容">
-                        <el-input v-model="form.phone" type="textarea" :rows="4" resize="none" placeholder="请输入消息"
+                    <el-form-item label="个性化">
+                        <el-input v-model="form.content" type="textarea" :rows="4" resize="none" placeholder="请输入消息"
                             spellcheck="false" clearable />
                     </el-form-item>
                 </el-form>
@@ -68,8 +68,8 @@
                     <el-form-item label="角色">
                         <el-input v-model="form.name"></el-input>
                     </el-form-item>
-                    <el-form-item label="个性化内容">
-                        <el-input v-model="form.phone" type="textarea" :rows="4" resize="none" placeholder="请输入消息"
+                    <el-form-item label="个性化">
+                        <el-input v-model="form.content" type="textarea" :rows="4" resize="none" placeholder="请输入消息"
                             spellcheck="false" clearable />
                     </el-form-item>
                 </el-form>
@@ -83,25 +83,42 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { ref, onMounted, computed } from 'vue';
+import { listPersonality } from '../api/AIMessage'
+import { Personality } from '../types/personality'
+import { aiPersonalityInfo } from '../stores/PersonalityStore'
 
 // 抽屉状态
 const drawer = ref(false)
 const imageUrl = ref('')
 const avatar = ref<File | null>(null)
 const fileInput = ref<any>(null);
-
 const addAIInfo = ref(false);
 const editAIInfo = ref(false);
+const aiPersonalityStore = aiPersonalityInfo()
 
 const form = ref({
     name: '',
-    phone: ''
+    content: ''
 });
 
 const submitForm = () => {
     console.log('填写的内容：', form.value);
-    addAIInfo.value = false;
+    if (form.value.content !== '' && form.value.name !== '') {
+        const personalityPack = {
+            name: form.value.name,
+            avatar: imageUrl.value,
+            systemPrompt: form.value.content,
+            isActive: 1,
+            isPreset: 0
+        }
+        aiPersonalityStore.addPersonality(personalityPack)
+        imageUrl.value = ''
+        addAIInfo.value = false;
+        form.value = { name: '', content: '' }
+    } else {
+        console.log(111)
+    }
 };
 
 const handleClick = async () => {
@@ -119,6 +136,20 @@ const props = defineProps({
         type: Object,
         default: {}
     }
+})
+
+const loadPersonality = async () => {
+    const res = await listPersonality()
+    console.log(res.data)
+}
+
+const personalityArr = computed(() => {
+    return aiPersonalityStore.aiPersonalityList
+})
+
+onMounted(async () => {
+    // 拉取个性化信息列表
+    await loadPersonality()
 })
 
 </script>
