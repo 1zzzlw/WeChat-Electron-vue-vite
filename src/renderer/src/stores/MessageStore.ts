@@ -24,7 +24,7 @@ export const messageInfo = defineStore('messageInfo', {
       if (!this.messageMap[conversationId]) {
         this.messageMap[conversationId] = []
       }
-      // 再添加消息，需要在头部拼接消息
+      // 再添加消息，需要在尾部拼接消息
       this.messageMap[conversationId].push(message)
       console.info(this.messageMap[conversationId])
     },

@@ -1,21 +1,23 @@
 <template>
     <div class="chat-count">
-        <ChatHeader :friendRemark="conversation.remark" :friendUsername="conversation.name" />
+        <ChatAIHeader :conversation="conversation" />
         <div class="chat-content">
             <el-scrollbar ref="scrollbarRef" @scroll="handleScroll" noresize style="height: 100%; width: 100%">
-                <div class="chat-message" v-for="message in messageArr" :key="message.id">
-                    <div v-if="String(message.senderId) === String(userId)">
+                <div class="chat-message" v-for="message in aiMessageArr" :key="message.id">
+                    <div v-if="message.role === 'user'">
                         <div class="chat-list-right">
                             <img :src="avatarUrl" class="list-image" />
                             <div v-if="message.msgType === 1" class="chat-bubble right-bubble">
                                 <div> {{ message.content }} </div>
                             </div>
-                            <MessageContentManage v-else v-bind="message" :isUpload="true" />
                         </div>
                     </div>
                     <div v-else>
                         <div class="chat-list-left">
-                            <div class="iconfont icon-ai-chat list-image" />
+                            <div v-if="conversation.avatar !== null">
+                                <img :src="conversation.avatar" class="list-image" />
+                            </div>
+                            <div v-else class="iconfont icon-ai-chat list-image" />
                             <div class="msg">
                                 <div class="left-name">{{ conversation.remark || conversation.name }}</div>
                                 <ContextMenu :menu="[
@@ -29,7 +31,6 @@
                                     <div v-if="message.msgType === 1" class="chat-bubble left-bubble">
                                         <div> {{ message.content }} </div>
                                     </div>
-                                    <MessageContentManage v-else v-bind="message" :isUpload="false" />
                                 </ContextMenu>
                             </div>
                         </div>
@@ -38,6 +39,7 @@
             </el-scrollbar>
         </div>
         <div class="chat-tool">
+            <el-button class="iconfont icon-tupian" square @click="selectImage"></el-button>
         </div>
         <form class="chat-input">
             <el-input v-model="message" type="textarea" :rows="4" resize="none" placeholder="请输入消息" spellcheck="false"
@@ -49,26 +51,127 @@
     </div>
 </template>
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
+import { useRoute } from 'vue-router'
 import { Conversation, initConversation } from '../../types/conversation.ts'
-import ChatHeader from '../../components/ChatHeader.vue'
+import ChatAIHeader from '../../components/ChatAIHeader.vue'
 import ContextMenu from '../../components/ContextMenu.vue'
+import { loadMessage, sendAIMessageApi } from '../../api/AIMessage.js'
+import { AIMessage } from '../../types/aiMessage.ts'
+import { aiMessageInfo } from '../../stores/AIMessageStore.ts'
+import { conversationInfo } from '../../stores/ConversationStore.ts';
 
 const avatarUrl = ref('')
 const message = ref('')
 const userId = ref()
+const convId = ref()
+const aiMessageInfoStore = aiMessageInfo()
+const conversationStore = conversationInfo()
+const route = useRoute()
+const scrollbarRef = ref()
 
 let conversation = ref<Conversation>(initConversation())
 
-function handleScroll({ scrollTop }: any) {
-    if (scrollTop === 0) {
-        console.log('加载更多...');
-        // loadMessage(conversation.value.id)
+const selectImage = async () => {
+    // 获取文件的信息
+    const file = await (window as any).uploadFileApi.selectFile('uploadFile')
+    console.log(file)
+    if (!file) {
+        return
     }
 }
 
 const sendMessage = () => {
+    if (message.value === '') {
+        return
+    }
+    const AIMessagePack = createAIMessagePack(message.value, 'user', 1)
+    sendApi(AIMessagePack)
+}
 
+const sendApi = async (AIMessagePack: AIMessage) => {
+    // 添加消息到缓存中
+    aiMessageInfoStore.addMessageMap(convId.value, AIMessagePack)
+
+    message.value = ''
+
+    // 滚动到最底部
+    await nextTick()
+    scrollToBottom()
+
+    const response = await sendAIMessageApi(AIMessagePack)
+
+    const responsePack: AIMessage = {
+        userId: userId.value,
+        role: 'assistant',
+        msgType: 1,
+        content: '',
+    }
+
+    aiMessageInfoStore.addMessageMap(convId.value, responsePack)
+
+    // 滚动到最底部
+    await nextTick()
+    scrollToBottom()
+
+    // 获得这个ai消息的最新索引
+    const messageIndex = aiMessageInfoStore.aiMessageMap[convId.value].length - 1
+
+    if (response.body !== null) {
+        const reader = response.body.getReader()
+        // 解码器
+        const textDecoder = new TextDecoder()
+        while (1) {
+            const { done, value } = await reader.read()
+            if (done) {
+                break
+            }
+            const text = textDecoder.decode(value, { stream: true })
+            // 处理SSE格式：可能有多行 "data:xxx\n\ndata:yyy\n\n"
+            const lines = text.split('\n')
+            for (const line of lines) {
+                if (line.startsWith('data:')) {
+                    // 去掉 "data:" 前缀并去除首位空白
+                    const chunk = line.substring(5).trim()
+                    aiMessageInfoStore.updateAIMessageContent(convId.value, messageIndex, chunk)
+                }
+            }
+        }
+    }
+}
+
+// 滚动监听
+async function handleScroll({ scrollTop }: any) {
+    if (scrollTop === 0) {
+        console.log('加载更多...');
+        const lastMessageId = aiMessageArr.value.at(0)?.id
+
+        console.log(lastMessageId)
+
+        // await loadAIMessage()
+
+        // 等待 DOM 更新
+        await nextTick()
+
+        // 滚动到之前的第一条消息
+        document.querySelector('#message' + lastMessageId)?.scrollIntoView()
+    }
+}
+
+function scrollToBottom() {
+    if (scrollbarRef.value) {
+        scrollbarRef.value.setScrollTop(1000000)
+    }
+}
+
+const createAIMessagePack = (content: string, role: string, msgType: number) => {
+    const AIMessagePack: AIMessage = {
+        userId: userId.value,
+        role: role,
+        msgType: msgType,
+        content: content,
+    }
+    return AIMessagePack
 }
 
 const handleEnterMessage = (e: KeyboardEvent) => {
@@ -81,13 +184,39 @@ const handleEnterMessage = (e: KeyboardEvent) => {
     sendMessage()
 }
 
-const handleChoice = (item: any, messageId: string) => {
+const handleChoice = (item: any, messageId: string | undefined) => {
 
 }
 
-const messageArr = computed(() => {
+const aiMessageArr = computed(() => {
+    const convId = route.query.conversationId as string
+    // 如果会话ID不存在，或消息列表未初始化，用空数组兜底
+    return aiMessageInfoStore.aiMessageMap[convId] || []
 })
 
+const loadAIMessage = async () => {
+    const res = await loadMessage()
+    res.data.forEach((messagePack: AIMessage) => aiMessageInfoStore.loadMessageMap(convId.value, messagePack))
+}
+
+onMounted(async () => {
+    convId.value = route.query.conversationId as string
+    avatarUrl.value = await (window as any).userInfoApi.storeGetUserInfo('avatar')
+    userId.value = await (window as any).userInfoApi.storeGetUserInfo('userId')
+    // 加载历史消息
+    await loadAIMessage()
+
+    // 滚动到最底部
+    await nextTick()
+    scrollToBottom()
+
+    // 初始化会话信息
+    conversation.value = conversationStore.conversationMap[convId.value as string]
+})
+
+onUnmounted(() => {
+    aiMessageInfoStore.clearMessageMap(convId.value)
+})
 </script>
 
 <style scoped>
@@ -130,6 +259,18 @@ img {
 .left-name {
     font-size: 14px;
     color: #ffffff;
+}
+
+.icon-ai-chat {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    width: 50px;
+    height: 50px;
+    border-radius: 10px;
+    background-color: rgba(35, 45, 60, 0.7);
+    color: #409eff;
 }
 
 .chat-list-right {
