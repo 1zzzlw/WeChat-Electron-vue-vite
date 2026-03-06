@@ -196,6 +196,7 @@ const aiMessageArr = computed(() => {
 
 const loadAIMessage = async () => {
     const res = await loadMessage()
+    console.log(res.data)
     res.data.forEach((messagePack: AIMessage) => aiMessageInfoStore.loadMessageMap(convId.value, messagePack))
 }
 

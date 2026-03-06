@@ -248,6 +248,8 @@ const sendPrivateMessage = async () => {
 
   const messagePack = createMessagePack(receiverId, convId, 1, content, null);
 
+  console.log(messagePack);
+
   // ws发送单聊信息：会话id、接收者id、消息内容
   (window as any).wsApi.sendMessage(1, 0, messagePack)
 

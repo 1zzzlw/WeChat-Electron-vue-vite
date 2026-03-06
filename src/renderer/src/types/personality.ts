@@ -4,6 +4,6 @@ export interface Personality {
     name: string
     avatar: string
     systemPrompt: string
-    isActive: number
-    isPreset: number
+    isActive?: number
+    isPreset?: number
 }

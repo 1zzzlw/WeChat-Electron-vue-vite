@@ -5,6 +5,14 @@ import { refreshToken, isRefreshToken } from '../utils/axios/refreshToken'
 
 export const loadMessage = () => request.get('/ai-message/loadMessage')
 
+export const createPersonality = (data) => request.post('/ai-message/createPersonality', data)
+
+export const updatePersonality = (data) => request.post('/ai-message/updatePersonality', data)
+
+export const switchPersonality = (id) => request.post(`/ai-message/switchPersonality/${id}`)
+
+export const deletePersonality = (id) => request.delete(`/ai-message/deletePersonality/${id}`)
+
 export const listPersonality = () => request.get('/ai-message/listPersonality')
 
 // AI流式请求

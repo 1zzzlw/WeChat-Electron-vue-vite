@@ -17,9 +17,9 @@
                     </div>
                     <el-scrollbar noresize style="height: 400PX; width: 100%">
                         <div v-for="personalityInfo in personalityArr">
-                            <el-descriptions @click="editAIInfo = true" direction="vertical" border>
-                                <el-descriptions-item label="角色" align="center" label-class-name="my-label"
-                                    class-name="my-content">
+                            <el-descriptions @click="handleOpenDrawer(personalityInfo.id)" direction="vertical" border>
+                                <el-descriptions-item label="角色" width="100px" align="center"
+                                    label-class-name="my-label" class-name="my-content">
                                     <el-image class="avatar" :src="personalityInfo.avatar" />
                                     <div>{{ personalityInfo.name }}</div>
                                 </el-descriptions-item>
@@ -58,24 +58,24 @@
                 </template>
             </el-dialog>
             <el-dialog title="智能ai" v-model="editAIInfo" width="500px">
-                <el-form :model="form" label-width="80px">
-                    <img v-if="imageUrl" :src="imageUrl" class="avatar" alt="头像" />
-                    <el-icon v-else class="avatar-uploader-icon" @click="handleClick">
-                        <Plus />
-                    </el-icon>
+                <el-form :model="currentPersonality" label-width="80px">
+                    <img v-if="currentPersonality.avatar !== null" :src="currentPersonality.avatar" class="avatar"
+                        alt="头像" />
+                    <div v-else class="iconfont icon-ai-chat avatar" />
                     <input ref="fileInput" style="display: none" type="file" accept="image/*"
                         @change="handleFileChange">
                     <el-form-item label="角色">
-                        <el-input v-model="form.name"></el-input>
+                        <el-input v-model="currentPersonality.name"></el-input>
                     </el-form-item>
                     <el-form-item label="个性化">
-                        <el-input v-model="form.content" type="textarea" :rows="4" resize="none" placeholder="请输入消息"
-                            spellcheck="false" clearable />
+                        <el-input v-model="currentPersonality.systemPrompt" type="textarea" :rows="4" resize="none"
+                            placeholder="请输入消息" spellcheck="false" clearable />
                     </el-form-item>
                 </el-form>
                 <template #footer>
-                    <el-button @click="editAIInfo = false">删除</el-button>
-                    <el-button type="primary" @click="submitForm">使用</el-button>
+                    <el-button @click="DeleteForm">删除</el-button>
+                    <el-button v-if="currentPersonality.isActive === 1" disabled>正在使用</el-button>
+                    <el-button v-else type="primary" @click="submitNewForm">使用</el-button>
                 </template>
             </el-dialog>
         </div>
@@ -83,52 +83,121 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted, computed } from 'vue';
-import { listPersonality } from '../api/AIMessage'
+import { ref, watch, computed } from 'vue';
+import { deletePersonality, switchPersonality, updatePersonality, createPersonality, listPersonality } from '../api/AIMessage'
 import { Personality } from '../types/personality'
 import { aiPersonalityInfo } from '../stores/PersonalityStore'
+import { conversationInfo } from '../stores/ConversationStore';
+import { updateConversation } from '../db/dualDB'
+import { ElMessage } from 'element-plus';
 
 // 抽屉状态
 const drawer = ref(false)
 const imageUrl = ref('')
-const avatar = ref<File | null>(null)
+const avatar = ref<File | ''>('')
 const fileInput = ref<any>(null);
 const addAIInfo = ref(false);
 const editAIInfo = ref(false);
 const aiPersonalityStore = aiPersonalityInfo()
+const personalityArr = ref<Personality[]>([]);
+const currentPersonalityId = ref<string>()
+const conversationStore = conversationInfo()
 
 const form = ref({
     name: '',
     content: ''
 });
 
-const submitForm = () => {
-    console.log('填写的内容：', form.value);
-    if (form.value.content !== '' && form.value.name !== '') {
-        const personalityPack = {
-            name: form.value.name,
-            avatar: imageUrl.value,
-            systemPrompt: form.value.content,
-            isActive: 1,
-            isPreset: 0
-        }
-        aiPersonalityStore.addPersonality(personalityPack)
-        imageUrl.value = ''
-        addAIInfo.value = false;
-        form.value = { name: '', content: '' }
-    } else {
-        console.log(111)
-    }
-};
-
-const handleClick = async () => {
-    fileInput.value?.click();
-}
-
 const handleFileChange = (e: any) => {
     const file = e.target.files[0]
     imageUrl.value = URL.createObjectURL(file)
     avatar.value = file
+}
+
+const submitNewForm = async () => {
+    const personalityPack = currentPersonality.value
+    // 更新个性化ai
+    await updatePersonality(personalityPack)
+
+    // 切换个性化ai
+    const res = await switchPersonality(personalityPack.id)
+    // 从服务端获取当前ai智能体的头像，因为新创建的ai智能体的头像可能是临时的
+    const avatar = res.data
+    const id = props.conversation.id
+    // 更新头像显示
+    conversationStore.updateConversationAvatar(id, avatar)
+
+    // 取消所有的ai智能体并激活当前的ai智能体
+    aiPersonalityStore.switchPersonality(personalityPack.id)
+
+    // 更新本地会话数据库的头像路径
+    const condition = {
+        id: id
+    }
+    const data = {
+        avatar: avatar
+    }
+    updateConversation(condition, data)
+    editAIInfo.value = false
+}
+
+const DeleteForm = async () => {
+    editAIInfo.value = false
+
+    await deletePersonality(currentPersonality.value.id)
+
+    // 删除缓存中的ai智能体
+    aiPersonalityStore.removePersonality(currentPersonality.value.id)
+}
+
+const submitForm = () => {
+    console.log('填写的内容：', form.value);
+    if (form.value.content !== '' && form.value.name !== '') {
+        const roleName = form.value.name
+        const content = form.value.content
+        const avatarTempUrl = imageUrl.value
+
+        // 重置表单状态
+        imageUrl.value = ''
+        addAIInfo.value = false;
+        form.value = { name: '', content: '' }
+
+        const formData = new FormData()
+
+        formData.append('name', roleName)
+        formData.append('systemPrompt', content)
+        formData.append('isActive', '1')
+        formData.append('isPreset', '0')
+        formData.append('avatarFile', avatar.value)
+
+        // 上传至服务器
+        createPersonality(formData).then((res) => {
+            const id = res.data
+            // 默认创建成功之后不自动使用
+            const personalityPack = {
+                id: id,
+                name: roleName,
+                avatar: avatarTempUrl,
+                systemPrompt: content,
+                isActive: 0,
+                isPreset: 0
+            }
+            console.log(personalityPack)
+            // 表单信息加入缓存中
+            aiPersonalityStore.addPersonality(id, personalityPack)
+        })
+    } else {
+        ElMessage.warning('个性话内容不能为空')
+    }
+};
+
+const handleOpenDrawer = (id: string | undefined) => {
+    editAIInfo.value = true;
+    currentPersonalityId.value = id as string
+};
+
+const handleClick = async () => {
+    fileInput.value?.click();
 }
 
 const props = defineProps({
@@ -139,19 +208,35 @@ const props = defineProps({
 })
 
 const loadPersonality = async () => {
+    const cache = Object.keys(aiPersonalityStore.aiPersonalityMap).length > 0
+
+    if (cache) {
+        console.info('ai个性化列表缓存非空:', cache)
+        return
+    }
+
     const res = await listPersonality()
-    console.log(res.data)
+
+    res.data.forEach((personalityPack: Personality) => {
+        aiPersonalityStore.addPersonality(personalityPack.id as string, personalityPack)
+    })
 }
 
-const personalityArr = computed(() => {
-    return aiPersonalityStore.aiPersonalityList
+const currentPersonality = computed(() => {
+    if (!currentPersonalityId.value) return null
+    return aiPersonalityStore.getPersonality(currentPersonalityId.value) as any
 })
 
-onMounted(async () => {
-    // 拉取个性化信息列表
-    await loadPersonality()
-})
+watch(
+    () => aiPersonalityStore.aiPersonalityMap,
+    async (newMap) => {
+        // 拉取个性化信息列表
+        await loadPersonality()
 
+        personalityArr.value = Object.values(newMap) || []
+    },
+    { immediate: true, deep: true }
+)
 </script>
 
 <style scoped>

@@ -71,6 +71,11 @@ export const conversationInfo = defineStore('conversationInfo', {
       if (this.conversationMap[conversationId]) {
         delete this.conversationMap[conversationId]
       }
+    },
+    updateConversationAvatar(conversationId: string, avatar: string) {
+      if (this.conversationMap[conversationId]) {
+        this.conversationMap[conversationId].avatar = avatar
+      }
     }
   }
 })

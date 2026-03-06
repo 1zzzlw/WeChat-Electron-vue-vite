@@ -31,7 +31,8 @@
               <div class="left-list">
                 <div class="left-image">
                   <UnreadCounts :unreadCounts="conversation.unreadCount" />
-                  <div v-if="conversation.type === 2" class="iconfont icon-ai-chat"></div>
+                  <div v-if="conversation.type === 2 && conversation.avatar === null" class="iconfont icon-ai-chat">
+                  </div>
                   <img v-else :src=conversation.avatar alt="头像" class="left-list-img" />
                 </div>
                 <div class="mid-message">
