@@ -7,6 +7,7 @@ export interface Conversation {
     remark?: string
     type?: number
     isTop?: number
+    isMute?: number
     unreadCount?: number
     latestMsg?: string
     latestMsgTime?: number | string

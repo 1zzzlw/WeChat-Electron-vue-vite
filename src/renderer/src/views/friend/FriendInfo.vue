@@ -1,6 +1,18 @@
 <template>
   <div class="friendInfo-count">
     <div class="userInfo">
+      <el-popover placement="bottom" trigger="click" :width="150">
+        <div class="setButton">
+          <div>设置备注</div>
+          <div>加入黑名单</div>
+          <div>删除好友</div>
+        </div>
+        <template #reference>
+          <el-icon class="left-icon" size="25">
+            <MoreFilled />
+          </el-icon>
+        </template>
+      </el-popover>
       <div class="accountInfo">
         <img :src="friendBaseInfo?.avatar" alt="">
         <div class="accountInfo-info">
@@ -11,12 +23,26 @@
         </div>
       </div>
       <div class="baseInfo">
-        <div>备注</div>
-        <div>性别: {{ friendBaseInfo?.gender }}</div>
+        <div>备注: {{ friendBaseInfo?.remark }}
+        </div>
+        <div>性别:
+          <span v-if="friendBaseInfo?.gender === '1.0'">
+            男 <el-icon
+              style="color: #409eff; font-size: 16px; filter: drop-shadow(0 0 2px #409eff); vertical-align: middle; margin-left: 4px;">
+              <Male />
+            </el-icon>
+          </span>
+          <span v-else-if="friendBaseInfo?.gender === '2.0'">
+            女 <el-icon
+              style="color: #ff8acc; font-size: 16px; filter: drop-shadow(0 0 2px #ff8acc); vertical-align: middle; margin-left: 4px;">
+              <Female />
+            </el-icon>
+          </span>
+        </div>
         <div>手机号: {{ friendBaseInfo?.phone }}</div>
-        <div>邮箱</div>
-        <div>地址</div>
-        <div>生日</div>
+        <div>邮箱: {{ friendBaseInfo?.email }}</div>
+        <div>地址: {{ friendBaseInfo?.address }}</div>
+        <div>生日: {{ friendBaseInfo?.birthday }}</div>
       </div>
       <div class="moments">
         朋友圈
@@ -113,12 +139,34 @@ watch(
   -webkit-app-region: no-drag;
 }
 
+.left-icon {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  -webkit-app-region: no-drag;
+  width: 30px;
+  height: 30px;
+  margin: 0;
+  font-size: 20px;
+  background-color: transparent;
+  border: none;
+  color: rgba(240, 240, 240, 0.8);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.left-icon:hover {
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 0 0 6px rgba(255, 255, 255, 0.25);
+}
+
 .accountInfo {
   width: 100%;
   height: 120px;
   display: flex;
+  align-items: center;
   gap: 20px;
-  padding: 10px;
+  padding: 10px 20px;
   background: rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   align-items: center;
@@ -134,6 +182,7 @@ img {
 .accountInfo-info {
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: 8px;
 }
 

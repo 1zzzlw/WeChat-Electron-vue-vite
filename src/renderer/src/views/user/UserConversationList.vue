@@ -3,7 +3,7 @@
     <div class="user-message-list-left">
       <div class="message-list-top">
         <AutocompleteSearch />
-        <el-dropdown>
+        <el-dropdown trigger="click">
           <el-button style="background-color: rgba(35, 45, 60, 0.7); border-color: rgba(66, 153, 225, 0.2);"
             :icon="Plus" square></el-button>
           <template #dropdown>
@@ -17,13 +17,15 @@
 
       <div class="message-list-bottom">
         <el-scrollbar>
-          <div v-for="conversation in conversationListArr" :key="conversation.id"
-            :class="{ 'left-list-bg': active === conversation.id }" @click="starCall(conversation)">
+          <div v-for="conversation in conversationListArr" :key="conversation.id" :class="{
+            'left-list-bg': active === conversation.id,
+            'top-bg': conversation.isTop === 1
+          }" @click="starCall(conversation)">
             <ContextMenu :menu="[
-              { label: '置顶聊天' },
+              conversation.isTop === 0 ? { label: '置顶聊天' } : { label: '取消置顶' },
               { label: '标为未读' },
               { divider: true },
-              { label: '消息免打扰' },
+              conversation.isMute === 0 ? { label: '消息免打扰' } : { label: '取消消息免打扰' },
               { label: '独立窗口显示' },
               { divider: true },
               { label: '删除' },
@@ -69,6 +71,7 @@ import UnreadCounts from '../../components/UnreadCounts.vue'
 import ContextMenu from '../../components/ContextMenu.vue';
 import { getConversationList, updateConversation } from '../../db/dualDB'
 import { formatMessageTime } from '../../utils/utils.js'
+import { updateConversationTopStatus, updateConversationMuteStatus } from '../../db/syncDB.js'
 
 const router = useRouter()
 const active = ref<string | undefined>('')
@@ -116,12 +119,29 @@ const createGroupChat = () => {
 const handleChoice = (item: any, conversationId: string) => {
   switch (item.label) {
     case '置顶聊天': {
+      // 更新缓存
+      conversationStore.updateConversationTopStatus(conversationId, 1)
+      updateConversationTopStatus(conversationId, userId.value, 1)
+      break
+    }
+    case '取消置顶': {
+      conversationStore.updateConversationTopStatus(conversationId, 0)
+      updateConversationTopStatus(conversationId, userId.value, 0)
       break
     }
     case '标为未读': {
       break
     }
     case '消息免打扰': {
+      // 更新缓存
+      conversationStore.updateConversationMuteStatus(conversationId, 1)
+      updateConversationMuteStatus(conversationId, userId.value, 1)
+      break
+    }
+    case '取消消息免打扰': {
+      // 更新缓存
+      conversationStore.updateConversationMuteStatus(conversationId, 0)
+      updateConversationMuteStatus(conversationId, userId.value, 0)
       break
     }
     case '独立窗口显示': {
@@ -138,6 +158,8 @@ const handleChoice = (item: any, conversationId: string) => {
       updateConversation(condition, data)
       // 从会话缓存中清除
       conversationStore.removeConversation(conversationId)
+      // 切换路由
+      router.push('/messageList')
       break
     }
   }
@@ -287,7 +309,21 @@ const loadConversationList = async () => {
 
 // 可以检测会话的更新实时展示
 const conversationListArr = computed(() => {
-  return Object.values(conversationStore.conversationMap)
+  const list = Object.values(conversationStore.conversationMap)
+
+  // 按置顶和时间排序
+  return list.sort((a: any, b: any) => {
+    // 置顶的排前面
+    if (a.isTop !== b.isTop) {
+      return b.isTop - a.isTop
+    }
+
+    if (!a.latestMsgTime) return 1
+    if (!b.latestMsgTime) return -1
+
+    // 都置顶或都不置顶，按时间排序
+    return b.latestMsgTime.localeCompare(a.latestMsgTime)
+  })
 })
 
 onMounted(async () => {
@@ -339,6 +375,24 @@ onMounted(async () => {
   margin-left: 40px;
   position: relative;
   height: 50px;
+}
+
+.top-bg {
+  background: linear-gradient(135deg,
+      rgba(66, 153, 225, 0.15) 0%,
+      rgba(66, 153, 225, 0.08) 100%);
+  border-left: 3px solid rgba(66, 153, 225, 0.6);
+  box-shadow: inset 0 0 20px rgba(66, 153, 225, 0.1);
+  position: relative;
+}
+
+.top-bg::before {
+  content: '📌';
+  position: absolute;
+  right: 10px;
+  top: 5px;
+  font-size: 12px;
+  opacity: 0.6;
 }
 
 .left-list-time {

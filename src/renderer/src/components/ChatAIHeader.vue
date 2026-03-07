@@ -269,8 +269,8 @@ watch(
 }
 
 .left-icon:hover {
-    color: rgba(66, 153, 225, 0.9);
-    text-shadow: 0 0 6px rgba(66, 153, 225, 0.3);
+    color: rgba(255, 255, 255, 0.95);
+    text-shadow: 0 0 6px rgba(255, 255, 255, 0.25);
 }
 
 .chat-set-content {
@@ -378,14 +378,10 @@ watch(
     background-color: transparent !important;
 }
 
-/* 自定义标签单元格样式 - 强化对比度 */
 :deep(.my-label) {
-    /* 背景：更深的半透明，确保标签突出 */
     background-color: rgba(28, 38, 50, 0.85) !important;
-    /* 文字：纯白，高对比度 */
     color: #ffffff !important;
     font-weight: 600 !important;
-    /* 边框：清晰的蓝色边框 */
     border: 1px solid rgba(66, 153, 225, 0.4) !important;
     padding: 14px 20px !important;
     text-align: center !important;
@@ -393,11 +389,8 @@ watch(
     font-size: 14px !important;
 }
 
-/* 自定义内容单元格样式 - 提升可读性 */
 :deep(.my-content) {
-    /* 背景：中等透明度的深色，保证文字清晰 */
     background-color: rgba(28, 38, 50, 0.6) !important;
-    /* 文字：亮白，确保清晰可见 */
     color: #ffffff !important;
     border: 1px solid rgba(66, 153, 225, 0.4) !important;
     padding: 14px 20px !important;

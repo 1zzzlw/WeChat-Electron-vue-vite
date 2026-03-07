@@ -76,6 +76,16 @@ export const conversationInfo = defineStore('conversationInfo', {
       if (this.conversationMap[conversationId]) {
         this.conversationMap[conversationId].avatar = avatar
       }
-    }
+    },
+    updateConversationTopStatus(conversationId: string, status: number) {
+      if (this.conversationMap[conversationId]) {
+        this.conversationMap[conversationId].isTop = status
+      }
+    },
+    updateConversationMuteStatus(conversationId: string, status: number) {
+      if (this.conversationMap[conversationId]) {
+        this.conversationMap[conversationId].isMute = status
+      }
+    },
   }
 })
