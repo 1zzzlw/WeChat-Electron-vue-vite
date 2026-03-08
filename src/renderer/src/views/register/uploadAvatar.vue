@@ -41,7 +41,7 @@ const router = useRouter()
 const route = useRoute()
 // 存储预览图片的临时URL
 const imageUrl = ref('')
-const fileInput = ref<any>(null);
+const fileInput = ref<any>(null)
 const avatar = ref<File | null>(null)
 
 const userInfo = reactive<UserInfo>({
@@ -85,6 +85,8 @@ const submitForm = async () => {
       // 注册成功后，将用户id保存到本地
       (window as any).userInfoApi.storeSetUserInfo('userId', userBaseInfo.userId);
       (window as any).userInfoApi.storeSetUserInfo('avatar', userBaseInfo.avatar);
+      (window as any).userInfoApi.storeSetUserInfo('username', userBaseInfo.username);
+
 
       // 清空缓存的注册信息
       registerInfoStore.$reset()

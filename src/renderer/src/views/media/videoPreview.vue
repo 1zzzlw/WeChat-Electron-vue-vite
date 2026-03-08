@@ -3,7 +3,7 @@
         <div class="video-header">
             <div class="iconfont icon-fangxiang-xiangzuo" @click="prev" title="上一张"></div>
             <div class="iconfont icon-fangxiang-xiangyou" @click="next" title="下一张"></div>
-            <div class="iconfont icon-xiazai" @click="dowload" title="下载"></div>
+            <div class="iconfont icon-xiazai-wenjianxiazai-05" @click="dowload" title="下载"></div>
         </div>
         <div class="player" ref="player">
 

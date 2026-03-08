@@ -18,7 +18,17 @@ const updateMessage = (condition, data) => {
     update('message', condition, data)
 }
 
+/**
+ * 更新数据库
+ * @param condition -- 条件
+ * @param data -- 新的笔记内容 
+ */
+const updateOldNoteContent = (condition, data) => {
+    update('favorites', condition, data)
+}
+
 export {
     updateConversation,
-    updateMessage
+    updateMessage,
+    updateOldNoteContent
 }

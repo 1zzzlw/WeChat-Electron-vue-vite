@@ -297,7 +297,6 @@ img {
 .apply-message :deep(.el-input__count) {
   color: rgba(224, 230, 237, 0.6);
   background: none;
-
 }
 
 .newFriend .el-button {

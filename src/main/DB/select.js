@@ -101,6 +101,13 @@ const getVideoUrlList = () => {
     return result
 }
 
+const getFavorites = (userId) => {
+    const sql = `select * from favorites where user_id = ?`
+    const params = [userId]
+    const result = queryAll(sql, params)
+    return result
+}
+
 export {
     isExistUserRecord,
     queryConversation,
@@ -109,5 +116,6 @@ export {
     getFriendInfoById,
     getConversationInfoById,
     getImageUrlList,
-    getVideoUrlList
+    getVideoUrlList,
+    getFavorites
 }

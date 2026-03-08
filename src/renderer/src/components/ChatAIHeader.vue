@@ -166,7 +166,7 @@ const submitForm = () => {
 
         formData.append('name', roleName)
         formData.append('systemPrompt', content)
-        formData.append('isActive', '1')
+        formData.append('isActive', '0')
         formData.append('isPreset', '0')
         formData.append('avatarFile', avatar.value)
 

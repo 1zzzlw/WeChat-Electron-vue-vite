@@ -26,6 +26,7 @@ import InformSetVue from '../views/setting/InformSet.vue'
 import AboutVue from '../views/setting/About.vue'
 import ImagePreviewView from '../views/media/imagePreview.vue'
 import VideoPreviewView from '../views/media/videoPreview.vue'
+import CreateNoteView from '../views/collect/CreateNote.vue'
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -64,6 +65,11 @@ const router = createRouter({
       path: '/createGroup',
       name: 'createGroup',
       component: CreateGroupView
+    },
+    {
+      path: '/createNote',
+      name: 'createNote',
+      component: CreateNoteView
     },
     {
       path: '/setting',

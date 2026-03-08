@@ -9,7 +9,7 @@
             <div class="iconfont icon-yuanshidaxiao" @click="resize" title="还原"></div>
             <el-divider direction="vertical" />
             <div class="iconfont icon-xuanzhuan" @click="rotate" title="旋转"></div>
-            <div class="iconfont icon-xiazai" @click="dowload" title="下载"></div>
+            <div class="iconfont icon-xiazai-wenjianxiazai-05" @click="dowload" title="下载"></div>
         </div>
         <div class="image-content">
             <viewer :images="imageUrl" :options="options" @inited="inited">

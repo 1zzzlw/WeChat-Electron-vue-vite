@@ -9,11 +9,14 @@ const settingView_width = 800
 const settingView_height = 650
 const mediaPreview_width = 1200
 const mediaPreview_height = 800
+const createNote_width = 700
+const createNote_height = 500
 
 let addFriendWindow = null
 let createGroupWindow = null
 let settingViewWindow = null
 let mediaPreviewWindow = null
+let createNoteWindow = null
 
 ipcMain.on('create-new-window', (e, windowType, data) => {
     console.log(windowType)
@@ -56,6 +59,15 @@ ipcMain.on('create-new-window', (e, windowType, data) => {
                 height: mediaPreview_height,
             }
             mediaPreviewWindow = createExtraWindow('videoPreview', options, 'vue', data)
+            break
+        }
+        case 'createNote': {
+            const options = {
+                minWidth: createNote_width,
+                minHeight: createNote_height,
+                resizable: true,
+            }
+            createNoteWindow = createExtraWindow('createNote', options, 'vue', data)
             break
         }
     }

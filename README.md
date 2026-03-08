@@ -72,3 +72,10 @@ npm install v-viewer viewerjs
 
 视频播放编辑库
 npm install dplayer
+
+笔记组件库安装步骤
+npm install @tiptap/vue-3 @tiptap/starter-kit
+
+npm install @tiptap/extension-image  # 图片
+npm install @tiptap/extension-link   # 链接
+npm install @tiptap/extension-table  # 表格

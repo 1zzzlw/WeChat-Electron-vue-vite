@@ -5,7 +5,7 @@
                 <AutocompleteSearch />
             </div>
             <div class="collect-mid">
-                <el-button>新建笔记</el-button>
+                <el-button @click="createNote">新建笔记</el-button>
                 <router-link to="/allCollectView">
                     <div class="all-collect-item">
                         <span class=""> 全部收藏 </span>
@@ -33,6 +33,10 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import AutocompleteSearch from '../../components/AutocompleteSearch.vue';
+
+const createNote = () => {
+    (window as any).windowToolApi.createNewWindow('createNote')
+}
 
 </script>
 <style scoped>
@@ -96,5 +100,6 @@ import AutocompleteSearch from '../../components/AutocompleteSearch.vue';
 
 .collect-list-right {
     flex: 1;
+    -webkit-app-region: drag;
 }
 </style>

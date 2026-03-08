@@ -79,6 +79,15 @@ const dbApi = {
   },
   getVideoUrlList: () => {
     return ipcRenderer.invoke('query:videoUrlList')
+  },
+  uploadNoteContent: (data) => {
+    ipcRenderer.send('save:note', data)
+  },
+  getFavorites: () => {
+    return ipcRenderer.invoke('query:favoritesList')
+  },
+  updateOldNoteContent: (condition, data) => {
+    ipcRenderer.send('update:note', condition, data)
   }
 }
 

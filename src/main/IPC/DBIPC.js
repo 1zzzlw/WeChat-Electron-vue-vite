@@ -1,8 +1,8 @@
 import { ipcMain } from 'electron'
 import { store } from '../index'
-import { queryConversation, queryFriend, loadMessage, getFriendInfoById, getConversationInfoById, getImageUrlList, getVideoUrlList } from '../DB/select'
-import { saveSentMessage, saveLoadMessage, addConversation, addFriendRelation } from '../DB/insert'
-import { updateConversation, updateMessage } from '../DB/update'
+import { queryConversation, queryFriend, loadMessage, getFriendInfoById, getConversationInfoById, getImageUrlList, getVideoUrlList, getFavorites } from '../DB/select'
+import { saveSentMessage, saveLoadMessage, addConversation, addFriendRelation, uploadNoteContent } from '../DB/insert'
+import { updateConversation, updateMessage, updateOldNoteContent } from '../DB/update'
 
 ipcMain.handle('query:conversation', (e) => {
     const userId = store.get('userId')
@@ -73,4 +73,20 @@ ipcMain.handle('query:imageUrlList', () => {
 ipcMain.handle('query:videoUrlList', () => {
     console.log(`查询所有的视频路径`)
     return getVideoUrlList()
+})
+
+ipcMain.on('save:note', (e, data) => {
+    const userId = String(store.get('userId'))
+    data.userId = userId
+    console.log(`保存的笔记内容为${data}`)
+    uploadNoteContent(data)
+})
+
+ipcMain.handle('query:favoritesList', () => {
+    const userId = String(store.get('userId'))
+    return getFavorites(userId)
+})
+
+ipcMain.on('update:note', (e, condition, data) => {
+    updateOldNoteContent(condition, data)
 })

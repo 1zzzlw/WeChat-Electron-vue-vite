@@ -32,9 +32,18 @@ const addFriendRelation = (friendPack) => {
     insert('friend_relation', friendPack)
 }
 
+/**
+ * 保存笔记到本地
+ * @param data -- 笔记内容
+ */
+const uploadNoteContent = (data) => {
+    insert('favorites', data)
+}
+
 export {
     saveSentMessage,
     saveLoadMessage,
     addConversation,
-    addFriendRelation
+    addFriendRelation,
+    uploadNoteContent
 }

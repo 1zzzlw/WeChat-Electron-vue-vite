@@ -169,6 +169,31 @@ const getVideoUrlList = async () => {
     return videoUrlList
 }
 
+/**
+ * 保存笔记到本地
+ * @param data -- 笔记内容
+ */
+const uploadNoteContent = async (data) => {
+    await window.dbApi.uploadNoteContent(data)
+}
+
+/**
+ * 获得笔记列表和收藏列表
+ * @returns 
+ */
+const getFavorites = async () => {
+    const favoritesList = await window.dbApi.getFavorites()
+    return favoritesList
+}
+
+/**
+ * 更新本地笔记
+ * @param data -- 新的笔记
+ */
+const updateOldNoteContent = async (condition, data) => {
+    await window.dbApi.updateOldNoteContent(condition, data)
+}
+
 export {
     getConversationList,
     getFriendList,
@@ -182,5 +207,8 @@ export {
     getFriendInfoById,
     getConversationInfoById,
     getImageUrlList,
-    getVideoUrlList
+    getVideoUrlList,
+    uploadNoteContent,
+    getFavorites,
+    updateOldNoteContent
 }

@@ -28,7 +28,6 @@ export default function (containerRef) {
         window.addEventListener('contextmenu', closeMenu, true);
     })
 
-
     onUnmounted(() => {
         if (divElement) {
             divElement.removeEventListener('contextmenu', handleContextMenu);

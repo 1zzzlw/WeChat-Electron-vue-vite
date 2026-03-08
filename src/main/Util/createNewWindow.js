@@ -22,7 +22,8 @@ const WINDOW_CONFIGS = {
         createGroup: '/createGroup',
         setting: '/setting',
         imagePreview: '/imagePreview',
-        videoPreview: '/videoPreview'
+        videoPreview: '/videoPreview',
+        createNote: '/createNote'
         // TODO 可以继续添加其他路由页面
     }
 }
