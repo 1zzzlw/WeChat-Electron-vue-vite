@@ -88,6 +88,9 @@ const dbApi = {
   },
   updateOldNoteContent: (condition, data) => {
     ipcRenderer.send('update:note', condition, data)
+  },
+  addFavorites: (favoritesPackList) => {
+    ipcRenderer.send('add:note', favoritesPackList)
   }
 }
 
@@ -146,6 +149,10 @@ const windowToolApi = {
   },
   onWindowWallpaper: (callback) => {
     ipcRenderer.on('on:wallpaper', callback)
+  },
+  // 注册快捷键通知
+  registerGlobalShortcut: () => {
+    ipcRenderer.send('register-shortcuts')
   }
 }
 
@@ -169,8 +176,8 @@ const chatToolApi = {
       func(savePath)
     })
   },
-  createFile: (arrayBuffer, fileName) => {
-    return ipcRenderer.invoke('window:create-file', arrayBuffer, fileName)
+  copyFile: (content, remoteUrl, msgType, fileName) => {
+    ipcRenderer.send('copy:file', content, remoteUrl, msgType, fileName)
   }
 }
 

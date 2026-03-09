@@ -79,3 +79,7 @@ npm install @tiptap/vue-3 @tiptap/starter-kit
 npm install @tiptap/extension-image  # 图片
 npm install @tiptap/extension-link   # 链接
 npm install @tiptap/extension-table  # 表格
+
+
+将文件复制到剪贴板上，可以复制文件
+clipboard-files

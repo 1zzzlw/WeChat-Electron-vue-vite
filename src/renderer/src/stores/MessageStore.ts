@@ -38,6 +38,14 @@ export const messageInfo = defineStore('messageInfo', {
     clearAllMessages() {
       this.messageMap = {}
       console.info('已清空所有消息缓存')
+    },
+    // 删除一条消息
+    deleteMessage(conversationId: string, messageId: string) {
+      if (this.messageMap[conversationId]) {
+        this.messageMap[conversationId] = this.messageMap[conversationId].filter(
+          (msg) => msg.id !== messageId
+        )
+      }
     }
   }
 })

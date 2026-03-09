@@ -5,3 +5,5 @@ export const uploadImageApi = (data) => request.post('/favorites/uploadImage', d
 export const uploadNoteContentApi = (data) => request.post('/favorites/saveNote', data)
 
 export const updateOldNoteContentApi = (condition, data) => request.post('/favorites/updateNote', { ...condition, ...data })
+
+export const getFavoritesApi = () => request.get('/favorites/getNote')

@@ -86,7 +86,8 @@ const submitForm = async () => {
       (window as any).userInfoApi.storeSetUserInfo('userId', userBaseInfo.userId);
       (window as any).userInfoApi.storeSetUserInfo('avatar', userBaseInfo.avatar);
       (window as any).userInfoApi.storeSetUserInfo('username', userBaseInfo.username);
-
+      (window as any).userInfoApi.storeSetUserInfo('phone', userBaseInfo.phone);
+      (window as any).userInfoApi.storeSetUserInfo('account', userBaseInfo.account);
 
       // 清空缓存的注册信息
       registerInfoStore.$reset()

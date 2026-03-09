@@ -16,6 +16,7 @@ import { statusMap } from './types/fileBaseInfo'
 import { updateMessage } from './db/dualDB'
 import emitter from '../src/utils/mitt'
 import dayjs from 'dayjs'
+import { updateMessageFileSendStatusApi } from './api/Message'
 
 function updateMessageStore(data) {
   // 私信类型，将消息存储到状态管理中
@@ -91,6 +92,8 @@ onMounted(async () => {
       data = {
         sendStatus: 1
       }
+      // 修改服务端的文件上次状态
+      updateMessageFileSendStatusApi(fileId, 1)
     } else {
       // 上传失败
       console.log('上传失败')
@@ -99,6 +102,8 @@ onMounted(async () => {
       data = {
         sendStatus: 2
       }
+      // 修改服务端的文件上次状态
+      updateMessageFileSendStatusApi(fileId, 2)
     }
     updateMessage(condition, data)
   })

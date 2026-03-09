@@ -60,7 +60,10 @@ const openSettingView = () => {
 
 onMounted(async () => {
   // 从本地存储中获取头像
-  avatarUrl.value = await (window as any).userInfoApi.storeGetUserInfo('avatar')
+  avatarUrl.value = await (window as any).userInfoApi.storeGetUserInfo('avatar');
+
+  // 进入main界面开始注册快捷键
+  (window as any).windowToolApi.registerGlobalShortcut()
 })
 </script>
 

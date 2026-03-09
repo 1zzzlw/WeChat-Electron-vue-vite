@@ -20,7 +20,8 @@
                 { label: '引用' },
                 { divider: true },
                 { label: '删除' },
-              ]" @select="(item) => handleChoice(item, message.id)">
+              ]"
+                @select="(item) => handleChoice(item, message.id, message.content, message.msgType, message.remoteUrl, message.fileName)">
                 <div v-if="message.msgType === 1" class="chat-bubble right-bubble">
                   <div> {{ message.content }} </div>
                 </div>
@@ -41,7 +42,8 @@
                   { label: '引用' },
                   { divider: true },
                   { label: '删除' },
-                ]" @select="(item) => handleChoice(item, message.id)">
+                ]"
+                  @select="(item) => handleChoice(item, message.id, message.content, message.msgType, message.remoteUrl, message.fileName)">
                   <div v-if="message.msgType === 1" class="chat-bubble left-bubble">
                     <div> {{ message.content }} </div>
                   </div>
@@ -105,7 +107,7 @@ import { getGroupMemberListApi } from '../../api/Conversation'
 import MessageContentManage from '../../components/MessageContentManage.vue'
 import FilePreviewView from '../../components/FilePreviewView.vue'
 import ChatHeader from '../../components/ChatHeader.vue'
-import { getMessageList, saveSentMessage, saveLoadMessage, updateConversation } from '../../db/dualDB.js'
+import { getMessageList, saveSentMessage, saveLoadMessage, updateConversation, updateMessage } from '../../db/dualDB.js'
 import { Message } from '../../types/message.ts'
 import { Snowflake } from '@theinternetfolks/snowflake'
 import ContextMenu from '../../components/ContextMenu.vue'
@@ -417,8 +419,38 @@ function createMessagePack(receiverId: string | number, convId: string, msgType:
   return messagePack
 }
 
-const handleChoice = (item: any, messageId: string) => {
+const handleChoice = async (item: any, messageId: string, messageContent: string, msgType: number, remoteUrl: any, fileName: any) => {
+  switch (item.label) {
+    case '复制': {
+      (window as any).chatToolApi.copyFile(messageContent, remoteUrl, msgType, fileName)
+      break
+    }
+    case '收藏': {
 
+      break
+    }
+    case '撤回': {
+
+      break
+    }
+    case '引用': {
+
+      break
+    }
+    case '删除': {
+      const condition = {
+        id: messageId
+      }
+      const data = {
+        isDeleted: 1
+      }
+      // 修改本地数据库
+      updateMessage(condition, data)
+      // 修改缓存
+      messageStore.deleteMessage(conversation.value.id, messageId)
+      break
+    }
+  }
 }
 
 function scrollToBottom() {

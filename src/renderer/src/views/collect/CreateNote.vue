@@ -239,7 +239,6 @@ const handleFileChange = (e: any) => {
 
 // 上次文本中的图片到服务端
 const saveImage = async () => {
-
     if (pendingImages.value.length === 0) {
         console.log(111)
         return []
@@ -272,7 +271,6 @@ const saveContent = async () => {
     if (!editor.value) {
         return
     }
-    console.log(editor.value.getHTML())
 
     const urlList = await saveImage()
 
@@ -281,7 +279,6 @@ const saveContent = async () => {
         replaceTempUrl(tempUrl, url)
     })
 
-    console.log(editor.value.getHTML())
 
     const html = editor.value.getHTML()
 
@@ -295,7 +292,7 @@ const saveContent = async () => {
         const data = {
             title: title.value,
             content: html,
-            sourceUsername: username
+            sourceUsername: username,
         }
         updateOldNote(condition, data)
     } else {
@@ -303,7 +300,8 @@ const saveContent = async () => {
         const data = {
             title: title.value,
             content: html,
-            sourceUsername: username
+            sourceUsername: username,
+            type: 0
         }
         insertNewNote(data)
     }

@@ -194,6 +194,10 @@ const updateOldNoteContent = async (condition, data) => {
     await window.dbApi.updateOldNoteContent(condition, data)
 }
 
+const addFavorites = async (favoritesPackList) => {
+    await window.dbApi.addFavorites(favoritesPackList)
+}
+
 export {
     getConversationList,
     getFriendList,
@@ -210,5 +214,6 @@ export {
     getVideoUrlList,
     uploadNoteContent,
     getFavorites,
-    updateOldNoteContent
+    updateOldNoteContent,
+    addFavorites
 }

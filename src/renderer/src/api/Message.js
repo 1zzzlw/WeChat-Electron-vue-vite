@@ -12,3 +12,5 @@ export const mergeFileApi = (data) =>
   request.post(
     `/message/merge?fileHash=${data.fileHash}&fileName=${data.fileName}&fileType=${data.fileType}&chunkCount=${data.chunkCount}`
   )
+
+export const updateMessageFileSendStatusApi = (fileId, status) => request.post(`/message/updateFileSendStatus?fileId=${fileId}&sendStatus=${status}`)

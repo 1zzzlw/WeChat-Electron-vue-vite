@@ -4,21 +4,18 @@
       <img class="avatar" :src="avatarUrl" alt="" />
       <div class="account-info-item">
         <div>
-          账号:
-          <input type="text" />
+          账号: {{ account }}
         </div>
         <div>
-          密码:
-          <input type="password" />
+          邮箱: {{ }}
         </div>
         <div>
-          手机号:
-          <input type="text" />
+          手机号: {{ phone }}
         </div>
         <div>
-          生日:
-          <input type="date" />
+          生日: {{ }}
         </div>
+        <a @click="showLinkDialog = true">修改账号信息</a>
       </div>
     </div>
     <div class="wallpaper">
@@ -33,6 +30,25 @@
         <el-button @click="changeWallpaper">切换壁纸</el-button>
       </div>
     </div>
+    <el-dialog v-model="showLinkDialog" title="修改账号信息" width="400px">
+      <el-form :inline="true" label-width="auto" style="max-width: 600px">
+        <el-form-item label="账号">
+          <el-input clearable />
+        </el-form-item>
+        <el-form-item label="邮箱">
+          <el-input clearable />
+        </el-form-item>
+        <el-form-item label="生日">
+          <el-col :span="11">
+            <el-date-picker type="date" placeholder="Pick a date" style="width: 100%" />
+          </el-col>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="onSubmit">保存</el-button>
+          <el-button>取消</el-button>
+        </el-form-item>
+      </el-form>
+    </el-dialog>
   </div>
 </template>
 
@@ -51,6 +67,13 @@ const imageList = ref([
   '/wallpaper/6.jpg',
 ])
 
+const account = ref()
+const email = ref()
+const phone = ref()
+const birthday = ref()
+
+const showLinkDialog = ref(false)
+
 const selectWallpaper = (current, prev) => {
   imagePath.value = imageList.value[current]
 }
@@ -63,6 +86,8 @@ const changeWallpaper = () => {
 
 onMounted(async () => {
   avatarUrl.value = await window.userInfoApi.storeGetUserInfo('avatar')
+  account.value = await window.userInfoApi.storeGetUserInfo('account')
+  phone.value = await window.userInfoApi.storeGetUserInfo('phone')
 })
 </script>
 

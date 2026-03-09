@@ -50,7 +50,7 @@ const loadMessage = (conversationId, messagePageInfo) => {
     const params = []
     // 根据消息总数和页码计算当前查询页码偏移量
     const { pageTotal, pageSize, offset } = computedOffset(totalCount, pageNO)
-    sql = `select * from message where conversation_id = ?`
+    sql = `select * from message where conversation_id = ? and is_deleted = 0 `
     params.push(conversationId)
     // 判断是否为第一次查询
     if (maxMessageId) {
@@ -101,8 +101,13 @@ const getVideoUrlList = () => {
     return result
 }
 
+/**
+ * 获得收藏表中的笔记内容
+ * @param userId -- 用户id
+ * @returns 
+ */
 const getFavorites = (userId) => {
-    const sql = `select * from favorites where user_id = ?`
+    const sql = `select * from favorites where user_id = ? and type = 0`
     const params = [userId]
     const result = queryAll(sql, params)
     return result

@@ -4,7 +4,7 @@
     <div class="file">
       <div class="file-content">
         <span class="file-name">{{ fileName }}</span>
-        <span class="file-size">{{ (fileSize / 1024 / 1024).toFixed(2) }} MB</span>
+        <span class="file-size">{{ formatFileSize(fileSize) }}</span>
       </div>
       <!-- 下载 -->
       <div v-if="!isUpload">
@@ -69,6 +69,23 @@ const props = defineProps<{
   isUpload: boolean
 }>()
 
+function formatFileSize(fileSize: any) {
+  // 处理边界值：0字节或非数字
+  if (!fileSize || isNaN(fileSize)) return "0.00 KB";
+
+  // 1MB = 1024KB = 1024*1024 Byte
+  const KB = 1024;
+  const MB = 1024 * KB;
+
+  if (fileSize >= MB) {
+    // 大于等于1MB，显示MB
+    return `${(fileSize / MB).toFixed(2)} MB`;
+  } else {
+    // 小于1MB，显示KB
+    return `${(fileSize / KB).toFixed(2)} KB`;
+  }
+}
+
 const fileStatusListInfoStore = fileStatusListInfo()
 const route = useRoute()
 
@@ -79,7 +96,6 @@ const refreshFileStatus = () => {
   fileUploadStatusInfo.value = fileStatusListInfoStore.getFileUploadUpdateInfo(props.fileId)
   fileDownloadStatusInfo.value = fileStatusListInfoStore.getFileDownloadInfo(props.fileId)
 }
-
 
 const uploadProgress = computed(() => fileUploadStatusInfo.value?.uploadProgress || 0);
 const pause = computed(() => fileUploadStatusInfo.value?.pause || false);

@@ -1,7 +1,7 @@
 import { ipcMain } from 'electron'
 import { store } from '../index'
 import { queryConversation, queryFriend, loadMessage, getFriendInfoById, getConversationInfoById, getImageUrlList, getVideoUrlList, getFavorites } from '../DB/select'
-import { saveSentMessage, saveLoadMessage, addConversation, addFriendRelation, uploadNoteContent } from '../DB/insert'
+import { saveSentMessage, saveLoadMessage, addConversation, addFriendRelation, uploadNoteContent, addFavorites } from '../DB/insert'
 import { updateConversation, updateMessage, updateOldNoteContent } from '../DB/update'
 
 ipcMain.handle('query:conversation', (e) => {
@@ -89,4 +89,9 @@ ipcMain.handle('query:favoritesList', () => {
 
 ipcMain.on('update:note', (e, condition, data) => {
     updateOldNoteContent(condition, data)
+})
+
+ipcMain.on('add:note', (e, favoritesPack) => {
+    console.log(favoritesPack)
+    addFavorites(favoritesPack)
 })

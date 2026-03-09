@@ -1,6 +1,7 @@
-import { ipcMain, globalShortcut, app } from "electron";
+import { ipcMain, globalShortcut, app, clipboard, nativeImage } from "electron"
 import { mainWindow } from '../index'
-import { createExtraWindow, windowPool } from "../Util/createNewWindow";
+import { createExtraWindow, windowPool } from "../Util/createNewWindow"
+const path = require('path')
 const fs = require('fs');
 
 let captureWindow = null
@@ -22,7 +23,6 @@ ipcMain.on('window:close-capture', () => {
 })
 
 ipcMain.on('window:save-capture', (e, uint8Array) => {
-    const { nativeImage, clipboard } = require('electron')
     console.info(uint8Array)
     const buffer = Buffer.from(uint8Array);
     const image = nativeImage.createFromBuffer(buffer)
@@ -30,7 +30,7 @@ ipcMain.on('window:save-capture', (e, uint8Array) => {
     clipboard.writeImage(image)
     // // 保存图片到指定路径
     const fileName = `screenshot_${Date.now()}.png`
-    const savePath = app.getPath('pictures') + '\\' + fileName
+    const savePath = path.join(app.getPath('pictures'), fileName)
     fs.writeFileSync(savePath, buffer);
 
     windowPool.delete('capture')
@@ -108,3 +108,60 @@ export async function createCaptureWindow() {
         globalShortcut.unregister('Esc')
     })
 }
+
+ipcMain.on('copy:file', async (e, content, remoteUrl, msgType, fileName) => {
+    switch (msgType) {
+        case 1: {
+            // 文本
+            clipboard.writeText(content)
+            break
+        }
+        case 2: {
+            // 图片
+            const response = await fetch(remoteUrl)
+            const buffer = await response.arrayBuffer()
+            const uint8Buffer = new Uint8Array(buffer)
+            const image = nativeImage.createFromBuffer(uint8Buffer)
+            // 复制图片到剪贴板
+            clipboard.writeImage(image)
+        }
+        default: {
+            // 其他文件(视频，音频，文件)
+            const response = await fetch(remoteUrl)
+            const buffer = await response.arrayBuffer()
+            const uint8Buffer = new Uint8Array(buffer)
+            const savePath = path.join(app.getPath('temp'), fileName)
+
+            fs.writeFileSync(savePath, uint8Buffer)
+
+            console.log(savePath)
+
+            const { exec } = require('child_process')
+            const psCommand = `Set-Clipboard -Path "${savePath}"`
+
+            exec(`powershell -command "${psCommand}"`, (error) => {
+                if (error) {
+                    console.error('复制失败:', error)
+                } else {
+                    console.log('复制成功，可以粘贴到桌面')
+                }
+            })
+
+            // windows下不能复制
+            // clipboard.write({
+            //     text: savePath,
+            //     files: [savePath]
+            // })
+
+            setTimeout(() => {
+                try {
+                    // 删除临时文件
+                    fs.unlinkSync(savePath);
+                    console.log('临时文件已清理：', savePath)
+                } catch (err) {
+                    console.warn('清理临时文件失败：', err)
+                }
+            }, 5 * 60 * 1000) // 5分钟后删除
+        }
+    }
+})

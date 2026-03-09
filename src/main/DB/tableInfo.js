@@ -12,6 +12,7 @@ const init_table = [
     read_status       INTEGER  NOT NULL DEFAULT 1,
     send_time         TEXT     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     is_revoked        INTEGER  NOT NULL DEFAULT 0,
+    is_deleted        INTEGER  NOT NULL DEFAULT 0,         -- 0=未删除, 1=删除
     quote_msg_id      INTEGER  DEFAULT NULL,
     file_id           TEXT DEFAULT NULL,                   -- 文件的唯一id
     file_name         TEXT DEFAULT NULL,                   -- 文件名
@@ -81,6 +82,7 @@ const init_table = [
     title TEXT,
     content TEXT NOT NULL,
     source_username TEXT,
+    type       INTEGER NOT NULL DEFAULT 0,
     created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000),
     updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000)
   );

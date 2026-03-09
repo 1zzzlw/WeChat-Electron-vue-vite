@@ -40,10 +40,19 @@ const uploadNoteContent = (data) => {
     insert('favorites', data)
 }
 
+/**
+ * 添加笔记
+ * @param favoritesPack -- 笔记内容 
+ */
+const addFavorites = (favoritesPack) => {
+    multipleInsert(`insert`, 'favorites', favoritesPack)
+}
+
 export {
     saveSentMessage,
     saveLoadMessage,
     addConversation,
     addFriendRelation,
-    uploadNoteContent
+    uploadNoteContent,
+    addFavorites
 }

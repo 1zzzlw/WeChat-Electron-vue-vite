@@ -37,7 +37,6 @@ import AutocompleteSearch from '../../components/AutocompleteSearch.vue';
 const createNote = () => {
     (window as any).windowToolApi.createNewWindow('createNote')
 }
-
 </script>
 <style scoped>
 @import "../../css/layout.css";

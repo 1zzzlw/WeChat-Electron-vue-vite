@@ -20,8 +20,9 @@
 </template>
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { getFavorites } from '../../db/dualDB';
+import { getFavorites, addFavorites } from '../../db/dualDB';
 import { formatMessageTime } from '../../utils/utils'
+import { getFavoritesApi } from '../../api/Favorites'
 
 const favoritesList = ref<any>([])
 
@@ -45,7 +46,24 @@ onMounted(async () => {
 
     if (favoritesList.value.length === 0) {
         // 本地数据库没有，尝试从服务端拉取
-        console.log(1111)
+        const res = await getFavoritesApi()
+        favoritesList.value = res.data
+        console.log(favoritesList.value)
+        // 将从服务端拿到的数据存储到本地
+        const favoritesPackList: any = []
+        favoritesList.value.forEach((item: any) => {
+            favoritesPackList.push({
+                id: item.id,
+                userId: String(item.userId),
+                title: item.title,
+                content: item.content,
+                sourceUsername: item.sourceUsername,
+                type: item.type,
+                createdAt: item.createdAt,
+                updatedAt: item.updatedAt
+            })
+        })
+        addFavorites(favoritesPackList)
     }
 
 })

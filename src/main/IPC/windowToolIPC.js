@@ -1,7 +1,10 @@
 import { mainWindow } from '../index'
-import { ipcMain, app } from 'electron'
+import { ipcMain, app, globalShortcut } from 'electron'
 import { windowPool } from '../Util/createNewWindow'
 import websocket from '../websocket'
+import { createCaptureWindow } from './chatToolIPC';
+
+let shortcutsRegistered = false
 
 const login_width = 300
 const login_height = 370
@@ -81,6 +84,27 @@ const enterMain = () => {
 // 更新窗口壁纸
 ipcMain.on('send:wallpaper', (e, imagePath) => {
   mainWindow.webContents.send('on:wallpaper', imagePath)
+})
+
+// 注册快捷键统一放在这个方法里面
+function registerShortcuts() {
+  if (shortcutsRegistered) {
+    console.log('快捷键已注册，跳过')
+    return
+  }
+
+  globalShortcut.register('Alt+Shift+A', () => {
+    mainWindow.hide()
+    createCaptureWindow()
+  })
+
+  shortcutsRegistered = true
+  console.log('快捷键注册成功')
+}
+
+ipcMain.on('register-shortcuts', () => {
+  console.log('开始注册快捷键')
+  registerShortcuts()
 })
 
 export {
