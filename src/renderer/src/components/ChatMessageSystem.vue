@@ -2,7 +2,7 @@
     <div>
         <ChatMessageTime :dataTime="message.sendTime"></ChatMessageTime>
         <div class="system-message">
-
+            {{ message.content }}
         </div>
     </div>
 </template>
@@ -19,6 +19,8 @@ const props = defineProps({
 
 const dataMessage = computed(() => {
     const data = { ...props.message }
+    // 撤回消息通知
+
     // 添加好友成功的通知
 
     // 群创建成功通知

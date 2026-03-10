@@ -68,6 +68,9 @@ onMounted(async () => {
         localStorage.removeItem('conversation-store')
         friendInfo().addUserListOnline(data.friendIdList)
         break
+      case 11:
+        console.log('接收到系统消息', data)
+        break
     }
   })
 

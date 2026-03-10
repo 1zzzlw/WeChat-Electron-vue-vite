@@ -9,6 +9,8 @@
             v-if="index > 0 && dayjs(message.sendTime).diff(dayjs(messageArr[index - 1].sendTime)) >= 300000">
           </ChatMessageTime>
           <!-- 展示系统消息 -->
+          <ChatMessageSystem v-if="message.msgType === 99" :message="message">
+          </ChatMessageSystem>
           <div v-if="String(message.senderId) === String(userId)">
             <div class="chat-list-right">
               <img :src="avatarUrl" class="list-image" />
@@ -112,6 +114,7 @@ import { Message } from '../../types/message.ts'
 import { Snowflake } from '@theinternetfolks/snowflake'
 import ContextMenu from '../../components/ContextMenu.vue'
 import ChatMessageTime from '../../components/ChatMessageTime.vue'
+import ChatMessageSystem from '../../components/ChatMessageSystem.vue'
 
 // 消息分页配置
 const messagePageInfo = {
@@ -358,8 +361,13 @@ const sendApi = (messagePack: Message) => {
         latestMsgTime: dayjs(messagePack.sendTime).format('HH:mm:ss')
       })
 
-      // 合并成功的时候才将状态修改为1
-      message.sendStatus = 0
+      if (message.msgType === 1) {
+        // 文本消息，直接修改状态为发送成功
+        message.sendStatus = 1
+      } else {
+        // 文件消息，需要等到合并成功的时候才将状态修改为1
+        message.sendStatus = 0
+      }
       // console.info(message)
       // 存入本地数据库
       saveSentMessage(message)

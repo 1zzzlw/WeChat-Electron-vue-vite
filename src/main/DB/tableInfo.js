@@ -8,7 +8,7 @@ const init_table = [
     receiver_id       TXT      NOT NULL,
     msg_type          INTEGER  NOT NULL,
     content           TEXT,
-    send_status       INTEGER  NOT NULL,
+    send_status       INTEGER  NOT NULL DEFAULT 0,
     read_status       INTEGER  NOT NULL DEFAULT 1,
     send_time         TEXT     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     is_revoked        INTEGER  NOT NULL DEFAULT 0,
