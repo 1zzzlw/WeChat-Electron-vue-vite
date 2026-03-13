@@ -95,7 +95,7 @@
 import { computed, nextTick, ref, watch, onUnmounted, toRaw } from 'vue'
 import { useRoute } from 'vue-router'
 import emojis from '../../emoji/emoji.js'
-import { sendMessageApi } from '../../api/Message'
+import { sendMessageApi, recallMessageApi } from '../../api/Message'
 import { messageInfo } from '../../stores/MessageStore'
 import dayjs from 'dayjs'
 import { Conversation, initConversation } from '../../types/conversation.ts'
@@ -115,6 +115,7 @@ import { Snowflake } from '@theinternetfolks/snowflake'
 import ContextMenu from '../../components/ContextMenu.vue'
 import ChatMessageTime from '../../components/ChatMessageTime.vue'
 import ChatMessageSystem from '../../components/ChatMessageSystem.vue'
+import { createSystemMessagePack } from '../../utils/systemMessageUtil.js'
 
 // 消息分页配置
 const messagePageInfo = {
@@ -173,7 +174,6 @@ const handleDeleteFile = (fileId: string) => {
   console.info('删除索引为', fileId, '的文件预览')
   fileInfoList.value = fileInfoList.value.filter(file => file.fileId != fileId)
   console.info('删除后的文件预览列表:', fileInfoList)
-  console.log('删除后长度：', fileInfoList.value.length)
 }
 
 // 处理emoji点击事件
@@ -221,6 +221,7 @@ const sendPrivateMessage = async () => {
     convId
   )
 
+  // 文件发送
   if (fileInfoList.value.length > 0) {
     for (const file of fileInfoList.value) {
       // 需要去掉响应式
@@ -239,8 +240,14 @@ const sendPrivateMessage = async () => {
       console.log(fileStatusListInfoStore)
       // 打包文件信息
       const messagePack = createMessagePack(receiverId, convId, file.fileType, file.content, file)
+
       console.log(messagePack);
-      (window as any).wsApi.sendMessage(1, 0, messagePack)
+
+      // 添加文件信息到缓存中
+      messageStore.addFileMessage(file.fileId, messagePack)
+
+      // 文件消息不能及时发送，可能还会上传失败
+      // (window as any).wsApi.sendMessage(1, 0, messagePack)
 
       sendApi(messagePack)
     }
@@ -300,7 +307,7 @@ const sendGroupMessage = async () => {
       // 打包文件信息
       const messagePack = createMessagePack(convId, convId, file.fileType, file.content, file)
       console.log(messagePack);
-      (window as any).wsApi.sendMessage(1, 0, {
+      (window as any).wsApi.sendMessage(3, 0, {
         ...messagePack,
         receiverIds
       })
@@ -367,8 +374,9 @@ const sendApi = (messagePack: Message) => {
       } else {
         // 文件消息，需要等到合并成功的时候才将状态修改为1
         message.sendStatus = 0
+        // 文件消息需要添加远程路径到缓存中
+        messageStore.addFileUrl(message.fileId, message.remoteUrl)
       }
-      // console.info(message)
       // 存入本地数据库
       saveSentMessage(message)
       // 更新本地会话列表的最新消息
@@ -438,7 +446,8 @@ const handleChoice = async (item: any, messageId: string, messageContent: string
       break
     }
     case '撤回': {
-
+      const systemMessagePack = await createSystemMessagePack(conversation.value.targetId, conversation.value.id, 1)
+      recallMessageApi(systemMessagePack)
       break
     }
     case '引用': {

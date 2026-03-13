@@ -8,7 +8,8 @@
       </div>
       <!-- 下载 -->
       <div v-if="!isUpload">
-        <el-button class="download-button" @click="downloadFile">下载</el-button>
+        <el-button v-if="downloadStatus === 0 && nowDownloadStatus === statusMap.preview.value" class="download-button"
+          @click="downloadFile">下载</el-button>
         <div v-if="downloadStatus === 0 && nowDownloadStatus === statusMap.downloading.value">
           <div class="file-process">
             <el-progress :percentage="downloadProgress > 100 ? 100 : downloadProgress" />
@@ -21,10 +22,12 @@
         </div>
         <div class="file-status complete"
           v-else-if="downloadStatus === 1 || nowDownloadStatus === statusMap.download_finish.value">
-          <span>下载完成</span>
+          <el-icon><Select /></el-icon>
         </div>
         <div class="file-status fail" v-else-if="downloadStatus === 2 || nowDownloadStatus === statusMap.fail.value">
-          <span>下载失败</span>
+          <el-icon>
+            <CloseBold />
+          </el-icon>
         </div>
       </div>
       <!-- 上传 -->
@@ -41,10 +44,12 @@
         </div>
         <div class="file-status complete"
           v-else-if="sendStatus === 1 || uploadStatus === statusMap.upload_finish.value">
-          <span>上传完成</span>
+          <el-icon><Select /></el-icon>
         </div>
         <div class="file-status fail" v-else-if="sendStatus === 2 || uploadStatus === statusMap.fail.value">
-          <span>上传失败</span>
+          <el-icon>
+            <CloseBold />
+          </el-icon>
         </div>
       </div>
     </div>
@@ -89,21 +94,44 @@ function formatFileSize(fileSize: any) {
 const fileStatusListInfoStore = fileStatusListInfo()
 const route = useRoute()
 
-const fileUploadStatusInfo = ref<FileUploadStatusInfo | undefined>()
-const fileDownloadStatusInfo = ref<FileDownloadStatusInfo | undefined>()
+// const fileUploadStatusInfo = ref<FileUploadStatusInfo | undefined>()
+// const fileDownloadStatusInfo = ref<FileDownloadStatusInfo | undefined>()
 
-const refreshFileStatus = () => {
-  fileUploadStatusInfo.value = fileStatusListInfoStore.getFileUploadUpdateInfo(props.fileId)
-  fileDownloadStatusInfo.value = fileStatusListInfoStore.getFileDownloadInfo(props.fileId)
-}
+// const refreshFileStatus = () => {
+//   fileUploadStatusInfo.value = fileStatusListInfoStore.getFileUploadUpdateInfo(props.fileId)
+//   fileDownloadStatusInfo.value = fileStatusListInfoStore.getFileDownloadInfo(props.fileId)
+// }
 
-const uploadProgress = computed(() => fileUploadStatusInfo.value?.uploadProgress || 0);
-const pause = computed(() => fileUploadStatusInfo.value?.pause || false);
-const uploadStatus = computed(() => fileUploadStatusInfo.value?.uploadStatus || statusMap.uploading.value);
-const uploadSpeed = computed(() => fileUploadStatusInfo.value?.uploadSpeed || 0)
-const nowDownloadStatus = computed(() => fileDownloadStatusInfo.value?.downloadStatus || statusMap.preview.value)
-const downloadProgress = computed(() => fileDownloadStatusInfo.value?.downloadProgress || 0);
-const downloadSpeed = computed(() => fileDownloadStatusInfo.value?.downloadSpeed || 0)
+// const uploadProgress = computed(() => fileUploadStatusInfo.value?.uploadProgress || 0);
+// const pause = computed(() => fileUploadStatusInfo.value?.pause || false);
+// const uploadStatus = computed(() => fileUploadStatusInfo.value?.uploadStatus || statusMap.uploading.value);
+// const uploadSpeed = computed(() => fileUploadStatusInfo.value?.uploadSpeed || 0)
+// const nowDownloadStatus = computed(() => fileDownloadStatusInfo.value?.downloadStatus || statusMap.preview.value)
+// const downloadProgress = computed(() => fileDownloadStatusInfo.value?.downloadProgress || 0);
+// const downloadSpeed = computed(() => fileDownloadStatusInfo.value?.downloadSpeed || 0)
+
+const uploadProgress = computed(() =>
+  fileStatusListInfoStore.getFileUploadUpdateInfo(props.fileId)?.uploadProgress || 0
+)
+const pause = computed(() =>
+  fileStatusListInfoStore.getFileUploadUpdateInfo(props.fileId)?.pause || false
+)
+const uploadStatus = computed(() =>
+  fileStatusListInfoStore.getFileUploadUpdateInfo(props.fileId)?.uploadStatus || statusMap.uploading.value
+)
+const uploadSpeed = computed(() =>
+  fileStatusListInfoStore.getFileUploadUpdateInfo(props.fileId)?.uploadSpeed || 0
+)
+
+const nowDownloadStatus = computed(() =>
+  fileStatusListInfoStore.getFileDownloadInfo(props.fileId)?.downloadStatus || statusMap.preview.value
+)
+const downloadProgress = computed(() =>
+  fileStatusListInfoStore.getFileDownloadInfo(props.fileId)?.downloadProgress || 0
+)
+const downloadSpeed = computed(() =>
+  fileStatusListInfoStore.getFileDownloadInfo(props.fileId)?.downloadSpeed || 0
+)
 
 const downloadFile = () => {
   const fileId = props.fileId
@@ -114,6 +142,7 @@ const downloadFile = () => {
     downloadSpeed: 0,
     pause: false
   });
+  // refreshFileStatus();
   (window as any).uploadFileApi.startDownloadFile(fileId, props.fileName, props.remoteUrl)
 }
 
@@ -151,7 +180,7 @@ const startUpload = () => {
 
 // 在文件组件的 onMounted 中
 onMounted(() => {
-  refreshFileStatus()
+  // refreshFileStatus()
 })
 
 // 监听路由变化，强制刷新状态
@@ -160,7 +189,7 @@ watch(
   () => {
     // 路由切换时重新获取文件状态
     nextTick(() => {
-      refreshFileStatus()
+      // refreshFileStatus()
     })
   }
 )
@@ -360,23 +389,49 @@ watch(
   box-shadow: 0 1px 2px rgba(74, 144, 226, 0.1);
 }
 
-/* 上传完成样式 */
+/* 上传完成样式 - 右下角定位 */
 .file-status.complete {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
   color: #4ade80;
-  font-size: 13px;
-  padding: 2px 0;
+  font-size: 18px;
   display: flex;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: rgba(74, 222, 128, 0.15);
+  border-radius: 50%;
+  padding: 0;
 }
 
-/* 上传失败样式 */
+/* 上传失败样式 - 右下角定位 */
 .file-status.fail {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
   color: #f87171;
-  font-size: 13px;
-  padding: 2px 0;
+  font-size: 18px;
   display: flex;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: rgba(248, 113, 113, 0.15);
+  border-radius: 50%;
+  padding: 0;
+}
+
+.file-status.complete:hover {
+  background: rgba(74, 222, 128, 0.25);
+  transform: scale(1.1);
+  transition: all 0.2s ease;
+}
+
+.file-status.fail:hover {
+  background: rgba(248, 113, 113, 0.25);
+  transform: scale(1.1);
+  transition: all 0.2s ease;
 }
 </style>

@@ -17,7 +17,7 @@ export const fileStatusListInfo = defineStore('fileStatusListInfo', {
     storage: localStorage,
     key: 'fileStatus-store',
     // 只持久化指定状态
-    pick: ['fileListMap', '_cacheVersion', '_cacheTimestamp']
+    pick: ['_cacheVersion', '_cacheTimestamp']
   },
   actions: {
     addFileUploadUpdateInfo(fileId: string, fileBaseInfo: FileUploadStatusInfo) {

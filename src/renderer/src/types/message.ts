@@ -4,6 +4,7 @@ export interface Message {
     conversationId: string
     receiverId: string | number
     msgType: number
+    subType?: number
     content: string
     sendStatus: number
     readStatus?: number

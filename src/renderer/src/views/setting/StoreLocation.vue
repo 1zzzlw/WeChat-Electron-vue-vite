@@ -1,19 +1,30 @@
 <template>
   <div class="setting-store-location">
-    <div class="location-count">
-      <div class="location-title">存储位置</div>
-      <div class="change">
-        <span class="context">{{ location }}</span>
-        <el-icon @click="choose" class="icon">
-          <More />
-        </el-icon>
+    <div class="location-item">
+      <div class="location-label">存储位置</div>
+      <div class="location-value">
+        <span class="path-text">{{ location || '未设置' }}</span>
+        <a href="javascript:;" class="choose-link" @click="choose">
+          <el-icon>
+            <FolderAdd />
+          </el-icon>
+          <span>选择存储位置</span>
+        </a>
       </div>
+    </div>
+
+    <div class="location-tip">
+      <el-icon class="tip-icon">
+        <InfoFilled />
+      </el-icon>
+      <span>建议设置除C盘外的路径存储文件</span>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, ref } from 'vue'
+import { FolderAdd, InfoFilled } from '@element-plus/icons-vue'
 
 const location = ref('')
 
@@ -23,7 +34,6 @@ const choose = () => {
     if (filePath) {
       location.value = filePath.localPath
       console.info('选择的存储位置:', filePath.localPath);
-      // 将选择的路径保存到本地
       (window as any).userInfoApi.storeSetUserInfo('storeLocation', filePath.localPath)
       console.info('存储位置已保存')
     }
@@ -38,57 +48,90 @@ onMounted(async () => {
 <style scoped>
 .setting-store-location {
   width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  padding: 20px 25px;
   -webkit-app-region: no-drag;
 }
 
-.location-count {
-  width: 200px;
-  height: 100px;
-  position: relative;
-  background-color: #8c939d;
-  border-radius: 20px;
+.location-item {
+  margin-bottom: 15px;
+}
+
+.location-label {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.location-value {
   display: flex;
   align-items: center;
+  gap: 12px;
+  padding: 10px 15px;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.location-title {
-  position: absolute;
-  top: 5px;
-  left: 5px;
-  font-weight: bold;
-  color: #fff;
-}
-
-.change {
-  width: 100%;
-  height: 100%;
-  padding: 10px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  overflow: hidden;
-}
-
-.context {
-  width: 160px;
-  font-size: 16px;
-  color: #74859c;
-  white-space: nowrap;
+.path-text {
+  flex: 1;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  word-break: break-all;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.icon {
-  font-size: 20px;
-  transition: all 0.3s ease-in-out;
+.path-text:empty::before {
+  content: '未设置';
+  color: rgba(255, 255, 255, 0.35);
+  font-style: italic;
 }
 
-.icon:hover {
-  color: #fff;
+.choose-link {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  color: rgba(102, 126, 234, 0.9);
+  text-decoration: none;
+  padding: 4px 10px;
+  border-radius: 6px;
+  transition: all 0.25s ease;
+  flex-shrink: 0;
   cursor: pointer;
+}
+
+.choose-link:hover {
+  color: rgba(102, 126, 234, 1);
+  background: rgba(102, 126, 234, 0.12);
+}
+
+.choose-link:active {
+  transform: scale(0.98);
+}
+
+.location-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  background: rgba(102, 126, 234, 0.15);
+  border-radius: 8px;
+  border-left: 3px solid rgba(102, 126, 234, 0.8);
+}
+
+.tip-icon {
+  color: rgba(102, 126, 234, 1);
+  font-size: 15px;
+  margin-top: 1px;
+  flex-shrink: 0;
+}
+
+.location-tip span {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.5;
 }
 </style>

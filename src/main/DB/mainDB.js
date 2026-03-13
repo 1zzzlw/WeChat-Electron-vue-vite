@@ -195,6 +195,26 @@ const update = (tableName, condition, data) => {
     return run(sql, params)
 }
 
+const deletes = (tableName, condition) => {
+    // 获得该表的字段映射关系
+    const columnsMap = globalColumnsMap[tableName]
+    // 数据库字段名数组
+    const conditionTableFieldNames = []
+    const params = []
+    // 拼接条件的sql语句
+    for (let item in condition) {
+        if (condition[item] != undefined && columnsMap[item] != undefined) {
+            conditionTableFieldNames.push(`${columnsMap[item]} = ?`)
+            // 加入该字段的值
+            params.push(condition[item])
+        }
+    }
+    const conditionPlaceholder = conditionTableFieldNames.join(' and ')
+    const sql = `delete from ${tableName} where ${conditionPlaceholder}`
+    console.log(sql)
+    return run(sql, params)
+}
+
 /**
  * 执行sql语句
  * @param  sql sql语句
@@ -221,5 +241,6 @@ export {
     multipleInsert,
     insert,
     update,
+    deletes,
     run
 }

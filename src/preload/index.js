@@ -91,6 +91,9 @@ const dbApi = {
   },
   addFavorites: (favoritesPackList) => {
     ipcRenderer.send('add:note', favoritesPackList)
+  },
+  clearHistoryMessage: (conversationId) => {
+    ipcRenderer.send('clear:historyMessage', conversationId)
   }
 }
 

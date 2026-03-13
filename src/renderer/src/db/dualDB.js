@@ -198,6 +198,10 @@ const addFavorites = async (favoritesPackList) => {
     await window.dbApi.addFavorites(favoritesPackList)
 }
 
+const clearHistoryMessage = async (conversationId) => {
+    await window.dbApi.clearHistoryMessage(conversationId)
+}
+
 export {
     getConversationList,
     getFriendList,
@@ -215,5 +219,6 @@ export {
     uploadNoteContent,
     getFavorites,
     updateOldNoteContent,
-    addFavorites
+    addFavorites,
+    clearHistoryMessage
 }

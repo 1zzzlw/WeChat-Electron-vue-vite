@@ -1,6 +1,7 @@
-import { updateConversation, uploadNoteContent, updateOldNoteContent } from "./dualDB";
+import { updateConversation, uploadNoteContent, updateOldNoteContent, clearHistoryMessage } from "./dualDB";
 import { uploadNoteContentApi, updateOldNoteContentApi } from '../api/Favorites'
 import { updateConversationTopStatusApi, updateConversationMuteStatusApi } from '../api/Conversation'
+import { clearHistoryMessageApi } from "../api/Message";
 
 /**
  * 
@@ -56,9 +57,17 @@ const updateOldNote = (condition, data) => {
     updateOldNoteContentApi(condition, data)
 }
 
+const clearHistoryMessageSync = (conversationId) => {
+    // 清空本地数据库的历史消息
+    clearHistoryMessage(conversationId)
+    // 清空服务器的历史消息
+    // clearHistoryMessageApi(conversationId)
+}
+
 export {
     updateConversationTopStatus,
     updateConversationMuteStatus,
     insertNewNote,
-    updateOldNote
+    updateOldNote,
+    clearHistoryMessageSync
 }

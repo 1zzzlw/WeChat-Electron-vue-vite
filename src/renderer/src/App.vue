@@ -5,7 +5,7 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, toRaw } from 'vue'
 import router from '../src/router/router'
 import { messageInfo } from '../src/stores/MessageStore'
 import { userApplyListInfo } from '../src/stores/UserApplyListStore'
@@ -69,8 +69,10 @@ onMounted(async () => {
         friendInfo().addUserListOnline(data.friendIdList)
         break
       case 11:
-        console.log('接收到系统消息', data)
+        console.log('接收到用户的离线消息', data)
+        friendInfo().removeUserOnline(data.userId)
         break
+
     }
   })
 
@@ -95,6 +97,14 @@ onMounted(async () => {
       data = {
         sendStatus: 1
       }
+      // 上传成功之后，再发送ws消息展示到对方界面
+
+      const rawMessagePack = toRaw(messageInfo().getFileMessage(fileId))
+
+      console.log(rawMessagePack)
+
+      window.wsApi.sendMessage(1, 0, rawMessagePack)
+
       // 修改服务端的文件上次状态
       updateMessageFileSendStatusApi(fileId, 1)
     } else {

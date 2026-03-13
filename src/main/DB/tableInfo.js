@@ -7,6 +7,7 @@ const init_table = [
     conversation_id   TEXT     NOT NULL,
     receiver_id       TXT      NOT NULL,
     msg_type          INTEGER  NOT NULL,
+    sub_type          INTEGER  NOT NULL,
     content           TEXT,
     send_status       INTEGER  NOT NULL DEFAULT 0,
     read_status       INTEGER  NOT NULL DEFAULT 1,

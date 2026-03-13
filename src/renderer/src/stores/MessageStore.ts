@@ -7,7 +7,8 @@ export const messageInfo = defineStore('messageInfo', {
   state: () => {
     return {
       // 会话id当键，消息当值
-      messageMap: {} as Record<string, Message[]>
+      messageMap: {} as Record<string, Message[]>,
+      fileMessgaeMap: {} as Record<string, Message>
     }
   },
   actions: {
@@ -46,6 +47,18 @@ export const messageInfo = defineStore('messageInfo', {
           (msg) => msg.id !== messageId
         )
       }
+    },
+    // 添加文件消息
+    addFileMessage(fileId: string, message: Message) {
+      this.fileMessgaeMap[fileId] = message
+    },
+    // 获取文件信息
+    getFileMessage(fileId: string) {
+      return this.fileMessgaeMap[fileId]
+    },
+    // 补充文件信息的路径
+    addFileUrl(fileId: string, remoteUrl: string) {
+      this.fileMessgaeMap[fileId].remoteUrl = remoteUrl
     }
   }
 })

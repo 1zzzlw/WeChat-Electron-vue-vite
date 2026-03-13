@@ -97,8 +97,8 @@ const Login = async (formEl: FormInstance | undefined) => {
     // 验证成功会进入这里，失败会直接跳去 catch
     await formEl.validate()
     isLoading.value = true
-    const result = await loginApi(loginForm)
-    const status = (result as any).code
+    const result: any = await loginApi(loginForm)
+    const status = result.code
     if (status === 1) {
       (window as any).userInfoApi.storeSetUserInfo('userId', result.data.id);
       (window as any).userInfoApi.storeSetUserInfo('avatar', result.data.avatar);
@@ -125,12 +125,13 @@ const Login = async (formEl: FormInstance | undefined) => {
         await (window as any).windowToolApi.resizeWindow('main')
       }
     } else {
-      ElMessage.error('登录失败')
+      ElMessage.error(result.msg)
     }
   } catch (error) {
     console.log('error submit!', error)
     ElMessage.error('登录失败')
   }
+
 }
 
 const Register = () => {
