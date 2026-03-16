@@ -17,7 +17,7 @@ export const groupListInfo = defineStore('groupListInfo', {
   state: () => {
     return {
       // Record<键类型, 值类型>：键是string/number，值是groupInfo
-      groupListMap: {} as Record<string | number, groupInfo>
+      groupListMap: {} as Record<string, groupInfo>
     }
   },
   actions: {
@@ -28,6 +28,14 @@ export const groupListInfo = defineStore('groupListInfo', {
       } else {
         // 新数据，直接赋值
         this.groupListMap[groupId] = groupInfo
+      }
+    },
+    isOwner(groupId: string, userId: string | number) {
+      console.log(this.groupListMap)
+      console.log(this.groupListMap[groupId])
+      if (this.groupListMap[groupId]) {
+        console.log(this.groupListMap[groupId])
+        return this.groupListMap[groupId].ownerId === userId
       }
     }
   }

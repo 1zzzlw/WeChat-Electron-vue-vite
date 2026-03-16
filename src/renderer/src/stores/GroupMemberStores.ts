@@ -34,6 +34,9 @@ export const groupMemberInfo = defineStore('groupMemberInfo', {
     },
     getGroupMemberAvatar(userId: string | number) {
       return this.groupMemberAvatarMap[userId]
+    },
+    getGroupMemberList(conversationId: string) {
+      return this.groupMemberMap[conversationId]
     }
   }
 })

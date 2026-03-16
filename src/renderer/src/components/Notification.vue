@@ -31,7 +31,7 @@ import { Close } from '@element-plus/icons-vue'
 import emitter from '../utils/mitt'
 
 // 通知显示状态
-const isOnline = ref(true)
+const isOnline = ref(false)
 
 // 空数据占位
 const avatarUrl = ref('')

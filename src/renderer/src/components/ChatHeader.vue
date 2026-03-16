@@ -36,12 +36,10 @@
                     <!-- 群信息头部 -->
                     <div class="group-header">
                         <div class="group-avatar">
-                            <img :src="conversation.avatar" alt="群头像">
-                            <div class="avatar-badge" v-if="conversation.memberCount">{{ conversation.memberCount }}人
-                            </div>
+                            <img :src="conversation.avatar + '?t=' + Date.now()" alt="群头像">
                         </div>
                         <div class="group-name">{{ conversation.remark || conversation.name }}</div>
-                        <div class="group-id">群号：{{ conversation.groupId || '---' }}</div>
+                        <div class="group-id">群号：{{ conversation.id || '---' }}</div>
                     </div>
 
                     <!-- 群设置选项 -->
@@ -51,6 +49,7 @@
                             <el-switch v-model="conversation.isTop" :active-value="1" :inactive-value="0"
                                 @change="changeTopStatus" />
                         </div>
+
                         <div class="setting-item">
                             <span class="setting-label">消息免打扰</span>
                             <el-switch v-model="conversation.isMute" :active-value="1" :inactive-value="0"
@@ -61,26 +60,34 @@
                     <!-- 群成员区域 -->
                     <div class="group-members">
                         <div class="members-header">
-                            <span class="members-title">群成员（{{ conversation.memberCount || 0 }}）</span>
+                            <span class="members-title">群成员（{{ groupList?.length || 0 }}）</span>
                             <el-icon class="members-more">
                                 <ArrowRight />
                             </el-icon>
                         </div>
                         <div class="members-list">
-                            <!-- 群主 -->
-                            <div class="member-item owner">
-                                <img src="" class="member-avatar">
-                                <span class="member-name">群主</span>
-                            </div>
-                            <!-- 管理员 -->
-                            <div class="member-item admin">
-                                <img src="" class="member-avatar">
-                                <span class="member-name">管理员</span>
-                            </div>
-                            <!-- 普通成员 -->
-                            <div class="member-item">
-                                <img src="" class="member-avatar">
-                                <span class="member-name">成员1</span>
+                            <div v-for="groupMember in groupList" :key="groupMember.userId">
+                                <ContextMenu :menu="[
+                                    { label: '设置为管理员' },
+                                    { label: '踢出群聊' },
+                                    { label: '禁言' },
+                                ]" @select="(item: any) => handleChoice(item)">
+                                    <!-- 群主 -->
+                                    <div v-if="groupMember.role === 2" class="member-item owner">
+                                        <img :src="groupMember.avatar" class="member-avatar">
+                                        <span class="member-name">群主</span>
+                                    </div>
+                                    <!-- 管理员 -->
+                                    <div v-if="groupMember.role === 1" class="member-item admin">
+                                        <img :src="groupMember.avatar" class="member-avatar">
+                                        <span class="member-name">管理员</span>
+                                    </div>
+                                    <!-- 普通成员 -->
+                                    <div v-if="groupMember.role === 0" class="member-item">
+                                        <img :src="groupMember.avatar" class="member-avatar">
+                                        <span class="member-name">成员</span>
+                                    </div>
+                                </ContextMenu>
                             </div>
                             <!-- 更多成员入口 -->
                             <div class="member-item more">
@@ -107,17 +114,17 @@
 
                     <!-- 底部操作按钮 -->
                     <div class="group-actions">
-                        <a class="action-btn secondary" @click="exitGroup">
-                            <el-icon>
-                                <SwitchButton />
-                            </el-icon>
-                            <span>退出群聊</span>
-                        </a>
-                        <a class="action-btn danger" v-if="conversation.isOwner" @click="dismissGroup">
+                        <a class="action-btn danger" v-if="userInfo.role === 2" @click="dismissGroup">
                             <el-icon>
                                 <Delete />
                             </el-icon>
                             <span>解散群聊</span>
+                        </a>
+                        <a class="action-btn secondary" v-else @click="exitGroup">
+                            <el-icon>
+                                <SwitchButton />
+                            </el-icon>
+                            <span>退出群聊</span>
                         </a>
                     </div>
                 </div>
@@ -127,16 +134,22 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { updateConversationTopStatus, updateConversationMuteStatus, clearHistoryMessageSync } from '../db/syncDB';
 import { messageInfo } from '../stores/MessageStore';
 import { ElMessage } from 'element-plus';
+import { groupMemberInfo } from '../stores/GroupMemberStores';
+import ContextMenu from '../components/ContextMenu.vue'
+import { groupListInfo } from '../stores/GroupListStores';
 
 const messageStore = messageInfo()
+const groupMemberStore = groupMemberInfo()
+const groupListStore = groupListInfo()
 
 // 抽屉状态
 const drawerPrivate = ref(false)
 const drawerGroup = ref(false)
+const userInfo = ref()
 
 const openDrawer = () => {
     if (props.conversation.type === 0) {
@@ -164,6 +177,10 @@ const dismissGroup = () => {
 
 }
 
+const handleChoice = (item: any) => {
+    console.log(item)
+}
+
 const clearMessageHistory = () => {
     messageStore.clearConversationMessages(props.conversation.id)
     clearHistoryMessageSync(props.conversation.id)
@@ -181,9 +198,25 @@ const props = defineProps({
     }
 })
 
-watch(() => props.conversation.id, () => {
+const groupList = computed(() => {
+    if (props.conversation.type === 1) {
+        // 是群聊时，获取群成员列表
+        return groupMemberStore.getGroupMemberList(props.conversation.id).sort((a: any, b: any) => {
+            if (a.role === 2) return -1
+            if (b.role === 2) {
+                userInfo.value = b
+                return 1
+            }
+            return 0;
+        }).slice(0, 5)
+    }
+})
+
+watch(() => props.conversation.id, async () => {
     drawerPrivate.value = false
     drawerGroup.value = false
+}, {
+    immediate: true
 })
 </script>
 

@@ -36,7 +36,8 @@
               <img v-if="conversation.type === 0" :src="conversation.avatar" class="list-image" />
               <img v-else :src="groupMemberStore.getGroupMemberAvatar(message.senderId)" class="list-image" />
               <div class="msg">
-                <div class="left-name">{{ conversation.remark || conversation.name }}</div>
+                <div v-if="conversation.type === 0" class="left-name">{{ conversation.remark || conversation.name }}
+                </div>
                 <ContextMenu :menu="[
                   { label: '复制' },
                   { divider: true },
@@ -282,7 +283,9 @@ const sendGroupMessage = async () => {
   const convId = route.query.conversationId as string
   const content = message.value
   console.info('发送群聊消息 ===> 群聊ID:', convId, '消息内容:', content)
-  const receiverIds = groupMemberStore.groupMemberMap[convId].map((item) => item.userId)
+  const receiverIds = groupMemberStore.groupMemberMap[convId]
+    ?.filter((item) => item.userId !== userId.value) // 过滤掉自己的ID
+    .map((item) => item.userId) || [];
   // 处理消息类型
   // ws发送群聊信息：群聊id、消息内容、接收者数组
   console.info('群成员列表:', groupMemberStore.groupMemberMap[convId])

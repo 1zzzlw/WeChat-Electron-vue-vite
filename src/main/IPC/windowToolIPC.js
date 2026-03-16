@@ -3,6 +3,7 @@ import { ipcMain, app, globalShortcut } from 'electron'
 import { windowPool } from '../Util/createNewWindow'
 import websocket from '../websocket'
 import { createCaptureWindow } from './chatToolIPC';
+import os from 'os'
 
 let shortcutsRegistered = false
 
@@ -105,6 +106,46 @@ function registerShortcuts() {
 ipcMain.on('register-shortcuts', () => {
   console.log('开始注册快捷键')
   registerShortcuts()
+})
+
+ipcMain.handle('window:info', () => {
+  const osInfo = {
+    // Windows_NT (Windows) / Linux (macOS/Linux)
+    osType: os.type(),
+    // win32 / darwin (macOS) / linux
+    platform: os.platform(),
+    // OS version number
+    osVersion: os.release(),
+    // x64 / arm64 etc.
+    cpuArchitecture: os.arch(),
+  }
+
+  const cpuInfo = {
+    cpuCores: os.cpus().length,
+    cpuModel: os.cpus()[0]?.model || 'Unknown',
+    cpuSpeed: `${os.cpus()[0]?.speed} MHz` || 'Unknown',
+  }
+
+  const totalMem = (os.totalmem() / 1024 / 1024 / 1024).toFixed(2)
+  const freeMem = (os.freemem() / 1024 / 1024 / 1024).toFixed(2)
+  const memInfo = {
+    totalMemory: `${totalMem} GB`,
+    freeMemory: `${freeMem} GB`,
+    memoryUsage: `${((1 - freeMem / totalMem) * 100).toFixed(2)}%`,
+  }
+
+  const hostInfo = {
+    hostname: os.hostname(),
+    userHomeDir: os.homedir(),
+    systemUptime: new Date(os.uptime() * 1000).toISOString().substring(11, 19) + ' hours',
+  }
+
+  return {
+    operatingSystemInfo: osInfo,
+    cpuInformation: cpuInfo,
+    memoryInformation: memInfo,
+    hostInformation: hostInfo,
+  }
 })
 
 export {

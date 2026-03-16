@@ -107,15 +107,15 @@ const checking = ref(false)
 
 onMounted(async () => {
   // 获取应用信息
-  // const appInfo = await ipcRenderer.invoke('get-app-info')
-  // appVersion.value = appInfo.version
-  // electronVersion.value = appInfo.electronVersion
-  // buildTime.value = appInfo.buildTime
+  const appInfo = await (window as any).windowToolApi.getWindowInfo()
 
-  // // 获取系统信息
-  // osInfo.value = appInfo.platform
-  // arch.value = appInfo.arch
-  // memoryInfo.value = `${(appInfo.totalMemory / 1024 / 1024 / 1024).toFixed(1)} GB`
+  const memory = appInfo.memoryInformation
+  const os = appInfo.operatingSystemInfo
+
+  osInfo.value = `CPU 架构：${os.cpuArchitecture} \t 系统类型：${os.osType} \t 系统平台：${os.platform} \t 系统版本：${os.osVersion}`
+  memoryInfo.value = `空闲内存：${memory.freeMemory} 已使用：${memory.memoryUsage} 总内存：${memory.totalMemory}`
+
+  console.log(appInfo)
 })
 
 const checkForUpdates = async () => {

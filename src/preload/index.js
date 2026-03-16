@@ -156,6 +156,9 @@ const windowToolApi = {
   // 注册快捷键通知
   registerGlobalShortcut: () => {
     ipcRenderer.send('register-shortcuts')
+  },
+  getWindowInfo: () => {
+    return ipcRenderer.invoke('window:info')
   }
 }
 
