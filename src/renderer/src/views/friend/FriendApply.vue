@@ -104,10 +104,11 @@ const agreeButton = () => {
       addConversation(conversationPack)
       // 将会话关系加入缓存
       conversationStore.setConversationMap(conversationPack.id, conversationPack)
+
       // 通知好友添加成功
       const wsFriendPack = {
-        userId: applyInfo.fromUserId,
-        friendId: userId.value,
+        userId: userId.value,
+        friendId: applyInfo.fromUserId,
         username: username.value,
         account: account.value,
         gender: gender.value,
@@ -120,6 +121,7 @@ const agreeButton = () => {
       ElMessage.error('同意失败')
     }
   })
+
 }
 
 const refuseButton = () => {

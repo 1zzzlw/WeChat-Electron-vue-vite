@@ -157,6 +157,9 @@ const joinGroup = async (activeGroupApply: any) => {
     addConversation(conversationPack)
     // 群会话添加到缓存
     conversationStore.setConversationMap(conversationPack.id, conversationPack)
+
+    // 发送自己入群的通知
+
   } else {
     ElMessage.error('入群失败')
   }

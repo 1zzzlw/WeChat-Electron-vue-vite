@@ -142,7 +142,7 @@ class WebSocketManager {
                     userId: data.userId,
                     targetId: data.friendId,
                     name: data.username,
-                    avatet: data.avatar,
+                    avatar: data.avatar,
                     type: 0,
                     isTop: 0,
                     isMute: 0,
