@@ -59,8 +59,8 @@
 <script lang="ts" setup>
 import { watch, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { friendInfo } from '../../stores/ContactListStore'
-import { conversationInfo } from '../../stores/ConversationStore'
+import { friendInfo } from '../../stores/modules/ContactListStore'
+import { conversationInfo } from '../../stores/modules/ConversationStore'
 import { Friend } from '../../types/friend'
 import { getFriendInfoById, getConversationInfoById, updateConversation } from '../../db/dualDB'
 import dayjs from 'dayjs'

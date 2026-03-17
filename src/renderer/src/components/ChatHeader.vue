@@ -136,11 +136,11 @@
 <script lang="ts" setup>
 import { ref, watch, computed } from 'vue';
 import { updateConversationTopStatus, updateConversationMuteStatus, clearHistoryMessageSync } from '../db/syncDB';
-import { messageInfo } from '../stores/MessageStore';
+import { messageInfo } from '../stores/modules/MessageStore';
 import { ElMessage } from 'element-plus';
-import { groupMemberInfo } from '../stores/GroupMemberStores';
+import { groupMemberInfo } from '../stores/modules/GroupMemberStores';
 import ContextMenu from '../components/ContextMenu.vue'
-import { groupListInfo } from '../stores/GroupListStores';
+import { groupListInfo } from '../stores/modules/GroupListStores';
 
 const messageStore = messageInfo()
 const groupMemberStore = groupMemberInfo()

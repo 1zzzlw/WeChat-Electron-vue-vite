@@ -86,8 +86,8 @@
 import { ref, watch, computed } from 'vue';
 import { deletePersonality, switchPersonality, updatePersonality, createPersonality, listPersonality } from '../api/AIMessage'
 import { Personality } from '../types/personality'
-import { aiPersonalityInfo } from '../stores/PersonalityStore'
-import { conversationInfo } from '../stores/ConversationStore';
+import { aiPersonalityInfo } from '../stores/modules/PersonalityStore'
+import { conversationInfo } from '../stores/modules/ConversationStore';
 import { updateConversation } from '../db/dualDB'
 import { ElMessage } from 'element-plus';
 

@@ -48,7 +48,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, FormInstance } from 'element-plus'
-import { useRegisterInfoStore } from '../../stores/RegisterInfoStore'
+import { useRegisterInfoStore } from '../../stores/modules/RegisterInfoStore'
 
 const registerInfoStore = useRegisterInfoStore()
 const router = useRouter()

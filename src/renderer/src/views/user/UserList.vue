@@ -78,12 +78,12 @@ import { getApplyListApi, getGroupApplyListApi, dealGroupApplyApi } from '../../
 import { Friend } from '../../types/friend'
 import { addConversation, getFriendList } from '../../db/dualDB'
 import { CollapseModelValue, ElMessage } from 'element-plus'
-import { userApplyListInfo } from '../../stores/UserApplyListStore'
-import { friendInfo } from '../../stores/ContactListStore'
-import { groupListInfo } from '../../stores/GroupListStores'
-import { groupMemberInfo } from '../../stores/GroupMemberStores'
+import { userApplyListInfo } from '../../stores/modules/UserApplyListStore'
+import { friendInfo } from '../../stores/modules/ContactListStore'
+import { groupListInfo } from '../../stores/modules/GroupListStores'
+import { groupMemberInfo } from '../../stores/modules/GroupMemberStores'
 import { getGroupMemberListApi } from '../../api/Conversation'
-import { conversationInfo } from '../../stores/ConversationStore'
+import { conversationInfo } from '../../stores/modules/ConversationStore'
 import AutocompleteSearch from '../../components/AutocompleteSearch.vue'
 
 const userId = ref()

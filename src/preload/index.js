@@ -213,6 +213,18 @@ const mediaHandleApi = {
   }
 }
 
+const piniaShareApi = {
+  sendStoreInfo: (targetStoreName, data) => {
+    ipcRenderer.send('store:change', targetStoreName, data)
+  },
+  // 将store信息发送给其他窗口
+  setStoreInfo: (callback) => {
+    ipcRenderer.on('store:set', (event, targetStoreName, data) => {
+      callback(event, targetStoreName, data)
+    })
+  }
+}
+
 // 只有在启用上下文隔离的情况下，才使用contextBridge API 向渲染器暴露 Electron API；否则，只需将其添加到 DOM 全局变量中。
 if (process.contextIsolated) {
   try {
@@ -225,6 +237,7 @@ if (process.contextIsolated) {
     contextBridge.exposeInMainWorld('wsApi', wsApi)
     contextBridge.exposeInMainWorld('mediaHandleApi', mediaHandleApi)
     contextBridge.exposeInMainWorld('chatToolApi', chatToolApi)
+    contextBridge.exposeInMainWorld('piniaShareApi', piniaShareApi)
   } catch (error) {
     console.error(error)
   }
@@ -238,4 +251,5 @@ if (process.contextIsolated) {
   window.wsApi = wsApi
   window.mediaHandleApi = mediaHandleApi
   window.chatToolApi = chatToolApi
+  window.piniaShareApi = piniaShareApi
 }

@@ -58,8 +58,8 @@ import ChatAIHeader from '../../components/ChatAIHeader.vue'
 import ContextMenu from '../../components/ContextMenu.vue'
 import { loadMessage, sendAIMessageApi } from '../../api/AIMessage.js'
 import { AIMessage } from '../../types/aiMessage.ts'
-import { aiMessageInfo } from '../../stores/AIMessageStore.ts'
-import { conversationInfo } from '../../stores/ConversationStore.ts';
+import { aiMessageInfo } from '../../stores/modules/AIMessageStore.ts'
+import { conversationInfo } from '../../stores/modules/ConversationStore.ts';
 
 const avatarUrl = ref('')
 const message = ref('')

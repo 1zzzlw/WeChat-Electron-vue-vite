@@ -27,7 +27,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { registerApi } from '../../api/Register'
 import { Plus } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { useRegisterInfoStore } from '../../stores/RegisterInfoStore'
+import { useRegisterInfoStore } from '../../stores/modules/RegisterInfoStore'
 
 interface UserInfo {
   username: string

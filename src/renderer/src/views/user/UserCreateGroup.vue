@@ -44,7 +44,7 @@ import { getFriendList, addConversation } from '../../db/dualDB'
 import { sendGroupApplyApi } from '../../api/Apply'
 import { ElMessage } from 'element-plus'
 import { Conversation } from '../../types/conversation'
-import { conversationInfo } from '../../stores/ConversationStore'
+import { conversationInfo } from '../../stores/modules/ConversationStore'
 import WindowControls from '../../components/WindowControls.vue'
 
 const count = ref(0)

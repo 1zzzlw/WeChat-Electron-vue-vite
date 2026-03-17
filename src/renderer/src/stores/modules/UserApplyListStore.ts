@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { userApplyInfo, groupApplyInfo } from '../types/applyInfo'
+import { userApplyInfo, groupApplyInfo } from '../../types/applyInfo'
 
 
 export const userApplyListInfo = defineStore('userApplyListInfo', {

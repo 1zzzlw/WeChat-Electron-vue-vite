@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { FileUploadStatusInfo, UploadStatus, FileDownloadStatusInfo } from '../types/fileBaseInfo'
+import { FileUploadStatusInfo, UploadStatus, FileDownloadStatusInfo } from '../../types/fileBaseInfo'
 
 export const fileStatusListInfo = defineStore('fileStatusListInfo', {
   state: () => {

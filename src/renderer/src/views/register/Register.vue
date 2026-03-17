@@ -54,7 +54,7 @@ import { useRouter } from 'vue-router'
 import { sendPhoneCodeApi } from '../../api/Register'
 import { ElMessage, FormInstance, FormRules } from 'element-plus'
 import WindowControls from '../../components/WindowControls.vue'
-import { useRegisterInfoStore } from '../../stores/RegisterInfoStore'
+import { useRegisterInfoStore } from '../../stores/modules/RegisterInfoStore'
 
 const registerInfoStore = useRegisterInfoStore()
 const router = useRouter()

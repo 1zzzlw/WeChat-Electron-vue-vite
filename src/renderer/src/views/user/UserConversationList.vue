@@ -63,7 +63,7 @@
 <script lang="ts" setup>
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { conversationInfo } from '../../stores/ConversationStore'
+import { conversationInfo } from '../../stores/modules/ConversationStore.js'
 import { Plus } from '@element-plus/icons-vue'
 import { Conversation } from '../../types/conversation'
 import AutocompleteSearch from '../../components/AutocompleteSearch.vue'

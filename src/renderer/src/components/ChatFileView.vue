@@ -60,7 +60,7 @@
 import { ref, computed, onMounted, watch, nextTick } from 'vue';
 import { useRoute } from 'vue-router'
 import { FileUploadStatusInfo, statusMap, FileDownloadStatusInfo } from '../types/fileBaseInfo';
-import { fileStatusListInfo } from '../stores/FileStatusInfoStore';
+import { fileStatusListInfo } from '../stores/modules/FileStatusInfoStore';
 
 const props = defineProps<{
   sendStatus: number

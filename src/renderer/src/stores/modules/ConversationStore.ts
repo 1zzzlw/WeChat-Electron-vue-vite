@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { Conversation } from '../types/conversation'
+import { Conversation } from '../../types/conversation'
 
 // 会话列表存储模块
 

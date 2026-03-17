@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { Friend } from '../types/friend'
+import { Friend } from '../../types/friend'
 
 // 用来临时存储联系人列表
 

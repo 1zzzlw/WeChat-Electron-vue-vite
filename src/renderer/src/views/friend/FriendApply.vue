@@ -26,9 +26,9 @@
 <script lang="ts" setup>
 import { ref, reactive, toRaw, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { userApplyListInfo } from '../../stores/UserApplyListStore'
-import { friendInfo } from '../../stores/ContactListStore'
-import { conversationInfo } from '../../stores/ConversationStore'
+import { userApplyListInfo } from '../../stores/modules/UserApplyListStore'
+import { friendInfo } from '../../stores/modules/ContactListStore'
+import { conversationInfo } from '../../stores/modules/ConversationStore'
 import { dealApplyApi } from '../../api/Apply'
 import { ElMessage } from 'element-plus'
 import { Friend } from '../../types/friend'

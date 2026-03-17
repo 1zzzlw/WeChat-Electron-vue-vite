@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { Personality } from '../types/personality'
+import { Personality } from '../../types/personality'
 
 export const aiPersonalityInfo = defineStore('aiPersonalityInfo', {
     state: () => {
