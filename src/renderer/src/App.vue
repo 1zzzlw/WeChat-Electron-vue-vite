@@ -74,6 +74,31 @@ onMounted(async () => {
         console.log('接收到用户的离线消息', data)
         friendInfo().removeUserOnline(data.userId)
         break
+      case 15:
+        console.log('接收到申请处理的结果', data)
+        const friendInfoPack = {
+          userId: data.userId,
+          username: data.username,
+          account: data.account,
+          friendId: data.friendId,
+          avatar: data.avatar,
+          gender: data.gender,
+          phone: data.phone,
+          relationStatus: data.relationStatus
+        }
+        friendInfo().setFriendMap(data.friendId, friendInfoPack)
+        const conversationPack = {
+          id: data.conversationId,
+          userId: data.userId,
+          targetId: data.friendId,
+          name: data.username,
+          avatet: data.avatar,
+          type: 0,
+          isTop: 0,
+          isMute: 0,
+          unreadCount: 0
+        }
+        conversationInfo().setConversationMap(data.conversationId, conversationPack)
     }
   })
 

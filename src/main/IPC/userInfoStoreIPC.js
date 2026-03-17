@@ -36,6 +36,9 @@ ipcMain.handle('window:setUserInfo', (e, userInfoType, userInfo) => {
     case 'account':
       store.set('account', userInfo)
       break
+    case 'gender':
+      store.set('gender', userInfo)
+      break
   }
   return true
 })
@@ -65,6 +68,8 @@ ipcMain.handle('window:getUserInfo', (e, userInfoType) => {
         return store.get('phone')
       case 'account':
         return store.get('account')
+      case 'gender':
+        return store.get('gender')
       default:
         return null
     }

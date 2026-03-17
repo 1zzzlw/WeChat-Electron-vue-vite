@@ -34,9 +34,6 @@ export const userApplyListInfo = defineStore('userApplyListInfo', {
         this.userApplyMap[userId] = { ...existingUserApply, ...partialInfo }
       }
     },
-    deleteUserApplyMap(userId: string | number) {
-      delete this.userApplyMap[userId]
-    },
     setGroupApplyMap(groupId: string | number, groupInfo: groupApplyInfo) {
       this.groupApplyMap[groupId] = groupInfo
     },

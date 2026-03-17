@@ -1,5 +1,5 @@
 import { store, mainWindow } from './index'
-import { saveSentMessage } from './DB/insert'
+import { saveSentMessage, addConversation, addFriendRelation } from './DB/insert'
 import { updateConversation } from './DB/update'
 
 class WebSocketManager {
@@ -135,6 +135,31 @@ class WebSocketManager {
                     latestMsgTime: data.receiveTime
                 }
                 updateConversation(condition, messageData)
+            } else if (messageType === 15) {
+                // 好友申请通过，将好友信息存储到数据库中
+                const conversationPack = {
+                    id: data.conversationId,
+                    userId: data.userId,
+                    targetId: data.friendId,
+                    name: data.username,
+                    avatet: data.avatar,
+                    type: 0,
+                    isTop: 0,
+                    isMute: 0,
+                    unreadCount: 0
+                }
+                addConversation(conversationPack)
+                const friendPack = {
+                    userId: data.userId,
+                    username: data.username,
+                    account: data.account,
+                    friendId: data.friendId,
+                    avatar: data.avatar,
+                    gender: data.gender,
+                    phone: data.phone,
+                    relationStatus: data.relationStatus
+                }
+                addFriendRelation(friendPack)
             }
             mainWindow.webContents.send('ws:receive', messageType, data)
         } catch (e) {

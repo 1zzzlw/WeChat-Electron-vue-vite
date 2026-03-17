@@ -105,6 +105,7 @@ const Login = async (formEl: FormInstance | undefined) => {
       (window as any).userInfoApi.storeSetUserInfo('username', result.data.username);
       (window as any).userInfoApi.storeSetUserInfo('phone', result.data.phone);
       (window as any).userInfoApi.storeSetUserInfo('account', result.data.account);
+      (window as any).userInfoApi.storeSetUserInfo('gender', result.data.gender);
 
       // 判断当前登录是否需要初始化
       const isNeed = await (window as any).loadApi.isNeedInitData()

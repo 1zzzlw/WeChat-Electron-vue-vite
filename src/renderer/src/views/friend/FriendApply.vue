@@ -24,15 +24,13 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, toRaw, watch } from 'vue'
+import { ref, reactive, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { userApplyListInfo } from '../../stores/modules/UserApplyListStore'
 import { friendInfo } from '../../stores/modules/ContactListStore'
 import { conversationInfo } from '../../stores/modules/ConversationStore'
 import { dealApplyApi } from '../../api/Apply'
 import { ElMessage } from 'element-plus'
-import { Friend } from '../../types/friend'
-import { Conversation } from '../../types/conversation'
 import { addConversation, addFriendRelation } from '../../db/dualDB'
 
 import { userApplyInfo, groupApplyInfo } from '../../types/applyInfo'
@@ -57,8 +55,13 @@ const applyInfo = reactive<userApplyInfo>({
   isDealt: 0,
   dealResult: 0
 })
-let firendPack = <Friend>({})
-let conversationPack = <Conversation>({})
+
+const username = ref()
+const account = ref()
+const phone = ref()
+const avatar = ref()
+const userId = ref()
+const gender = ref()
 
 const agreeButton = () => {
   dealApplyApi(applyInfo.applyId, 1, applyInfo.fromUserId).then(async (res: any) => {
@@ -70,9 +73,8 @@ const agreeButton = () => {
         isDealt: 1,
         dealResult: 1
       })
-      const userId = await (window as any).userInfoApi.storeGetUserInfo('userId')
-      firendPack = {
-        userId: userId,
+      const firendPack = {
+        userId: userId.value,
         friendId: applyInfo.fromUserId,
         username: applyInfo.username,
         avatar: applyInfo.avatar,
@@ -85,9 +87,9 @@ const agreeButton = () => {
         remark: '',
         relationStatus: 1
       }
-      conversationPack = {
+      const conversationPack = {
         id: res.data,
-        userId: userId,
+        userId: userId.value,
         targetId: String(applyInfo.fromUserId),
         name: applyInfo.username,
         avatar: applyInfo.avatar,
@@ -102,6 +104,18 @@ const agreeButton = () => {
       addConversation(conversationPack)
       // 将会话关系加入缓存
       conversationStore.setConversationMap(conversationPack.id, conversationPack)
+      // 通知好友添加成功
+      const wsFriendPack = {
+        userId: applyInfo.fromUserId,
+        friendId: userId.value,
+        username: username.value,
+        account: account.value,
+        gender: gender.value,
+        phone: phone.value,
+        avatar: avatar.value,
+        dealResult: 1
+      };
+      (window as any).wsApi.sendMessage(14, 0, wsFriendPack)
     } else {
       ElMessage.error('同意失败')
     }
@@ -123,6 +137,15 @@ const refuseButton = () => {
     }
   })
 }
+
+onMounted(async () => {
+  username.value = await (window as any).userInfoApi.storeGetUserInfo('username')
+  account.value = await (window as any).userInfoApi.storeGetUserInfo('account')
+  phone.value = await (window as any).userInfoApi.storeGetUserInfo('phone')
+  avatar.value = await (window as any).userInfoApi.storeGetUserInfo('avatar')
+  userId.value = await (window as any).userInfoApi.storeGetUserInfo('userId')
+  gender.value = await (window as any).userInfoApi.storeGetUserInfo('gender')
+})
 
 watch(
   // 第一个参数：要监听的“源”（可以是响应式变量、计算属性、路由参数等）

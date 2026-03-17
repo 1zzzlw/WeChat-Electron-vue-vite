@@ -87,9 +87,6 @@ export const friendInfo = defineStore('friendListInfo', {
         this.friendInfoMap[friendId].isOnline = false
       }
     },
-    getFriendMap(friendId: string | number): Friend | undefined {
-      return this.friendInfoMap[friendId]
-    },
     restoreOnlineStatus() {
       this.onlineUserIds.forEach(friendId => {
         if (this.friendInfoMap[friendId]) {
@@ -97,6 +94,7 @@ export const friendInfo = defineStore('friendListInfo', {
         }
       })
     },
+    // 更新好友信息
     updateFriendMap(friendId: string | number, partialInfo: Partial<Friend>) {
       // 获得未修改前的用户信息
       const existingUser = this.friendInfoMap[friendId]
@@ -108,6 +106,7 @@ export const friendInfo = defineStore('friendListInfo', {
         this.friendInfoMap[friendId] = { ...existingUser, ...partialInfo }
       }
     },
+    // 删除好友
     deleteFriendMap(friendId: string | number) {
       delete this.friendInfoMap[friendId]
     }
