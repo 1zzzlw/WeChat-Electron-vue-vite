@@ -8,21 +8,20 @@ export function shareStorePlugin({ store }: PiniaPluginContext) {
     // 不在白名单内的就不需要共享，直接跳过
     if (!SHARED_STORES.includes(store.$id)) return
 
-    console.log(store.$id)
-
     let isPassiveUpdate = false;
 
     // 收到其他窗口的广播，更新自己
     (window as any).piniaShareApi.setStoreInfo((event: any, targetStoreName: string, data: string) => {
+        console.log(targetStoreName, data)
         if (store.$id === targetStoreName) {
             isPassiveUpdate = true
+            console.log(data)
             store.$patch(JSON.parse(data))
         }
     })
 
     // 监听自己的变化，广播出去
     store.$subscribe(() => {
-        console.log(2222114444411);
         if (isPassiveUpdate) {
             // 更新过了，直接跳过
             isPassiveUpdate = false

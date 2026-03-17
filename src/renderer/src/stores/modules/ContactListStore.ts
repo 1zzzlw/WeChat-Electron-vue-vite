@@ -67,7 +67,9 @@ export const friendInfo = defineStore('friendListInfo', {
     addUserListOnline(friendIds: Array<string>) {
       for (const friendId of friendIds) {
         this.onlineUserIds.add(friendId)
-        this.friendInfoMap[friendId].isOnline = true
+        if (this.friendInfoMap[friendId]) {
+          this.friendInfoMap[friendId].isOnline = true
+        }
       }
     },
     isUserOnline(friendId: string) {
@@ -81,7 +83,9 @@ export const friendInfo = defineStore('friendListInfo', {
     },
     removeUserOnline(friendId: string) {
       this.onlineUserIds.delete(friendId)
-      this.friendInfoMap[friendId].isOnline = false
+      if (this.friendInfoMap[friendId]) {
+        this.friendInfoMap[friendId].isOnline = false
+      }
     },
     getFriendMap(friendId: string | number): Friend | undefined {
       return this.friendInfoMap[friendId]

@@ -51,9 +51,11 @@ onMounted(async () => {
         })
         break
       case 6:
+        console.log('收到好友申请', data)
         userApplyListInfo().setUserApplyMap(data.applyId, data)
         break
       case 8:
+        console.log('收到群聊申请', data)
         userApplyListInfo().setGroupApplyMap(data.userId, data)
         break
       case 9:
@@ -72,7 +74,6 @@ onMounted(async () => {
         console.log('接收到用户的离线消息', data)
         friendInfo().removeUserOnline(data.userId)
         break
-
     }
   })
 

@@ -57,7 +57,7 @@
 </template>
 
 <script lang="ts" setup>
-import { watch, ref } from 'vue'
+import { watch, ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { friendInfo } from '../../stores/modules/ContactListStore'
 import { conversationInfo } from '../../stores/modules/ConversationStore'
@@ -67,7 +67,6 @@ import dayjs from 'dayjs'
 
 const route = useRoute()
 const router = useRouter()
-const userOnlineStatus = ref(false)
 const friendInfoStore = friendInfo()
 const conversationStore = conversationInfo()
 let friendBaseInfo = ref<Friend>()
@@ -100,9 +99,12 @@ const sendMessage = async () => {
 const loadFriendInfo = async (friendId: any) => {
   // 获得好友的信息
   friendBaseInfo.value = await getFriendInfoById(friendId)
-  // 好友是否在线
-  userOnlineStatus.value = friendInfoStore.isUserOnline(friendId)
 }
+
+// 好友是否在线
+const userOnlineStatus = computed(() => {
+  return friendInfoStore.isUserOnline(route.query.friendId as string)
+})
 
 watch(
   // 第一个参数：要监听的“源”（可以是响应式变量、计算属性、路由参数等）
