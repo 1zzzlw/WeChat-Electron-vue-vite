@@ -1,7 +1,6 @@
 import axios from 'axios'
 import { getAccessToken } from './token'
 import { refreshToken, isRefreshToken } from './refreshToken'
-import { WSManager } from '../../../../../test/websocket'
 
 const server = axios.create({
   baseURL: '/api',

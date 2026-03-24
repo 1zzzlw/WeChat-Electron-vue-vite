@@ -1,7 +1,8 @@
 <template>
   <div class="unread-count">
     <div class="count-dot" v-if="unreadCounts > 0">
-      {{ unreadCounts <= 99 ? unreadCounts : '99+' }}
+      <!-- {{ unreadCounts <= 99 ? unreadCounts : '99+' }} -->
+      {{ unreadCounts }}
     </div>
   </div>
 </template>

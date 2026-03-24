@@ -105,7 +105,7 @@ const submitForm = async () => {
       await router.push('/main')
       await (window as any).windowToolApi.resizeWindow('main')
     } else {
-      ElMessage.error('注册失败')
+      ElMessage.error(res.msg)
     }
   })
 }

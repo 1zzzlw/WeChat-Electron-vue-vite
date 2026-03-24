@@ -238,6 +238,8 @@ class WebSocketManager {
         // 7.写正文
         new Uint8Array(buffer, offset).set(jsonBytes)
 
+        console.log(buffer)
+        console.log(bufferToHexString(buffer))
         // 8.发送
         this.send(buffer)
     }
@@ -248,6 +250,7 @@ class WebSocketManager {
             this.ws.websocket.send(buffer)
         }
     }
+
 
     // 开启重连计时器，尝试重连
     tryRecoonectTimer() {
@@ -301,6 +304,13 @@ class WebSocketManager {
             this.heartTimer = null
         }
     }
+}
+
+function bufferToHexString(buffer) {
+    return Array.from(new Uint8Array(buffer))
+        // 转十六进制 + 补零（确保单个数字是01而不是1） + 拼接成连续字符串
+        .map(byte => byte.toString(16).padStart(2, '0'))
+        .join('');
 }
 
 export default new WebSocketManager()

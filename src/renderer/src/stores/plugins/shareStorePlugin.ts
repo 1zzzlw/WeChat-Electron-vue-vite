@@ -1,7 +1,7 @@
 import { PiniaPluginContext } from "pinia"
 
 // 需要共享数据的pinia
-const SHARED_STORES = ['aiMessageInfo', 'messageInfo', 'conversationInfo']
+const SHARED_STORES = ['']
 
 // 处理electron多窗口，pinia共享问题
 export function shareStorePlugin({ store }: PiniaPluginContext) {

@@ -99,6 +99,17 @@ onMounted(async () => {
           unreadCount: 0
         }
         conversationInfo().setConversationMap(data.conversationId, conversationPack)
+        break
+      case 16:
+        console.log('接收到ACK确认消息', data)
+        if (data.status === 0) {
+          // 成功的ACK
+          const messagePack = messageInfo().onReceiveAck(data.tempId)
+          messagePack.id = data.messageId
+          // 将消息存储到数据库中
+          console.log(messagePack)
+
+        }
     }
   })
 

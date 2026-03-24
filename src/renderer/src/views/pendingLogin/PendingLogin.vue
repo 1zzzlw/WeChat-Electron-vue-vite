@@ -40,7 +40,7 @@ const confirmLogin = async () => {
     await router.push('/main')
     await window.windowToolApi.resizeWindow('main')
   } else {
-    ElMessage.error('登录过期，重新登录')
+    ElMessage.error('登录过期，重新登录', res.msg)
   }
 }
 
