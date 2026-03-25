@@ -10,7 +10,6 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import Store from 'electron-store'
-import dayjs from 'dayjs'
 import './IPC/userInfoStoreIPC.js'
 import './IPC/windowToolIPC.js'
 import './IPC/newWindowIPC.js'
@@ -116,8 +115,8 @@ function createTray() {
   ]
   const menu = Menu.buildFromTemplate(template)
   // 创建托盘并设置图标
-  const trayIconPath = 'src\\renderer\\src\\assets\\image\\weixinOnline.ico'
-  tray = new Tray(trayIconPath)
+  // const trayIconPath = 'src\\renderer\\src\\assets\\image\\weixinOnline.ico'
+  tray = new Tray(icon)
   tray.setToolTip('IM 客户端')
   tray.setContextMenu(menu)
 

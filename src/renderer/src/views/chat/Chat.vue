@@ -257,10 +257,8 @@ const sendPrivateMessage = async () => {
       // 添加文件信息到缓存中
       messageStore.addFileMessage(file.fileId, messagePack)
 
-      // 文件消息不能及时发送，可能还会上传失败
-      // (window as any).wsApi.sendMessage(1, 0, messagePack)
-
-      // sendApi(messagePack)
+      // 文件消息不能及时发送，可能还会上传失败，所以先用http发送到数据库中直接存储
+      sendApi(messagePack)
     }
     fileInfoList.value.length = 0
   }
@@ -269,12 +267,19 @@ const sendPrivateMessage = async () => {
     return
   }
 
+  // 清空输入框
+  message.value = ''
+
   const messagePack = createMessagePack(receiverId, convId, 1, content, null);
 
   console.log(messagePack);
 
   // ws发送单聊信息
   messageStore.sendMessage(messagePack, convId)
+
+  // 滚动到最底部
+  await nextTick()
+  scrollToBottom()
 }
 
 // 发送群聊消息
@@ -344,62 +349,61 @@ const sendGroupMessage = async () => {
   }
 }
 
-// const sendApi = (messagePack: Message) => {
-//   // http发送接收者id、会话id、消息内容
-//   sendMessageApi(messagePack).then(async (res) => {
-//     console.info('发送消息成功', res)
-//     // 清空输入框
-//     message.value = ''
-//     // 清空文件预览列表
-//     fileUrl.value = ''
-//     // 清空截图
-//     captureImageUrl.value = ''
-//     if (res.data) {
-//       const message = res.data
-//       console.log(message)
+const sendApi = (messagePack: Message) => {
+  // http发送接收者id、会话id、消息内容
+  sendMessageApi(messagePack).then(async (res) => {
+    console.info('发送消息成功', res)
+    // 清空输入框
+    message.value = ''
+    // 清空文件预览列表
+    fileUrl.value = ''
+    // 清空截图
+    captureImageUrl.value = ''
+    if (res.data) {
+      const message = res.data
+      console.log(message)
 
-//       // 消息列表存入缓存中
-//       console.info('存入缓存中')
+      // 消息列表存入缓存中
+      console.info('存入缓存中')
 
-//       messagePack.remoteUrl = message.remoteUrl
+      messagePack.remoteUrl = message.remoteUrl
 
-//       messageStore.addMessageMap(messagePack.conversationId, messagePack)
+      messageStore.addMessageMap(messagePack.conversationId, messagePack)
 
-//       // 更新会话最新消息和时间
-//       conversationStore.setConversationMap(messagePack.conversationId, {
-//         latestMsg: messagePack.content,
-//         latestMsgTime: dayjs(messagePack.sendTime).format('HH:mm:ss')
-//       })
+      // 更新会话最新消息和时间
+      conversationStore.setConversationMap(messagePack.conversationId, {
+        latestMsg: messagePack.content,
+        latestMsgTime: dayjs(messagePack.sendTime).format('HH:mm:ss')
+      })
 
-//       if (message.msgType === 1) {
-//         // 文本消息，直接修改状态为发送成功
-//         message.sendStatus = 1
-//       } else {
-//         // 文件消息，需要等到合并成功的时候才将状态修改为1
-//         message.sendStatus = 0
-//         // 文件消息需要添加远程路径到缓存中
-//         messageStore.addFileUrl(message.fileId, message.remoteUrl)
-//       }
-//       // 存入本地数据库
-//       saveSentMessage(message)
-//       // 更新本地会话列表的最新消息
-//       const condition = {
-//         id: messagePack.conversationId
-//       }
-//       const data = {
-//         latestMsg: messagePack.content,
-//         latestMsgTime: messagePack.sendTime
-//       }
-//       updateConversation(condition, data)
-//       // 滚动到最底部
-//       await nextTick()
-//       scrollToBottom()
-//     }
-//   })
-// }
+      if (message.msgType === 1) {
+        // 文本消息，直接修改状态为发送成功
+        message.sendStatus = 1
+      } else {
+        // 文件消息，需要等到合并成功的时候才将状态修改为1
+        message.sendStatus = 0
+        // 文件消息需要添加远程路径到缓存中
+        messageStore.addFileUrl(message.fileId, message.remoteUrl)
+      }
+      // 存入本地数据库
+      saveSentMessage(message)
+      // 更新本地会话列表的最新消息
+      const condition = {
+        id: messagePack.conversationId
+      }
+      const data = {
+        latestMsg: messagePack.content,
+        latestMsgTime: messagePack.sendTime
+      }
+      updateConversation(condition, data)
+      // 滚动到最底部
+      await nextTick()
+      scrollToBottom()
+    }
+  })
+}
 
 // 生成消息的包装
-
 function createMessagePack(receiverId: string | number, convId: string, msgType: number, content: string, file: any) {
   let fileId = ''
   let fileName = ''

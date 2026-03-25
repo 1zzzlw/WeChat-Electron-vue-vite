@@ -49,7 +49,8 @@
                 <div class="left-list" v-for="friend in friendListArr" :key="friend.friendId"
                   :class="{ 'left-friendList-bg': activeFriend == friend.friendId }" @click="starCall(friend)">
                   <div class="left-image">
-                    <img :src="friend.avatar" alt="头像" class="left-list-img" />
+                    <img :src="friend.avatar" alt="头像" class="left-list-img"
+                      :class="{ 'user-offline': !friend.isOnline }" />
                   </div>
                   <div>
                     <h1 class="friend-name" v-if="friend.remark === ''">{{ friend.username }}</h1>
@@ -409,6 +410,11 @@ onMounted(async () => {
   border-radius: 10px;
   /* 防止头像被压缩 */
   flex-shrink: 0;
+}
+
+.user-offline {
+  filter: grayscale(100%);
+  transition: filter 0.8s ease;
 }
 
 .user-list-right {

@@ -28,6 +28,8 @@ function updateMessageStore(data) {
   if (!isInCurrentChatPage) {
     // 此时用户不在和对方聊天，未读消息数增涨
     conversationInfo().addUnreadCount(data.conversationId)
+    // 不需要添加缓存信息到pinia中，只有当用户在当前会话窗口时才需要添加信息到pinia中
+    return
   }
   messageInfo().addMessageMap(data.conversationId, data)
 }
@@ -155,7 +157,9 @@ onMounted(async () => {
       // 修改服务端的文件上次状态
       updateMessageFileSendStatusApi(fileId, 2)
     }
+    // 修改本地的发送状态
     updateMessage(condition, data)
+
   })
 
   // 下载进度监听器

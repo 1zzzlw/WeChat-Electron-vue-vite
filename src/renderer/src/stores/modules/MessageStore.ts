@@ -75,7 +75,6 @@ export const messageInfo = defineStore('messageInfo', {
 
       return message.id
     },
-
     // 启动1秒轮询检查
     startTimeoutChecker() {
       if (this.timeoutTimer) return
