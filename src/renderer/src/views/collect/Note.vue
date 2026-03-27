@@ -19,10 +19,11 @@
     </div>
 </template>
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { getFavorites, addFavorites } from '../../db/dualDB';
 import { formatMessageTime } from '../../utils/utils'
 import { getFavoritesApi } from '../../api/Favorites'
+import { eventEmitter } from '../../utils/eventEmitter'
 
 const favoritesList = ref<any>([])
 
@@ -38,7 +39,7 @@ const openInNote = (id: string | number) => {
 
 }
 
-onMounted(async () => {
+const getFavoritesList = async () => {
     // 从本地拉取
     favoritesList.value = await getFavorites()
 
@@ -65,7 +66,19 @@ onMounted(async () => {
         })
         addFavorites(favoritesPackList)
     }
+}
 
+onMounted(async () => {
+    getFavoritesList()
+
+    // 监听笔记更新事件
+    eventEmitter.on('note:updated', getFavoritesList)
+
+})
+
+// 组件卸载时移除监听
+onUnmounted(() => {
+    eventEmitter.off('note:updated', getFavoritesList)
 })
 </script>
 <style scoped>

@@ -125,6 +125,7 @@ import Link from '@tiptap/extension-link'
 import { uploadImageApi } from '../../api/Favorites'
 import { insertNewNote, updateOldNote } from '../../db/syncDB'
 import { ElMessage } from 'element-plus';
+import { eventEmitter } from '../../utils/eventEmitter'
 
 const pendingImages = ref<any>([])
 const showLinkDialog = ref(false)
@@ -305,6 +306,9 @@ const saveContent = async () => {
         }
         insertNewNote(data)
     }
+
+    // 发送笔记更新事件
+    eventEmitter.emit('note:updated')
 }
 
 onMounted(() => {

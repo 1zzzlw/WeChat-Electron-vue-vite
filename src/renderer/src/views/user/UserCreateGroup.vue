@@ -46,6 +46,7 @@ import { ElMessage } from 'element-plus'
 import { Conversation } from '../../types/conversation'
 import { conversationInfo } from '../../stores/modules/ConversationStore'
 import WindowControls from '../../components/WindowControls.vue'
+import { eventEmitter } from '../../utils/eventEmitter'
 
 const count = ref(0)
 const friendList = reactive<any>({ list: [] })
@@ -112,12 +113,15 @@ const createGroup = async () => {
   if (result.code === 1) {
     ElMessage.success('创建群聊成功')
     const conversationInfo: Conversation = result.data
+
     console.log(conversationInfo)
-    // TODO 后面学习多窗口的缓存同步更新添加到会话缓存中
+
+    // 跨组间通信，实时更新会话列表
     conversationStore.setConversationMap(conversationInfo.id, conversationInfo)
     // 将创建的群会话列表存入本地
     addConversation(conversationInfo);
-    // (window as any).api.destroyNewWindow('createGroup')
+
+    (window as any).windowToolApi.destroyNewWindow('createGroup')
   } else {
     ElMessage.error(result.msg)
   }

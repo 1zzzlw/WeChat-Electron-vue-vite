@@ -1,6 +1,8 @@
 import { store, mainWindow } from './index'
+import { app, Notification } from 'electron'
 import { saveSentMessage, addConversation, addFriendRelation } from './DB/insert'
 import { updateConversation } from './DB/update'
+import icon from '../../resources/icon.png?asset'
 
 class WebSocketManager {
     constructor() {
@@ -17,7 +19,7 @@ class WebSocketManager {
         // 当前的重连次数
         this.reconnectCount = 0
         // 最大重连次数
-        this.reconnectCountMax = 200
+        this.reconnectCountMax = 3
         // 重连锁
         this.lockReconnect = false
     }
@@ -42,7 +44,7 @@ class WebSocketManager {
 
     // 创建连接请求
     createWebSocket(token) {
-        this.ws.websocket = new WebSocket(`ws://localhost:8000/ws?token=${token}`)
+        this.ws.websocket = new WebSocket(`ws://localhost:80/ws?token=${token}`)
 
         // ws的状态为正在连接
         this.ws.status = WebSocket.CONNECTING
@@ -264,6 +266,30 @@ class WebSocketManager {
 
         if (this.reconnectCount >= this.reconnectCountMax) {
             console.warn('达到最大重连次数，停止重连')
+
+            this.clearReconnectTimer()
+            this.stopHeartbeat()
+            if (this.ws.websocket) {
+                this.ws.websocket.close()
+                this.ws.websocket = null
+            }
+
+            const notification = new Notification({
+                icon: icon,
+                title: '连接已断开',
+                body: '无法连接服务器，应用将自动关闭',
+                silent: false
+            })
+
+            // 显示通知
+            notification.show()
+
+            setTimeout(() => {
+                // 直接退出程序
+                mainWindow.destroy()
+                app.quit()
+            }, 2000)
+
             return
         }
 

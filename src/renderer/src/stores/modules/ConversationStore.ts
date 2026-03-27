@@ -3,7 +3,7 @@ import { Conversation } from '../../types/conversation'
 
 // 会话列表存储模块
 
-export const conversationInfo = defineStore('conversationInfo', {
+export const conversationInfo = defineStore('conversationMap', {
   state: () => {
     return {
       // 键为单聊会话id
@@ -17,7 +17,7 @@ export const conversationInfo = defineStore('conversationInfo', {
   persist: {
     // 存储位置：localStorage 
     storage: localStorage,
-    key: 'conversation-store',
+    key: 'conversationMap',
     // 只持久化指定状态
     pick: ['conversationMap', '_cacheVersion', '_cacheTimestamp']
   },
@@ -42,17 +42,17 @@ export const conversationInfo = defineStore('conversationInfo', {
     },
     // 会话id为键，传入部分数据进行更新
     setConversationMap(conversationId: string, partialInfo: Partial<Conversation>) {
-      this.conversationMap = {
-        ...this.conversationMap,
-        [conversationId]: {
-          ...this.conversationMap[conversationId],
-          ...partialInfo
-        }
+      const oldInfo = this.conversationMap[conversationId] || {}
+
+      this.conversationMap[conversationId] = {
+        ...oldInfo,
+        ...partialInfo
       }
     },
-    getConversationMap(conversationId: string) {
-      console.info('查找结果:', this.conversationMap[conversationId])
-      return this.conversationMap[conversationId]
+    getGroupConversation() {
+      return Object.entries(this.conversationMap)
+        .filter(([conversationId]) => conversationId.startsWith('g'))
+        .map(([, conversation]) => conversation)
     },
     clearUnreadCount(conversationId: string) {
       // 清除未读消息数量 

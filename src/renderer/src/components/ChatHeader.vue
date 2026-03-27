@@ -114,7 +114,7 @@
 
                     <!-- 底部操作按钮 -->
                     <div class="group-actions">
-                        <a class="action-btn danger" v-if="userInfo.role === 2" @click="dismissGroup">
+                        <a class="action-btn danger" v-if="userInfo?.role === 2" @click="dismissGroup">
                             <el-icon>
                                 <Delete />
                             </el-icon>

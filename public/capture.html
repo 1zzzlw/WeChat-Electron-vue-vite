@@ -121,8 +121,7 @@
 
     document.addEventListener("mousemove", (e) => {
       if (!selection.flag || !isReady || !sourceContext) return;
-      console.log(123)
-      console.log(sourceContext)
+
       const { x, y } = e;
 
       const left = Math.min(x, selection.x);

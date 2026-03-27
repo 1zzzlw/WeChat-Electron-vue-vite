@@ -40,9 +40,9 @@
                 <div class="left-list-group" v-for="(group, index) in groupListArr" :key="index"
                   :class="{ 'left-list-bg': activeGroup == group.id }">
                   <div class="left-image">
-                    <img :src="group.groupAvatar" alt="头像" class="left-list-img" />
+                    <img :src="group.avatar" alt="头像" class="left-list-img" />
                   </div>
-                  <div class="friend-name">{{ group.groupName }}</div>
+                  <div class="friend-name">{{ group.name || group.remark }}</div>
                 </div>
               </el-collapse-item>
               <el-collapse-item title="联系人" name="4">
@@ -232,32 +232,34 @@ const fetchGroupApplyList = () => {
   })
 }
 
-const fetchGroupList = () => {
-  const cache = Object.keys(groupListStore.groupListMap).length > 0
+// const fetchGroupList = () => {
+//   const cache = Object.keys(groupListStore.groupListMap).length > 0
 
-  if (cache) {
-    console.info('群聊列表缓存非空:', cache)
-    return
-  }
+//   if (cache) {
+//     console.info('群聊列表缓存非空:', cache)
+//     return
+//   }
 
-  // getGroupListApi().then((res) => {
-  //   console.info('群聊列表:', res.data)
-  //   res.data.forEach((groupItem) => {
-  //     groupListStore.setGroupListMap(groupItem.id, {
-  //       id: groupItem.id,
-  //       groupName: groupItem.groupName,
-  //       groupAvatar: groupItem.groupAvatar,
-  //       ownerId: groupItem.ownerId,
-  //       isTop: groupItem.isTop,
-  //       latestMsg: groupItem.latestMsg,
-  //       latestMsgTime: groupItem.latestMsgTime,
-  //       status: groupItem.status
-  //     })
-  //   })
-  // })
-}
+//   getGroupListApi().then((res) => {
+//     console.info('群聊列表:', res.data)
+//     res.data.forEach((groupItem) => {
+//       groupListStore.setGroupListMap(groupItem.id, {
+//         id: groupItem.id,
+//         groupName: groupItem.groupName,
+//         groupAvatar: groupItem.groupAvatar,
+//         ownerId: groupItem.ownerId,
+//         isTop: groupItem.isTop,
+//         latestMsg: groupItem.latestMsg,
+//         latestMsgTime: groupItem.latestMsgTime,
+//         status: groupItem.status
+//       })
+//     })
+//   })
+// }
 
-const groupListArr = computed(() => Object.values(groupListStore.groupListMap))
+const groupListArr = computed(() =>
+  conversationStore.getGroupConversation()
+)
 
 const groupApplyListArr = computed(() => Object.values(userApplyStore.groupApplyMap))
 
@@ -286,8 +288,6 @@ onMounted(async () => {
   userId.value = await (window as any).userInfoApi.storeGetUserInfo('userId')
 
   fetchGroupApplyList()
-
-  fetchGroupList()
 
   fetchApplyList()
 

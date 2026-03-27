@@ -5,6 +5,7 @@ import {
   Tray,
   Menu,
   globalShortcut,
+  Notification
 } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
@@ -34,6 +35,8 @@ export let mainWindow = null
 let tray = null
 const login_width = 300
 const login_height = 370
+
+app.setAppUserModelId('com.easychat.im')
 
 function createMainWindow() {
   // Create the browser window.
@@ -128,7 +131,7 @@ function createTray() {
 // 当 Electron 完成初始化并准备好创建浏览器窗口时，此方法将被调用。一些 API 仅能在此事件发生后使用。
 app.whenReady().then(() => {
   // 用于在Windows系统上为Electron应用设置唯一标识符，确保任务栏、开始菜单等功能能正确识别和显示应用。
-  electronApp.setAppUserModelId('com.electron')
+  electronApp.setAppUserModelId('com.easychat.im')
 
   // 用于在Electron应用创建新窗口时，让优化器模块监听该窗口的快捷键事件。
   app.on('browser-window-created', (_, window) => {

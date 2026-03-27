@@ -150,6 +150,8 @@ const fileUpload = async (localPath, fileSize, fileId, fileName, fileType, verif
             })
 
             e.updateStatus(currentFileIndex)
+        }).catch((err) => {
+            console.log(err)
         })
     },
         (fileIndex) => {

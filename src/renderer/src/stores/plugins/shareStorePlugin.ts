@@ -1,7 +1,7 @@
 import { PiniaPluginContext } from "pinia"
 
 // 需要共享数据的pinia
-const SHARED_STORES = ['']
+const SHARED_STORES = ['conversationMap']
 
 // 处理electron多窗口，pinia共享问题
 export function shareStorePlugin({ store }: PiniaPluginContext) {
@@ -15,8 +15,12 @@ export function shareStorePlugin({ store }: PiniaPluginContext) {
         console.log(targetStoreName, data)
         if (store.$id === targetStoreName) {
             isPassiveUpdate = true
-            console.log(data)
-            store.$patch(JSON.parse(data))
+
+            const item = localStorage.getItem(targetStoreName)
+            console.log(item)
+            if (item != null) {
+                store.$patch(JSON.parse(item))
+            }
         }
     })
 

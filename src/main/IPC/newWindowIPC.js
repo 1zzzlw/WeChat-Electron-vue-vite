@@ -1,5 +1,6 @@
 import { ipcMain } from 'electron'
 import { createExtraWindow } from '../Util/createNewWindow'
+import { windowPool } from '../Util/createNewWindow'
 
 const friendAdd_width = 350
 const friendAdd_height = 520
@@ -73,17 +74,19 @@ ipcMain.on('create-new-window', (e, windowType, data) => {
     }
 })
 
-// 关闭新窗口
-function destroyNewWindow(windowType) {
-    if (windowType === 'addFriend') {
-        if (addFriendWindow) {
+// 关闭指定窗口
+ipcMain.on('destory-window', (e, windowType) => {
+    console.log(windowType)
+    switch (windowType) {
+        case 'addFriend': {
+            windowPool.delete(windowType)
             addFriendWindow.close()
             addFriendWindow = null
         }
-    } else if (windowType === 'createGroup') {
-        if (createGroupWindow) {
+        case 'createGroup': {
+            windowPool.delete(windowType)
             createGroupWindow.close()
             createGroupWindow = null
         }
     }
-}
+})

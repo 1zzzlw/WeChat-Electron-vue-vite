@@ -277,6 +277,8 @@ const sendPrivateMessage = async () => {
   // ws发送单聊信息
   messageStore.sendMessage(messagePack, convId)
 
+  updateConversationInfo(messagePack)
+
   // 滚动到最底部
   await nextTick()
   scrollToBottom()
@@ -400,6 +402,23 @@ const sendApi = (messagePack: Message) => {
       await nextTick()
       scrollToBottom()
     }
+  })
+}
+
+const updateConversationInfo = (messagePack: Message) => {
+  // 更新本地会话列表的最新消息
+  const condition = {
+    id: messagePack.conversationId
+  }
+  const data = {
+    latestMsg: messagePack.content,
+    latestMsgTime: messagePack.sendTime
+  }
+  updateConversation(condition, data)
+  // 更新会话最新消息和时间
+  conversationStore.setConversationMap(messagePack.conversationId, {
+    latestMsg: messagePack.content,
+    latestMsgTime: dayjs(messagePack.sendTime).format('HH:mm:ss')
   })
 }
 

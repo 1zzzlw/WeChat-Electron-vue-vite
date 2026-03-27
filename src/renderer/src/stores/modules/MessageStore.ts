@@ -78,6 +78,7 @@ export const messageInfo = defineStore('messageInfo', {
     // 启动1秒轮询检查
     startTimeoutChecker() {
       if (this.timeoutTimer) return
+
       this.timeoutTimer = setInterval(() => {
         const now = Date.now()
 

@@ -17,6 +17,7 @@ import { updateMessage } from './db/dualDB'
 import emitter from '../src/utils/mitt'
 import dayjs from 'dayjs'
 import { updateMessageFileSendStatusApi } from './api/Message'
+import { saveSentMessage } from './db/dualDB'
 
 function updateMessageStore(data) {
   // 私信类型，将消息存储到状态管理中
@@ -108,9 +109,10 @@ onMounted(async () => {
           // 成功的ACK
           const messagePack = messageInfo().onReceiveAck(data.tempId)
           messagePack.id = data.messageId
+          const message = { ...messagePack }
           // 将消息存储到数据库中
-          console.log(messagePack)
-
+          console.log(message)
+          saveSentMessage(message)
         }
     }
   })
@@ -136,8 +138,8 @@ onMounted(async () => {
       data = {
         sendStatus: 1
       }
-      // 上传成功之后，再发送ws消息展示到对方界面
 
+      // 上传成功之后，再发送ws消息展示到对方界面
       const rawMessagePack = toRaw(messageInfo().getFileMessage(fileId))
 
       console.log(rawMessagePack)

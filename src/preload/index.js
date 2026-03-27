@@ -140,12 +140,12 @@ const windowToolApi = {
   createNewWindow: (windowType, data) => {
     ipcRenderer.send('create-new-window', windowType, data)
   },
+  destroyNewWindow: (windowType) => {
+    ipcRenderer.send('destory-window', windowType)
+  },
   // 向新建窗口发送窗口信息
   sendWindowInfo: (windowInfo) => {
     ipcRenderer.on('newWindowInfo', windowInfo)
-  },
-  destroyNewWindow: (windowType) => {
-    ipcRenderer.send('destroy-new-window', windowType)
   },
   sendWindowWallpaper: (imagePath) => {
     ipcRenderer.send('send:wallpaper', imagePath)
