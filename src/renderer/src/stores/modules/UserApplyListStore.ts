@@ -38,6 +38,7 @@ export const userApplyListInfo = defineStore('userApplyListInfo', {
       this.groupApplyMap[groupId] = groupInfo
     },
     getGroupApplyMap(groupId: string | number): groupApplyInfo | undefined {
+      console.log(this.groupApplyMap[groupId])
       return this.groupApplyMap[groupId]
     },
     updateGroupApplyStatus(groupId: string | number, status: number) {

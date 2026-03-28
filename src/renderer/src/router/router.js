@@ -27,6 +27,9 @@ import AboutVue from '../views/setting/About.vue'
 import ImagePreviewView from '../views/media/imagePreview.vue'
 import VideoPreviewView from '../views/media/videoPreview.vue'
 import CreateNoteView from '../views/collect/CreateNote.vue'
+import groupApplyView from '../views/group/groupApply.vue'
+import groupInfoView from '../views/group/groupInfo.vue'
+
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -133,6 +136,16 @@ const router = createRouter({
               path: '/friendInfo',
               name: 'friendInfo',
               component: FriendInfoView
+            },
+            {
+              path: '/groupApply',
+              name: 'groupApply',
+              component: groupApplyView
+            },
+            {
+              path: '/groupInfo',
+              name: 'groupInfo',
+              component: groupInfoView
             }
           ]
         },

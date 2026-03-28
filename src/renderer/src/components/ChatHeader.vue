@@ -228,9 +228,9 @@ watch(() => props.conversation.id, async () => {
     justify-content: space-between;
     align-items: center;
     padding: 20px;
-    border-bottom: 1px solid rgba(66, 153, 225, 0.5);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
     -webkit-app-region: drag;
-    color: #f0f0f0;
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .left-icon {
@@ -256,15 +256,16 @@ watch(() => props.conversation.id, async () => {
 
 :deep(.el-drawer) {
     width: 50% !important;
-    --el-drawer-bg-color: rgba(28, 38, 50, 0.4);
+    /* 调浅背景色，降低不透明度，更贴合主界面毛玻璃风格 */
+    --el-drawer-bg-color: rgba(70, 100, 130, 0.2);
     background-color: var(--el-drawer-bg-color);
-    backdrop-filter: blur(10px);
-    border-left: 1px solid rgba(66, 153, 225, 0.5);
+    backdrop-filter: blur(12px);
+    border-left: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 :deep(.el-drawer__body) {
     padding: 20px 16px;
-    color: #f0f0f0;
+    color: rgba(255, 255, 255, 0.9);
     overflow: hidden;
 }
 
@@ -295,13 +296,13 @@ watch(() => props.conversation.id, async () => {
     border-radius: 50%;
     object-fit: cover;
     margin-bottom: 0;
-    border: 2px solid rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.3);
 }
 
 .avatar div {
     font-size: 18px;
     font-weight: 500;
-    color: #f0f0f0;
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .conversation-set {
@@ -328,8 +329,8 @@ watch(() => props.conversation.id, async () => {
 
 :deep(.el-switch) {
     --el-switch-on-color: #5dade2;
-    --el-switch-off-color: rgba(240, 240, 240, 0.3);
-    --el-switch-core-border-color: rgba(240, 240, 240, 0.3);
+    --el-switch-off-color: rgba(255, 255, 255, 0.3);
+    --el-switch-core-border-color: rgba(255, 255, 255, 0.3);
 }
 
 .button {
@@ -350,10 +351,26 @@ watch(() => props.conversation.id, async () => {
     cursor: pointer;
     font-size: 14px;
     box-sizing: border-box;
+    color: rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    transition: all 0.2s ease;
+}
+
+.button a:hover {
+    background: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.25);
 }
 
 .button a:last-child {
-    color: red;
+    color: #e74c3c;
+    background: rgba(231, 76, 60, 0.1);
+    border-color: rgba(231, 76, 60, 0.2);
+}
+
+.button a:last-child:hover {
+    background: rgba(231, 76, 60, 0.2);
+    border-color: rgba(231, 76, 60, 0.3);
 }
 
 .group-drawer-content {
@@ -373,7 +390,7 @@ watch(() => props.conversation.id, async () => {
     align-items: center;
     margin-bottom: 35px;
     padding-bottom: 25px;
-    border-bottom: 1px solid rgba(66, 153, 225, 0.3);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .group-avatar {
@@ -388,7 +405,7 @@ watch(() => props.conversation.id, async () => {
     height: 100%;
     border-radius: 16px;
     object-fit: cover;
-    border: 2px solid rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.3);
 }
 
 .avatar-badge {
@@ -407,13 +424,13 @@ watch(() => props.conversation.id, async () => {
 .group-name {
     font-size: 20px;
     font-weight: 600;
-    color: #f0f0f0;
+    color: rgba(255, 255, 255, 0.9);
     margin-bottom: 6px;
 }
 
 .group-id {
     font-size: 13px;
-    color: rgba(240, 240, 240, 0.5);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 /* 群设置选项 */
@@ -424,7 +441,7 @@ watch(() => props.conversation.id, async () => {
     gap: 20px;
     margin-bottom: 30px;
     padding: 15px 0;
-    border-bottom: 1px solid rgba(66, 153, 225, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .setting-item {
@@ -437,13 +454,13 @@ watch(() => props.conversation.id, async () => {
 
 .setting-label {
     font-size: 14px;
-    color: rgba(240, 240, 240, 0.85);
+    color: rgba(255, 255, 255, 0.85);
 }
 
 :deep(.el-switch) {
     --el-switch-on-color: #5dade2;
-    --el-switch-off-color: rgba(240, 240, 240, 0.25);
-    --el-switch-core-border-color: rgba(240, 240, 240, 0.25);
+    --el-switch-off-color: rgba(255, 255, 255, 0.25);
+    --el-switch-core-border-color: rgba(255, 255, 255, 0.25);
 }
 
 /* 群成员区域 */
@@ -463,18 +480,18 @@ watch(() => props.conversation.id, async () => {
 .members-title {
     font-size: 15px;
     font-weight: 500;
-    color: rgba(240, 240, 240, 0.9);
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .members-more {
-    color: rgba(240, 240, 240, 0.5);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 16px;
     cursor: pointer;
     transition: color 0.2s;
 }
 
 .members-more:hover {
-    color: rgba(240, 240, 240, 0.8);
+    color: rgba(255, 255, 255, 0.8);
 }
 
 .members-list {
@@ -496,7 +513,7 @@ watch(() => props.conversation.id, async () => {
 }
 
 .member-item:hover {
-    background: rgba(66, 153, 225, 0.1);
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .member-avatar {
@@ -509,7 +526,7 @@ watch(() => props.conversation.id, async () => {
 
 .member-name {
     font-size: 11px;
-    color: rgba(240, 240, 240, 0.7);
+    color: rgba(255, 255, 255, 0.7);
     text-align: center;
     max-width: 100%;
     overflow: hidden;
@@ -527,7 +544,7 @@ watch(() => props.conversation.id, async () => {
 
 .member-item.more {
     justify-content: center;
-    color: rgba(240, 240, 240, 0.6);
+    color: rgba(255, 255, 255, 0.6);
 }
 
 .member-item.more .el-icon {
@@ -543,9 +560,9 @@ watch(() => props.conversation.id, async () => {
 .group-notice {
     width: 100%;
     padding: 15px;
-    background: rgba(66, 153, 225, 0.08);
+    background: rgba(255, 255, 255, 0.08);
     border-radius: 10px;
-    border: 1px solid rgba(66, 153, 225, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     margin-bottom: auto;
 }
 
@@ -564,19 +581,19 @@ watch(() => props.conversation.id, async () => {
 .notice-header span {
     font-size: 14px;
     font-weight: 500;
-    color: rgba(240, 240, 240, 0.9);
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .notice-content {
     font-size: 13px;
-    color: rgba(240, 240, 240, 0.65);
+    color: rgba(255, 255, 255, 0.65);
     line-height: 1.6;
     word-break: break-all;
 }
 
 .notice-content:empty::before {
     content: '暂无群公告';
-    color: rgba(240, 240, 240, 0.4);
+    color: rgba(255, 255, 255, 0.4);
     font-style: italic;
 }
 
@@ -587,7 +604,7 @@ watch(() => props.conversation.id, async () => {
     gap: 15px;
     padding-top: 20px;
     margin-top: 10px;
-    border-top: 1px solid rgba(66, 153, 225, 0.2);
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .action-btn {
@@ -603,17 +620,17 @@ watch(() => props.conversation.id, async () => {
     cursor: pointer;
     transition: all 0.25s ease;
     text-decoration: none;
-    color: rgba(240, 240, 240, 0.9);
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .action-btn.secondary {
-    background: rgba(240, 240, 240, 0.1);
-    border: 1px solid rgba(240, 240, 240, 0.15);
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .action-btn.secondary:hover {
-    background: rgba(240, 240, 240, 0.18);
-    border-color: rgba(240, 240, 240, 0.25);
+    background: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.25);
 }
 
 .action-btn.danger {
@@ -641,11 +658,11 @@ watch(() => props.conversation.id, async () => {
 }
 
 .group-drawer-content::-webkit-scrollbar-thumb {
-    background: rgba(240, 240, 240, 0.2);
+    background: rgba(255, 255, 255, 0.2);
     border-radius: 2px;
 }
 
 .group-drawer-content::-webkit-scrollbar-thumb:hover {
-    background: rgba(240, 240, 240, 0.35);
+    background: rgba(255, 255, 255, 0.35);
 }
 </style>

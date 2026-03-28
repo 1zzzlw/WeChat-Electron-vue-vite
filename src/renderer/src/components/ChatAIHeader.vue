@@ -247,9 +247,9 @@ watch(
     justify-content: space-between;
     align-items: center;
     padding: 20px;
-    border-bottom: 1px solid rgba(66, 153, 225, 0.5);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
     -webkit-app-region: drag;
-    color: #f0f0f0;
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .left-icon {
@@ -283,15 +283,15 @@ watch(
 
 :deep(.el-drawer) {
     width: 50% !important;
-    --el-drawer-bg-color: rgba(28, 38, 50, 0.4);
+    --el-drawer-bg-color: rgba(70, 100, 130, 0.2);
     background-color: var(--el-drawer-bg-color);
-    backdrop-filter: blur(10px);
-    border-left: 1px solid rgba(66, 153, 225, 0.5);
+    backdrop-filter: blur(12px);
+    border-left: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 :deep(.el-drawer__body) {
     padding: 20px 16px;
-    color: #f0f0f0;
+    color: rgba(255, 255, 255, 0.9);
     overflow: hidden;
 }
 

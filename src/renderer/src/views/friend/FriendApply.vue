@@ -2,19 +2,19 @@
   <div class="apply-count">
     <div class="apply-info">
       <div class="info-top">
-        <img :src="applyInfo.avatar" alt="" class="img" />
-        <h1>{{ applyInfo.username }}</h1>
+        <img :src="applyInfo?.avatar" alt="" class="img" />
+        <h1>{{ applyInfo?.username }}</h1>
       </div>
       <div class="info-mid">
         <div class="title">好友留言</div>
-        <p>{{ applyInfo.applyMsg }}</p>
+        <p>{{ applyInfo?.applyMsg }}</p>
       </div>
       <div class="info-bottom">
-        <div class="btn-group" v-if="applyInfo.isDealt == 0">
+        <div class="btn-group" v-if="applyInfo?.isDealt == 0">
           <el-button type="success" @click="agreeButton">同意</el-button>
           <el-button type="danger" @click="refuseButton">拒绝</el-button>
         </div>
-        <div class="btn-group" v-else-if="applyInfo.isDealt == 1">
+        <div class="btn-group" v-else-if="applyInfo?.isDealt == 1">
           <el-button type="success" disabled v-if="applyInfo.dealResult == 1">已同意</el-button>
           <el-button type="danger" disabled v-else-if="applyInfo.dealResult == 0">已拒绝</el-button>
         </div>
@@ -24,7 +24,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, watch, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { userApplyListInfo } from '../../stores/modules/UserApplyListStore'
 import { friendInfo } from '../../stores/modules/ContactListStore'
@@ -33,29 +33,10 @@ import { dealApplyApi } from '../../api/Apply'
 import { ElMessage } from 'element-plus'
 import { addConversation, addFriendRelation } from '../../db/dualDB'
 
-import { userApplyInfo, groupApplyInfo } from '../../types/applyInfo'
-
-
 const route = useRoute()
 const userApplyStore = userApplyListInfo()
 const friendInfoStore = friendInfo()
 const conversationStore = conversationInfo()
-const applyInfo = reactive<userApplyInfo>({
-  applyId: 0,
-  fromUserId: 0,
-  username: '',
-  avatar: '',
-  account: '',
-  gender: '',
-  phone: '',
-  email: '',
-  birthday: '',
-  address: '',
-  applyMsg: '',
-  isDealt: 0,
-  dealResult: 0
-})
-
 const username = ref()
 const account = ref()
 const phone = ref()
@@ -64,40 +45,42 @@ const userId = ref()
 const gender = ref()
 
 const agreeButton = () => {
-  dealApplyApi(applyInfo.applyId, 1, applyInfo.fromUserId).then(async (res: any) => {
+  dealApplyApi(applyInfo.value?.applyId, 1, applyInfo.value?.fromUserId).then(async (res: any) => {
     if (res.code === 1) {
       ElMessage.success('同意成功')
-      applyInfo.isDealt = 1
-      applyInfo.dealResult = 1
-      userApplyStore.updateUserApplyMap(applyInfo.applyId, {
+      if (applyInfo.value) {
+        applyInfo.value.isDealt = 1
+        applyInfo.value.dealResult = 0
+      }
+      userApplyStore.updateUserApplyMap(applyInfo.value?.applyId as string, {
         isDealt: 1,
         dealResult: 1
       })
       const firendPack = {
         userId: userId.value,
-        friendId: applyInfo.fromUserId,
-        username: applyInfo.username,
-        avatar: applyInfo.avatar,
-        account: applyInfo.account,
-        gender: applyInfo.gender,
-        phone: applyInfo.phone,
-        email: applyInfo.email,
-        birthday: applyInfo.birthday,
-        address: applyInfo.address,
+        friendId: applyInfo.value?.fromUserId,
+        username: applyInfo.value?.username,
+        avatar: applyInfo.value?.avatar,
+        account: applyInfo.value?.account,
+        gender: applyInfo.value?.gender,
+        phone: applyInfo.value?.phone,
+        email: applyInfo.value?.email,
+        birthday: applyInfo.value?.birthday,
+        address: applyInfo.value?.address,
         remark: '',
         relationStatus: 1
       }
       const conversationPack = {
         id: res.data,
         userId: userId.value,
-        targetId: String(applyInfo.fromUserId),
-        name: applyInfo.username,
-        avatar: applyInfo.avatar,
+        targetId: String(applyInfo.value?.fromUserId),
+        name: applyInfo.value?.username,
+        avatar: applyInfo.value?.avatar,
         remark: '',
         type: 0
       }
       // 加入好友关系缓存
-      friendInfoStore.setFriendMap(applyInfo.fromUserId, firendPack)
+      friendInfoStore.setFriendMap(applyInfo.value?.fromUserId as string, firendPack)
       // 将好友关系加入本地数据库
       addFriendRelation(firendPack)
       // 将会话关系加入本地数据库
@@ -108,7 +91,7 @@ const agreeButton = () => {
       // 通知好友添加成功
       const wsFriendPack = {
         userId: userId.value,
-        friendId: applyInfo.fromUserId,
+        friendId: applyInfo.value?.fromUserId,
         username: username.value,
         account: account.value,
         gender: gender.value,
@@ -125,12 +108,14 @@ const agreeButton = () => {
 }
 
 const refuseButton = () => {
-  dealApplyApi(applyInfo.applyId, 0, applyInfo.fromUserId).then((res: any) => {
+  dealApplyApi(applyInfo.value?.applyId, 0, applyInfo.value?.fromUserId).then((res: any) => {
     if (res.code === 1) {
       ElMessage.success('拒绝成功')
-      applyInfo.isDealt = 1
-      applyInfo.dealResult = 0
-      userApplyStore.updateUserApplyMap(applyInfo.applyId, {
+      if (applyInfo.value) {
+        applyInfo.value.isDealt = 1
+        applyInfo.value.dealResult = 0
+      }
+      userApplyStore.updateUserApplyMap(applyInfo.value?.applyId as string, {
         isDealt: 1,
         dealResult: 0
       })
@@ -149,16 +134,7 @@ onMounted(async () => {
   gender.value = await (window as any).userInfoApi.storeGetUserInfo('gender')
 })
 
-watch(
-  // 第一个参数：要监听的“源”（可以是响应式变量、计算属性、路由参数等）
-  () => route.query.applyId,
-  (newVal: any, oldVal) => {
-    applyInfo.applyId = newVal
-    Object.assign(applyInfo, userApplyStore.getUserApplyMap(applyInfo.applyId))
-    console.log(applyInfo)
-  },
-  { immediate: true }
-)
+const applyInfo = computed(() => userApplyStore.getUserApplyMap(route.query.applyId as string))
 </script>
 
 <style scoped>
@@ -203,7 +179,7 @@ watch(
 .img {
   width: 100px;
   height: 100px;
-  border-radius: 50%;
+  border-radius: 10px;
   border: 3px solid rgba(255, 255, 255, 0.3);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   transition: all 0.2s ease;

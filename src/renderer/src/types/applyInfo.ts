@@ -10,11 +10,12 @@ export interface userApplyInfo {
     birthday: string
     address: string
     applyMsg: string
-    isDealt: 0 | 1
-    dealResult: 0 | 1
+    isDealt: number
+    dealResult: number
 }
 
 export interface groupApplyInfo {
+    id: string
     conversationId: string
     userId: string | number
     userAvatar: string

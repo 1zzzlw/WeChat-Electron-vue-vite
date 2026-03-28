@@ -18,13 +18,14 @@
                 </div>
               </el-collapse-item>
               <el-collapse-item title="群聊申请" name="2">
-                <div class="left-list-group" v-for="(apply, index) in groupApplyListArr" :key="index"
-                  :class="{ 'left-groupApplyList-bg': activeGroupApply == apply.conversationId }">
+                <div class="left-list" v-for="(apply, index) in groupApplyListArr" :key="index"
+                  :class="{ 'left-groupApplyList-bg': activeGroupApply == apply.conversationId }"
+                  @click="startGroupApply(apply)">
                   <div class="left-image">
                     <img :src="apply.userAvatar" alt="头像" class="left-list-img" />
                   </div>
                   <div class="friend-name">{{ apply.groupName }}</div>
-                  <div class="btn1" v-if="apply.status === 1">
+                  <!-- <div class="btn1" v-if="apply.status === 1">
                     <el-button type="primary" size="small" @click="joinGroup(apply)">入群</el-button>
                     <el-button type="danger" size="small" @click="ignoreGroupApply(apply)">忽略</el-button>
                   </div>
@@ -33,12 +34,12 @@
                   </div>
                   <div v-else>
                     <el-button type="danger" size="small" disabled>已忽略</el-button>
-                  </div>
+                  </div> -->
                 </div>
               </el-collapse-item>
               <el-collapse-item title="群聊" name="3">
-                <div class="left-list-group" v-for="(group, index) in groupListArr" :key="index"
-                  :class="{ 'left-list-bg': activeGroup == group.id }">
+                <div class="left-list" v-for="(group, index) in groupListArr" :key="index"
+                  :class="{ 'left-list-bg': activeGroup == group.id }" @click="startGroupInfo(group)">
                   <div class="left-image">
                     <img :src="group.avatar" alt="头像" class="left-list-img" />
                   </div>
@@ -81,7 +82,6 @@ import { addConversation, getFriendList } from '../../db/dualDB'
 import { CollapseModelValue, ElMessage } from 'element-plus'
 import { userApplyListInfo } from '../../stores/modules/UserApplyListStore'
 import { friendInfo } from '../../stores/modules/ContactListStore'
-import { groupListInfo } from '../../stores/modules/GroupListStores'
 import { groupMemberInfo } from '../../stores/modules/GroupMemberStores'
 import { getGroupMemberListApi } from '../../api/Conversation'
 import { conversationInfo } from '../../stores/modules/ConversationStore'
@@ -90,7 +90,6 @@ import AutocompleteSearch from '../../components/AutocompleteSearch.vue'
 const userId = ref()
 const userApplyStore = userApplyListInfo()
 const friendInfoStore = friendInfo()
-const groupListStore = groupListInfo()
 const groupMemberStore = groupMemberInfo()
 const conversationStore = conversationInfo()
 // 联系人列表默认展开
@@ -110,61 +109,72 @@ const startApply = (activeApply: any) => {
   router.push({ path: '/friendApply', query: { applyId: activeApply.applyId } })
 }
 
+const startGroupApply = (activeApply: any) => {
+  activeGroupApply.value = activeApply.id
+  console.log(activeApply.id)
+  router.push({ path: '/groupApply', query: { applyId: activeApply.id } })
+}
+
+const startGroupInfo = (group: any) => {
+  activeGroup.value = group.id
+  router.push({ path: '/groupInfo', query: { groupId: group.id } })
+}
+
 const starCall = (user: any) => {
   console.info('用户', user.friendId, '点击了联系人')
   activeFriend.value = user.friendId
   router.push({ path: '/friendInfo', query: { friendId: user.friendId } })
 }
 
-const joinGroup = async (activeGroupApply: any) => {
-  console.info(activeGroupApply)
-  const userId = await (window as any).userInfoApi.storeGetUserInfo('userId')
-  console.info('用户', userId, '同意入群');
+// const joinGroup = async (activeGroupApply: any) => {
+//   console.info(activeGroupApply)
+//   const userId = await (window as any).userInfoApi.storeGetUserInfo('userId')
+//   console.info('用户', userId, '同意入群');
 
-  // 获取群成员信息列表
-  const groupMemberList: any = await getGroupMemberListApi(activeGroupApply.conversationId)
+//   // 获取群成员信息列表
+//   const groupMemberList: any = await getGroupMemberListApi(activeGroupApply.conversationId)
 
-  const avatarUrlList = groupMemberList.data.map((userInfo: any) => userInfo.avatar)
+//   const avatarUrlList = groupMemberList.data.map((userInfo: any) => userInfo.avatar)
 
-  console.log(avatarUrlList)
+//   console.log(avatarUrlList)
 
-  // 更新群聊头像
-  const groupAvatar = await (window as any).mediaHandleApi.updateGroupAvatar(avatarUrlList)
-  const groupAvatarBlob = new Blob([groupAvatar])
+//   // 更新群聊头像
+//   const groupAvatar = await (window as any).mediaHandleApi.updateGroupAvatar(avatarUrlList)
+//   const groupAvatarBlob = new Blob([groupAvatar])
 
-  const formData = new FormData()
-  formData.append('groupAvatarBlob', groupAvatarBlob)
-  formData.append('conversationId', activeGroupApply.conversationId)
-  formData.append('userId', activeGroupApply.userId)
-  formData.append('memberId', userId)
-  formData.append('status', '2')
+//   const formData = new FormData()
+//   formData.append('groupAvatarBlob', groupAvatarBlob)
+//   formData.append('conversationId', activeGroupApply.conversationId)
+//   formData.append('userId', activeGroupApply.userId)
+//   formData.append('memberId', userId)
+//   formData.append('status', '2')
 
-  const conversationRes: any = await dealGroupApplyApi(formData)
-  console.log(conversationRes)
-  if (conversationRes.code === 1) {
-    ElMessage.success('入群成功')
-    // 更新群聊申请状态
-    userApplyStore.updateGroupApplyStatus(activeGroupApply.userId, 2)
-    // 添加到群成员缓存中
-    groupMemberStore.addGroupMember(activeGroupApply.conversationId, {
-      conversationId: activeGroupApply.conversationId,
-      userId: activeGroupApply.userId,
-      username: activeGroupApply.username,
-      role: 0,
-      avatar: activeGroupApply.avatar
-    })
-    const conversationPack = conversationRes.data
-    // 将群聊会话添加到本地数据库
-    addConversation(conversationPack)
-    // 群会话添加到缓存
-    conversationStore.setConversationMap(conversationPack.id, conversationPack)
+//   const conversationRes: any = await dealGroupApplyApi(formData)
+//   console.log(conversationRes)
+//   if (conversationRes.code === 1) {
+//     ElMessage.success('入群成功')
+//     // 更新群聊申请状态
+//     userApplyStore.updateGroupApplyStatus(activeGroupApply.userId, 2)
+//     // 添加到群成员缓存中
+//     groupMemberStore.addGroupMember(activeGroupApply.conversationId, {
+//       conversationId: activeGroupApply.conversationId,
+//       userId: activeGroupApply.userId,
+//       username: activeGroupApply.username,
+//       role: 0,
+//       avatar: activeGroupApply.avatar
+//     })
+//     const conversationPack = conversationRes.data
+//     // 将群聊会话添加到本地数据库
+//     addConversation(conversationPack)
+//     // 群会话添加到缓存
+//     conversationStore.setConversationMap(conversationPack.id, conversationPack)
 
-    // 发送自己入群的通知
+//     // 发送自己入群的通知
 
-  } else {
-    ElMessage.error('入群失败')
-  }
-}
+//   } else {
+//     ElMessage.error('入群失败')
+//   }
+// }
 
 const ignoreGroupApply = async (apply: any) => {
   console.info(apply)
@@ -221,7 +231,8 @@ const fetchGroupApplyList = () => {
   getGroupApplyListApi().then((res) => {
     console.info('群聊申请列表:', res.data)
     res.data.forEach((applyItem: any) => {
-      userApplyStore.setGroupApplyMap(applyItem.userId, {
+      userApplyStore.setGroupApplyMap(applyItem.id, {
+        id: applyItem.id,
         conversationId: applyItem.conversationId,
         userId: applyItem.userId,
         userAvatar: applyItem.userAvatar,
@@ -339,19 +350,6 @@ onMounted(async () => {
   left: 0;
   transform: translateY(-50%);
   border: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-.left-list-group {
-  /* 固定高度确保所有项目一致 */
-  height: 72px;
-  /* 确保占满父容器 */
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px;
-  gap: 10px;
-  transition: 0.3s;
 }
 
 .btn1 {
