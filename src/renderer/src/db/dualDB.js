@@ -202,6 +202,10 @@ const clearHistoryMessage = async (conversationId) => {
     await window.dbApi.clearHistoryMessage(conversationId)
 }
 
+const deleteMessage = async (conversationId, messageId) => {
+    await window.dbApi.deleteMessage(conversationId)
+}
+
 export {
     getConversationList,
     getFriendList,
@@ -220,5 +224,6 @@ export {
     getFavorites,
     updateOldNoteContent,
     addFavorites,
-    clearHistoryMessage
+    clearHistoryMessage,
+    deleteMessage
 }

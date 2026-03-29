@@ -49,10 +49,13 @@ export const conversationInfo = defineStore('conversationMap', {
         ...partialInfo
       }
     },
-    getGroupConversation() {
+    getGroupConversationList() {
       return Object.entries(this.conversationMap)
         .filter(([conversationId]) => conversationId.startsWith('g'))
         .map(([, conversation]) => conversation)
+    },
+    getGroupConversationInfo(conversationId: string) {
+      return this.conversationMap[conversationId];
     },
     clearUnreadCount(conversationId: string) {
       // 清除未读消息数量 

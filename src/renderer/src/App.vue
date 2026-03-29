@@ -108,8 +108,9 @@ onMounted(async () => {
         if (data.status === 0) {
           // 成功的ACK
           const messagePack = messageInfo().onReceiveAck(data.tempId)
+          console.log(messagePack)
           messagePack.id = data.messageId
-          const message = { ...messagePack }
+          const message = { ...messagePack, receiverIds: [] }
           // 将消息存储到数据库中
           console.log(message)
           saveSentMessage(message)
@@ -144,7 +145,8 @@ onMounted(async () => {
 
       console.log(rawMessagePack)
 
-      window.wsApi.sendMessage(1, 0, rawMessagePack)
+      // 使用专门的文件消息发送方法，不会重复添加缓存
+      messageInfo().sendFileMessage(rawMessagePack, rawMessagePack.conversationId, rawMessagePack.receiverIds)
 
       // 修改服务端的文件上次状态
       updateMessageFileSendStatusApi(fileId, 1)

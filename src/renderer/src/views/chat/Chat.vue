@@ -11,7 +11,7 @@
           <!-- 展示系统消息 -->
           <ChatMessageSystem v-if="message.msgType === 99" :message="message">
           </ChatMessageSystem>
-          <div v-if="String(message.senderId) === String(userId)">
+          <div v-if="String(message.senderId) === String(userId) && message.msgType !== 99">
             <div class="chat-list-right">
               <img :src="avatarUrl" class="list-image" />
               <ContextMenu :menu="[
@@ -41,7 +41,7 @@
               </ContextMenu>
             </div>
           </div>
-          <div v-else>
+          <div v-else-if="message.msgType !== 99">
             <div class="chat-list-left">
               <img v-if="conversation.type === 0" :src="conversation.avatar" class="list-image" />
               <img v-else :src="groupMemberStore.getGroupMemberAvatar(message.senderId)" class="list-image" />
@@ -127,6 +127,8 @@ import ContextMenu from '../../components/ContextMenu.vue'
 import ChatMessageTime from '../../components/ChatMessageTime.vue'
 import ChatMessageSystem from '../../components/ChatMessageSystem.vue'
 import { createSystemMessagePack } from '../../utils/systemMessageUtil.js'
+import { SystemMsgSubType } from '../../utils/constants.js'
+import { deleteMessage } from '../../db/dualDB.js'
 
 // 消息分页配置
 const messagePageInfo = {
@@ -138,6 +140,12 @@ const messagePageInfo = {
   maxMessageId: null,
   // 当前有没有数据
   noData: false
+}
+
+interface SendConfig {
+  convId: string
+  targetId: string
+  getReceiverIds: () => string[]
 }
 
 const fileUrl = ref('')
@@ -216,142 +224,76 @@ const handleEnterMessage = (e: KeyboardEvent) => {
   }
 }
 
-// 发送单聊消息
-const sendPrivateMessage = async () => {
-  // 获取会话id
+const sendMessage = async () => {
   const convId = route.query.conversationId as string
-  const receiverId = conversation.value.targetId as string
   const content = message.value
-  // 处理消息类型
-  console.info(
-    '发送单聊消息 ===> 接收消息用户的ID:',
-    conversation.value.targetId,
-    '消息内容:',
-    content,
-    '会话id:',
-    convId
+  const isPrivate = conversation.value.type === 0
+  const receiverId = isPrivate ? conversation.value.targetId : convId
+
+  // 获取接收者ID列表
+  const receiverIds = isPrivate ? [] : (
+    groupMemberStore.groupMemberMap[convId]
+      ?.filter((item) => item.userId !== userId.value)
+      .map((item) => item.userId) || []
   )
 
-  // 文件发送
+  // ---------------------- 处理文件消息 ----------------------
   if (fileInfoList.value.length > 0) {
     for (const file of fileInfoList.value) {
-      // 需要去掉响应式
+      // 上传文件
       const { minioFilePath, chunkCount } = await (window as any).uploadFileApi.uploadFile(toRaw(file))
       file.remotePath = minioFilePath
+
+      // 存文件上传状态
       const fileStatusInfo: FileUploadStatusInfo = {
         fileId: file.fileId,
-        chunkCount: chunkCount,
+        chunkCount,
         uploadStatus: statusMap.uploading.value,
         uploadProgress: 0,
         uploadSpeed: 0,
         pause: false
       }
-      // 将文件上传信息存入缓存中
       fileStatusListInfoStore.addFileUploadUpdateInfo(file.fileId, fileStatusInfo)
-      console.log(fileStatusListInfoStore)
-      // 打包文件信息
-      const messagePack = createMessagePack(receiverId, convId, file.fileType, file.content, file)
 
-      console.log(messagePack);
-
-      // 添加文件信息到缓存中
+      // 打包消息
+      const messagePack = createMessagePack(receiverId as string, convId, file.fileType, file.content, file)
+      messagePack.receiverIds = receiverIds as string[]
       messageStore.addFileMessage(file.fileId, messagePack)
 
-      // 文件消息不能及时发送，可能还会上传失败，所以先用http发送到数据库中直接存储
+      // 文件消息：先发 HTTP
       sendApi(messagePack)
     }
     fileInfoList.value.length = 0
   }
 
-  if (content === '') {
-    return
+  // ---------------------- 处理文本消息 ----------------------
+  if (content !== '') {
+    message.value = ''
+    const messagePack = createMessagePack(receiverId as string, convId, 1, content, null)
+
+    // 文本消息：直接走 store
+    messageStore.sendMessage(messagePack, convId, receiverIds as string[])
+
+    updateConversationInfo(messagePack)
+
+    // 滚动到底部
+    await nextTick()
+    scrollToBottom()
   }
+}
 
-  // 清空输入框
-  message.value = ''
-
-  const messagePack = createMessagePack(receiverId, convId, 1, content, null);
-
-  console.log(messagePack);
-
-  // ws发送单聊信息
-  messageStore.sendMessage(messagePack, convId)
-
-  updateConversationInfo(messagePack)
-
-  // 滚动到最底部
-  await nextTick()
-  scrollToBottom()
+// 发送单聊消息
+const sendPrivateMessage = async () => {
+  await sendMessage()
 }
 
 // 发送群聊消息
 const sendGroupMessage = async () => {
-  // 获取会话id
-  const convId = route.query.conversationId as string
-  const content = message.value
-  console.info('发送群聊消息 ===> 群聊ID:', convId, '消息内容:', content)
-  const receiverIds = groupMemberStore.groupMemberMap[convId]
-    ?.filter((item) => item.userId !== userId.value) // 过滤掉自己的ID
-    .map((item) => item.userId) || [];
-  // 处理消息类型
-  // ws发送群聊信息：群聊id、消息内容、接收者数组
-  console.info('群成员列表:', groupMemberStore.groupMemberMap[convId])
-  console.info('群成员ID列表:', receiverIds)
-
-  if (fileInfoList.value.length > 0) {
-    for (const file of fileInfoList.value) {
-      // 需要去掉响应式
-      const { minioFilePath, chunkCount } = await (window as any).uploadFileApi.uploadFile(toRaw(file))
-      file.remotePath = minioFilePath
-      const fileStatusInfo: FileUploadStatusInfo = {
-        fileId: file.fileId,
-        chunkCount: chunkCount,
-        uploadStatus: statusMap.uploading.value,
-        uploadProgress: 0,
-        uploadSpeed: 0,
-        pause: false
-      }
-      // 将文件上传信息存入缓存中
-      fileStatusListInfoStore.addFileUploadUpdateInfo(file.fileId, fileStatusInfo)
-      console.log(fileStatusListInfoStore)
-      // 打包文件信息
-      const messagePack = createMessagePack(convId, convId, file.fileType, file.content, file)
-      console.log(messagePack);
-      (window as any).wsApi.sendMessage(3, 0, {
-        ...messagePack,
-        receiverIds
-      })
-
-      // sendApi(messagePack)
-    }
-    fileInfoList.value.length = 0
-  }
-
-  if (content === '') {
-    return
-  }
-
-  // 接收者id为群聊会话id
-  const messagePack = createMessagePack(convId, convId, 1, content, null);
-
-  (window as any).wsApi.sendMessage(3, 0, {
-    ...messagePack,
-    receiverIds
-  })
-
-  // 发送截屏
-  if (captureImageUrl.value.length > 0) {
-    // sendApi(captureImageUrl.value, convId, 2)
-  }
-
-  // 发送文本消息
-  if (message.value !== '') {
-    const messagePack = createMessagePack(convId, convId, 1, content, null)
-    // sendApi(messagePack)
-  }
+  await sendMessage()
 }
 
 const sendApi = (messagePack: Message) => {
+  console.log(messagePack)
   // http发送接收者id、会话id、消息内容
   sendMessageApi(messagePack).then(async (res) => {
     console.info('发送消息成功', res)
@@ -388,7 +330,7 @@ const sendApi = (messagePack: Message) => {
         messageStore.addFileUrl(message.fileId, message.remoteUrl)
       }
       // 存入本地数据库
-      saveSentMessage(message)
+      // saveSentMessage(message)
       // 更新本地会话列表的最新消息
       const condition = {
         id: messagePack.conversationId
@@ -473,8 +415,52 @@ const handleChoice = async (item: any, messageId: string, messageContent: string
       break
     }
     case '撤回': {
-      const systemMessagePack = await createSystemMessagePack(conversation.value.targetId, conversation.value.id, 1)
-      recallMessageApi(systemMessagePack)
+      const convId = conversation.value.id as string
+      const isGroup = conversation.value.type === 1
+
+      // HTTP 撤回
+      const res: any = await recallMessageApi({
+        conversationId: convId,
+        messageId: messageId
+      })
+      if (res?.code !== 1) {
+        ElMessage.error('撤回失败')
+        break
+      }
+
+      // 本地删除被撤回的消息
+      messageStore.deleteMessage(convId, messageId);
+
+      // 本地数据库删除撤回的消息
+      deleteMessage(convId, messageId)
+
+      // 组装 receiverIds（群聊发给群成员；单聊发给对方）
+      const receiverIds = isGroup
+        ? (groupMemberStore.groupMemberMap[convId]
+          ?.filter((m: any) => String(m.userId) !== String(userId.value))
+          .map((m: any) => String(m.userId)) || [])
+        : [String(conversation.value.targetId)]
+
+      // 构造系统消息
+      const myName = await (window as any).userInfoApi.storeGetUserInfo('username')
+      const content = JSON.stringify({
+        tpl: '{name} 撤回了一条消息',
+        opName: myName
+      })
+
+      // receiverId：单聊存对方ID，群聊存群ID
+      const receiverId = isGroup ? convId : String(conversation.value.targetId)
+
+      // 生成系统消息包并发送
+      const systemMessagePack = await createSystemMessagePack(
+        receiverId,
+        convId,
+        SystemMsgSubType.RECALL,
+        content,
+        receiverIds
+      )
+
+      messageStore.sendSystemMessage(systemMessagePack as Message, convId, receiverIds as string[])
       break
     }
     case '引用': {

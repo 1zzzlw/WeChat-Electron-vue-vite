@@ -3,6 +3,7 @@ export interface Message {
     senderId: string | number
     conversationId: string
     receiverId: string | number
+    receiverIds?: string[]
     msgType: number
     subType?: number
     content: string

@@ -6,6 +6,8 @@ export const pullMessageListApi = (data) => request.get('/message/pull/list', { 
 
 export const updateMessageFileSendStatusApi = (fileId, status) => request.put(`/message/updateFileSendStatus?fileId=${fileId}&sendStatus=${status}`)
 
-export const recallMessageApi = (data) => request.post('/message/recallMessage', data)
+export const recallMessageApi = (data) => request.delete('/message/recallMessage', {
+    params: data
+})
 
 export const clearHistoryMessageApi = (conversationId) => request.delete(`/message/clearHistoryMessage/${conversationId}`)

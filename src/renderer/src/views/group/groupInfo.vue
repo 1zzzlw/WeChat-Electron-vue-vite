@@ -13,22 +13,16 @@
                     </el-icon>
                 </template>
             </el-popover>
-
             <div class="groupAccountInfo">
                 <img :src="groupBaseInfo?.avatar || '/default-group-avatar.png'" alt="群聊头像">
                 <div class="groupAccountInfo-info">
-                    <p>群聊名称: {{ groupBaseInfo?.groupName }}</p>
-                    <span>群聊ID: {{ groupBaseInfo?.groupId }} </span>
-                    <div class="member-status">
-                        成员总数: {{ groupBaseInfo?.memberCount || 15 }}人 (在线: {{ onlineMemberCount || 5 }}人)
-                    </div>
+                    <p>群聊名称: {{ groupBaseInfo?.name }}</p>
+                    <span>群聊ID: {{ groupBaseInfo?.id }} </span>
                 </div>
             </div>
 
             <div class="groupBaseInfo">
-                <div>群公告: {{ groupBaseInfo?.announcement || '欢迎加入本群聊！' }}</div>
-                <div>创建时间: {{ groupBaseInfo?.createTime || '2025-01-01 10:00:00' }}</div>
-                <div>群主: {{ groupBaseInfo?.ownerName || '群主用户' }}</div>
+
             </div>
 
             <div class="groupMoments">
@@ -42,27 +36,41 @@
     </div>
 </template>
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { MoreFilled } from '@element-plus/icons-vue'
+import { conversationInfo } from '../../stores/modules/ConversationStore'
+import { getConversationInfoById, updateConversation } from '../../db/dualDB'
+import dayjs from 'dayjs'
 
-// 群聊基础信息（示例数据）
-const groupBaseInfo = ref({
-    avatar: '/default-group-avatar.png',
-    groupName: '测试群聊',
-    groupId: 'group_123456',
-    memberCount: 15,
-    announcement: '欢迎加入本群聊，一起交流学习！',
-    createTime: '2025-01-01 10:00:00',
-    ownerName: '群主用户'
-})
+const conversationStore = conversationInfo()
+const route = useRoute()
+const router = useRouter()
 
-// 在线成员数量（示例数据）
-const onlineMemberCount = ref(5)
+// 发消息方法
+const sendMessage = async () => {
+    const conversationId = route.query.conversationId as string
 
-// 发消息方法（空实现，后续补充逻辑）
-const sendMessage = () => {
-    // 此处留空，由你后续实现跳转逻辑
+    const conversationInfo = await getConversationInfoById(conversationId)
+    conversationInfo.latestMsgTime = conversationInfo.latestMsgTime !== null ? dayjs(conversationInfo.latestMsgTime).format('HH:mm:ss') : undefined
+    // 将信息添加到会话缓存中
+    conversationStore.setConversationMap(conversationId, conversationInfo)
+    // 修改会话的显示状态为1
+    const condition = {
+        id: conversationId
+    }
+    const data = {
+        status: 1
+    }
+    updateConversation(condition, data)
+    router.push({
+        name: 'chat',
+        // 传递会话id
+        query: { conversationId: conversationId }
+    })
 }
+
+const groupBaseInfo = computed(() => conversationStore.getGroupConversationInfo(route.query.conversationId as string))
 </script>
 <style scoped>
 .groupInfo-count {

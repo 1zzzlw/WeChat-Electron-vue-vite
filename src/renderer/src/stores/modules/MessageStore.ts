@@ -10,6 +10,8 @@ interface PendingMessageInfo {
   index: number       // 在messageMap数组中的位置
 }
 
+type EnqueueMode = 'append' | 'reuse_if_exists'
+
 export const messageInfo = defineStore('messageInfo', {
   state: () => {
     return {
@@ -43,37 +45,105 @@ export const messageInfo = defineStore('messageInfo', {
       // 再添加消息，需要在尾部拼接消息
       this.messageMap[conversationId].push(message)
     },
-    sendMessage(message: Message, conversationId: string, isGroup = false) {
-      // 添加到messageMap（立即显示在UI）
-      if (!this.messageMap[conversationId]) {
-        this.messageMap[conversationId] = []
-      }
-      const messageIndex = this.messageMap[conversationId].length
-      this.messageMap[conversationId].push(message)
 
-      // 添加到pendingMessages（用于超时检测）
-      this.pendingMessages.set(message.id, {
-        id: message.id,
+    _ensureMessageInMap(conversationId: string, message: Message, mode: EnqueueMode) {
+      if (!this.messageMap[conversationId]) this.messageMap[conversationId] = []
+
+      const messages = this.messageMap[conversationId]
+
+      if (mode === 'reuse_if_exists') {
+        const existedIndex = messages.findIndex(m => m.id === message.id)
+        if (existedIndex !== -1) return existedIndex
+      }
+
+      messages.push(message)
+      return messages.length - 1
+    },
+
+    // ---- 通用“挂起 + 超时检测” ----
+    _trackPending(messageId: string, conversationId: string, index: number) {
+      this.pendingMessages.set(messageId, {
+        id: messageId,
         sentAt: Date.now(),
         status: 0,
         conversationId,
-        index: messageIndex
+        index
+      })
+      this.startTimeoutChecker()
+    },
+
+    // ---- 通用“发 WS（捕获异常）” ----
+    _sendViaWs(wsType: number, payload: any, onError: (err: any) => void) {
+      try {
+        ; (window as any).wsApi.sendMessage(wsType, 0, payload)
+      } catch (err) {
+        onError(err)
+      }
+    },
+
+    // ---- 统一发送内核 ----
+    _sendOutgoing(
+      message: Message,
+      conversationId: string,
+      opts: {
+        wsType: number
+        receiverIds?: string[]
+        enqueueMode?: EnqueueMode
+      }
+    ) {
+      const enqueueMode = opts.enqueueMode ?? 'append'
+
+      const payload =
+        opts.receiverIds && opts.receiverIds.length > 0
+          ? { ...message, receiverIds: opts.receiverIds }
+          : message
+
+      const index = this._ensureMessageInMap(conversationId, payload, enqueueMode)
+      this._trackPending(payload.id, conversationId, index)
+
+      this._sendViaWs(opts.wsType, payload, () => {
+        this.markMessageFailed(payload.id, '发送失败')
       })
 
-      console.log(this.pendingMessages)
+      return payload.id
+    },
 
-      // 启动超时检测器
-      this.startTimeoutChecker()
+    /**
+     * 文本消息
+     */
+    sendMessage(message: Message, conversationId: string, receiverIds: string[] = []) {
+      const wsType = receiverIds.length > 0 ? 3 : 1
+      return this._sendOutgoing(message, conversationId, {
+        wsType,
+        receiverIds,
+        enqueueMode: 'append'
+      })
+    },
 
-      // 通过WebSocket发送消息
-      try {
-        (window as any).wsApi.sendMessage(1, 0, message)
-      } catch (error) {
-        // 发送失败，立即标记为失败
-        this.markMessageFailed(message.id, '发送失败')
-      }
+    /**
+     * 文件消息
+     * 和文本的差异：允许“复用已存在的消息”（HTTP 先插入 or UI 先插入的场景）
+     */
+    sendFileMessage(message: Message, conversationId: string, receiverIds: string[] = []) {
+      const wsType = receiverIds.length > 0 ? 3 : 1
+      return this._sendOutgoing(message, conversationId, {
+        wsType,
+        receiverIds,
+        enqueueMode: 'reuse_if_exists'
+      })
+    },
 
-      return message.id
+    /**
+     * 系统消息
+     *
+     */
+    sendSystemMessage(message: Message, conversationId: string, receiverIds: string[] = []) {
+      const wsType = 12
+      return this._sendOutgoing(message, conversationId, {
+        wsType,
+        receiverIds,
+        enqueueMode: 'append'
+      })
     },
     // 启动1秒轮询检查
     startTimeoutChecker() {
@@ -93,7 +163,6 @@ export const messageInfo = defineStore('messageInfo', {
 
       }, this.checkInterval) // 1秒检查一次
     },
-
     /**
     * 处理消息超时
     */
@@ -179,8 +248,8 @@ export const messageInfo = defineStore('messageInfo', {
       }
     },
     /**
- * 手动标记消息为失败
- */
+     * 手动标记消息为失败
+     */
     markMessageFailed(messageId: string, error: string) {
       // 查找消息（可能在pendingMessages或messageMap中）
       for (const [sessionKey, messages] of Object.entries(this.messageMap)) {
@@ -213,11 +282,11 @@ export const messageInfo = defineStore('messageInfo', {
         )
       }
     },
-    // 添加文件消息
+    // 添加文件消息（临时存储，用于上传完成后发送 WS）
     addFileMessage(fileId: string, message: Message) {
       this.fileMessgaeMap[fileId] = message
     },
-    // 获取文件信息
+    // 获取文件消息
     getFileMessage(fileId: string) {
       return this.fileMessgaeMap[fileId]
     },

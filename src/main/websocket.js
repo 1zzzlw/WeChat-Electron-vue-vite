@@ -1,6 +1,7 @@
 import { store, mainWindow } from './index'
 import { app, Notification } from 'electron'
 import { saveSentMessage, addConversation, addFriendRelation } from './DB/insert'
+import { deleteMessage } from './DB/delete'
 import { updateConversation } from './DB/update'
 import icon from '../../resources/icon.png?asset'
 
@@ -137,6 +138,9 @@ class WebSocketManager {
                     latestMsgTime: data.receiveTime
                 }
                 updateConversation(condition, messageData)
+            } else if (messageType === 13) {
+                // 保存到数据库里
+                saveSentMessage(data)
             } else if (messageType === 15) {
                 // 好友申请通过，将好友信息存储到数据库中
                 const conversationPack = {

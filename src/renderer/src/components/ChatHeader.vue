@@ -149,7 +149,6 @@ const groupListStore = groupListInfo()
 // 抽屉状态
 const drawerPrivate = ref(false)
 const drawerGroup = ref(false)
-const userInfo = ref()
 
 const openDrawer = () => {
     if (props.conversation.type === 0) {
@@ -170,11 +169,9 @@ const changeMuteStatus = () => {
 }
 
 const exitGroup = () => {
-
 }
 
 const dismissGroup = () => {
-
 }
 
 const handleChoice = (item: any) => {
@@ -202,15 +199,16 @@ const groupList = computed(() => {
     if (props.conversation.type === 1) {
         // 是群聊时，获取群成员列表
         return groupMemberStore.getGroupMemberList(props.conversation.id).sort((a: any, b: any) => {
-            if (a.role === 2) return -1
-            if (b.role === 2) {
-                userInfo.value = b
+            if (a.role === 2)
+                return -1
+            if (b.role === 2)
                 return 1
-            }
             return 0;
         }).slice(0, 5)
     }
 })
+
+const userInfo = computed(() => groupList.value?.find((item: any) => item.userId === props.conversation.userId))
 
 watch(() => props.conversation.id, async () => {
     drawerPrivate.value = false

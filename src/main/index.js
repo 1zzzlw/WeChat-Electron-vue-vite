@@ -118,7 +118,6 @@ function createTray() {
   ]
   const menu = Menu.buildFromTemplate(template)
   // 创建托盘并设置图标
-  // const trayIconPath = 'src\\renderer\\src\\assets\\image\\weixinOnline.ico'
   tray = new Tray(icon)
   tray.setToolTip('IM 客户端')
   tray.setContextMenu(menu)

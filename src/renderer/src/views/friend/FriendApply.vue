@@ -32,11 +32,16 @@ import { conversationInfo } from '../../stores/modules/ConversationStore'
 import { dealApplyApi } from '../../api/Apply'
 import { ElMessage } from 'element-plus'
 import { addConversation, addFriendRelation } from '../../db/dualDB'
+import { messageInfo } from '../../stores/modules/MessageStore'
+import { Message } from '../../types/message'
+import { createSystemMessagePack } from '../../utils/systemMessageUtil'
+import { SystemMsgSubType } from '../../utils/constants'
 
 const route = useRoute()
 const userApplyStore = userApplyListInfo()
 const friendInfoStore = friendInfo()
 const conversationStore = conversationInfo()
+const messageStore = messageInfo()
 const username = ref()
 const account = ref()
 const phone = ref()
@@ -100,11 +105,20 @@ const agreeButton = () => {
         dealResult: 1
       };
       (window as any).wsApi.sendMessage(14, 0, wsFriendPack)
+
+      // 发送系统消息包
+      const content = JSON.stringify({
+        tpl: "你们已成为好友，现在可以开始聊天了！"
+      })
+      const receiverIds = [applyInfo.value?.fromUserId]
+
+      const systemMessagePack = await createSystemMessagePack(applyInfo.value?.fromUserId, conversationPack.id, SystemMsgSubType.FRIEND_ADDED, content, receiverIds)
+
+      messageStore.sendSystemMessage(systemMessagePack as Message, conversationPack.id, receiverIds as string[])
     } else {
       ElMessage.error('同意失败')
     }
   })
-
 }
 
 const refuseButton = () => {

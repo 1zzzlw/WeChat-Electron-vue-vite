@@ -7,6 +7,15 @@ const clearHistoryMessage = (conversationId) => {
     deletes('message', condition)
 }
 
+const deleteMessage = (conversationId, messageId) => {
+    const condition = {
+        conversationId: conversationId,
+        messageId: messageId
+    }
+    deletes('message', condition)
+}
+
 export {
-    clearHistoryMessage
+    clearHistoryMessage,
+    deleteMessage
 }
