@@ -473,6 +473,7 @@ const handleChoice = async (item: any, messageId: string, messageContent: string
       break
     }
     case '删除': {
+      console.log(11)
       const condition = {
         id: messageId
       }

@@ -10,7 +10,7 @@ const clearHistoryMessage = (conversationId) => {
 const deleteMessage = (conversationId, messageId) => {
     const condition = {
         conversationId: conversationId,
-        messageId: messageId
+        id: messageId
     }
     deletes('message', condition)
 }

@@ -203,7 +203,7 @@ const clearHistoryMessage = async (conversationId) => {
 }
 
 const deleteMessage = async (conversationId, messageId) => {
-    await window.dbApi.deleteMessage(conversationId)
+    await window.dbApi.deleteMessage(conversationId, messageId)
 }
 
 export {

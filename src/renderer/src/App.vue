@@ -231,7 +231,7 @@ onMounted(async () => {
         // 添加好友成功，目前不需要处理，本地消息已经本添加
         break
       case SystemMsgSubType.FRIEND_DELETED:
-        // 被对方删除好友，需要拿到对方的id  
+        // 被对方删除好友，需要拿到对方的id
 
         // 通知你被该好友删除
 

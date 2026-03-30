@@ -39,7 +39,7 @@ async function createSystemMessagePack(receiverId, convId, subType, content, rec
  * @param {*} operationData -- 操作相关系统消息通知的额外数据：撤回消息为消息Id，好友申请为对方头像
  * @returns 
  */
-export function createContentJson(tpl, opName, targetId, targetName, operationData) {
+function createContentJson(tpl, opName, targetId, targetName, operationData) {
     const contentJson = JSON.stringify({
         tpl: tpl,
         opName: opName,

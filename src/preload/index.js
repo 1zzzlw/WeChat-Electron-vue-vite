@@ -96,7 +96,7 @@ const dbApi = {
     ipcRenderer.send('clear:historyMessage', conversationId)
   },
   deleteMessage: (conversationId, messageId) => {
-    ipcRenderer.send('delete:message', conversationId)
+    ipcRenderer.send('delete:message', conversationId, messageId)
   }
 }
 

@@ -1,8 +1,5 @@
 <template>
     <div class="system-msg-wrapper">
-        <!-- 展示系统消息的时间 -->
-        <ChatMessageTime :dataTime="message.sendTime"></ChatMessageTime>
-
         <!-- 居中展示的系统消息文本 -->
         <div class="system-message-content">
             {{ displayContent }}
@@ -12,7 +9,6 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import ChatMessageTime from './ChatMessageTime.vue';
 
 const props = defineProps({
     message: {
@@ -72,7 +68,7 @@ const displayContent = computed(() => {
             return text || '该群聊已被解散'
 
         default:
-            return text || content
+            return '展示错误'
     }
 })
 </script>
