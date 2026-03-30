@@ -22,28 +22,28 @@ const props = defineProps({
     }
 })
 
-const currentUserId = ref('');
+const currentUserId = ref('')
 
 onMounted(async () => {
-    currentUserId.value = await (window as any).userInfoApi.storeGetUserInfo('userId');
+    currentUserId.value = await (window as any).userInfoApi.storeGetUserInfo('userId')
 })
 
 /**
  * 核心逻辑：根据 sub_type 和 content (JSON) 解析最终显示的文本
  */
 const displayContent = computed(() => {
-    const { subType, content, senderId } = props.message;
+    const { subType, content, senderId } = props.message
 
-    let info: any = {};
+    let info: any = {}
     try {
-        info = JSON.parse(content);
+        info = JSON.parse(content)
     } catch (e) {
-        return content;
+        return content
     }
 
-    const isMe = (id: any) => String(id) === String(currentUserId.value);
+    const isMe = (id: any) => String(id) === String(currentUserId.value)
     // 优先使用 JSON 里的 tpl 字段
-    let text = info.tpl || '';
+    let text = info.tpl || ''
 
     switch (subType) {
         case 10: // 撤回

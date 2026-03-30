@@ -126,7 +126,7 @@ import { Snowflake } from '@theinternetfolks/snowflake'
 import ContextMenu from '../../components/ContextMenu.vue'
 import ChatMessageTime from '../../components/ChatMessageTime.vue'
 import ChatMessageSystem from '../../components/ChatMessageSystem.vue'
-import { createSystemMessagePack } from '../../utils/systemMessageUtil.js'
+import { createSystemMessagePack, createContentJson } from '../../utils/systemMessageUtil.js'
 import { SystemMsgSubType } from '../../utils/constants.js'
 import { deleteMessage } from '../../db/dualDB.js'
 
@@ -443,10 +443,15 @@ const handleChoice = async (item: any, messageId: string, messageContent: string
 
       // 构造系统消息
       const myName = await (window as any).userInfoApi.storeGetUserInfo('username')
-      const content = JSON.stringify({
-        tpl: '{name} 撤回了一条消息',
-        opName: myName
-      })
+
+      /**
+       * 系统消息内容
+       * 撤回人姓名
+       * 会话id
+       * 对方名称
+       * 撤回消息Id
+       */
+      const content = createContentJson('{name} 撤回了一条消息', myName, conversation.value.id, conversation.value.name, messageId)
 
       // receiverId：单聊存对方ID，群聊存群ID
       const receiverId = isGroup ? convId : String(conversation.value.targetId)

@@ -30,6 +30,28 @@ async function createSystemMessagePack(receiverId, convId, subType, content, rec
     return systemPack
 }
 
+/**
+ * 
+ * @param {*} tpl -- 系统消息信息 
+ * @param {*} opName -- 操作人名称
+ * @param {*} targetId -- 操作对方的Id，比如好友id，会话id，群成员id
+ * @param {*} targetName -- 对方名称
+ * @param {*} operationData -- 操作相关系统消息通知的额外数据：撤回消息为消息Id，好友申请为对方头像
+ * @returns 
+ */
+export function createContentJson(tpl, opName, targetId, targetName, operationData) {
+    const contentJson = JSON.stringify({
+        tpl: tpl,
+        opName: opName,
+        targetId: targetId,
+        targetName: targetName,
+        operationData: operationData
+    })
+
+    return contentJson
+}
+
 export {
-    createSystemMessagePack
+    createSystemMessagePack,
+    createContentJson
 }

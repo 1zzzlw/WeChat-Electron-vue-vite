@@ -17,7 +17,8 @@ import { updateMessage } from './db/dualDB'
 import emitter from '../src/utils/mitt'
 import dayjs from 'dayjs'
 import { updateMessageFileSendStatusApi } from './api/Message'
-import { saveSentMessage } from './db/dualDB'
+import { saveSentMessage, deleteMessage } from './db/dualDB'
+import { SystemMsgSubType } from './utils/constants'
 
 function updateMessageStore(data) {
   // 私信类型，将消息存储到状态管理中
@@ -77,6 +78,11 @@ onMounted(async () => {
         console.log('接收到用户的离线消息', data)
         friendInfo().removeUserOnline(data.userId)
         break
+      case 13:
+        console.log('接收到系统消息', data)
+        // 不需要在这里添加消息到本地数据库中，已经在主进程中接收到就直接添加进去了
+        handleSystemMessage(data)
+        break
       case 15:
         console.log('接收到申请处理的结果', data)
         const friendInfoPack = {
@@ -102,6 +108,9 @@ onMounted(async () => {
           unreadCount: 0
         }
         conversationInfo().setConversationMap(data.conversationId, conversationPack)
+
+        // TODO 展示Notification通知卡片
+
         break
       case 16:
         console.log('接收到ACK确认消息', data)
@@ -204,6 +213,59 @@ onMounted(async () => {
     document.body.style.backgroundImage = `url(${imagePath})`
     window.userInfoApi.storeSetUserInfo('wallpaperPath', imagePath)
   })
+
+  const handleSystemMessage = (data) => {
+    const subType = data.subType
+    const content = JSON.parse(data.content)
+    switch (subType) {
+      case SystemMsgSubType.RECALL:
+        // 消息撤回
+        const messageId = content.operationData
+        const conversationId = content.targetId
+        // 缓存中删除该消息
+        messageInfo().deleteMessage(conversationId, messageId)
+        // 本地数据库中删除该消息
+        deleteMessage(conversationId, messageId)
+        break
+      case SystemMsgSubType.FRIEND_ADDED:
+        // 添加好友成功，目前不需要处理，本地消息已经本添加
+        break
+      case SystemMsgSubType.FRIEND_DELETED:
+        // 被对方删除好友，需要拿到对方的id  
+
+        // 通知你被该好友删除
+
+        // 删除和对方的好友关系
+
+        break
+      case SystemMsgSubType.FRIEND_BLACKLIST:
+        // 被对方拉黑，需要拿到对方的id
+
+        // 修改本地数据库和该好友的关系，不需要通知
+
+        break
+      case SystemMsgSubType.GROUP_JOINED:
+        // 有成员入群
+
+        // 如果是该群的群主，就展示Notification通知卡片
+        break
+      case SystemMsgSubType.GROUP_KICKED:
+        // 有成员被踢
+
+        // 如果是该群的群主，就展示Notification通知卡片
+        break
+      case SystemMsgSubType.GROUP_LEAVED:
+        // 有成员离开
+
+        // 如果是该群的群主，就展示Notification通知卡片
+        break
+      case SystemMsgSubType.GROUP_DISBANDED:
+        // 有群聊被群主解散
+
+        // 展示Notification通知卡片，该群聊被解散
+        break
+    }
+  }
 })
 
 </script>

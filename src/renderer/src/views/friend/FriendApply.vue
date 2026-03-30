@@ -34,7 +34,7 @@ import { ElMessage } from 'element-plus'
 import { addConversation, addFriendRelation } from '../../db/dualDB'
 import { messageInfo } from '../../stores/modules/MessageStore'
 import { Message } from '../../types/message'
-import { createSystemMessagePack } from '../../utils/systemMessageUtil'
+import { createSystemMessagePack, createContentJson } from '../../utils/systemMessageUtil'
 import { SystemMsgSubType } from '../../utils/constants'
 
 const route = useRoute()
@@ -107,9 +107,12 @@ const agreeButton = () => {
       (window as any).wsApi.sendMessage(14, 0, wsFriendPack)
 
       // 发送系统消息包
-      const content = JSON.stringify({
-        tpl: "你们已成为好友，现在可以开始聊天了！"
-      })
+      // const content = JSON.stringify({
+      //   tpl: "你们已成为好友，现在可以开始聊天了！"
+      // })
+
+      const content = createContentJson("你们已成为好友，现在可以开始聊天了！", username, applyInfo.value?.fromUserId, applyInfo.value?.username, applyInfo.value?.avatar)
+
       const receiverIds = [applyInfo.value?.fromUserId]
 
       const systemMessagePack = await createSystemMessagePack(applyInfo.value?.fromUserId, conversationPack.id, SystemMsgSubType.FRIEND_ADDED, content, receiverIds)
