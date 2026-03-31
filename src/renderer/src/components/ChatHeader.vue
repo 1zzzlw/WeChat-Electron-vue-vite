@@ -140,7 +140,6 @@ import { messageInfo } from '../stores/modules/MessageStore';
 import { ElMessage } from 'element-plus';
 import { groupMemberInfo } from '../stores/modules/GroupMemberStores';
 import ContextMenu from '../components/ContextMenu.vue'
-import { groupListInfo } from '../stores/modules/GroupListStores';
 import { friendInfo } from '../stores/modules/ContactListStore';
 import { conversationInfo } from '../stores/modules/ConversationStore';
 import { useRouter } from 'vue-router'
@@ -150,7 +149,6 @@ import { Message } from '../types/message';
 
 const messageStore = messageInfo()
 const groupMemberStore = groupMemberInfo()
-const groupListStore = groupListInfo()
 const friendStore = friendInfo()
 const conversationStore = conversationInfo()
 const router = useRouter()
@@ -180,21 +178,42 @@ const changeMuteStatus = () => {
 }
 
 const exitGroup = () => {
+    // 服务端和本地删除该群成员的群聊会话
+
+    // 缓存删除该会话
+
+    // ws通知所有的群成员更新一下群会话，如果是群主，则提供卡片通知
+
 }
 
 const dismissGroup = () => {
+    // 本地和服务端数据库删除该会话
+
+    // 缓存中删除该会话
+
+    // 发送ws通知所有群成员删除该会话
 }
 
 const handleChoice = (item: any) => {
     console.log(item)
+    switch (item) {
+        case '设置为管理员':
+            break
+        case '踢出群聊':
+            break
+        case '禁言':
+            break
+    }
 }
 
+// 清空聊天历史
 const clearMessageHistory = () => {
     messageStore.clearConversationMessages(props.conversation.id)
     clearHistoryMessageSync(props.conversation.id)
     ElMessage.success('聊天记录清理成功')
 }
 
+// 删除好友
 const deleteFriend = async () => {
     const friendId = props.conversation.targetId
     const conversationId = props.conversation.id

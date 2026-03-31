@@ -22,6 +22,7 @@ import { SystemMsgSubType, getSystemMsgText } from './utils/constants'
 import FriendOnlineNotify from './components/FriendOnlineNotify.vue'
 import FriendAddNotify from './components/FriendAddNotify.vue'
 import FriendDeleteNotify from './components/FriendDeleteNotify.vue'
+import { groupMemberInfo } from './stores/modules/GroupMemberStores'
 
 function updateMessageStore(data) {
   // 私信类型，将消息存储到状态管理中
@@ -140,6 +141,13 @@ onMounted(async () => {
           console.log(message)
           saveSentMessage(message)
         }
+        break
+      case 18:
+        console.log('接收到群聊申请处理消息', data)
+
+      // 将同意申请的好友信息添加到群聊缓存中
+
+
     }
   })
 
@@ -309,21 +317,25 @@ onMounted(async () => {
         // 有成员入群
 
         // 如果是该群的群主，就展示Notification通知卡片
+
         break
       case SystemMsgSubType.GROUP_KICKED:
         // 有成员被踢
 
         // 如果是该群的群主，就展示Notification通知卡片
+
         break
       case SystemMsgSubType.GROUP_LEAVED:
         // 有成员离开
 
         // 如果是该群的群主，就展示Notification通知卡片
+
         break
       case SystemMsgSubType.GROUP_DISBANDED:
         // 有群聊被群主解散
 
         // 展示Notification通知卡片，该群聊被解散
+
         break
     }
   }

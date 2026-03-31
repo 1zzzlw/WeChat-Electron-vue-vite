@@ -7,6 +7,7 @@ import { exec } from 'child_process'
 import { store } from '../index'
 import path from 'path'
 import http from 'http';
+import { app } from 'electron'
 
 /**
  * 限制图片尺寸，生成图片预览图用于展示头像，聊天内容的照片
@@ -100,6 +101,10 @@ const generateGroupAvatar = async () => {
     // 获得当前登录用户的头像路径
     const avatarPath = store.get('avatar')
     const localPath = store.get('storeLocation')
+    if (localPath === undefined) {
+        // 不存在
+        localPath = app.getPath('pictures')
+    }
     const groupTempAvatar = localPath + '/temp.png'
     const cmd = pathToFfmpeg + ` -f lavfi -i color=white:size=201x201 -i "${avatarPath}" -filter_complex [1:v]scale=67:67[a];[0:v][a]overlay=0:0 -frames:v 1 -y "${groupTempAvatar}"`
     await execCommand(cmd)
@@ -113,9 +118,10 @@ const generateGroupAvatar = async () => {
  */
 const updateGroupAvatar = async (avatarUrlList) => {
     const localPath = store.get('storeLocation')
-    // 获取用户的头像路径
-    const avatar = store.get('avatar')
-    avatarUrlList.push(avatar)
+    if (localPath === undefined) {
+        // 不存在
+        localPath = app.getPath('pictures')
+    }
     // 根据路径下载用户头像到本地
     const downloadPromises = avatarUrlList.map((url, index) => {
         return new Promise((resolve) => {

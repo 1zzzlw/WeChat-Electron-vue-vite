@@ -24,7 +24,7 @@
             </div>
             <div class="info-bottom">
                 <div class="btn-group" v-if="groupApplyInfo?.status == 1">
-                    <el-button type="success" @click="agreeButton">同意</el-button>
+                    <el-button type="success" @click="agreeButton" :loading="isLoading">同意</el-button>
                     <el-button type="danger" @click="refuseButton">拒绝</el-button>
                 </div>
                 <div class="btn-group" v-else>
@@ -36,7 +36,7 @@
     </div>
 </template>
 <script lang="ts" setup>
-import { watch, computed } from 'vue'
+import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { userApplyListInfo } from '../../stores/modules/UserApplyListStore'
 import { ElMessage } from 'element-plus'
@@ -51,19 +51,23 @@ const UserApplyListStore = userApplyListInfo()
 const userApplyStore = userApplyListInfo()
 const groupMemberStore = groupMemberInfo()
 const conversationStore = conversationInfo()
+const isLoading = ref(false)
 
 // 同意申请
 const agreeButton = async () => {
     console.info(groupApplyInfo)
+    isLoading.value = true
     const userId = await (window as any).userInfoApi.storeGetUserInfo('userId')
     const username = await (window as any).userInfoApi.storeGetUserInfo('username')
+    const avatar = await (window as any).userInfoApi.storeGetUserInfo('avatar')
+
     console.info('用户', userId, '同意入群');
 
     // 获取群成员信息列表
     const groupMemberList: any = await getGroupMemberListApi(groupApplyInfo.value?.conversationId)
 
     const avatarUrlList = groupMemberList.data.map((userInfo: any) => userInfo.avatar)
-
+    avatarUrlList.push(avatar)
     console.log(avatarUrlList)
 
     // 更新群聊头像
@@ -83,13 +87,13 @@ const agreeButton = async () => {
         ElMessage.success('入群成功')
         // 更新群聊申请状态
         userApplyStore.updateGroupApplyStatus(groupApplyInfo.value?.userId as string, 2)
-        // 添加到群成员缓存中
+        // 将自己的信息添加到群成员缓存中
         groupMemberStore.addGroupMember(groupApplyInfo.value?.conversationId as string, {
             conversationId: groupApplyInfo.value?.conversationId as string,
             userId: userId,
             username: username,
             role: 0,
-            avatar: groupAvatar
+            avatar: avatar
         })
         const conversationPack = conversationRes.data
         // 将群聊会话添加到本地数据库
@@ -97,7 +101,7 @@ const agreeButton = async () => {
         // 群会话添加到缓存
         conversationStore.setConversationMap(conversationPack.id, conversationPack)
 
-        // 发送自己入群的系统通知
+        // 发送自己入群的系统通知，需要提供部分信息，用于新成员的展示
 
 
     } else {
