@@ -65,7 +65,7 @@ const init_table = [
     username TEXT NOT NULL,                 -- 好友用户名
     account TEXT NOT NULL,                  -- 好友账号
     avatar TEXT NOT NULL,                   -- 头像URL
-    gender TEXT NOT NULL,                   -- 好友性别
+    gender INTEGER NOT NULL,                   -- 好友性别
     phone TEXT NOT NULL,                    -- 好友手机号
     email TEXT,                             -- 好友邮箱
     birthday INTEGER,                       -- 好友生日

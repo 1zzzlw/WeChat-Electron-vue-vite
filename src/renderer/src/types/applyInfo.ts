@@ -4,7 +4,7 @@ export interface userApplyInfo {
     username: string
     avatar: string
     account: string
-    gender: string
+    gender: number
     phone: string
     email: string
     birthday: string

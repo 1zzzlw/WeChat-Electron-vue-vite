@@ -72,11 +72,15 @@ import ContextMenu from '../../components/ContextMenu.vue';
 import { getConversationList, updateConversation } from '../../db/dualDB'
 import { formatMessageTime } from '../../utils/utils.js'
 import { updateConversationTopStatus, updateConversationMuteStatus } from '../../db/syncDB.js'
+import { Friend } from '../../types/friend'
+import { getFriendList } from '../../db/dualDB'
+import { friendInfo } from '../../stores/modules/ContactListStore'
 
 const router = useRouter()
 const active = ref<string | undefined>('')
 const userId = ref()
 const conversationStore = conversationInfo()
+const friendInfoStore = friendInfo()
 
 const starCall = async (conversation: Conversation) => {
   active.value = conversation.targetId
@@ -326,11 +330,30 @@ const conversationListArr = computed(() => {
   })
 })
 
+const loadFriendList = async () => {
+  const cache = friendInfoStore.initCache(userId.value as string)
+
+  if (!cache) {
+    // 缓存失效，重新获取
+    console.info('好友信息缓存为空或缓存失效')
+
+    const friendList = await getFriendList()
+    friendList.forEach((friendInfo: Friend) => {
+      friendInfoStore.setFriendMap(friendInfo.friendId, friendInfo)
+    })
+    friendInfoStore.restoreOnlineStatus()
+  }
+}
+
+
 onMounted(async () => {
   userId.value = await (window as any).userInfoApi.storeGetUserInfo('userId')
 
   // 查询会话列表
   loadConversationList()
+
+  // 初始化好友列表
+  loadFriendList()
 })
 </script>
 

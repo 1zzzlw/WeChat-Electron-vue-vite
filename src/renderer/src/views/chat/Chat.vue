@@ -270,7 +270,7 @@ const sendMessage = async () => {
   if (content !== '') {
     message.value = ''
     const messagePack = createMessagePack(receiverId as string, convId, 1, content, null)
-
+    console.log(messagePack)
     // 文本消息：直接走 store
     messageStore.sendMessage(messagePack, convId, receiverIds as string[])
 
@@ -446,12 +446,12 @@ const handleChoice = async (item: any, messageId: string, messageContent: string
 
       /**
        * 系统消息内容
-       * 撤回人姓名
-       * 会话id
+       * 撤回人名称
+       * 撤回人 id
        * 对方名称
        * 撤回消息Id
        */
-      const content = createContentJson('{name} 撤回了一条消息', myName, conversation.value.id, conversation.value.name, messageId)
+      const content = createContentJson('{name} 撤回了一条消息', myName, userId.value, conversation.value.name, messageId)
 
       // receiverId：单聊存对方ID，群聊存群ID
       const receiverId = isGroup ? convId : String(conversation.value.targetId)

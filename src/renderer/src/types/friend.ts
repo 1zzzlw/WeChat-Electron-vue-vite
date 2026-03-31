@@ -5,7 +5,7 @@ export interface Friend {
     friendId: number | string
     avatar: string
     remark?: string
-    gender?: string
+    gender?: number
     phone?: string
     email?: string
     birthday?: string

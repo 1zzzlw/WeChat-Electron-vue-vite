@@ -1,79 +1,40 @@
 <template>
-  <transition name="slide-fade">
-    <div class="notification" v-if="isOnline">
-      <!-- 关闭按钮 -->
-      <el-icon class="close-btn" @click="closeNotification">
-        <Close />
-      </el-icon>
+  <div class="notification">
+    <!-- 关闭按钮 -->
+    <el-icon class="close-btn" @click="emit('close')">
+      <Close />
+    </el-icon>
 
-      <!-- 内容区域 -->
-      <div class="notification-content">
-        <!-- 头像区域 -->
-        <div class="avatar-wrapper">
-          <img :src="avatarUrl" alt="头像" class="notification-avatar" />
-        </div>
+    <!-- 内容区域 -->
+    <div class="notification-content">
+      <!-- 头像区域 -->
+      <div class="avatar-wrapper">
+        <img :src="avatar" alt="头像" class="notification-avatar" />
+      </div>
 
-        <!-- 文字信息 -->
-        <div class="notification-info">
-          <div class="notification-title">
-            <span class="friend-name">{{ friendName }}</span>
-            <span class="status-text">上线了</span>
-          </div>
+      <!-- 文字信息 -->
+      <div class="notification-info">
+        <div class="notification-title">
+          <span class="friend-name">{{ name }}</span>
+          <span class="status-text">上线了</span>
         </div>
       </div>
     </div>
-  </transition>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
 import { Close } from '@element-plus/icons-vue'
-import emitter from '../utils/mitt'
 
-// 通知显示状态
-const isOnline = ref(false)
-
-// 空数据占位
-const avatarUrl = ref('')
-const friendName = ref('')
-
-/**
- * 关闭通知
- */
-const closeNotification = () => {
-  isOnline.value = false
-}
-
-/**
- * 显示上线通知
- * @param data 好友信息 { avatar, name }
- */
-const showOnlineNotify = (data: any) => {
-  // 填充数据
-  avatarUrl.value = data.avatar
-  friendName.value = data.name
-
-  // 显示通知
-  isOnline.value = true
-
-  // 定时关闭
-  setTimeout(() => { isOnline.value = false }, 3000)
-}
-
-
-// 监听好友上线事件（你可以根据需要启用）
-emitter.on('friendOnline', (data: any) => {
-  showOnlineNotify(data)
-})
+const props = defineProps({ avatar: String, name: String })
+const emit = defineEmits(['close'])
 </script>
 
 <style scoped>
 .notification {
-  position: absolute;
-  top: 20px;
-  right: 20px;
   width: 320px;
   height: 100px;
+  flex-shrink: 0;
 
   /* 纯毛玻璃效果，无背景色 */
   backdrop-filter: blur(16px);
@@ -84,8 +45,18 @@ emitter.on('friendOnline', (data: any) => {
   box-shadow: var(--notification-shadow, 0 8px 32px rgba(0, 0, 0, 0.15));
 
   overflow: hidden;
-  z-index: 9999;
   -webkit-app-region: no-drag;
+}
+
+.notification {
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.notification:hover {
+  transform: scale(1.02);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
 }
 
 /* 关闭按钮 */
@@ -164,10 +135,5 @@ emitter.on('friendOnline', (data: any) => {
   font-size: 12px;
   color: var(--text-accent, inherit);
   font-weight: 500;
-}
-
-.notification-time {
-  font-size: 11px;
-  color: var(--text-secondary, inherit);
 }
 </style>

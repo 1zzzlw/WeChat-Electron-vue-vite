@@ -48,7 +48,7 @@ import WindowControls from '../../components/WindowControls.vue'
 import UserOnlineStatus from '../../components/UserOnlineStatus.vue'
 import UserInfoCart from '../../components/UserInfoCart.vue'
 import '../../assets/iconfont/iconfont.css'
-import Notification from '../../components/Notification.vue'
+import Notification from '../../components/NotificationContainer.vue'
 
 const avatarUrl = ref('')
 const containerRef = ref(null)

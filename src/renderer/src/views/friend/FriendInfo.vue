@@ -26,13 +26,13 @@
         <div>备注: {{ friendBaseInfo?.remark }}
         </div>
         <div>性别:
-          <span v-if="friendBaseInfo?.gender === '1.0'">
+          <span v-if="friendBaseInfo?.gender === 1">
             男 <el-icon
               style="color: #409eff; font-size: 16px; filter: drop-shadow(0 0 2px #409eff); vertical-align: middle; margin-left: 4px;">
               <Male />
             </el-icon>
           </span>
-          <span v-else-if="friendBaseInfo?.gender === '2.0'">
+          <span v-else-if="friendBaseInfo?.gender === 0">
             女 <el-icon
               style="color: #ff8acc; font-size: 16px; filter: drop-shadow(0 0 2px #ff8acc); vertical-align: middle; margin-left: 4px;">
               <Female />

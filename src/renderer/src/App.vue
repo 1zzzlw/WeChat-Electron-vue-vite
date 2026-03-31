@@ -18,7 +18,9 @@ import emitter from '../src/utils/mitt'
 import dayjs from 'dayjs'
 import { updateMessageFileSendStatusApi } from './api/Message'
 import { saveSentMessage, deleteMessage } from './db/dualDB'
-import { SystemMsgSubType } from './utils/constants'
+import { SystemMsgSubType, getSystemMsgText } from './utils/constants'
+import FriendOnlineNotify from './components/FriendOnlineNotify.vue'
+import FriendAddNotify from './components/FriendAddNotify.vue'
 
 function updateMessageStore(data) {
   // 私信类型，将消息存储到状态管理中
@@ -64,7 +66,13 @@ onMounted(async () => {
         break
       case 9:
         console.log('好友上线信息', data)
-        emitter.emit('friendOnline', data)
+        emitter.emit('addNotification', {
+          component: FriendOnlineNotify,
+          props: {
+            avatar: data.avatar,
+            name: data.name
+          },
+        })
         friendInfo().addUserOnline(data.userId)
         break
       case 10:
@@ -93,7 +101,8 @@ onMounted(async () => {
           avatar: data.avatar,
           gender: data.gender,
           phone: data.phone,
-          relationStatus: data.relationStatus
+          relationStatus: data.relationStatus,
+          isOnline: true
         }
         friendInfo().setFriendMap(data.friendId, friendInfoPack)
         const conversationPack = {
@@ -101,7 +110,7 @@ onMounted(async () => {
           userId: data.userId,
           targetId: data.friendId,
           name: data.username,
-          avatet: data.avatar,
+          avatar: data.avatar,
           type: 0,
           isTop: 0,
           isMute: 0,
@@ -109,8 +118,14 @@ onMounted(async () => {
         }
         conversationInfo().setConversationMap(data.conversationId, conversationPack)
 
-        // TODO 展示Notification通知卡片
-
+        emitter.emit('addNotification', {
+          component: FriendAddNotify,
+          props: {
+            avatar: data.avatar,
+            name: data.username,
+            gender: data.gender
+          },
+        })
         break
       case 16:
         console.log('接收到ACK确认消息', data)
@@ -216,19 +231,50 @@ onMounted(async () => {
 
   const handleSystemMessage = (data) => {
     const subType = data.subType
+    const senderId = data.snederId
+    const receiverId = data.receiverId
+    const conversationId = data.conversationId
+    const messageType = data.messageType
     const content = JSON.parse(data.content)
+    let messagePack = null
     switch (subType) {
       case SystemMsgSubType.RECALL:
         // 消息撤回
+        const opName = content.opName
         const messageId = content.operationData
-        const conversationId = content.targetId
+        // 添加系统消息到缓存中
+        messagePack = {
+          // 系统消息id
+          id: data.id,
+          senderId: senderId,
+          receiverId: receiverId,
+          conversationId: conversationId,
+          subType: messageType,
+          msgType: 99,
+          content: getSystemMsgText(SystemMsgSubType.RECALL, { name: opName }),
+          sendStatus: 1,
+          sendTime: ''
+        }
+        messageInfo().addMessageMap(conversationId, messagePack)
         // 缓存中删除该消息
         messageInfo().deleteMessage(conversationId, messageId)
         // 本地数据库中删除该消息
         deleteMessage(conversationId, messageId)
         break
       case SystemMsgSubType.FRIEND_ADDED:
-        // 添加好友成功，目前不需要处理，本地消息已经本添加
+        // 添加好友成功，将消息添加到缓存中用来实时展示
+        messagePack = {
+          id: data.id,
+          senderId: senderId,
+          receiverId: receiverId,
+          conversationId: conversationId,
+          subType: messageType,
+          msgType: 99,
+          content: getSystemMsgText(SystemMsgSubType.FRIEND_ADDED),
+          sendStatus: 1,
+          sendTime: ''
+        }
+        messageInfo().addMessageMap(conversationId, messagePack)
         break
       case SystemMsgSubType.FRIEND_DELETED:
         // 被对方删除好友，需要拿到对方的id

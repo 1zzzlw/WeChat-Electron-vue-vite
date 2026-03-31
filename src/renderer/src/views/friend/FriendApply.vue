@@ -61,6 +61,7 @@ const agreeButton = () => {
         isDealt: 1,
         dealResult: 1
       })
+      const isOnline = res.data.isOnline === 1 ? true : false
       const firendPack = {
         userId: userId.value,
         friendId: applyInfo.value?.fromUserId,
@@ -73,10 +74,11 @@ const agreeButton = () => {
         birthday: applyInfo.value?.birthday,
         address: applyInfo.value?.address,
         remark: '',
-        relationStatus: 1
+        relationStatus: 1,
+        isOnline: isOnline
       }
       const conversationPack = {
-        id: res.data,
+        id: res.data.conversationId,
         userId: userId.value,
         targetId: String(applyInfo.value?.fromUserId),
         name: applyInfo.value?.username,
@@ -107,10 +109,6 @@ const agreeButton = () => {
       (window as any).wsApi.sendMessage(14, 0, wsFriendPack)
 
       // 发送系统消息包
-      // const content = JSON.stringify({
-      //   tpl: "你们已成为好友，现在可以开始聊天了！"
-      // })
-
       const content = createContentJson("你们已成为好友，现在可以开始聊天了！", username, applyInfo.value?.fromUserId, applyInfo.value?.username, applyInfo.value?.avatar)
 
       const receiverIds = [applyInfo.value?.fromUserId]

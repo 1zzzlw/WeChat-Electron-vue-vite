@@ -44,7 +44,8 @@
                       :class="{ 'user-offline': !friend.isOnline }" />
                   </div>
                   <div>
-                    <h1 class="friend-name" v-if="friend.remark === ''">{{ friend.username }}</h1>
+                    <h1 class="friend-name" v-if="friend.remark === '' || friend.remark === null">{{ friend.username }}
+                    </h1>
                     <h1 class="friend-name" v-else>{{ friend.remark }}</h1>
                     <div v-show="friend.isOnline" class="online-status">在线</div>
                     <div v-show="!friend.isOnline" class="offline-status">离线</div>
@@ -67,8 +68,6 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { getApplyListApi, getGroupApplyListApi } from '../../api/Apply'
-import { Friend } from '../../types/friend'
-import { getFriendList } from '../../db/dualDB'
 import { CollapseModelValue } from 'element-plus'
 import { userApplyListInfo } from '../../stores/modules/UserApplyListStore'
 import { friendInfo } from '../../stores/modules/ContactListStore'
@@ -178,20 +177,6 @@ const friendApplyListArr = computed(() => {
   return userApplyStore.getAllUserApplyMap()
 })
 
-const loadFriendList = async () => {
-  const cache = friendInfoStore.initCache(userId.value as string)
-
-  if (!cache) {
-    // 缓存失效，重新获取
-    console.info('好友信息缓存为空或缓存失效')
-
-    const friendList = await getFriendList()
-    friendList.forEach((friendInfo: Friend) => {
-      friendInfoStore.setFriendMap(friendInfo.friendId, friendInfo)
-    })
-    friendInfoStore.restoreOnlineStatus()
-  }
-}
 
 onMounted(async () => {
   userId.value = await (window as any).userInfoApi.storeGetUserInfo('userId')
@@ -199,8 +184,6 @@ onMounted(async () => {
   fetchGroupApplyList()
 
   fetchApplyList()
-
-  loadFriendList()
 })
 </script>
 
