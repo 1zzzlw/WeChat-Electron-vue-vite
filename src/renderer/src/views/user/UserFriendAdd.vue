@@ -99,11 +99,11 @@ const sendApply = async () => {
   if (res.code === 1) {
     ElMessage.success(`发送好友申请成功`)
     console.info('好友申请表ID：' + applyId);
-    // 发送好友申请成功后，通知对方好友申请列表更新
+    // 发送好友申请，成功后，通知对方好友申请列表更新
     (window as any).wsApi.sendMessage(5, 0, {
       applyId: applyId,
       toUserId: applyInfo.toUserId,
-      applyMsg: applyInfo.applyMsg
+      applyMsg: applyInfo.applyMsg,
     })
   } else {
     ElMessage.error('发送好友申请失败')

@@ -159,6 +159,7 @@ const router = useRouter()
 const drawerPrivate = ref(false)
 const drawerGroup = ref(false)
 const username = ref('')
+const avatar = ref('')
 
 const openDrawer = () => {
     if (props.conversation.type === 0) {
@@ -197,7 +198,6 @@ const clearMessageHistory = () => {
 const deleteFriend = async () => {
     const friendId = props.conversation.targetId
     const conversationId = props.conversation.id
-    const avatar = props.conversation.avatar
     // 删除好友关系
     deleteFriendSync(friendId)
     // 删除会话关系
@@ -212,7 +212,7 @@ const deleteFriend = async () => {
     })
     // ws通知
     const tpl = getSystemMsgText(SystemMsgSubType.FRIEND_DELETED)
-    const content = createContentJson(tpl, username.value, '', '', avatar)
+    const content = createContentJson(tpl, username.value, '', '', avatar.value)
     const receiverId = friendId
     const receiverIds = friendId
 
@@ -253,6 +253,7 @@ watch(() => props.conversation.id, async () => {
     drawerPrivate.value = false
     drawerGroup.value = false
     username.value = await (window as any).userInfoApi.storeGetUserInfo('username')
+    avatar.value = await (window as any).userInfoApi.storeGetUserInfo('avatar')
 }, {
     immediate: true
 })

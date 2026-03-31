@@ -44,9 +44,8 @@
                       :class="{ 'user-offline': !friend.isOnline }" />
                   </div>
                   <div>
-                    <h1 class="friend-name" v-if="friend.remark === '' || friend.remark === null">{{ friend.username }}
+                    <h1 class="friend-name">{{ friend.username }}
                     </h1>
-                    <h1 class="friend-name" v-else>{{ friend.remark }}</h1>
                     <div v-show="friend.isOnline" class="online-status">在线</div>
                     <div v-show="!friend.isOnline" class="offline-status">离线</div>
                   </div>

@@ -232,7 +232,7 @@ onMounted(async () => {
 
   const handleSystemMessage = (data) => {
     const subType = data.subType
-    const senderId = data.snederId
+    const senderId = data.senderId
     const receiverId = data.receiverId
     const conversationId = data.conversationId
     const messageType = data.messageType
@@ -279,16 +279,8 @@ onMounted(async () => {
         break
       case SystemMsgSubType.FRIEND_DELETED:
         // 被对方删除好友，需要拿到对方的id
-        const avatar = content.avatar
+        const avatar = content.operationData
         const name = content.opName
-        // 卡片通知你被该好友删除
-        emitter.emit('addNotification', {
-          component: FriendDeleteNotify,
-          props: {
-            avatar: avatar,
-            name: name,
-          },
-        })
 
         // 缓存中删除和对方的好友关系
         conversationInfo().deleteConversation(conversationId)
@@ -297,6 +289,15 @@ onMounted(async () => {
         // 本地删除和对方的好友关系
         deleteConversation(conversationId)
         deleteFriend(senderId)
+
+        // 卡片通知你被该好友删除
+        emitter.emit('addNotification', {
+          component: FriendDeleteNotify,
+          props: {
+            avatar: avatar,
+            name: name,
+          },
+        })
         break
       case SystemMsgSubType.FRIEND_BLACKLIST:
         // 被对方拉黑，需要拿到对方的id
