@@ -35,7 +35,7 @@ import { addConversation, addFriendRelation } from '../../db/dualDB'
 import { messageInfo } from '../../stores/modules/MessageStore'
 import { Message } from '../../types/message'
 import { createSystemMessagePack, createContentJson } from '../../utils/systemMessageUtil'
-import { SystemMsgSubType } from '../../utils/constants'
+import { SystemMsgSubType, getSystemMsgText } from '../../utils/constants'
 
 const route = useRoute()
 const userApplyStore = userApplyListInfo()
@@ -109,7 +109,8 @@ const agreeButton = () => {
       (window as any).wsApi.sendMessage(14, 0, wsFriendPack)
 
       // 发送系统消息包
-      const content = createContentJson("你们已成为好友，现在可以开始聊天了！", username, applyInfo.value?.fromUserId, applyInfo.value?.username, applyInfo.value?.avatar)
+      const tpl = getSystemMsgText(SystemMsgSubType.FRIEND_ADDED, { name: username.value })
+      const content = createContentJson(tpl, username.value, applyInfo.value?.fromUserId, applyInfo.value?.username, applyInfo.value?.avatar)
 
       const receiverIds = [applyInfo.value?.fromUserId]
 

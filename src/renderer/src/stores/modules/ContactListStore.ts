@@ -108,7 +108,9 @@ export const friendInfo = defineStore('friendListInfo', {
     },
     // 删除好友
     deleteFriendMap(friendId: string | number) {
-      delete this.friendInfoMap[friendId]
+      if (this.friendInfoMap[friendId]) {
+        delete this.friendInfoMap[friendId]
+      }
     }
   }
 })

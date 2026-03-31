@@ -1,7 +1,8 @@
-import { updateConversation, uploadNoteContent, updateOldNoteContent, clearHistoryMessage } from "./dualDB";
+import { updateConversation, uploadNoteContent, updateOldNoteContent, clearHistoryMessage, deleteFriend, deleteConversation } from "./dualDB";
 import { uploadNoteContentApi, updateOldNoteContentApi } from '../api/Favorites'
-import { updateConversationTopStatusApi, updateConversationMuteStatusApi } from '../api/Conversation'
+import { updateConversationTopStatusApi, updateConversationMuteStatusApi, deleteConversationApi } from '../api/Conversation'
 import { clearHistoryMessageApi } from "../api/Message";
+import { deleteFriendApi } from "../api/Friend";
 
 /**
  * 
@@ -64,10 +65,22 @@ const clearHistoryMessageSync = (conversationId) => {
     // clearHistoryMessageApi(conversationId)
 }
 
+const deleteFriendSync = (friendId) => {
+    deleteFriend(friendId)
+    deleteFriendApi(friendId)
+}
+
+const deleteConversationSync = (conversationId) => {
+    deleteConversation(conversationId)
+    deleteConversationApi(conversationId)
+}
+
 export {
     updateConversationTopStatus,
     updateConversationMuteStatus,
     insertNewNote,
     updateOldNote,
-    clearHistoryMessageSync
+    clearHistoryMessageSync,
+    deleteFriendSync,
+    deleteConversationSync
 }

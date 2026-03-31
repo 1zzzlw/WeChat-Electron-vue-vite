@@ -97,6 +97,12 @@ const dbApi = {
   },
   deleteMessage: (conversationId, messageId) => {
     ipcRenderer.send('delete:message', conversationId, messageId)
+  },
+  deleteFriend: (friendId) => {
+    ipcRenderer.send('delete:friend', friendId)
+  },
+  deleteConversation: (conversationId) => {
+    ipcRenderer.send('delete:conversation', conversationId)
   }
 }
 

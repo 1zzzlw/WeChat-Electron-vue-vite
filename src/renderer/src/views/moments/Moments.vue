@@ -1,10 +1,10 @@
 <template>
   <div>朋友圈</div>
-  <FriendAddNotify></FriendAddNotify>
+  <FriendDeleteNotify></FriendDeleteNotify>
 </template>
 
 <script setup lang="ts">
-import FriendAddNotify from '../../components/FriendAddNotify.vue';
+import FriendDeleteNotify from '../../components/FriendDeleteNotify.vue';
 </script>
 
 <style scoped></style>

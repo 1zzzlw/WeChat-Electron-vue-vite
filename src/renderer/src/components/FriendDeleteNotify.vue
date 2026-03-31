@@ -16,26 +16,19 @@
             <div class="notification-info">
                 <div class="notification-title">
                     <span class="friend-name">{{ name }}</span>
-                    <el-icon v-if="gender === 1" class="gender-icon male">
-                        <Male />
-                    </el-icon>
-                    <el-icon v-else-if="gender === 0" class="gender-icon female">
-                        <Female />
-                    </el-icon>
                 </div>
-                <div class="status-text">同意你的好友申请</div>
+                <div class="status-text">已将你删除</div>
             </div>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { Close, Male, Female } from '@element-plus/icons-vue'
+import { Close } from '@element-plus/icons-vue'
 
 const props = defineProps({
     avatar: String,
-    name: String,
-    gender: Number // 1 男, 0 女
+    name: String
 })
 const emit = defineEmits(['close'])
 </script>
@@ -46,18 +39,20 @@ const emit = defineEmits(['close'])
     height: 100px;
     flex-shrink: 0;
 
-    /* 纯毛玻璃效果，无背景色 */
+    /* 毛玻璃保留 */
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
 
+    /* 警告风格：橙色边框 + 橙色微光 */
     border-radius: 12px;
-    border: 1px solid var(--notification-border, rgba(255, 255, 255, 0.15));
-    box-shadow: var(--notification-shadow, 0 8px 32px rgba(0, 0, 0, 0.15));
+    border: 1px solid rgba(255, 136, 77, 0.3);
+    box-shadow: 0 8px 32px rgba(255, 81, 0, 0.15);
 
     overflow: hidden;
     -webkit-app-region: no-drag;
 }
 
+/* 悬浮效果保留 */
 .notification {
     transition: all 0.2s ease;
     cursor: pointer;
@@ -65,10 +60,11 @@ const emit = defineEmits(['close'])
 
 .notification:hover {
     transform: scale(1.02);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
-    border-color: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 12px 40px rgba(255, 81, 0, 0.25);
+    border-color: rgba(255, 136, 77, 0.4);
 }
 
+/* 关闭按钮 */
 .close-btn {
     position: absolute;
     top: 6px;
@@ -87,9 +83,10 @@ const emit = defineEmits(['close'])
 }
 
 .close-btn:hover {
-    background: var(--icon-hover-bg, rgba(255, 255, 255, 0.1));
+    background: rgba(255, 255, 255, 0.1);
 }
 
+/* 内容区域 */
 .notification-content {
     display: flex;
     align-items: center;
@@ -109,7 +106,7 @@ const emit = defineEmits(['close'])
     height: 60px;
     border-radius: 15px;
     object-fit: cover;
-    border: 2px solid var(--avatar-border, rgba(255, 255, 255, 0.2));
+    border: 2px solid rgba(255, 136, 77, 0.2);
 }
 
 .notification-info {
@@ -124,36 +121,23 @@ const emit = defineEmits(['close'])
 .notification-title {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
 }
 
 .friend-name {
     font-size: 14px;
     font-weight: 600;
-    color: var(--text-primary, inherit);
-    max-width: 150px;
+    color: #ff884d;
+    /* 警告橙色 */
+    max-width: 180px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.gender-icon {
-    font-size: 16px;
-    vertical-align: middle;
-    filter: drop-shadow(0 0 2px currentColor);
-}
-
-.gender-icon.male {
-    color: #409eff;
-}
-
-.gender-icon.female {
-    color: #ff8acc;
-}
-
 .status-text {
     font-size: 12px;
-    color: var(--text-secondary, rgba(255, 255, 255, 0.7));
-    font-weight: 400;
+    color: rgba(255, 204, 153, 0.85);
+    font-weight: 500;
 }
 </style>

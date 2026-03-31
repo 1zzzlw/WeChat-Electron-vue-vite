@@ -55,8 +55,8 @@ const emit = defineEmits(['close'])
 
 .notification:hover {
   transform: scale(1.02);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25) !important;
-  border-color: rgba(255, 255, 255, 0.25) !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+  border-color: rgba(255, 255, 255, 0.25);
 }
 
 /* 关闭按钮 */

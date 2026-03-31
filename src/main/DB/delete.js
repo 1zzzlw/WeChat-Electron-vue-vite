@@ -15,7 +15,24 @@ const deleteMessage = (conversationId, messageId) => {
     deletes('message', condition)
 }
 
+const deleteFriend = (userId, friendId) => {
+    const condition = {
+        userId: userId,
+        friendId: friendId
+    }
+    deletes('friend_relation', condition)
+}
+
+const deleteConversation = (conversationId) => {
+    const condition = {
+        id: conversationId
+    }
+    deletes('conversation', condition)
+}
+
 export {
     clearHistoryMessage,
-    deleteMessage
+    deleteMessage,
+    deleteFriend,
+    deleteConversation
 }

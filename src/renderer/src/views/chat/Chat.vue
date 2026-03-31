@@ -127,7 +127,7 @@ import ContextMenu from '../../components/ContextMenu.vue'
 import ChatMessageTime from '../../components/ChatMessageTime.vue'
 import ChatMessageSystem from '../../components/ChatMessageSystem.vue'
 import { createSystemMessagePack, createContentJson } from '../../utils/systemMessageUtil.js'
-import { SystemMsgSubType } from '../../utils/constants.js'
+import { SystemMsgSubType, getSystemMsgText } from '../../utils/constants.js'
 import { deleteMessage } from '../../db/dualDB.js'
 
 // 消息分页配置
@@ -451,7 +451,8 @@ const handleChoice = async (item: any, messageId: string, messageContent: string
        * 对方名称
        * 撤回消息Id
        */
-      const content = createContentJson('{name} 撤回了一条消息', myName, userId.value, conversation.value.name, messageId)
+      const tpl = getSystemMsgText(SystemMsgSubType.RECALL, { name: myName })
+      const content = createContentJson(tpl, myName, userId.value, conversation.value.name, messageId)
 
       // receiverId：单聊存对方ID，群聊存群ID
       const receiverId = isGroup ? convId : String(conversation.value.targetId)

@@ -12,3 +12,7 @@ export const updateConversationTopStatusApi = (conversationId, status) => reques
 export const updateConversationMuteStatusApi = (conversationId, status) => request.post('/conversation/updateMuteStatus', {}, {
   params: { conversationId, isMute: status }
 })
+
+export const deleteConversationApi = (conversationId) => request.delete('/conversation/delete', {
+  params: { conversationId }
+})

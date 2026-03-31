@@ -25,6 +25,7 @@ export const SystemMsgSubType = Object.freeze({
 const SystemMsgTemplates = {
     [SystemMsgSubType.RECALL]: "{name} 撤回了一条消息",
     [SystemMsgSubType.FRIEND_ADDED]: "你们已成为好友，现在可以开始聊天了！",
+    [SystemMsgSubType.FRIEND_DELETED]: "你们不在是好友",
     [SystemMsgSubType.FRIEND_BLACKLIST]: "消息已发出，但被对方拒收了",
     [SystemMsgSubType.GROUP_JOINED]: "{name} 加入了群聊",
     [SystemMsgSubType.GROUP_KICKED]: "{name} 被移出了群聊",

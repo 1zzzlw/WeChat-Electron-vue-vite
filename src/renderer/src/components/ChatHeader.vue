@@ -135,20 +135,30 @@
 
 <script lang="ts" setup>
 import { ref, watch, computed } from 'vue';
-import { updateConversationTopStatus, updateConversationMuteStatus, clearHistoryMessageSync } from '../db/syncDB';
+import { updateConversationTopStatus, updateConversationMuteStatus, clearHistoryMessageSync, deleteFriendSync, deleteConversationSync } from '../db/syncDB';
 import { messageInfo } from '../stores/modules/MessageStore';
 import { ElMessage } from 'element-plus';
 import { groupMemberInfo } from '../stores/modules/GroupMemberStores';
 import ContextMenu from '../components/ContextMenu.vue'
 import { groupListInfo } from '../stores/modules/GroupListStores';
+import { friendInfo } from '../stores/modules/ContactListStore';
+import { conversationInfo } from '../stores/modules/ConversationStore';
+import { useRouter } from 'vue-router'
+import { createContentJson, createSystemMessagePack } from '../utils/systemMessageUtil';
+import { getSystemMsgText, SystemMsgSubType } from '../utils/constants'
+import { Message } from '../types/message';
 
 const messageStore = messageInfo()
 const groupMemberStore = groupMemberInfo()
 const groupListStore = groupListInfo()
+const friendStore = friendInfo()
+const conversationStore = conversationInfo()
+const router = useRouter()
 
 // 抽屉状态
 const drawerPrivate = ref(false)
 const drawerGroup = ref(false)
+const username = ref('')
 
 const openDrawer = () => {
     if (props.conversation.type === 0) {
@@ -184,8 +194,37 @@ const clearMessageHistory = () => {
     ElMessage.success('聊天记录清理成功')
 }
 
-const deleteFriend = () => {
+const deleteFriend = async () => {
+    const friendId = props.conversation.targetId
+    const conversationId = props.conversation.id
+    const avatar = props.conversation.avatar
+    // 删除好友关系
+    deleteFriendSync(friendId)
+    // 删除会话关系
+    deleteConversationSync(conversationId)
+    // 缓存中删除该好友
+    friendStore.deleteFriendMap(friendId)
+    // 删除和该好友的会话
+    conversationStore.deleteConversation(conversationId)
+    // 回到原路由
+    router.push({
+        name: 'messageList',
+    })
+    // ws通知
+    const tpl = getSystemMsgText(SystemMsgSubType.FRIEND_DELETED)
+    const content = createContentJson(tpl, username.value, '', '', avatar)
+    const receiverId = friendId
+    const receiverIds = friendId
 
+    // 生成系统消息包并发送
+    const systemMessagePack = await createSystemMessagePack(
+        receiverId,
+        conversationId,
+        SystemMsgSubType.FRIEND_DELETED,
+        content,
+        receiverIds
+    )
+    messageStore.sendSystemMessage(systemMessagePack as Message, conversationId, receiverIds as string[])
 }
 
 const props = defineProps({
@@ -213,6 +252,7 @@ const userInfo = computed(() => groupList.value?.find((item: any) => item.userId
 watch(() => props.conversation.id, async () => {
     drawerPrivate.value = false
     drawerGroup.value = false
+    username.value = await (window as any).userInfoApi.storeGetUserInfo('username')
 }, {
     immediate: true
 })

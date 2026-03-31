@@ -76,6 +76,7 @@ const removeNotification = (targetId) => {
     display: flex;
     flex-direction: column;
     gap: 12px;
+    -webkit-app-region: no-drag;
 }
 
 /* 动画样式移到这里，统一管理 */

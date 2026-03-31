@@ -126,6 +126,10 @@ const table_index = [
   `
     CREATE INDEX IF NOT EXISTS idx_friend_user_status ON friend_relation(user_id, relation_status);
   `,
+  // 好友表的用户id和好友id的联合索引，用于删除好友
+  `
+    CREATE INDEX IF NOT EXISTS idx_user_id_friend_id ON friend_relation(user_id, friend_id);
+  `,
   // 收藏表的用户id索引
   `
     CREATE INDEX IF NOT EXISTS idx_user_id ON favorites(user_id);

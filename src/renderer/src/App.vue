@@ -13,7 +13,7 @@ import { conversationInfo } from './stores/modules/ConversationStore'
 import { friendInfo } from './stores/modules/ContactListStore'
 import { fileStatusListInfo } from './stores/modules/FileStatusInfoStore'
 import { statusMap } from './types/fileBaseInfo'
-import { updateMessage } from './db/dualDB'
+import { updateMessage, deleteConversation, deleteFriend } from './db/dualDB'
 import emitter from '../src/utils/mitt'
 import dayjs from 'dayjs'
 import { updateMessageFileSendStatusApi } from './api/Message'
@@ -21,6 +21,7 @@ import { saveSentMessage, deleteMessage } from './db/dualDB'
 import { SystemMsgSubType, getSystemMsgText } from './utils/constants'
 import FriendOnlineNotify from './components/FriendOnlineNotify.vue'
 import FriendAddNotify from './components/FriendAddNotify.vue'
+import FriendDeleteNotify from './components/FriendDeleteNotify.vue'
 
 function updateMessageStore(data) {
   // 私信类型，将消息存储到状态管理中
@@ -278,11 +279,24 @@ onMounted(async () => {
         break
       case SystemMsgSubType.FRIEND_DELETED:
         // 被对方删除好友，需要拿到对方的id
+        const avatar = content.avatar
+        const name = content.opName
+        // 卡片通知你被该好友删除
+        emitter.emit('addNotification', {
+          component: FriendDeleteNotify,
+          props: {
+            avatar: avatar,
+            name: name,
+          },
+        })
 
-        // 通知你被该好友删除
+        // 缓存中删除和对方的好友关系
+        conversationInfo().deleteConversation(conversationId)
+        friendInfo().deleteFriendMap(senderId)
 
-        // 删除和对方的好友关系
-
+        // 本地删除和对方的好友关系
+        deleteConversation(conversationId)
+        deleteFriend(senderId)
         break
       case SystemMsgSubType.FRIEND_BLACKLIST:
         // 被对方拉黑，需要拿到对方的id

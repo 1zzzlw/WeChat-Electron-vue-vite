@@ -90,5 +90,10 @@ export const conversationInfo = defineStore('conversationMap', {
         this.conversationMap[conversationId].isMute = status
       }
     },
+    deleteConversation(conversationId: string) {
+      if (this.conversationMap[conversationId]) {
+        delete this.conversationMap[conversationId]
+      }
+    }
   }
 })

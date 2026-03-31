@@ -3,7 +3,7 @@ import { store } from '../index'
 import { queryConversation, queryFriend, loadMessage, getFriendInfoById, getConversationInfoById, getImageUrlList, getVideoUrlList, getFavorites } from '../DB/select'
 import { saveSentMessage, saveLoadMessage, addConversation, addFriendRelation, uploadNoteContent, addFavorites } from '../DB/insert'
 import { updateConversation, updateMessage, updateOldNoteContent } from '../DB/update'
-import { clearHistoryMessage, deleteMessage } from '../DB/delete'
+import { clearHistoryMessage, deleteMessage, deleteFriend, deleteConversation } from '../DB/delete'
 
 ipcMain.handle('query:conversation', (e) => {
     const userId = store.get('userId')
@@ -105,4 +105,13 @@ ipcMain.on('clear:historyMessage', (e, conversationId) => {
 ipcMain.on('delete:message', (e, conversationId, messageId) => {
     console.log(`删除会话${conversationId}的消息${messageId}`)
     return deleteMessage(conversationId, messageId)
+})
+
+ipcMain.on('delete:friend', (e, friendId) => {
+    const userId = String(store.get('userId'))
+    return deleteFriend(userId, friendId)
+})
+
+ipcMain.on('delete:conversation', (e, conversationId) => {
+    return deleteConversation(conversationId)
 })

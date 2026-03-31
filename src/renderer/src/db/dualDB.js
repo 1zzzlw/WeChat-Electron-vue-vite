@@ -206,6 +206,14 @@ const deleteMessage = async (conversationId, messageId) => {
     await window.dbApi.deleteMessage(conversationId, messageId)
 }
 
+const deleteFriend = async (friendId) => {
+    await window.dbApi.deleteFriend(friendId)
+}
+
+const deleteConversation = async (conversationId) => {
+    await window.dbApi.deleteConversation(conversationId)
+}
+
 export {
     getConversationList,
     getFriendList,
@@ -225,5 +233,7 @@ export {
     updateOldNoteContent,
     addFavorites,
     clearHistoryMessage,
-    deleteMessage
+    deleteMessage,
+    deleteFriend,
+    deleteConversation
 }
