@@ -14,7 +14,7 @@
                 </template>
             </el-popover>
             <div class="groupAccountInfo">
-                <img :src="groupBaseInfo?.avatar || '/default-group-avatar.png'" alt="群聊头像">
+                <img :src="groupBaseInfo?.avatar + '?t=' + Date.now()" alt="群聊头像">
                 <div class="groupAccountInfo-info">
                     <p>群聊名称: {{ groupBaseInfo?.name }}</p>
                     <span>群聊ID: {{ groupBaseInfo?.id }} </span>

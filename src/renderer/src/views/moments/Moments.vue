@@ -4,7 +4,7 @@
 </template>
 
 <script setup lang="ts">
-import FriendDeleteNotify from '../../components/FriendDeleteNotify.vue';
+import FriendDeleteNotify from '../../components/GroupAddNotify.vue';
 </script>
 
 <style scoped></style>

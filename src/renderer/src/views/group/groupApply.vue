@@ -2,7 +2,7 @@
     <div class="groupApply-count">
         <div class="groupApply-info">
             <div class="info-top">
-                <img :src="groupApplyInfo?.userAvatar" alt="" class="img" />
+                <img :src="groupApplyInfo?.userAvatar + '?t=' + Date.now()" alt="" class="img" />
                 <h1>{{ groupApplyInfo?.groupName || '测试群聊' }}</h1>
             </div>
             <div class="info-mid">
@@ -45,6 +45,10 @@ import { groupMemberInfo } from '../../stores/modules/GroupMemberStores'
 import { addConversation } from '../../db/dualDB'
 import { conversationInfo } from '../../stores/modules/ConversationStore'
 import { dealGroupApplyApi } from '../../api/Apply'
+import { getSystemMsgText, SystemMsgSubType } from '../../utils/constants'
+import { createContentJson, createSystemMessagePack } from '../../utils/systemMessageUtil'
+import { messageInfo } from '../../stores/modules/MessageStore'
+import { Message } from '../../types/message'
 
 const route = useRoute()
 const UserApplyListStore = userApplyListInfo()
@@ -52,6 +56,7 @@ const userApplyStore = userApplyListInfo()
 const groupMemberStore = groupMemberInfo()
 const conversationStore = conversationInfo()
 const isLoading = ref(false)
+const messageStore = messageInfo()
 
 // 同意申请
 const agreeButton = async () => {
@@ -67,12 +72,15 @@ const agreeButton = async () => {
     const groupMemberList: any = await getGroupMemberListApi(groupApplyInfo.value?.conversationId)
 
     const avatarUrlList = groupMemberList.data.map((userInfo: any) => userInfo.avatar)
+    const receiverIds = groupMemberList.data.map((userInfo: any) => userInfo.userId)
     avatarUrlList.push(avatar)
     console.log(avatarUrlList)
 
     // 更新群聊头像
     const groupAvatar = await (window as any).mediaHandleApi.updateGroupAvatar(avatarUrlList)
     const groupAvatarBlob = new Blob([groupAvatar])
+
+    console.log(groupAvatarBlob)
 
     const formData = new FormData()
     formData.append('groupAvatarBlob', groupAvatarBlob)
@@ -87,23 +95,41 @@ const agreeButton = async () => {
         ElMessage.success('入群成功')
         // 更新群聊申请状态
         userApplyStore.updateGroupApplyStatus(groupApplyInfo.value?.userId as string, 2)
-        // 将自己的信息添加到群成员缓存中
-        groupMemberStore.addGroupMember(groupApplyInfo.value?.conversationId as string, {
-            conversationId: groupApplyInfo.value?.conversationId as string,
-            userId: userId,
-            username: username,
-            role: 0,
-            avatar: avatar
-        })
+
+        // 将自己的信息添加到群成员缓存中，不需要这里，因为进入会话时会从服务端拉取
+        // groupMemberStore.addGroupMember(groupApplyInfo.value?.conversationId as string, {
+        //     conversationId: groupApplyInfo.value?.conversationId as string,
+        //     userId: userId,
+        //     username: username,
+        //     role: 0,
+        //     avatar: avatar
+        // })
+
         const conversationPack = conversationRes.data
+
         // 将群聊会话添加到本地数据库
         addConversation(conversationPack)
         // 群会话添加到缓存
         conversationStore.setConversationMap(conversationPack.id, conversationPack)
 
-        // 发送自己入群的系统通知，需要提供部分信息，用于新成员的展示
+        // 发送自己入群的通知，需要提供部分信息，用于新成员的展示
+        const wsGroupMemberPack = {
+            conversationId: groupApplyInfo.value?.conversationId,
+            userId: userId,
+            username: username,
+            avatar: avatar,
+            role: 0,
+            receiverIds: receiverIds
+        };
+        (window as any).wsApi.sendMessage(17, 0, wsGroupMemberPack)
 
+        // 发送入群成功的系统通知
+        const tpl = getSystemMsgText(SystemMsgSubType.GROUP_JOINED, { name: username })
+        const content = createContentJson(tpl, username.value, '', '', '')
 
+        const systemMessagePack = await createSystemMessagePack(conversationPack.id, conversationPack.id, SystemMsgSubType.GROUP_JOINED, content, receiverIds)
+
+        messageStore.sendSystemMessage(systemMessagePack as Message, conversationPack.id, receiverIds as string[])
     } else {
         ElMessage.error('入群失败')
     }

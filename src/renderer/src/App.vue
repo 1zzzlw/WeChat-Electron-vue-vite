@@ -23,6 +23,7 @@ import FriendOnlineNotify from './components/FriendOnlineNotify.vue'
 import FriendAddNotify from './components/FriendAddNotify.vue'
 import FriendDeleteNotify from './components/FriendDeleteNotify.vue'
 import { groupMemberInfo } from './stores/modules/GroupMemberStores'
+import GroupAddNotify from './components/GroupAddNotify.vue'
 
 function updateMessageStore(data) {
   // 私信类型，将消息存储到状态管理中
@@ -144,10 +145,18 @@ onMounted(async () => {
         break
       case 18:
         console.log('接收到群聊申请处理消息', data)
-
-      // 将同意申请的好友信息添加到群聊缓存中
-
-
+        // 将同意申请的好友信息添加到群聊缓存中
+        groupMemberInfo().addGroupMember(data.conversationId, data)
+        // 卡片通知
+        emitter.emit('addNotification', {
+          component: GroupAddNotify,
+          props: {
+            avatar: data.avatar,
+            name: data.username,
+            role: data.role
+          },
+        })
+        break
     }
   })
 
@@ -245,25 +254,23 @@ onMounted(async () => {
     const conversationId = data.conversationId
     const messageType = data.messageType
     const content = JSON.parse(data.content)
-    let messagePack = null
+    const tpl = content.tpl
+    const messagePack = {
+      id: data.id,
+      senderId: senderId,
+      receiverId: receiverId,
+      conversationId: conversationId,
+      subType: messageType,
+      msgType: 99,
+      content: tpl,
+      sendStatus: 1,
+      sendTime: ''
+    }
     switch (subType) {
       case SystemMsgSubType.RECALL:
         // 消息撤回
-        const opName = content.opName
         const messageId = content.operationData
         // 添加系统消息到缓存中
-        messagePack = {
-          // 系统消息id
-          id: data.id,
-          senderId: senderId,
-          receiverId: receiverId,
-          conversationId: conversationId,
-          subType: messageType,
-          msgType: 99,
-          content: getSystemMsgText(SystemMsgSubType.RECALL, { name: opName }),
-          sendStatus: 1,
-          sendTime: ''
-        }
         messageInfo().addMessageMap(conversationId, messagePack)
         // 缓存中删除该消息
         messageInfo().deleteMessage(conversationId, messageId)
@@ -272,17 +279,6 @@ onMounted(async () => {
         break
       case SystemMsgSubType.FRIEND_ADDED:
         // 添加好友成功，将消息添加到缓存中用来实时展示
-        messagePack = {
-          id: data.id,
-          senderId: senderId,
-          receiverId: receiverId,
-          conversationId: conversationId,
-          subType: messageType,
-          msgType: 99,
-          content: getSystemMsgText(SystemMsgSubType.FRIEND_ADDED),
-          sendStatus: 1,
-          sendTime: ''
-        }
         messageInfo().addMessageMap(conversationId, messagePack)
         break
       case SystemMsgSubType.FRIEND_DELETED:
@@ -315,9 +311,7 @@ onMounted(async () => {
         break
       case SystemMsgSubType.GROUP_JOINED:
         // 有成员入群
-
-        // 如果是该群的群主，就展示Notification通知卡片
-
+        messageInfo().addMessageMap(conversationId, messagePack)
         break
       case SystemMsgSubType.GROUP_KICKED:
         // 有成员被踢

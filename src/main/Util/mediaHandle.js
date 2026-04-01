@@ -122,6 +122,7 @@ const updateGroupAvatar = async (avatarUrlList) => {
         // 不存在
         localPath = app.getPath('pictures')
     }
+    console.log('存储位置为', localPath)
     // 根据路径下载用户头像到本地
     const downloadPromises = avatarUrlList.map((url, index) => {
         return new Promise((resolve) => {

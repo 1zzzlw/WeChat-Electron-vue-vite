@@ -22,7 +22,7 @@
                   :class="{ 'left-groupApplyList-bg': activeGroupApply == apply.conversationId }"
                   @click="startGroupApply(apply)">
                   <div class="left-image">
-                    <img :src="apply.userAvatar" alt="头像" class="left-list-img" />
+                    <img :src="apply.userAvatar + '?t=' + Date.now()" alt="头像" class="left-list-img" />
                   </div>
                   <div class="friend-name">{{ apply.groupName }}</div>
                 </div>
@@ -31,7 +31,7 @@
                 <div class="left-list" v-for="(group, index) in groupListArr" :key="index"
                   :class="{ 'left-list-bg': activeGroup == group.id }" @click="startGroupInfo(group)">
                   <div class="left-image">
-                    <img :src="group.avatar" alt="头像" class="left-list-img" />
+                    <img :src="group.avatar + '?t=' + Date.now()" alt="头像" class="left-list-img" />
                   </div>
                   <div class="friend-name">{{ group.name || group.remark }}</div>
                 </div>
