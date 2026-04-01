@@ -214,6 +214,10 @@ const deleteConversation = async (conversationId) => {
     await window.dbApi.deleteConversation(conversationId)
 }
 
+const getNodeCount = async () => {
+    return await window.dbApi.getNodeCount()
+}
+
 export {
     getConversationList,
     getFriendList,
@@ -235,5 +239,6 @@ export {
     clearHistoryMessage,
     deleteMessage,
     deleteFriend,
-    deleteConversation
+    deleteConversation,
+    getNodeCount
 }

@@ -113,6 +113,13 @@ const getFavorites = (userId) => {
     return result
 }
 
+const getNodeCount = (userId) => {
+    const sql = `select count(*) as total from favorites where user_id = ? and type = 0`
+    const params = [userId]
+    const result = queryAll(sql, params)
+    return Number(result?.[0]?.total) || 0
+}
+
 export {
     isExistUserRecord,
     queryConversation,
@@ -122,5 +129,6 @@ export {
     getConversationInfoById,
     getImageUrlList,
     getVideoUrlList,
-    getFavorites
+    getFavorites,
+    getNodeCount
 }

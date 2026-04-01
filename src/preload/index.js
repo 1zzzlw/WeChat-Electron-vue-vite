@@ -103,6 +103,9 @@ const dbApi = {
   },
   deleteConversation: (conversationId) => {
     ipcRenderer.send('delete:conversation', conversationId)
+  },
+  getNodeCount: () => {
+    return ipcRenderer.invoke('query:nodeCount')
   }
 }
 

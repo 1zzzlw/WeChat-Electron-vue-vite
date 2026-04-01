@@ -114,8 +114,6 @@ const createGroup = async () => {
     ElMessage.success('创建群聊成功')
     const conversationInfo: Conversation = result.data
 
-    console.log(conversationInfo)
-
     // 跨组间通信，实时更新会话列表
     conversationStore.setConversationMap(conversationInfo.id, conversationInfo)
     // 将创建的群会话列表存入本地

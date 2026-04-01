@@ -94,16 +94,7 @@ const agreeButton = async () => {
     if (conversationRes.code === 1) {
         ElMessage.success('入群成功')
         // 更新群聊申请状态
-        userApplyStore.updateGroupApplyStatus(groupApplyInfo.value?.userId as string, 2)
-
-        // 将自己的信息添加到群成员缓存中，不需要这里，因为进入会话时会从服务端拉取
-        // groupMemberStore.addGroupMember(groupApplyInfo.value?.conversationId as string, {
-        //     conversationId: groupApplyInfo.value?.conversationId as string,
-        //     userId: userId,
-        //     username: username,
-        //     role: 0,
-        //     avatar: avatar
-        // })
+        userApplyStore.updateGroupApplyStatus(groupApplyInfo.value?.id as string, 2)
 
         const conversationPack = conversationRes.data
 

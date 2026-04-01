@@ -94,6 +94,10 @@ export const conversationInfo = defineStore('conversationMap', {
       if (this.conversationMap[conversationId]) {
         delete this.conversationMap[conversationId]
       }
+    },
+    // 获得群聊数量
+    getGroupConversationCount() {
+      return this.getGroupConversationList().length
     }
   }
 })

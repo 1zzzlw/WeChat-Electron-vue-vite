@@ -112,6 +112,10 @@ export const friendInfo = defineStore('friendListInfo', {
         console.log('删除成功')
         delete this.friendInfoMap[friendId]
       }
+    },
+    // 获得好友数量
+    getFriendCount() {
+      return Object.keys(this.friendInfoMap).length;
     }
   }
 })

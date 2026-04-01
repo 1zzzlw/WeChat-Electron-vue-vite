@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron'
 import { store } from '../index'
-import { queryConversation, queryFriend, loadMessage, getFriendInfoById, getConversationInfoById, getImageUrlList, getVideoUrlList, getFavorites } from '../DB/select'
+import { queryConversation, queryFriend, loadMessage, getFriendInfoById, getConversationInfoById, getImageUrlList, getVideoUrlList, getFavorites, getNodeCount } from '../DB/select'
 import { saveSentMessage, saveLoadMessage, addConversation, addFriendRelation, uploadNoteContent, addFavorites } from '../DB/insert'
 import { updateConversation, updateMessage, updateOldNoteContent } from '../DB/update'
 import { clearHistoryMessage, deleteMessage, deleteFriend, deleteConversation } from '../DB/delete'
@@ -114,4 +114,9 @@ ipcMain.on('delete:friend', (e, friendId) => {
 
 ipcMain.on('delete:conversation', (e, conversationId) => {
     return deleteConversation(conversationId)
+})
+
+ipcMain.handle('query:nodeCount', () => {
+    const userId = String(store.get('userId'))
+    return getNodeCount(userId)
 })

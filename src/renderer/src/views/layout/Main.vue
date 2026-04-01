@@ -2,7 +2,9 @@
   <div class="main-count">
     <div class="main-count-left">
       <div class="main-count-left-top">
-        <el-popover popper-style="width: 400px; height: 300px; padding: 0;" show-after="500">
+        <el-popover trigger="click" transition="user-card-pop" popper-class="user-card-popover"
+          popper-style="width: 400px; height: 300px; padding: 0;" effect="dark" show-after="300" hide-after="150"
+          placement="bottom" :offset="10" :persistent="false">
           <UserInfoCart />
           <template #reference>
             <img :src="avatarUrl" alt="头像" class="main-count-left-top-img" />
@@ -111,10 +113,11 @@ onMounted(async () => {
   transition: all 0.3s ease;
   cursor: pointer;
   border: 1px solid rgba(179, 200, 255, 0.3);
+  will-change: transform, box-shadow, border-color, opacity;
 }
 
 .main-count-left-top-img:hover {
-  opacity: 0.8;
+  opacity: 0.9;
   box-shadow: 0 0 15px rgba(179, 200, 255, 0.8),
     0 0 30px rgba(120, 140, 255, 0.6);
   transform: scale(1.05);
@@ -142,9 +145,80 @@ onMounted(async () => {
   color: rgba(66, 153, 225, 0.9);
   transform: scale(1.08);
   text-shadow: 0 0 8px rgba(66, 153, 225, 0.4);
+  background: rgba(66, 153, 225, 0.1);
 }
 
 .main-count-right {
   flex: 1;
+}
+
+/* 核心动画优化 - 更优雅的缓动+分层过渡 */
+:global(.user-card-pop-enter-active) {
+  transition:
+    transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+    opacity 0.25s ease,
+    box-shadow 0.3s ease;
+}
+
+:global(.user-card-pop-leave-active) {
+  transition:
+    transform 0.2s cubic-bezier(0.6, -0.28, 0.735, 0.045),
+    opacity 0.2s ease,
+    box-shadow 0.2s ease;
+  will-change: transform, opacity, filter, box-shadow;
+}
+
+/* 入场起始态：更细腻的缩放+位移+透明度 */
+:global(.user-card-pop-enter-from) {
+  opacity: 0;
+  transform: translateY(8px) scale(0.96);
+  filter: blur(2px);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  will-change: transform, opacity, filter, box-shadow;
+}
+
+/* 入场结束态 */
+:global(.user-card-pop-enter-to) {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  filter: blur(0);
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.25);
+  transform: translateY(-2px) scale(1);
+}
+
+/* 离场结束态 */
+:global(.user-card-pop-leave-to) {
+  opacity: 0;
+  transform: translateY(4px) scale(0.98);
+  filter: blur(1px);
+}
+
+/* 优化popover容器样式，贴合整体界面风格 */
+:global(.user-card-popover) {
+  background: rgba(20, 24, 32, 0.65) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.3) !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  /* 【优化8】增加轻微的边框发光，贴合头像的光效风格 */
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.3), 0 0 15px rgba(66, 153, 225, 0.1) !important;
+}
+
+/* 优化掉小箭头 */
+:global(.user-card-popover .el-popper__arrow::before) {
+  background: rgba(20, 24, 32, 0.65) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  /* 【优化9】给箭头增加轻微模糊，和容器风格统一 */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* 增加popover的hover效果，强化交互 */
+:global(.user-card-popover:hover) {
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.35), 0 0 20px rgba(66, 153, 225, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  transition: all 0.3s ease;
 }
 </style>
