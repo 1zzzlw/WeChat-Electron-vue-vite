@@ -16,3 +16,7 @@ export const updateConversationMuteStatusApi = (conversationId, status) => reque
 export const deleteConversationApi = (conversationId) => request.delete('/conversation/delete', {
   params: { conversationId }
 })
+
+export const GroupNumberExitApi = (conversationId) => request.delete('/conversation/exitGroup', {
+  params: { conversationId }
+})

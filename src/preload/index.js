@@ -190,8 +190,8 @@ const chatToolApi = {
     ipcRenderer.send('window:close-capture')
   },
   sendImageToMain: (func) => {
-    ipcRenderer.on('capture:image', (event, savePath) => {
-      func(savePath)
+    ipcRenderer.once('capture:image', (event, fileInfo) => {
+      func(fileInfo)
     })
   },
   copyFile: (content, remoteUrl, msgType, fileName) => {

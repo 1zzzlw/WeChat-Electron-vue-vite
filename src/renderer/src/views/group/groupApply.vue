@@ -17,8 +17,6 @@
                         <span class="value">{{ '欢迎加入本群聊！' }}</span>
                     </div>
                     <div class="detail-item">
-                        <span class="label">成员总数：</span>
-                        <span class="value">{{ 15 }}人</span>
                     </div>
                 </div>
             </div>
@@ -116,7 +114,7 @@ const agreeButton = async () => {
 
         // 发送入群成功的系统通知
         const tpl = getSystemMsgText(SystemMsgSubType.GROUP_JOINED, { name: username })
-        const content = createContentJson(tpl, username.value, '', '', '')
+        const content = createContentJson(tpl, username, '', '', '')
 
         const systemMessagePack = await createSystemMessagePack(conversationPack.id, conversationPack.id, SystemMsgSubType.GROUP_JOINED, content, receiverIds)
 

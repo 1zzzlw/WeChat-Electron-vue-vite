@@ -1,6 +1,7 @@
 import { ipcMain, globalShortcut, app, clipboard, nativeImage } from "electron"
 import { mainWindow } from '../index'
 import { createExtraWindow, windowPool } from "../Util/createNewWindow"
+const crypto = require('crypto')
 const path = require('path')
 const fs = require('fs');
 
@@ -36,8 +37,50 @@ ipcMain.on('window:save-capture', (e, uint8Array) => {
     windowPool.delete('capture')
     captureWindow.close()
 
+    // 获取文件信息
+    const stats = fs.statSync(savePath);
+    const fileId = crypto.randomUUID(); // 生成唯一文件ID
+
+    // 生成base64预览（可以适当缩小尺寸以减少数据量）
+    let base64Preview = '';
+    try {
+        // 创建缩略图用于预览（原图可能太大）
+        const previewImage = nativeImage.createFromBuffer(buffer);
+        // 缩放到合适大小，例如最大宽度300px
+        const { width, height } = previewImage.getSize();
+        const maxWidth = 300;
+        let resizeWidth = width;
+        let resizeHeight = height;
+
+        if (width > maxWidth) {
+            resizeWidth = maxWidth;
+            resizeHeight = Math.round((height * maxWidth) / width);
+            const resizedImage = previewImage.resize({ width: resizeWidth, height: resizeHeight });
+            base64Preview = resizedImage.toDataURL();
+        } else {
+            base64Preview = previewImage.toDataURL();
+        }
+    } catch (error) {
+        console.error('生成base64预览失败:', error);
+        // 如果生成失败，使用一个占位符
+        base64Preview = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+    }
+
+    windowPool.delete('capture')
+    captureWindow.close()
+
     if (mainWindow) {
-        mainWindow.webContents.send('capture:image', savePath)
+        // 发送完整的文件信息对象
+        mainWindow.webContents.send('capture:image', {
+            fileId,           // 唯一文件ID
+            fileName,         // 文件名，如 "screenshot_1700000000000.png"
+            fileSize: stats.size, // 文件大小（字节）
+            fileType: 'image/png', // 文件类型
+            content: '',      // 文本内容为空
+            base64: base64Preview, // base64预览图
+            localPath: savePath, // 本地保存路径
+            remotePath: '',   // 远程路径（上传后填充）
+        })
     }
 })
 

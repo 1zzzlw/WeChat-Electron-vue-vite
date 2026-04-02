@@ -24,6 +24,8 @@ import FriendAddNotify from './components/FriendAddNotify.vue'
 import FriendDeleteNotify from './components/FriendDeleteNotify.vue'
 import { groupMemberInfo } from './stores/modules/GroupMemberStores'
 import GroupAddNotify from './components/GroupAddNotify.vue'
+import GroupExitNotify from './components/GroupExitNotify.vue'
+import GroupDissolveNotify from './components/GroupDissolveNotify.vue'
 
 function updateMessageStore(data) {
   // 私信类型，将消息存储到状态管理中
@@ -321,15 +323,38 @@ onMounted(async () => {
         break
       case SystemMsgSubType.GROUP_LEAVED:
         // 有成员离开
+        messageInfo().addMessageMap(conversationId, messagePack)
+        // 展示Notification通知卡片
+        const avatarMember = content.operationData
+        const nameMember = content.opName
+        const groupName = content.targetName
 
-        // 如果是该群的群主，就展示Notification通知卡片
-
+        emitter.emit('addNotification', {
+          component: GroupExitNotify,
+          props: {
+            avatar: avatarMember,
+            name: nameMember,
+            groupName: groupName
+          },
+        })
         break
       case SystemMsgSubType.GROUP_DISBANDED:
         // 有群聊被群主解散
+        messageInfo().addMessageMap(conversationId, messagePack)
+
+        // 缓存中删除该会话信息
+        conversationInfo().deleteConversation(conversationId)
+        // 本地删除该会话信息
+        deleteConversation(conversationId)
 
         // 展示Notification通知卡片，该群聊被解散
-
+        emitter.emit('addNotification', {
+          component: GroupDissolveNotify,
+          props: {
+            groupAvatar: content.operationData,
+            groupName: content.targetName
+          },
+        })
         break
     }
   }

@@ -146,6 +146,7 @@ import { useRouter } from 'vue-router'
 import { createContentJson, createSystemMessagePack } from '../utils/systemMessageUtil';
 import { getSystemMsgText, SystemMsgSubType } from '../utils/constants'
 import { Message } from '../types/message';
+import { GroupNumberExitApi } from '../api/Conversation'
 
 const messageStore = messageInfo()
 const groupMemberStore = groupMemberInfo()
@@ -177,21 +178,44 @@ const changeMuteStatus = () => {
     updateConversationMuteStatus(props.conversation.id, props.conversation.userId, props.conversation.isMute)
 }
 
-const exitGroup = () => {
+const exitGroup = async () => {
+    // 回到原路由
+    router.push({
+        name: 'messageList',
+    })
     // 服务端和本地删除该群成员的群聊会话
-
+    const conversationId = props.conversation.id
+    deleteConversationSync(conversationId)
+    // 服务端删除该会话的群成员
+    GroupNumberExitApi(conversationId)
     // 缓存删除该会话
+    conversationStore.deleteConversation(conversationId)
+    // ws通知所有的群成员更新一下群会话
+    const tpl = getSystemMsgText(SystemMsgSubType.GROUP_LEAVED, { name: username.value })
+    const content = createContentJson(tpl, username.value, conversationId, props.conversation.name, avatar.value)
 
-    // ws通知所有的群成员更新一下群会话，如果是群主，则提供卡片通知
+    const systemMessagePack = await createSystemMessagePack(conversationId, conversationId, SystemMsgSubType.GROUP_LEAVED, content, receiverIds.value)
 
+    messageStore.sendSystemMessage(systemMessagePack as Message, conversationId, receiverIds.value as string[])
 }
 
-const dismissGroup = () => {
+const dismissGroup = async () => {
+    // 回到原路由
+    router.push({
+        name: 'messageList',
+    })
     // 本地和服务端数据库删除该会话
-
+    const conversationId = props.conversation.id
+    deleteConversationSync(conversationId)
     // 缓存中删除该会话
-
+    conversationStore.deleteConversation(conversationId)
     // 发送ws通知所有群成员删除该会话
+    const tpl = getSystemMsgText(SystemMsgSubType.GROUP_DISBANDED, { name: username.value })
+    const content = createContentJson(tpl, username.value, conversationId, props.conversation.name, props.conversation.avatar)
+
+    const systemMessagePack = await createSystemMessagePack(conversationId, conversationId, SystemMsgSubType.GROUP_DISBANDED, content, receiverIds.value)
+
+    messageStore.sendSystemMessage(systemMessagePack as Message, conversationId, receiverIds.value as string[])
 }
 
 const handleChoice = (item: any) => {
@@ -264,6 +288,13 @@ const groupList = computed(() => {
             return 0;
         }).slice(0, 5)
     }
+    return []
+})
+
+const receiverIds = computed(() => {
+    // 1. 访问计算属性的值：groupList.value
+    // 2. 正确的类型断言和map语法
+    return groupList.value.map((member: any) => member.id);
 })
 
 const userInfo = computed(() => groupList.value?.find((item: any) => item.userId === props.conversation.userId))

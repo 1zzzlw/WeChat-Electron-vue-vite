@@ -81,13 +81,7 @@
         </template>
       </el-popover>
       <el-button :icon="Folder" size="large" square @click="selectFile"></el-button>
-      <el-popover placement="top" :disabled="captureImageUrl === ''"
-        popper-style="display: flex; margin: 0; padding: 0; justify-content: center; align-items: center;">
-        <el-image :src="captureImageUrl" fit="contain" style="width: 150px; height: 150px" />
-        <template #reference>
-          <el-button :icon="Scissor" size="large" square @click="captureBtn"></el-button>
-        </template>
-      </el-popover>
+      <el-button :icon="Scissor" size="large" square @click="captureBtn"></el-button>
       <el-button :icon="VideoCamera" size="large" square></el-button>
     </div>
     <form class="chat-input">
@@ -149,7 +143,6 @@ interface SendConfig {
 }
 
 const fileUrl = ref('')
-const captureImageUrl = ref('')
 let conversation = ref<Conversation>(initConversation())
 const route = useRoute()
 const message = ref('')
@@ -205,8 +198,26 @@ const captureBtn = () => {
   console.info('截图按钮点击事件');
   (window as any).chatToolApi.openCapture();
 
-  (window as any).chatToolApi.sendImageToMain((savePath: any) => {
-    captureImageUrl.value = savePath
+  (window as any).chatToolApi.sendImageToMain((fileInfo: any) => {
+    // 检查文件数量限制
+    if (fileInfoList.value.length >= 3) {
+      ElMessage.error('最多3个文件')
+      return
+    }
+
+    // 添加到文件预览列表
+    fileInfoList.value.push({
+      base64: fileInfo.base64,           // 预览用的base64
+      fileId: fileInfo.fileId,           // 唯一文件ID
+      fileName: fileInfo.fileName,       // 文件名，如"screenshot_20240101.png"
+      fileSize: fileInfo.fileSize,       // 文件大小（字节）
+      fileType: 2,       // 文件类型，如"image/png"
+      content: fileInfo.content || '[照片]',   // 可选内容
+      localPath: fileInfo.localPath,     // 本地保存路径
+      remotePath: '',                    // 远程路径（上传后填充）
+    })
+
+    ElMessage.success('截屏已添加到文件列表')
   })
 }
 
@@ -302,7 +313,6 @@ const sendApi = (messagePack: Message) => {
     // 清空文件预览列表
     fileUrl.value = ''
     // 清空截图
-    captureImageUrl.value = ''
     if (res.data) {
       const message = res.data
       console.log(message)

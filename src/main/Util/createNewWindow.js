@@ -1,7 +1,8 @@
-import { BrowserWindow, shell } from 'electron'
+import { BrowserWindow, shell, app } from 'electron'
 import { join } from 'path'
 import icon from '../../../resources/icon.png?asset'
 import { is } from '@electron-toolkit/utils'
+import { mainWindow } from '../index'
 
 // 管理窗口的集合
 const windowPool = new Map()
@@ -54,7 +55,7 @@ function createExtraWindow(windowType, options = {}, loadType = 'vue', data) {
         // 使窗口背景透明（窗口区域会显示桌面或下层窗口的内容）
         // transparent: true,
         // 设置父窗口
-        // parent: mainWindow,
+        backgroundColor: '#00000000',
         ...(process.platform === 'linux' ? { icon } : {}),
         webPreferences: {
             // 关闭网页安全限制（允许加载本地文件）

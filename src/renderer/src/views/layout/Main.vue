@@ -145,7 +145,6 @@ onMounted(async () => {
   color: rgba(66, 153, 225, 0.9);
   transform: scale(1.08);
   text-shadow: 0 0 8px rgba(66, 153, 225, 0.4);
-  background: rgba(66, 153, 225, 0.1);
 }
 
 .main-count-right {
