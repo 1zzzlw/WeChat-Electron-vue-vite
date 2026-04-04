@@ -1,9 +1,9 @@
 import { store, mainWindow } from './index'
-import { app, Notification } from 'electron'
+import { app, Notification, nativeImage } from 'electron'
 import { saveSentMessage, addConversation, addFriendRelation } from './DB/insert'
 import { deleteMessage } from './DB/delete'
 import { updateConversation } from './DB/update'
-import icon from '../../resources/icon.png?asset'
+import { join } from 'path'
 
 class WebSocketManager {
     constructor() {
@@ -45,7 +45,7 @@ class WebSocketManager {
 
     // 创建连接请求
     createWebSocket(token) {
-        this.ws.websocket = new WebSocket(`ws://localhost:80/ws?token=${token}`)
+        this.ws.websocket = new WebSocket(`ws://47.111.22.183:80/ws?token=${token}`)
 
         // ws的状态为正在连接
         this.ws.status = WebSocket.CONNECTING
@@ -278,8 +278,13 @@ class WebSocketManager {
                 this.ws.websocket = null
             }
 
+            // 动态获取 icon 路径
+            const iconPath = app.isPackaged
+                ? join(process.resourcesPath, 'icon.png')
+                : join(__dirname, '../../resources/icon.png')
+
             const notification = new Notification({
-                icon: icon,
+                icon: iconPath,
                 title: '连接已断开',
                 body: '无法连接服务器，应用将自动关闭',
                 silent: false

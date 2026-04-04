@@ -1,22 +1,37 @@
-appId: com.electron.app
+appId: com.easychat.im
 productName: zzz-im-web
+copyright: Copyright @ 个人项目 2025
 directories:
   buildResources: build
+  output: dist
 files:
+  - out/**/*
+  - package.json
   - '!**/.vscode/*'
   - '!src/*'
   - '!electron.vite.config.{js,ts,mjs,cjs}'
   - '!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
   - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
+extraResources:
+  - from: out/main/File
+    to: File
+    filter:
+      - '**/*'
+  - from: resources/icon.png
+    to: icon.png
 asarUnpack:
   - resources/**
 win:
+  target: nsis
+  icon: build/favicon.ico
   executableName: zzz-im-web
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}
   createDesktopShortcut: always
+  installerIcon: build/favicon.ico
+  uninstallerIcon: build/favicon.ico
 mac:
   entitlementsInherit: build/entitlements.mac.plist
   extendInfo:

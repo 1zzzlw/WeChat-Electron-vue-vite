@@ -8,7 +8,23 @@ export default defineConfig({
       externalizeDepsPlugin({
         exclude: ['electron-store'] // 排除 electron-store，把它打包进主进程
       })
-    ]
+    ],
+    build: {
+      rollupOptions: {
+        input: {
+          index: join(__dirname, 'src/main/index.js'),
+          worker: join(__dirname, 'src/main/File/worker.js')
+        },
+        output: {
+          entryFileNames: (chunkInfo) => {
+            if (chunkInfo.name === 'worker') {
+              return 'File/[name].js'
+            }
+            return '[name].js'
+          }
+        }
+      }
+    }
   },
   preload: {
     plugins: [externalizeDepsPlugin()]
@@ -26,7 +42,7 @@ export default defineConfig({
     server: {
       proxy: {
         '/api': {
-          target: 'http://localhost:81',
+          target: 'http://47.111.22.183:81',
           // 设置为 false 表示代理请求使用 HTTP 协议，true 则使用 HTTPS 协议
           secure: false,
           // 设置为 true 可以解决因跨域时 Origin 不一致导致的访问被拒绝问题
@@ -43,7 +59,7 @@ export default defineConfig({
           "style-src 'self' 'unsafe-inline'; " +
           "img-src 'self' data: blob: file: *; " +
           "media-src 'self' blob: data: file: *; " +
-          "connect-src 'self' ws://localhost:80; http://localhost:81;"
+          "connect-src 'self' ws://localhost:80 ws://zzz.im.com:80 http://localhost:81 http://zzz.im.com:81 http://47.111.22.183:9000;"
       }
     }
   }

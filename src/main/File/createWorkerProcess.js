@@ -1,4 +1,4 @@
-import { THREAD_NUMBER, pool } from "./poolConfig"
+import { THREAD_NUMBER, pool } from "./poolConfig.js"
 import fs from 'fs'
 
 const CHUNK_SIZE = 1024 * 1024 * 5

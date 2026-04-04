@@ -38,7 +38,6 @@ function updateMessageStore(data) {
     // 此时用户不在和对方聊天，未读消息数增涨
     conversationInfo().addUnreadCount(data.conversationId)
     // 不需要添加缓存信息到pinia中，只有当用户在当前会话窗口时才需要添加信息到pinia中
-    return
   }
   messageInfo().addMessageMap(data.conversationId, data)
 }

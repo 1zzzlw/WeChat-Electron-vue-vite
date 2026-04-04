@@ -1,6 +1,6 @@
-const crypto = require('crypto');
+import crypto from 'crypto'
 
-const computedFileChunkHash = (data) => {
+export const computedFileChunkHash = (data) => {
     const { fileId, currentFileIndex, arrayBuffer, chunkCount } = data
 
     const buffer = Buffer.from(arrayBuffer);
@@ -15,8 +15,4 @@ const computedFileChunkHash = (data) => {
         chunkHash,
         blob
     }
-}
-
-module.exports = {
-    computedFileChunkHash
 }

@@ -87,7 +87,8 @@ const generatePath = (fileName) => {
     // 获得当前时间
     const currentTime = dayjs().format('YYYY-MM-DD')
     // 获得存储文件路径
-    const savePath = store.get('storeLocation') + '\\' + currentTime
+    const basePath = store.get('storeLocation') || app.getPath('downloads')
+    const savePath = path.join(basePath, currentTime)
     // 根据当前日期创建文件夹
     fs.mkdir(savePath, { recursive: true })
     const filePath = savePath + '\\' + fileName
@@ -100,12 +101,11 @@ const generatePath = (fileName) => {
 const generateGroupAvatar = async () => {
     // 获得当前登录用户的头像路径
     const avatarPath = store.get('avatar')
-    const localPath = store.get('storeLocation')
-    if (localPath === undefined) {
-        // 不存在
+    let localPath = store.get('storeLocation')
+    if (!localPath) {
         localPath = app.getPath('pictures')
     }
-    const groupTempAvatar = localPath + '/temp.png'
+    const groupTempAvatar = path.join(localPath, 'temp.png')
     const cmd = pathToFfmpeg + ` -f lavfi -i color=white:size=201x201 -i "${avatarPath}" -filter_complex [1:v]scale=67:67[a];[0:v][a]overlay=0:0 -frames:v 1 -y "${groupTempAvatar}"`
     await execCommand(cmd)
     const buffer = await fs.readFile(groupTempAvatar)
@@ -126,7 +126,7 @@ const updateGroupAvatar = async (avatarUrlList) => {
     // 根据路径下载用户头像到本地
     const downloadPromises = avatarUrlList.map((url, index) => {
         return new Promise((resolve) => {
-            const destPath = localPath + `/${index}.png`
+            const destPath = path.join(localPath, `${index}.png`)
             http.get(url, (res) => {
                 const stream = createWriteStream(destPath)
                 res.pipe(stream)
@@ -168,7 +168,7 @@ const updateGroupAvatar = async (avatarUrlList) => {
         }
     }
 
-    const outputPath = localPath + '/group_avatar.png'
+    const outputPath = path.join(localPath, '/group_avatar.png')
     const cmd = pathToFfmpeg + ` -f lavfi -i color=white:size=201x201 ${inputFiles} -filter_complex "${scaleFilters}${gridFilter}" -frames:v 1 -y "${outputPath}"`
 
     await execCommand(cmd)

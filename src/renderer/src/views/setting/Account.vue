@@ -57,15 +57,15 @@
 import { onMounted, ref } from 'vue'
 
 const avatarUrl = ref('')
-const imagePath = ref('/wallpaper/1.jpg')
+const imagePath = ref(new URL('/wallpaper/1.jpg', import.meta.url).href)
 
 const imageList = ref([
-  '/wallpaper/1.jpg',
-  '/wallpaper/2.jpg',
-  '/wallpaper/3.jpg',
-  '/wallpaper/4.jpg',
-  '/wallpaper/5.jpg',
-  '/wallpaper/6.jpg',
+  new URL('/wallpaper/1.jpg', import.meta.url).href,
+  new URL('/wallpaper/2.jpg', import.meta.url).href,
+  new URL('/wallpaper/3.jpg', import.meta.url).href,
+  new URL('/wallpaper/4.jpg', import.meta.url).href,
+  new URL('/wallpaper/5.jpg', import.meta.url).href,
+  new URL('/wallpaper/6.jpg', import.meta.url).href,
 ])
 
 const account = ref()

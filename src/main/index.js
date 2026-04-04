@@ -5,11 +5,11 @@ import {
   Tray,
   Menu,
   globalShortcut,
-  Notification
+  Notification,
+  nativeImage
 } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import icon from '../../resources/icon.png?asset'
 import Store from 'electron-store'
 import './IPC/userInfoStoreIPC.js'
 import './IPC/windowToolIPC.js'
@@ -39,9 +39,14 @@ const login_height = 370
 app.setAppUserModelId('com.easychat.im')
 
 function createMainWindow() {
+  // 动态获取 icon 路径
+  const iconPath = app.isPackaged
+    ? join(process.resourcesPath, 'icon.png')
+    : join(__dirname, '../../resources/icon.png')
+
   // Create the browser window.
   mainWindow = new BrowserWindow({
-    icon: icon,
+    icon: iconPath,
     width: login_width,
     height: login_height,
     minWidth: login_width,
@@ -60,7 +65,7 @@ function createMainWindow() {
     // transparent: true,
     backgroundColor: '#00000000',
     opacity: 0.98,
-    ...(process.platform === 'linux' ? { icon } : {}),
+    ...(process.platform === 'linux' ? { icon: iconPath } : {}),
     webPreferences: {
       // 关闭网页安全限制（允许加载本地文件）
       webSecurity: false,
@@ -77,6 +82,15 @@ function createMainWindow() {
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
     mainWindow.setTitle('EasyChat')
+    
+    // 修改请求头，绕过 CORS
+    const { session } = mainWindow.webContents
+    session.webRequest.onBeforeSendHeaders((details, callback) => {
+      // 添加或修改请求头
+      details.requestHeaders['Origin'] = 'http://localhost:5173'
+      details.requestHeaders['Referer'] = 'http://localhost:5173/'
+      callback({ requestHeaders: details.requestHeaders })
+    })
   })
 
   // 禁用右键事件
@@ -117,8 +131,14 @@ function createTray() {
     }
   ]
   const menu = Menu.buildFromTemplate(template)
+
+  // 动态获取 icon 路径
+  const iconPath = app.isPackaged
+    ? join(process.resourcesPath, 'icon.png')
+    : join(__dirname, '../../resources/icon.png')
+
   // 创建托盘并设置图标
-  tray = new Tray(icon)
+  tray = new Tray(nativeImage.createFromPath(iconPath))
   tray.setToolTip('IM 客户端')
   tray.setContextMenu(menu)
 
@@ -147,6 +167,21 @@ app.whenReady().then(() => {
   createMainWindow()
 
   createTray()
+
+  // 注册全局快捷键打开开发者工具（F12 或 Ctrl+Shift+I）
+  globalShortcut.register('F12', () => {
+    const focusedWindow = BrowserWindow.getFocusedWindow()
+    if (focusedWindow) {
+      focusedWindow.webContents.toggleDevTools()
+    }
+  })
+  
+  globalShortcut.register('CommandOrControl+Shift+I', () => {
+    const focusedWindow = BrowserWindow.getFocusedWindow()
+    if (focusedWindow) {
+      focusedWindow.webContents.toggleDevTools()
+    }
+  })
 
   app.on('activate', function () {
     // 在 macOS 系统上，当点击程序坞图标且没有其他窗口打开时，在应用中重新创建一个窗口是很常见的做法。

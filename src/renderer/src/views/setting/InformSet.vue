@@ -193,11 +193,6 @@ onMounted(async () => {
   // const savedSettings = await ipcRenderer.invoke('get-notification-settings')
   // Object.assign(settings, savedSettings)
 })
-
-// 监听设置变化并保存
-// watch(() => settings, async (newSettings) => {
-//   await ipcRenderer.invoke('save-notification-settings', newSettings)
-// }, { deep: true })
 </script>
 
 <style scoped>

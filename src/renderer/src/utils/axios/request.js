@@ -2,8 +2,12 @@ import axios from 'axios'
 import { getAccessToken } from './token'
 import { refreshToken, isRefreshToken } from './refreshToken'
 
+const baseURL = import.meta.env.DEV
+  ? '/api'
+  : 'http://47.111.22.183:81'
+
 const server = axios.create({
-  baseURL: '/api',
+  baseURL: baseURL,
   headers: {
     Authorization: `${getAccessToken()}`
   },

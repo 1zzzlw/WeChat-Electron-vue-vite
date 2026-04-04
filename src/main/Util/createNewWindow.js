@@ -1,7 +1,7 @@
-import { BrowserWindow, shell, app } from 'electron'
+import { BrowserWindow, shell, app, nativeImage } from 'electron'
 import { join } from 'path'
-import icon from '../../../resources/icon.png?asset'
 import { is } from '@electron-toolkit/utils'
+import { pathToFileURL } from 'url'
 import { mainWindow } from '../index'
 
 // 管理窗口的集合
@@ -42,8 +42,14 @@ function createExtraWindow(windowType, options = {}, loadType = 'vue', data) {
         console.log('该窗口已存在')
         return
     }
+
+    // 动态获取 icon 路径
+    const iconPath = app.isPackaged
+        ? join(process.resourcesPath, 'icon.png')
+        : join(__dirname, '../../../resources/icon.png')
+
     const defaultOptions = {
-        icon: icon,
+        icon: iconPath,
         // 窗口创建后默认不显示
         show: false,
         // 固定窗口大小
@@ -56,7 +62,7 @@ function createExtraWindow(windowType, options = {}, loadType = 'vue', data) {
         // transparent: true,
         // 设置父窗口
         backgroundColor: '#00000000',
-        ...(process.platform === 'linux' ? { icon } : {}),
+        ...(process.platform === 'linux' ? { icon: iconPath } : {}),
         webPreferences: {
             // 关闭网页安全限制（允许加载本地文件）
             webSecurity: false,
@@ -140,9 +146,13 @@ function getWindowLoadConfig(windowType, loadType = 'vue') {
             throw new Error(`Unknown standalone window type: ${windowType}`)
         }
 
+        // const filePath = isDev
+        //     ? `public/${fileName}`  // 开发环境路径
+        //     : `out/renderer/${fileName}`  // 生产环境路径
+
         const filePath = isDev
-            ? `public/${fileName}`  // 开发环境路径
-            : `out/renderer/${fileName}`  // 生产环境路径
+            ? join(process.cwd(), 'public', fileName)
+            : join(app.getAppPath(), 'out', 'renderer', fileName)
 
         return {
             method: 'loadFile',
@@ -169,7 +179,7 @@ function getWindowLoadConfig(windowType, loadType = 'vue') {
         } else {
             // 生产环境：加载本地文件 + hash 路由
             const htmlPath = join(__dirname, '../renderer/index.html')
-            const loadUrl = `file://${htmlPath}#${routePath}`
+            const loadUrl = `${pathToFileURL(htmlPath).toString()}#${routePath}`
             return {
                 method: 'loadURL',
                 path: loadUrl,

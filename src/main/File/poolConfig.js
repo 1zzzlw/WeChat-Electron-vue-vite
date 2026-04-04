@@ -1,11 +1,16 @@
 import path from 'path'
+import { app } from 'electron'
 import Piscina from 'piscina'
 import os from 'os'
 
 const THREAD_NUMBER = os.cpus().length
 
+const workerPath = app.isPackaged
+    ? path.join(process.resourcesPath, 'File', 'worker.js')
+    : path.join(process.cwd(), 'src', 'main', 'File', 'worker.js')
+
 const pool = new Piscina({
-    filename: path.join(process.cwd(), 'src/main/File/worker.js'),
+    filename: workerPath,
     minThreads: Math.max(1, Math.floor(THREAD_NUMBER)),
     maxThreads: os.cpus().length,
 

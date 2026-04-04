@@ -3,7 +3,7 @@ import { store } from "../index";
 
 const server = axios.create(
     {
-        baseURL: 'http://localhost:81',
+        baseURL: 'http://47.111.22.183:81',
         // 超时时间
         timeout: 600000
     }
