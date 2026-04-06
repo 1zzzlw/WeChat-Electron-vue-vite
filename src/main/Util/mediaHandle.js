@@ -1,13 +1,22 @@
 import dayjs from 'dayjs'
 import fs from 'fs/promises'
 import { createWriteStream } from 'fs';
-import pathToFfmpeg from 'ffmpeg-static'
-import ffmprobe from 'ffprobe-static'
+import pathToFfmpegStatic from 'ffmpeg-static'
+import ffmprobeStatic from 'ffprobe-static'
 import { exec } from 'child_process'
 import { store } from '../index'
 import path from 'path'
 import http from 'http';
 import { app } from 'electron'
+
+// 动态获取 ffmpeg 和 ffprobe 路径
+const pathToFfmpeg = app.isPackaged
+    ? pathToFfmpegStatic.replace('app.asar', 'app.asar.unpacked')
+    : pathToFfmpegStatic
+
+const ffmprobePath = app.isPackaged
+    ? ffmprobeStatic.path.replace('app.asar', 'app.asar.unpacked')
+    : ffmprobeStatic.path
 
 /**
  * 限制图片尺寸，生成图片预览图用于展示头像，聊天内容的照片
@@ -53,7 +62,7 @@ const getImageMimeType = (buffer) => {
  * @param videoPath -- 文件路径
  */
 const generateVideoPreview = async (fileName, videoPath) => {
-    let command = ffmprobe.path + ` -v error -select_streams v:0 -show_entries stream=codec_name "${videoPath}"`
+    let command = ffmprobePath + ` -v error -select_streams v:0 -show_entries stream=codec_name "${videoPath}"`
     let result = await execCommand(command)
     // 去掉空格
     result = result.replaceAll("\r\n", "")

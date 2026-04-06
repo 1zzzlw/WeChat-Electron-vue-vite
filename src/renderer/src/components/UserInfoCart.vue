@@ -15,11 +15,11 @@
         <div class="user-account">{{ account }}</div>
         <!-- 性别展示 -->
         <div class="user-gender">
-          <el-icon size="14" class="gender-icon">
-            <Male v-if="gender === 1" />
-            <Female v-else-if="gender === 0" />
+          <el-icon size="14">
+            <Female v-if="gender === 0" color="#ff9ecc" />
+            <Male v-else-if="gender === 1" color="#66b1ff" />
           </el-icon>
-          <span>{{ gender === 1 ? '男' : gender === 0 ? '女' : '未知' }}</span>
+          <span>{{ gender === 0 ? '女' : gender === 1 ? '男' : '未知' }}</span>
         </div>
         <!-- 手机号展示 -->
         <div class="user-phone" v-if="phone">
@@ -178,14 +178,6 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 4px;
-}
-
-.gender-icon {
-  color: #ff9ecc;
-}
-
-.gender-icon :deep(.el-icon-male) {
-  color: #66b1ff;
 }
 
 .user-phone {

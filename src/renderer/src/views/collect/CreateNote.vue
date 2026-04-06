@@ -26,7 +26,7 @@
 
             <!-- 当文本是行内代码模式时激活,激活时输入文本为行内代码 -->
             <button @click="editor?.chain().focus().toggleCode().run()"
-                :class="{ 'is-active': editor?.isActive('code') }" class="iconfont icon-zitijiacu" title="行内代码" />
+                :class="{ 'is-active': editor?.isActive('code') }" class="iconfont icon-hangneidaima" title="行内代码" />
 
             <!-- 当文本是H1模式时激活,激活时输入文本为H1 -->
             <button @click="editor?.chain().focus().toggleHeading({ level: 1 }).run()"

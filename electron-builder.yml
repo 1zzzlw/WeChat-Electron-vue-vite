@@ -21,6 +21,8 @@ extraResources:
     to: icon.png
 asarUnpack:
   - resources/**
+  - node_modules/ffmpeg-static/**
+  - node_modules/ffprobe-static/**
 win:
   target: nsis
   icon: build/favicon.ico
