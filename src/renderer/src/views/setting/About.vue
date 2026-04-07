@@ -208,11 +208,11 @@ const checkForUpdates = async () => {
 }
 
 const openGitHub = () => {
-  // ipcRenderer.invoke('open-external', 'https://github.com/your-repo')
+  window.open('https://github.com/1zzzlw/WeChat-Electron-vue-vite', '_blank');
 }
 
 const openWebsite = () => {
-  // ipcRenderer.invoke('open-external', 'https://your-website.com')
+  window.open('https://github.com/1zzzlw/IM-SpringCloud-Upgrade', '_blank');
 }
 </script>
 

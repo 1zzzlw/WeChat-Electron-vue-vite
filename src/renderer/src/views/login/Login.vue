@@ -37,7 +37,7 @@
       </el-form>
     </div>
     <div class="login-bottom">
-      <router-link to="/" class="login-bottom-reset">重置密码</router-link>
+      <router-link to="" class="login-bottom-reset">重置密码</router-link>
     </div>
   </div>
   <WindowControls :showSetTop="false" :showSetMiniSize="false" :showSetFullScreen="false" windowType="mainWindow" />
@@ -127,12 +127,13 @@ const Login = async (formEl: FormInstance | undefined) => {
       }
     } else {
       ElMessage.error(result.msg)
+      isLoading.value = false
     }
   } catch (error) {
     console.log('error submit!', error)
     ElMessage.error('登录失败')
+    isLoading.value = false
   }
-
 }
 
 const Register = () => {

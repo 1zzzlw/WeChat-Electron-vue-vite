@@ -42,7 +42,8 @@
       </el-form>
     </div>
     <div class="register-bottom">
-      <router-link to="/?">协议</router-link>
+      {{ correctCode }}
+      <router-link to="">协议</router-link>
     </div>
   </div>
   <WindowControls :showSetTop="false" :showSetMiniSize="false" :showSetFullScreen="false" windowType="mainWindow" />
