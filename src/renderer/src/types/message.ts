@@ -18,7 +18,7 @@ export interface Message {
     remotePath?: string | null
     localPath?: string | null
     remoteUrl?: string | null
-    previewBase64?: string | null
+    previewBase64?: String | null
     downloadStatus?: number
     receiveTime?: string
 }

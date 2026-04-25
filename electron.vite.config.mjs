@@ -42,7 +42,7 @@ export default defineConfig({
     server: {
       proxy: {
         '/api': {
-          target: 'http://47.111.22.183:81',
+          target: 'http://127.0.0.1:81',
           // 设置为 false 表示代理请求使用 HTTP 协议，true 则使用 HTTPS 协议
           secure: false,
           // 设置为 true 可以解决因跨域时 Origin 不一致导致的访问被拒绝问题

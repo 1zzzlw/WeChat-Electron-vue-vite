@@ -45,7 +45,7 @@ class WebSocketManager {
 
     // 创建连接请求
     createWebSocket(token) {
-        this.ws.websocket = new WebSocket(`ws://47.111.22.183:80/ws?token=${token}`)
+        this.ws.websocket = new WebSocket(`ws://127.0.0.1:80/ws?token=${token}`)
 
         // ws的状态为正在连接
         this.ws.status = WebSocket.CONNECTING

@@ -70,7 +70,6 @@ const uploadFile = async (file) => {
     await verifyFileUpload(fileId).then((res) => {
         verify = res.data.verify
         minioFilePath = res.data.minioFilePath
-        console.log(verify, minioFilePath)
     })
 
     // 获得上传凭证成功，从服务端拉取已经上传过的分块
@@ -105,7 +104,8 @@ const fileUpload = async (localPath, fileSize, fileId, fileName, fileType, verif
     // 保存上传凭证
     fileVerifyMap.set(fileId, verify)
     // 初始化完成的分块数量
-    completedChunksMap.set(fileId, 0)
+    completedChunksMap.set(fileId, chunksList.length)
+    console.log(chunksList.length)
 
     // console.log(localPath, fileSize, fileId, chunksList)
     createWorkerProcess(localPath, fileSize, fileId, chunksList, (e) => {
