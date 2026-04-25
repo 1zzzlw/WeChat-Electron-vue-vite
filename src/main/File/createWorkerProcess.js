@@ -86,6 +86,12 @@ const createWorkerProcess = (localPath, fileSize, fileId, chunksList, callback, 
             onComplete(fileIndex)
         }
     }
+
+    return {
+        pause: () => readStream.pause(),
+        resume: () => readStream.resume(),
+        stop: () => readStream.destroy(),
+    }
 }
 
 export {
