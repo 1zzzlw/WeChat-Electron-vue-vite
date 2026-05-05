@@ -23,11 +23,6 @@ const createWorkerProcess = (localPath, fileSize, fileId, chunksList, callback, 
         chunkStatusArray: Array.from({ length: chunkCount }, (_, index) => {
             // 如果上传成功的数组长度为0就默认全为0，否则只有包含index的索引处为1，不包含的为0，表示上传过和未上传过
             return chunksList.length === 0 ? 0 : chunksList.includes(index) ? 1 : 0
-            // if (chunksList.length === 0) {
-            //     return 0
-            // } else {
-            //     return chunksList.includes(index) ? 1 : 0
-            // }
         }),
     })
 
