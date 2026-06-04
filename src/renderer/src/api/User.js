@@ -19,4 +19,7 @@ export const registerApi = (data) => request.post('/user/register', data)
 export const sendPhoneCodeApi = (phone) =>
     request.post('/user/phoneCode', {}, { params: { phone } })
 
+export const searchFriendApi = (number) => request.get('/user/search', {
+    params: { number }
+})
 

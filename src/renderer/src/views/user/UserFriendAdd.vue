@@ -46,11 +46,11 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, watch } from 'vue'
-import { sendApplyApi } from '../../api/Apply'
-import { searchFriendApi } from '../../api/Friend'
 import { Search } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import { reactive, ref, watch } from 'vue'
+import { sendApplyApi } from '../../api/Apply'
+import { searchFriendApi } from '../../api/User'
 import WindowControls from '../../components/WindowControls.vue'
 
 const applyMessage = ref('')
