@@ -190,7 +190,7 @@ onMounted(() => {
     justify-content: center;
     align-items: center;
     -webkit-app-region: no-drag;
-    background: rgba(40, 50, 65, 0.95);
+    background: rgba(35, 45, 60, 0.7);
 }
 
 .favorite-content {
@@ -200,11 +200,11 @@ onMounted(() => {
     flex-direction: column;
     border-radius: 12px;
     overflow: hidden;
-    border: 1px solid rgba(66, 153, 225, 0.4);
+    border: 1px solid rgba(67, 243, 255, 0.4);
     box-shadow:
-        0 8px 32px rgba(0, 0, 0, 0.3),
-        0 0 0 1px rgba(66, 153, 225, 0.1);
-    background: rgba(40, 50, 65, 0.95);
+        0 8px 32px rgba(67, 243, 255, 0.15),
+        0 0 0 1px rgba(67, 243, 255, 0.1);
+    background: rgba(40, 50, 65, 0.75);
 }
 
 .title {
@@ -215,19 +215,22 @@ onMounted(() => {
     justify-content: center;
     gap: 10px;
     font-size: 18px;
-    font-weight: 500;
-    color: #f5f5f5;
-    background: rgba(50, 65, 85, 0.9);
-    border-bottom: 1px solid rgba(66, 153, 225, 0.3);
+    font-weight: 600;
+    color: #43f3ff;
+    background: linear-gradient(135deg, rgba(67, 243, 255, 0.15) 0%, rgba(0, 217, 255, 0.1) 100%);
+    border-bottom: 1px solid rgba(67, 243, 255, 0.3);
+    text-shadow: 0 0 8px rgba(67, 243, 255, 0.3);
     -webkit-app-region: drag;
 }
 
 .count-badge {
     padding: 2px 10px;
-    background: rgba(66, 153, 225, 0.3);
+    background: rgba(67, 243, 255, 0.2);
     border-radius: 10px;
     font-size: 12px;
-    color: rgba(255, 255, 255, 0.9);
+    color: #43f3ff;
+    border: 1px solid rgba(67, 243, 255, 0.3);
+    box-shadow: 0 0 8px rgba(67, 243, 255, 0.2);
 }
 
 .favorite-content-view {
@@ -235,11 +238,10 @@ onMounted(() => {
     height: 100%;
     flex: 1;
     display: flex;
-    background: rgba(40, 50, 65, 0.8);
+    background: rgba(35, 45, 60, 0.6);
     overflow: hidden;
 }
 
-/* 空状态 */
 .empty-state {
     width: 100%;
     height: 100%;
@@ -248,43 +250,52 @@ onMounted(() => {
     align-items: center;
     justify-content: center;
     gap: 12px;
-    color: rgba(240, 240, 240, 0.5);
+    color: rgba(67, 243, 255, 0.4);
 }
 
 .empty-icon {
     font-size: 48px;
-    color: rgba(66, 153, 225, 0.4);
+    color: rgba(67, 243, 255, 0.5);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 0.5;
+    }
+    50% {
+        opacity: 1;
+    }
 }
 
 .empty-text {
     font-size: 16px;
-    color: rgba(240, 240, 240, 0.7);
+    color: rgba(67, 243, 255, 0.7);
 }
 
 .empty-tip {
     font-size: 13px;
-    color: rgba(240, 240, 240, 0.4);
+    color: rgba(67, 243, 255, 0.5);
 }
 
-/* 收藏项 */
 .favorite-item {
     margin: 8px 12px;
     padding: 12px 16px;
-    background: rgba(50, 65, 85, 0.8);
+    background: rgba(67, 243, 255, 0.05);
     border-radius: 10px;
-    border: 1px solid rgba(66, 153, 225, 0.25);
-    transition: all 0.2s ease;
+    border: 1px solid rgba(67, 243, 255, 0.25);
+    transition: all 0.3s ease;
     position: relative;
     cursor: pointer;
 }
 
 .favorite-item:hover {
-    background: rgba(55, 70, 90, 1);
-    border-color: rgba(66, 153, 225, 0.4);
-    box-shadow: 0 2px 8px rgba(66, 153, 225, 0.15);
+    background: rgba(67, 243, 255, 0.1);
+    border-color: rgba(67, 243, 255, 0.4);
+    box-shadow: 0 2px 8px rgba(67, 243, 255, 0.2);
+    transform: translateY(-2px);
 }
 
-/* 类型标签 */
 .item-type {
     position: absolute;
     top: 10px;
@@ -298,23 +309,23 @@ onMounted(() => {
 }
 
 .item-type.type-text {
-    background: rgba(102, 126, 234, 0.8);
+    background: rgba(67, 243, 255, 0.6);
+    box-shadow: 0 0 8px rgba(67, 243, 255, 0.3);
 }
 
 .item-type.type-image {
-    background: rgba(231, 76, 60, 0.8);
+    background: rgba(255, 118, 224, 0.6);
+    box-shadow: 0 0 8px rgba(255, 118, 224, 0.3);
 }
 
-/* 内容区域 */
 .item-body {
     padding-right: 50px;
     margin-bottom: 10px;
 }
 
-/* 文本内容 */
 .text-content {
     font-size: 14px;
-    color: rgba(240, 242, 245, 0.9);
+    color: rgba(255, 255, 255, 0.9);
     line-height: 1.6;
     max-height: 80px;
     overflow: hidden;
@@ -326,7 +337,6 @@ onMounted(() => {
     white-space: pre-wrap;
 }
 
-/* 图片内容 */
 .image-content {
     width: 100%;
     border-radius: 8px;
@@ -339,22 +349,27 @@ onMounted(() => {
     max-height: 300px;
     object-fit: contain;
     border-radius: 8px;
-    border: 1px solid rgba(66, 153, 225, 0.2);
+    border: 1px solid rgba(67, 243, 255, 0.2);
     display: block;
+    transition: all 0.3s ease;
 }
 
-/* 底部信息 */
+.image-content img:hover {
+    border-color: rgba(67, 243, 255, 0.4);
+    box-shadow: 0 0 12px rgba(67, 243, 255, 0.3);
+}
+
 .item-footer {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding-top: 8px;
-    border-top: 1px solid rgba(66, 153, 225, 0.15);
+    border-top: 1px solid rgba(67, 243, 255, 0.15);
 }
 
 .source {
     font-size: 12px;
-    color: rgba(160, 180, 220, 0.7);
+    color: rgba(67, 243, 255, 0.7);
     max-width: 40%;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -363,7 +378,7 @@ onMounted(() => {
 
 .time {
     font-size: 12px;
-    color: rgba(160, 180, 220, 0.6);
+    color: rgba(67, 243, 255, 0.6);
 }
 
 .item-actions {
@@ -374,34 +389,35 @@ onMounted(() => {
 
 .action-icon {
     font-size: 16px;
-    color: rgba(240, 240, 240, 0.5);
+    color: rgba(67, 243, 255, 0.6);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
     padding: 4px;
     border-radius: 4px;
 }
 
 .action-icon:hover {
-    color: rgba(240, 240, 240, 0.85);
-    background: rgba(255, 255, 255, 0.1);
+    color: #43f3ff;
+    background: rgba(67, 243, 255, 0.15);
+    box-shadow: 0 0 8px rgba(67, 243, 255, 0.3);
 }
 
 .action-icon.delete:hover {
-    color: #e74c3c;
-    background: rgba(231, 76, 60, 0.15);
+    color: #ff4757;
+    background: rgba(255, 71, 87, 0.15);
+    box-shadow: 0 0 8px rgba(255, 71, 87, 0.3);
 }
 
-/* 滚动条样式 */
 :deep(.el-scrollbar__bar) {
-    background: rgba(66, 153, 225, 0.1);
+    background: rgba(67, 243, 255, 0.05);
 }
 
 :deep(.el-scrollbar__thumb) {
-    background: rgba(66, 153, 225, 0.4);
+    background: rgba(67, 243, 255, 0.4);
     border-radius: 4px;
 }
 
 :deep(.el-scrollbar__thumb:hover) {
-    background: rgba(66, 153, 225, 0.6);
+    background: rgba(67, 243, 255, 0.6);
 }
 </style>

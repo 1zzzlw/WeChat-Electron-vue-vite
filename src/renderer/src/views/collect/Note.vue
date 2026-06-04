@@ -90,7 +90,7 @@ onUnmounted(() => {
     justify-content: center;
     align-items: center;
     -webkit-app-region: no-drag;
-    background: rgba(40, 50, 65, 0.95);
+    background: rgba(35, 45, 60, 0.7);
 }
 
 .note-content {
@@ -100,9 +100,9 @@ onUnmounted(() => {
     flex-direction: column;
     border-radius: 12px;
     overflow: hidden;
-    border: 1px solid rgba(66, 153, 225, 0.4);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(66, 153, 225, 0.1);
-    background: rgba(40, 50, 65, 0.95);
+    border: 1px solid rgba(67, 243, 255, 0.4);
+    box-shadow: 0 8px 32px rgba(67, 243, 255, 0.15), 0 0 0 1px rgba(67, 243, 255, 0.1);
+    background: rgba(40, 50, 65, 0.75);
 }
 
 .title {
@@ -111,10 +111,11 @@ onUnmounted(() => {
     line-height: 48px;
     text-align: center;
     font-size: 18px;
-    font-weight: 500;
-    color: #f5f5f5;
-    background: rgba(50, 65, 85, 0.9);
-    border-bottom: 1px solid rgba(66, 153, 225, 0.3);
+    font-weight: 600;
+    color: #43f3ff;
+    background: linear-gradient(135deg, rgba(67, 243, 255, 0.15) 0%, rgba(0, 217, 255, 0.1) 100%);
+    border-bottom: 1px solid rgba(67, 243, 255, 0.3);
+    text-shadow: 0 0 8px rgba(67, 243, 255, 0.3);
     -webkit-app-region: drag;
 }
 
@@ -123,38 +124,41 @@ onUnmounted(() => {
     height: 100%;
     flex: 1;
     display: flex;
-    background: rgba(40, 50, 65, 0.8);
+    background: rgba(35, 45, 60, 0.6);
     overflow: hidden;
 }
 
 .note-item {
     margin: 8px 12px;
     padding: 12px 16px;
-    background: rgba(50, 65, 85, 0.8);
+    background: rgba(67, 243, 255, 0.05);
     border-radius: 10px;
-    border: 1px solid rgba(66, 153, 225, 0.25);
-    transition: all 0.2s ease;
+    border: 1px solid rgba(67, 243, 255, 0.25);
+    transition: all 0.3s ease;
     position: relative;
+    cursor: pointer;
 }
 
 .note-item:hover {
-    background: rgba(55, 70, 90, 1);
-    border-color: rgba(66, 153, 225, 0.4);
-    box-shadow: 0 2px 8px rgba(66, 153, 225, 0.15);
+    background: rgba(67, 243, 255, 0.1);
+    border-color: rgba(67, 243, 255, 0.4);
+    box-shadow: 0 2px 8px rgba(67, 243, 255, 0.2);
+    transform: translateY(-2px);
 }
 
 .note-title {
     font-size: 16px;
     font-weight: 600;
-    color: #7cb7f5;
+    color: #43f3ff;
     margin-bottom: 8px;
     padding-bottom: 4px;
-    border-bottom: 1px solid rgba(66, 153, 225, 0.2);
+    border-bottom: 1px solid rgba(67, 243, 255, 0.2);
+    text-shadow: 0 0 6px rgba(67, 243, 255, 0.2);
 }
 
 .note-content-html {
     font-size: 14px;
-    color: #f0f2f5;
+    color: rgba(255, 255, 255, 0.9);
     line-height: 1.6;
 }
 
@@ -163,7 +167,7 @@ onUnmounted(() => {
     right: 12px;
     bottom: 8px;
     font-size: 12px;
-    color: rgba(160, 180, 220, 0.7);
+    color: rgba(67, 243, 255, 0.6);
     z-index: 1;
     white-space: nowrap;
     opacity: 0.8;
@@ -174,30 +178,35 @@ onUnmounted(() => {
     height: auto;
     border-radius: 8px;
     margin: 8px auto;
-    border: 2px solid rgba(66, 153, 225, 0.2);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    border: 2px solid rgba(67, 243, 255, 0.2);
+    box-shadow: 0 2px 8px rgba(67, 243, 255, 0.15);
     transition: all 0.3s ease;
 }
 
 :deep(.note-content-html img:hover) {
-    border-color: rgba(66, 153, 225, 0.4);
-    box-shadow: 0 4px 12px rgba(66, 153, 225, 0.2);
+    border-color: rgba(67, 243, 255, 0.4);
+    box-shadow: 0 4px 12px rgba(67, 243, 255, 0.3);
+    transform: scale(1.02);
 }
 
 :deep(.el-scrollbar__bar) {
-    background: rgba(66, 153, 225, 0.1);
+    background: rgba(67, 243, 255, 0.05);
 }
 
 :deep(.el-scrollbar__thumb) {
-    background: rgba(66, 153, 225, 0.4);
+    background: rgba(67, 243, 255, 0.4);
     border-radius: 4px;
+}
+
+:deep(.el-scrollbar__thumb:hover) {
+    background: rgba(67, 243, 255, 0.6);
 }
 
 :deep(.note-content-html strong),
 :deep(.note-content-html b) {
     font-weight: 900;
-    color: #fff;
-    background: rgba(66, 153, 225, 0.15);
+    color: #43f3ff;
+    background: rgba(67, 243, 255, 0.15);
     padding: 0 3px;
     border-radius: 2px;
 }
@@ -205,30 +214,32 @@ onUnmounted(() => {
 :deep(.note-content-html em),
 :deep(.note-content-html i) {
     font-style: italic;
-    color: #e0e0e0;
+    color: rgba(255, 255, 255, 0.8);
 }
 
 :deep(.note-content-html h1) {
     font-size: 2em;
     font-weight: bold;
     margin: 0.8em 0 0.4em;
-    color: #fff;
-    border-bottom: 2px solid rgba(66, 153, 225, 0.5);
+    color: #43f3ff;
+    border-bottom: 2px solid rgba(67, 243, 255, 0.5);
     padding-bottom: 0.3em;
+    text-shadow: 0 0 8px rgba(67, 243, 255, 0.3);
 }
 
 :deep(.note-content-html h2) {
     font-size: 1.5em;
     font-weight: bold;
     margin: 0.7em 0 0.3em;
-    color: #fff;
+    color: #43f3ff;
+    text-shadow: 0 0 6px rgba(67, 243, 255, 0.2);
 }
 
 :deep(.note-content-html h3) {
     font-size: 1.2em;
     font-weight: bold;
     margin: 0.6em 0 0.3em;
-    color: #e0e0e0;
+    color: rgba(67, 243, 255, 0.9);
 }
 
 :deep(.note-content-html p) {
@@ -246,19 +257,19 @@ onUnmounted(() => {
 }
 
 :deep(.note-content-html blockquote) {
-    border-left: 4px solid rgba(66, 153, 225, 0.6);
+    border-left: 4px solid rgba(67, 243, 255, 0.6);
     padding-left: 1rem;
     margin: 1em 0;
-    color: #b0b0b0;
+    color: rgba(255, 255, 255, 0.7);
     font-style: italic;
-    background: rgba(66, 153, 225, 0.05);
+    background: rgba(67, 243, 255, 0.05);
     padding: 0.5em 1rem;
     border-radius: 0 4px 4px 0;
 }
 
 :deep(.note-content-html code) {
-    background: rgba(66, 153, 225, 0.15);
-    color: #409eff;
+    background: rgba(67, 243, 255, 0.15);
+    color: #43f3ff;
     padding: 2px 6px;
     border-radius: 3px;
     font-family: 'Consolas', 'Monaco', monospace;
@@ -266,8 +277,8 @@ onUnmounted(() => {
 }
 
 :deep(.note-content-html pre) {
-    background: rgba(20, 25, 35, 0.8);
-    border: 1px solid rgba(66, 153, 225, 0.3);
+    background: rgba(25, 30, 40, 0.8);
+    border: 1px solid rgba(67, 243, 255, 0.3);
     border-radius: 6px;
     padding: 12px;
     margin: 1em 0;
@@ -276,7 +287,7 @@ onUnmounted(() => {
 
 :deep(.note-content-html pre code) {
     background: none;
-    color: #a0d8f1;
+    color: #43f3ff;
     padding: 0;
     font-size: 0.9em;
     line-height: 1.5;
@@ -284,24 +295,25 @@ onUnmounted(() => {
 
 :deep(.note-content-html hr) {
     border: none;
-    border-top: 2px solid rgba(66, 153, 225, 0.3);
+    border-top: 2px solid rgba(67, 243, 255, 0.3);
     margin: 2em 0;
 }
 
 :deep(.note-content-html s),
 :deep(.note-content-html strike) {
     text-decoration: line-through;
-    color: #999;
+    color: rgba(255, 255, 255, 0.5);
 }
 
 :deep(.note-content-html a) {
-    color: #60a5fa;
+    color: #43f3ff;
     text-decoration: underline;
     text-underline-offset: 2px;
-    transition: color 0.2s ease;
+    transition: all 0.2s ease;
 }
 
 :deep(.note-content-html a:hover) {
-    color: #93c5fd;
+    color: rgba(67, 243, 255, 0.8);
+    text-shadow: 0 0 8px rgba(67, 243, 255, 0.4);
 }
 </style>

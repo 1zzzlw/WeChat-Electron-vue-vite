@@ -317,9 +317,18 @@ watch(() => props.conversation.id, async () => {
     justify-content: space-between;
     align-items: center;
     padding: 20px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    background: linear-gradient(135deg, rgba(67, 243, 255, 0.08) 0%, rgba(0, 217, 255, 0.05) 100%);
+    border-bottom: 1px solid rgba(67, 243, 255, 0.3);
+    box-shadow: 0 2px 12px rgba(67, 243, 255, 0.1);
     -webkit-app-region: drag;
-    color: rgba(255, 255, 255, 0.9);
+    color: rgba(255, 255, 255, 0.95);
+}
+
+.title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #43f3ff;
+    text-shadow: 0 0 8px rgba(67, 243, 255, 0.4);
 }
 
 .left-icon {
@@ -333,23 +342,24 @@ watch(() => props.conversation.id, async () => {
     font-size: 20px;
     background-color: transparent;
     border: none;
-    color: rgba(240, 240, 240, 0.8);
+    color: rgba(67, 243, 255, 0.8);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
 }
 
 .left-icon:hover {
-    color: rgba(255, 255, 255, 0.95);
-    text-shadow: 0 0 6px rgba(255, 255, 255, 0.25);
+    color: #43f3ff;
+    text-shadow: 0 0 10px rgba(67, 243, 255, 0.6);
+    transform: scale(1.1);
 }
 
 :deep(.el-drawer) {
     width: 50% !important;
-    /* 调浅背景色，降低不透明度，更贴合主界面毛玻璃风格 */
-    --el-drawer-bg-color: rgba(70, 100, 130, 0.2);
+    --el-drawer-bg-color: rgba(35, 45, 60, 0.75);
     background-color: var(--el-drawer-bg-color);
-    backdrop-filter: blur(12px);
-    border-left: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(20px);
+    border-left: 1px solid rgba(67, 243, 255, 0.3);
+    box-shadow: -4px 0 24px rgba(67, 243, 255, 0.1);
 }
 
 :deep(.el-drawer__body) {
@@ -385,13 +395,22 @@ watch(() => props.conversation.id, async () => {
     border-radius: 50%;
     object-fit: cover;
     margin-bottom: 0;
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    border: 3px solid rgba(67, 243, 255, 0.4);
+    box-shadow: 0 0 20px rgba(67, 243, 255, 0.3);
+    transition: all 0.3s ease;
+}
+
+.avatar img:hover {
+    border-color: rgba(67, 243, 255, 0.7);
+    box-shadow: 0 0 30px rgba(67, 243, 255, 0.5);
+    transform: scale(1.05);
 }
 
 .avatar div {
     font-size: 18px;
-    font-weight: 500;
-    color: rgba(255, 255, 255, 0.9);
+    font-weight: 600;
+    color: #43f3ff;
+    text-shadow: 0 0 8px rgba(67, 243, 255, 0.3);
 }
 
 .conversation-set {
@@ -409,6 +428,7 @@ watch(() => props.conversation.id, async () => {
     align-items: center;
     width: 100%;
     height: 40px;
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .conversation-set .set1 el-switch,
@@ -417,9 +437,13 @@ watch(() => props.conversation.id, async () => {
 }
 
 :deep(.el-switch) {
-    --el-switch-on-color: #5dade2;
-    --el-switch-off-color: rgba(255, 255, 255, 0.3);
-    --el-switch-core-border-color: rgba(255, 255, 255, 0.3);
+    --el-switch-on-color: #43f3ff;
+    --el-switch-off-color: rgba(255, 255, 255, 0.2);
+    --el-switch-core-border-color: rgba(67, 243, 255, 0.3);
+}
+
+:deep(.el-switch.is-checked .el-switch__core) {
+    box-shadow: 0 0 12px rgba(67, 243, 255, 0.5);
 }
 
 .button {
@@ -436,30 +460,33 @@ watch(() => props.conversation.id, async () => {
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 4px;
+    border-radius: 8px;
     cursor: pointer;
     font-size: 14px;
     box-sizing: border-box;
-    color: rgba(255, 255, 255, 0.85);
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    transition: all 0.2s ease;
+    color: rgba(67, 243, 255, 0.9);
+    background: rgba(67, 243, 255, 0.1);
+    border: 1px solid rgba(67, 243, 255, 0.3);
+    transition: all 0.3s ease;
 }
 
 .button a:hover {
-    background: rgba(255, 255, 255, 0.18);
-    border-color: rgba(255, 255, 255, 0.25);
+    background: rgba(67, 243, 255, 0.2);
+    border-color: rgba(67, 243, 255, 0.5);
+    box-shadow: 0 0 15px rgba(67, 243, 255, 0.3);
+    transform: translateY(-2px);
 }
 
 .button a:last-child {
-    color: #e74c3c;
-    background: rgba(231, 76, 60, 0.1);
-    border-color: rgba(231, 76, 60, 0.2);
+    color: #ff4757;
+    background: rgba(255, 71, 87, 0.1);
+    border-color: rgba(255, 71, 87, 0.3);
 }
 
 .button a:last-child:hover {
-    background: rgba(231, 76, 60, 0.2);
-    border-color: rgba(231, 76, 60, 0.3);
+    background: rgba(255, 71, 87, 0.2);
+    border-color: rgba(255, 71, 87, 0.5);
+    box-shadow: 0 0 15px rgba(255, 71, 87, 0.3);
 }
 
 .group-drawer-content {
@@ -472,14 +499,13 @@ watch(() => props.conversation.id, async () => {
     overflow-y: auto;
 }
 
-/* 群信息头部 */
 .group-header {
     display: flex;
     flex-direction: column;
     align-items: center;
     margin-bottom: 35px;
     padding-bottom: 25px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    border-bottom: 1px solid rgba(67, 243, 255, 0.2);
 }
 
 .group-avatar {
@@ -494,7 +520,8 @@ watch(() => props.conversation.id, async () => {
     height: 100%;
     border-radius: 16px;
     object-fit: cover;
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    border: 3px solid rgba(67, 243, 255, 0.4);
+    box-shadow: 0 0 20px rgba(67, 243, 255, 0.3);
 }
 
 .avatar-badge {
@@ -502,27 +529,28 @@ watch(() => props.conversation.id, async () => {
     bottom: -5px;
     right: -5px;
     padding: 4px 10px;
-    background: rgba(66, 153, 225, 0.9);
+    background: rgba(67, 243, 255, 0.9);
     border-radius: 12px;
     font-size: 11px;
-    color: #fff;
-    font-weight: 500;
-    border: 2px solid rgba(28, 38, 50, 0.8);
+    color: #000;
+    font-weight: 600;
+    border: 2px solid rgba(20, 25, 35, 0.8);
+    box-shadow: 0 0 10px rgba(67, 243, 255, 0.5);
 }
 
 .group-name {
     font-size: 20px;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.9);
+    color: #43f3ff;
+    text-shadow: 0 0 8px rgba(67, 243, 255, 0.3);
     margin-bottom: 6px;
 }
 
 .group-id {
     font-size: 13px;
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(67, 243, 255, 0.6);
 }
 
-/* 群设置选项 */
 .group-settings {
     width: 100%;
     display: flex;
@@ -530,7 +558,7 @@ watch(() => props.conversation.id, async () => {
     gap: 20px;
     margin-bottom: 30px;
     padding: 15px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    border-bottom: 1px solid rgba(67, 243, 255, 0.2);
 }
 
 .setting-item {
@@ -543,16 +571,9 @@ watch(() => props.conversation.id, async () => {
 
 .setting-label {
     font-size: 14px;
-    color: rgba(255, 255, 255, 0.85);
+    color: rgba(255, 255, 255, 0.9);
 }
 
-:deep(.el-switch) {
-    --el-switch-on-color: #5dade2;
-    --el-switch-off-color: rgba(255, 255, 255, 0.25);
-    --el-switch-core-border-color: rgba(255, 255, 255, 0.25);
-}
-
-/* 群成员区域 */
 .group-members {
     width: 100%;
     margin-bottom: 25px;
@@ -569,18 +590,19 @@ watch(() => props.conversation.id, async () => {
 .members-title {
     font-size: 15px;
     font-weight: 500;
-    color: rgba(255, 255, 255, 0.9);
+    color: #43f3ff;
 }
 
 .members-more {
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(67, 243, 255, 0.6);
     font-size: 16px;
     cursor: pointer;
-    transition: color 0.2s;
+    transition: all 0.3s;
 }
 
 .members-more:hover {
-    color: rgba(255, 255, 255, 0.8);
+    color: #43f3ff;
+    text-shadow: 0 0 8px rgba(67, 243, 255, 0.4);
 }
 
 .members-list {
@@ -598,11 +620,11 @@ watch(() => props.conversation.id, async () => {
     cursor: pointer;
     padding: 8px 4px;
     border-radius: 8px;
-    transition: background 0.2s;
+    transition: all 0.3s;
 }
 
 .member-item:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(67, 243, 255, 0.1);
 }
 
 .member-avatar {
@@ -610,7 +632,13 @@ watch(() => props.conversation.id, async () => {
     height: 44px;
     border-radius: 10px;
     object-fit: cover;
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(67, 243, 255, 0.3);
+    transition: all 0.3s;
+}
+
+.member-item:hover .member-avatar {
+    border-color: rgba(67, 243, 255, 0.6);
+    box-shadow: 0 0 10px rgba(67, 243, 255, 0.3);
 }
 
 .member-name {
@@ -624,16 +652,18 @@ watch(() => props.conversation.id, async () => {
 }
 
 .member-item.owner .member-avatar {
-    border: 2px solid #f39c12;
+    border: 2px solid #ffd700;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
 }
 
 .member-item.admin .member-avatar {
-    border: 2px solid #3498db;
+    border: 2px solid #43f3ff;
+    box-shadow: 0 0 10px rgba(67, 243, 255, 0.4);
 }
 
 .member-item.more {
     justify-content: center;
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(67, 243, 255, 0.6);
 }
 
 .member-item.more .el-icon {
@@ -645,13 +675,12 @@ watch(() => props.conversation.id, async () => {
     font-size: 10px;
 }
 
-/* 群公告 */
 .group-notice {
     width: 100%;
     padding: 15px;
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(67, 243, 255, 0.05);
     border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(67, 243, 255, 0.2);
     margin-bottom: auto;
 }
 
@@ -663,19 +692,19 @@ watch(() => props.conversation.id, async () => {
 }
 
 .notice-header .el-icon {
-    color: #5dade2;
+    color: #43f3ff;
     font-size: 16px;
 }
 
 .notice-header span {
     font-size: 14px;
     font-weight: 500;
-    color: rgba(255, 255, 255, 0.9);
+    color: #43f3ff;
 }
 
 .notice-content {
     font-size: 13px;
-    color: rgba(255, 255, 255, 0.65);
+    color: rgba(255, 255, 255, 0.7);
     line-height: 1.6;
     word-break: break-all;
 }
@@ -686,14 +715,13 @@ watch(() => props.conversation.id, async () => {
     font-style: italic;
 }
 
-/* 底部操作按钮 */
 .group-actions {
     width: 100%;
     display: flex;
     gap: 15px;
     padding-top: 20px;
     margin-top: 10px;
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    border-top: 1px solid rgba(67, 243, 255, 0.2);
 }
 
 .action-btn {
@@ -707,39 +735,43 @@ watch(() => props.conversation.id, async () => {
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.25s ease;
+    transition: all 0.3s ease;
     text-decoration: none;
     color: rgba(255, 255, 255, 0.9);
 }
 
 .action-btn.secondary {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(67, 243, 255, 0.1);
+    border: 1px solid rgba(67, 243, 255, 0.3);
+    color: #43f3ff;
 }
 
 .action-btn.secondary:hover {
-    background: rgba(255, 255, 255, 0.18);
-    border-color: rgba(255, 255, 255, 0.25);
+    background: rgba(67, 243, 255, 0.2);
+    border-color: rgba(67, 243, 255, 0.5);
+    box-shadow: 0 0 15px rgba(67, 243, 255, 0.3);
+    transform: translateY(-2px);
 }
 
 .action-btn.danger {
-    background: rgba(231, 76, 60, 0.15);
-    border: 1px solid rgba(231, 76, 60, 0.3);
-    color: #e74c3c;
+    background: rgba(255, 71, 87, 0.1);
+    border: 1px solid rgba(255, 71, 87, 0.3);
+    color: #ff4757;
 }
 
 .action-btn.danger:hover {
-    background: rgba(231, 76, 60, 0.25);
-    border-color: rgba(231, 76, 60, 0.5);
+    background: rgba(255, 71, 87, 0.2);
+    border-color: rgba(255, 71, 87, 0.5);
+    box-shadow: 0 0 15px rgba(255, 71, 87, 0.3);
+    transform: translateY(-2px);
 }
 
 .action-btn:active {
-    transform: scale(0.98);
+    transform: translateY(0) scale(0.98);
 }
 
-/* 滚动条样式 */
 .group-drawer-content::-webkit-scrollbar {
-    width: 4px;
+    width: 6px;
 }
 
 .group-drawer-content::-webkit-scrollbar-track {
@@ -747,11 +779,11 @@ watch(() => props.conversation.id, async () => {
 }
 
 .group-drawer-content::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 2px;
+    background: rgba(67, 243, 255, 0.3);
+    border-radius: 3px;
 }
 
 .group-drawer-content::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.35);
+    background: rgba(67, 243, 255, 0.5);
 }
 </style>

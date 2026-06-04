@@ -247,9 +247,18 @@ watch(
     justify-content: space-between;
     align-items: center;
     padding: 20px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    background: linear-gradient(135deg, rgba(67, 243, 255, 0.08) 0%, rgba(0, 217, 255, 0.05) 100%);
+    border-bottom: 1px solid rgba(67, 243, 255, 0.3);
+    box-shadow: 0 2px 12px rgba(67, 243, 255, 0.1);
     -webkit-app-region: drag;
-    color: rgba(255, 255, 255, 0.9);
+    color: rgba(255, 255, 255, 0.95);
+}
+
+.title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #43f3ff;
+    text-shadow: 0 0 8px rgba(67, 243, 255, 0.4);
 }
 
 .left-icon {
@@ -263,14 +272,15 @@ watch(
     font-size: 20px;
     background-color: transparent;
     border: none;
-    color: rgba(240, 240, 240, 0.8);
+    color: rgba(67, 243, 255, 0.8);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
 }
 
 .left-icon:hover {
-    color: rgba(255, 255, 255, 0.95);
-    text-shadow: 0 0 6px rgba(255, 255, 255, 0.25);
+    color: #43f3ff;
+    text-shadow: 0 0 10px rgba(67, 243, 255, 0.6);
+    transform: scale(1.1);
 }
 
 .chat-set-content {
@@ -283,10 +293,11 @@ watch(
 
 :deep(.el-drawer) {
     width: 50% !important;
-    --el-drawer-bg-color: rgba(70, 100, 130, 0.2);
+    --el-drawer-bg-color: rgba(35, 45, 60, 0.75);
     background-color: var(--el-drawer-bg-color);
-    backdrop-filter: blur(12px);
-    border-left: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(20px);
+    border-left: 1px solid rgba(67, 243, 255, 0.3);
+    box-shadow: -4px 0 24px rgba(67, 243, 255, 0.1);
 }
 
 :deep(.el-drawer__body) {
@@ -306,25 +317,35 @@ watch(
     display: flex;
     flex-direction: column;
     align-items: center;
-    color: rgba(66, 153, 225, 0.8);
+    color: #43f3ff;
     font-size: 16px;
     padding: 8px 20px;
     border-radius: 6px;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
     cursor: pointer;
     background-color: transparent;
     margin-top: 20px;
     gap: 10px;
 }
 
+.button a {
+    padding: 10px 24px;
+    border-radius: 8px;
+    background: rgba(67, 243, 255, 0.1);
+    border: 1px solid rgba(67, 243, 255, 0.3);
+    color: #43f3ff;
+    transition: all 0.3s ease;
+}
+
 .button a:hover {
-    color: rgba(66, 153, 225, 1);
-    background-color: rgba(66, 153, 225, 0.1);
-    text-shadow: 0 0 4px rgba(66, 153, 225, 0.2);
+    background: rgba(67, 243, 255, 0.2);
+    border-color: rgba(67, 243, 255, 0.5);
+    box-shadow: 0 0 15px rgba(67, 243, 255, 0.3);
+    transform: translateY(-2px);
 }
 
 .button a:active {
-    background-color: rgba(66, 153, 225, 0.15);
+    transform: translateY(0) scale(0.98);
 }
 
 .icon-ai-chat {
@@ -335,9 +356,9 @@ watch(
     width: 80px;
     height: 80px;
     border-radius: 10px;
-    background-color: rgba(35, 45, 60, 0.7);
-    color: #409eff;
-    border: 2px solid rgba(66, 153, 225, 0.3);
+    background: rgba(67, 243, 255, 0.1);
+    color: #43f3ff;
+    border: 2px solid rgba(67, 243, 255, 0.3);
 }
 
 .avatar {
@@ -345,22 +366,24 @@ watch(
     height: 80px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid rgba(66, 153, 225, 0.3);
+    border: 2px solid rgba(67, 243, 255, 0.4);
     cursor: pointer;
     transition: all 0.3s ease;
+    box-shadow: 0 0 15px rgba(67, 243, 255, 0.3);
 }
 
 .avatar:hover {
-    border-color: rgba(66, 153, 225, 0.6);
-    box-shadow: 0 0 12px rgba(66, 153, 225, 0.3);
+    border-color: rgba(67, 243, 255, 0.7);
+    box-shadow: 0 0 25px rgba(67, 243, 255, 0.5);
+    transform: scale(1.05);
 }
 
 .avatar-uploader-icon {
     font-size: 28px;
-    color: #8c939d;
+    color: rgba(67, 243, 255, 0.6);
     width: 80px;
     height: 80px;
-    border: 2px dashed rgba(66, 153, 225, 0.3);
+    border: 2px dashed rgba(67, 243, 255, 0.3);
     border-radius: 50%;
     display: flex;
     justify-content: center;
@@ -370,8 +393,9 @@ watch(
 }
 
 .avatar-uploader-icon:hover {
-    border-color: rgba(66, 153, 225, 0.6);
-    color: rgba(66, 153, 225, 0.8);
+    border-color: rgba(67, 243, 255, 0.6);
+    color: #43f3ff;
+    box-shadow: 0 0 15px rgba(67, 243, 255, 0.3);
 }
 
 :deep(.el-descriptions__body) {
@@ -379,10 +403,10 @@ watch(
 }
 
 :deep(.my-label) {
-    background-color: rgba(28, 38, 50, 0.85) !important;
-    color: #ffffff !important;
+    background: linear-gradient(135deg, rgba(67, 243, 255, 0.15) 0%, rgba(0, 217, 255, 0.1) 100%) !important;
+    color: #43f3ff !important;
     font-weight: 600 !important;
-    border: 1px solid rgba(66, 153, 225, 0.4) !important;
+    border: 1px solid rgba(67, 243, 255, 0.4) !important;
     padding: 14px 20px !important;
     text-align: center !important;
     border-radius: 6px 0 0 6px !important;
@@ -390,9 +414,9 @@ watch(
 }
 
 :deep(.my-content) {
-    background-color: rgba(28, 38, 50, 0.6) !important;
-    color: #ffffff !important;
-    border: 1px solid rgba(66, 153, 225, 0.4) !important;
+    background: rgba(35, 45, 60, 0.6) !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    border: 1px solid rgba(67, 243, 255, 0.2) !important;
     padding: 14px 20px !important;
     line-height: 1.8 !important;
     word-break: break-all !important;
@@ -402,26 +426,38 @@ watch(
 }
 
 :deep(.el-dialog) {
-    --el-dialog-bg-color: rgba(28, 38, 50, 0.4) !important;
+    --el-dialog-bg-color: rgba(35, 45, 60, 0.85) !important;
     background-color: var(--el-dialog-bg-color) !important;
-    backdrop-filter: blur(10px) !important;
-    -webkit-backdrop-filter: blur(10px) !important;
-    border: 1px solid rgba(66, 153, 225, 0.5) !important;
-    border-radius: 8px !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(67, 243, 255, 0.4) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 32px rgba(67, 243, 255, 0.2) !important;
 }
 
 :deep(.el-dialog__title) {
-    color: #f0f0f0 !important;
+    color: #43f3ff !important;
+    font-weight: 600 !important;
+    text-shadow: 0 0 8px rgba(67, 243, 255, 0.3) !important;
 }
 
 :deep(.el-form-item__label) {
-    color: #e0e0e0 !important;
+    color: rgba(67, 243, 255, 0.9) !important;
 }
 
 :deep(.el-input__wrapper) {
-    background-color: rgba(28, 38, 50, 1) !important;
-    border: 1px solid rgba(66, 153, 225, 0.2) !important;
+    background: rgba(35, 45, 60, 0.8) !important;
+    border: 1px solid rgba(67, 243, 255, 0.3) !important;
     box-shadow: none !important;
+}
+
+:deep(.el-input__wrapper:hover) {
+    border-color: rgba(67, 243, 255, 0.5) !important;
+}
+
+:deep(.el-input__wrapper.is-focus) {
+    border-color: rgba(67, 243, 255, 0.7) !important;
+    box-shadow: 0 0 10px rgba(67, 243, 255, 0.2) !important;
 }
 
 :deep(.el-input__inner) {
@@ -429,35 +465,52 @@ watch(
 }
 
 :deep(.el-input__inner::placeholder) {
-    color: rgba(240, 240, 240, 0.5) !important;
+    color: rgba(240, 240, 240, 0.4) !important;
 }
 
 :deep(.el-textarea__inner) {
-    background-color: rgba(28, 38, 50, 1);
+    background: rgba(35, 45, 60, 0.8);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     color: #f0f0f0;
     box-shadow: none;
-    border: 1px solid rgba(66, 153, 225, 0.2);
+    border: 1px solid rgba(67, 243, 255, 0.3);
 
     &::placeholder {
-        color: rgba(240, 240, 240, 0.5);
+        color: rgba(240, 240, 240, 0.4);
     }
 }
 
+:deep(.el-textarea__inner:hover) {
+    border-color: rgba(67, 243, 255, 0.5);
+}
+
+:deep(.el-textarea__inner:focus) {
+    border-color: rgba(67, 243, 255, 0.7);
+    box-shadow: 0 0 10px rgba(67, 243, 255, 0.2);
+}
+
 :deep(.el-dialog .el-button) {
-    background-color: rgba(35, 45, 60, 0.7) !important;
-    border: 1px solid rgba(66, 153, 225, 0.2) !important;
-    color: #f0f0f0 !important;
+    background: rgba(67, 243, 255, 0.1) !important;
+    border: 1px solid rgba(67, 243, 255, 0.3) !important;
+    color: #43f3ff !important;
     border-radius: 6px !important;
+    transition: all 0.3s ease !important;
 }
 
 :deep(.el-dialog .el-button--primary) {
-    background-color: rgba(66, 153, 225, 0.2) !important;
+    background: rgba(67, 243, 255, 0.2) !important;
+    border-color: rgba(67, 243, 255, 0.5) !important;
 }
 
 :deep(.el-dialog .el-button:hover) {
-    background-color: rgba(66, 153, 225, 0.2) !important;
-    border-color: rgba(66, 153, 225, 0.4) !important;
+    background: rgba(67, 243, 255, 0.2) !important;
+    border-color: rgba(67, 243, 255, 0.5) !important;
+    box-shadow: 0 0 12px rgba(67, 243, 255, 0.3) !important;
+}
+
+:deep(.el-dialog .el-button--primary:hover) {
+    background: rgba(67, 243, 255, 0.3) !important;
+    border-color: rgba(67, 243, 255, 0.6) !important;
 }
 </style>

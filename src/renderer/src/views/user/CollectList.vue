@@ -31,7 +31,6 @@
     </div>
 </template>
 <script setup lang="ts">
-import { ref } from 'vue';
 import AutocompleteSearch from '../../components/AutocompleteSearch.vue';
 
 const createNote = () => {
@@ -42,25 +41,47 @@ const createNote = () => {
 @import "../../css/layout.css";
 
 .collect-mid {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
-    padding-bottom: 12px;
-    margin-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+    padding-top: 10px;
 }
 
 .collect-mid .el-button {
-    width: 100%;
-    background-color: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #fff;
-    border-radius: 6px;
-    padding: 8px 12px;
-    margin-bottom: 12px;
-    transition: all 0.2s ease;
+    width: calc(100% - 24px);
+    margin: 0 12px 16px 12px;
+    /* 保持原有质感 */
+    background-color: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: left;
+    transition: all 0.15s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    --el-button-hover-bg-color: rgba(255, 255, 255, 0.15);
+    --el-button-active-bg-color: rgba(255, 255, 255, 0.2);
 }
 
 .collect-mid .el-button:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
+}
+
+.collect-mid .el-button:active {
     background-color: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    transform: translateY(0);
+}
+
+.collect-mid .el-button:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2);
 }
 
 .all-collect-item {

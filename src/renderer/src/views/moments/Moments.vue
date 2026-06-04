@@ -257,16 +257,16 @@ const handleCommentReply = (postId: number, commentId: number, username: string)
   display: flex;
   align-items: center;
   padding: 0 20px;
-  background: rgba(50, 65, 85, 0.9);
-  border-bottom: 1px solid rgba(66, 153, 225, 0.3);
+  background: linear-gradient(135deg, rgba(67, 243, 255, 0.15) 0%, rgba(0, 217, 255, 0.1) 100%);
+  border-bottom: 1px solid rgba(67, 243, 255, 0.3);
   -webkit-app-region: drag;
 }
 
 .header-title {
   font-size: 16px;
   font-weight: 600;
-  color: #f5f5f5;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  color: #43f3ff;
+  text-shadow: 0 0 8px rgba(67, 243, 255, 0.3);
 }
 
 .moments-count {
@@ -300,42 +300,42 @@ const handleCommentReply = (postId: number, commentId: number, username: string)
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: rgba(66, 153, 225, 0.85);
+  background: rgba(67, 243, 255, 0.85);
   backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(66, 153, 225, 0.4), 0 0 0 1px rgba(66, 153, 225, 0.3);
+  box-shadow: 0 4px 16px rgba(67, 243, 255, 0.4), 0 0 0 1px rgba(67, 243, 255, 0.3);
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  color: #ffffff;
+  color: #000;
   z-index: 1000;
 }
 
 .fab-button:hover {
-  background: rgba(66, 153, 225, 0.95);
+  background: rgba(67, 243, 255, 0.95);
   transform: scale(1.1) translateY(-2px);
-  box-shadow: 0 8px 24px rgba(66, 153, 225, 0.6), 0 0 0 2px rgba(66, 153, 225, 0.5);
+  box-shadow: 0 8px 24px rgba(67, 243, 255, 0.6), 0 0 0 2px rgba(67, 243, 255, 0.5);
 }
 
 .fab-button:active {
   transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(66, 153, 225, 0.5);
+  box-shadow: 0 4px 12px rgba(67, 243, 255, 0.5);
 }
 
 .post-item {
   margin: 0 15px 15px;
   padding: 16px;
-  background: rgba(40, 50, 65, 0.8);
+  background: rgba(67, 243, 255, 0.05);
   border-radius: 12px;
-  border: 1px solid rgba(66, 153, 225, 0.25);
-  transition: all 0.2s ease;
+  border: 1px solid rgba(67, 243, 255, 0.25);
+  transition: all 0.3s ease;
 }
 
 .post-item:hover {
-  background: rgba(45, 55, 70, 0.9);
-  border-color: rgba(66, 153, 225, 0.4);
-  box-shadow: 0 4px 12px rgba(66, 153, 225, 0.15);
+  background: rgba(67, 243, 255, 0.08);
+  border-color: rgba(67, 243, 255, 0.4);
+  box-shadow: 0 4px 12px rgba(67, 243, 255, 0.15);
 }
 
 .post-header {
@@ -355,8 +355,14 @@ const handleCommentReply = (postId: number, commentId: number, username: string)
   width: 45px;
   height: 45px;
   border-radius: 50%;
-  border: 2px solid rgba(66, 153, 225, 0.3);
+  border: 2px solid rgba(67, 243, 255, 0.3);
   flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.user-avatar:hover {
+  border-color: rgba(67, 243, 255, 0.6);
+  box-shadow: 0 0 12px rgba(67, 243, 255, 0.3);
 }
 
 .user-details {
@@ -368,12 +374,12 @@ const handleCommentReply = (postId: number, commentId: number, username: string)
 .username {
   font-size: 15px;
   font-weight: 600;
-  color: #f0f2f5;
+  color: #43f3ff;
 }
 
 .post-time {
   font-size: 12px;
-  color: rgba(160, 180, 220, 0.7);
+  color: rgba(67, 243, 255, 0.6);
 }
 
 .follow-btn,
@@ -385,17 +391,18 @@ const handleCommentReply = (postId: number, commentId: number, username: string)
   border-radius: 6px;
   font-size: 13px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
 }
 
 .follow-btn {
-  background: rgba(66, 153, 225, 0.25);
-  color: #7cb7f5;
-  border: 1px solid rgba(66, 153, 225, 0.4);
+  background: rgba(67, 243, 255, 0.15);
+  color: #43f3ff;
+  border: 1px solid rgba(67, 243, 255, 0.4);
 }
 
 .follow-btn:hover {
-  background: rgba(66, 153, 225, 0.35);
+  background: rgba(67, 243, 255, 0.25);
+  box-shadow: 0 0 12px rgba(67, 243, 255, 0.3);
   transform: translateY(-1px);
 }
 
@@ -438,12 +445,13 @@ const handleCommentReply = (postId: number, commentId: number, username: string)
   object-fit: cover;
   border-radius: 8px;
   cursor: pointer;
-  border: 1px solid rgba(66, 153, 225, 0.2);
-  transition: all 0.2s ease;
+  border: 1px solid rgba(67, 243, 255, 0.2);
+  transition: all 0.3s ease;
 }
 
 .post-image:hover {
-  border-color: rgba(66, 153, 225, 0.4);
+  border-color: rgba(67, 243, 255, 0.4);
+  box-shadow: 0 0 12px rgba(67, 243, 255, 0.3);
   transform: scale(1.02);
 }
 
@@ -452,7 +460,7 @@ const handleCommentReply = (postId: number, commentId: number, username: string)
   align-items: center;
   gap: 20px;
   padding-top: 12px;
-  border-top: 1px solid rgba(66, 153, 225, 0.15);
+  border-top: 1px solid rgba(67, 243, 255, 0.15);
 }
 
 .action-item {
@@ -462,15 +470,16 @@ const handleCommentReply = (postId: number, commentId: number, username: string)
   padding: 6px 12px;
   border-radius: 6px;
   font-size: 13px;
-  color: rgba(160, 180, 220, 0.9);
+  color: rgba(67, 243, 255, 0.8);
   cursor: pointer;
-  transition: all 0.2s ease;
-  background: rgba(66, 153, 225, 0.1);
+  transition: all 0.3s ease;
+  background: rgba(67, 243, 255, 0.1);
 }
 
 .action-item:hover {
-  background: rgba(66, 153, 225, 0.2);
-  color: #7cb7f5;
+  background: rgba(67, 243, 255, 0.2);
+  color: #43f3ff;
+  box-shadow: 0 0 10px rgba(67, 243, 255, 0.2);
   transform: translateY(-1px);
 }
 
@@ -486,7 +495,7 @@ const handleCommentReply = (postId: number, commentId: number, username: string)
 .comment-list {
   margin-top: 12px;
   padding-top: 12px;
-  border-top: 1px solid rgba(66, 153, 225, 0.15);
+  border-top: 1px solid rgba(67, 243, 255, 0.15);
 }
 
 .comment-item {
@@ -495,19 +504,19 @@ const handleCommentReply = (postId: number, commentId: number, username: string)
   margin-bottom: 10px;
   padding: 8px;
   border-radius: 8px;
-  background: rgba(28, 38, 50, 0.5);
-  transition: all 0.2s ease;
+  background: rgba(67, 243, 255, 0.05);
+  transition: all 0.3s ease;
 }
 
 .comment-item:hover {
-  background: rgba(35, 45, 60, 0.6);
+  background: rgba(67, 243, 255, 0.08);
 }
 
 .comment-avatar {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  border: 1px solid rgba(66, 153, 225, 0.2);
+  border: 1px solid rgba(67, 243, 255, 0.2);
   flex-shrink: 0;
 }
 
@@ -518,7 +527,7 @@ const handleCommentReply = (postId: number, commentId: number, username: string)
 .comment-user {
   font-size: 13px;
   font-weight: 500;
-  color: #7cb7f5;
+  color: #43f3ff;
   margin-bottom: 4px;
 }
 
@@ -531,7 +540,7 @@ const handleCommentReply = (postId: number, commentId: number, username: string)
 
 .comment-time {
   font-size: 11px;
-  color: rgba(160, 180, 220, 0.6);
+  color: rgba(67, 243, 255, 0.6);
 }
 
 .comment-footer {
@@ -553,15 +562,15 @@ const handleCommentReply = (postId: number, commentId: number, username: string)
   padding: 4px 8px;
   border-radius: 4px;
   font-size: 12px;
-  color: rgba(160, 180, 220, 0.8);
+  color: rgba(67, 243, 255, 0.7);
   cursor: pointer;
-  transition: all 0.2s ease;
-  background: rgba(66, 153, 225, 0.08);
+  transition: all 0.3s ease;
+  background: rgba(67, 243, 255, 0.08);
 }
 
 .comment-action:hover {
-  background: rgba(66, 153, 225, 0.15);
-  color: #7cb7f5;
+  background: rgba(67, 243, 255, 0.15);
+  color: #43f3ff;
 }
 
 .comment-action.active {
@@ -580,7 +589,7 @@ const handleCommentReply = (postId: number, commentId: number, username: string)
 .reply-list {
   margin-top: 8px;
   padding-left: 12px;
-  border-left: 2px solid rgba(66, 153, 225, 0.2);
+  border-left: 2px solid rgba(67, 243, 255, 0.2);
 }
 
 .reply-item {
@@ -591,12 +600,12 @@ const handleCommentReply = (postId: number, commentId: number, username: string)
 }
 
 .reply-user {
-  color: #7cb7f5;
+  color: #43f3ff;
   font-weight: 500;
 }
 
 .reply-to {
-  color: rgba(160, 180, 220, 0.8);
+  color: rgba(67, 243, 255, 0.7);
   margin: 0 4px;
 }
 
@@ -605,7 +614,7 @@ const handleCommentReply = (postId: number, commentId: number, username: string)
 }
 
 :deep(.el-scrollbar__thumb) {
-  background: rgba(66, 153, 225, 0.4);
+  background: rgba(67, 243, 255, 0.4);
   border-radius: 4px;
 }
 </style>
