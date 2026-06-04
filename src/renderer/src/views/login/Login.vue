@@ -44,10 +44,10 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ElMessage, FormInstance, FormRules } from 'element-plus'
+import { onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { loginApi, verifyCodeApi } from '../../api/Login.js'
-import { FormInstance, FormRules, ElMessage } from 'element-plus'
+import { loginApi, verifyCodeApi } from '../../api/User.js'
 import WindowControls from '../../components/WindowControls.vue'
 
 onMounted(() => {

@@ -20,3 +20,6 @@ export const deleteConversationApi = (conversationId) => request.delete('/conver
 export const GroupNumberExitApi = (conversationId) => request.delete('/conversation/exitGroup', {
   params: { conversationId }
 })
+
+export const sendGroupApplyApi = (formData) =>
+  request.post(`/conversation/createGroup`, formData)

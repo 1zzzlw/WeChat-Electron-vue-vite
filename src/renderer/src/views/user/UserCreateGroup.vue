@@ -39,14 +39,13 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted, reactive } from 'vue'
-import { getFriendList, addConversation } from '../../db/dualDB'
-import { sendGroupApplyApi } from '../../api/Apply'
 import { ElMessage } from 'element-plus'
-import { Conversation } from '../../types/conversation'
-import { conversationInfo } from '../../stores/modules/ConversationStore'
+import { onMounted, reactive, ref } from 'vue'
+import { sendGroupApplyApi } from '../../api/Conversation'
 import WindowControls from '../../components/WindowControls.vue'
-import { eventEmitter } from '../../utils/eventEmitter'
+import { addConversation, getFriendList } from '../../db/dualDB'
+import { conversationInfo } from '../../stores/modules/ConversationStore'
+import { Conversation } from '../../types/conversation'
 
 const count = ref(0)
 const friendList = reactive<any>({ list: [] })

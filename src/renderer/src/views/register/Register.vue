@@ -50,10 +50,10 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, onUnmounted, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { sendPhoneCodeApi } from '../../api/Register'
 import { ElMessage, FormInstance, FormRules } from 'element-plus'
+import { onMounted, onUnmounted, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { sendPhoneCodeApi } from '../../api/User'
 import WindowControls from '../../components/WindowControls.vue'
 import { useRegisterInfoStore } from '../../stores/modules/RegisterInfoStore'
 

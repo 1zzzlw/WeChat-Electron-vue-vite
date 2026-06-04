@@ -15,7 +15,7 @@ export async function refreshToken(userId) {
     // 从本地获取刷新token
     console.info('刷新token')
     const res = await request.post(
-      `/commons/refreshToken/${userId}`,
+      `/user/refreshToken/${userId}`,
       {},
       {
         headers: {

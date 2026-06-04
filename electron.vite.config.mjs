@@ -1,6 +1,6 @@
-import { join } from 'path'
-import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
-import vue from '@vitejs/plugin-vue' // 让 Vite 支持 Vue 单文件组件
+import vue from '@vitejs/plugin-vue'; // 让 Vite 支持 Vue 单文件组件
+import { defineConfig, externalizeDepsPlugin } from 'electron-vite';
+import { join } from 'path';
 
 export default defineConfig({
   main: {

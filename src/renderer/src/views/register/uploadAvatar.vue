@@ -22,11 +22,11 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, onMounted, toRaw } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { registerApi } from '../../api/Register'
 import { Plus } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import { onMounted, reactive, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { registerApi } from '../../api/User'
 import { useRegisterInfoStore } from '../../stores/modules/RegisterInfoStore'
 
 interface UserInfo {

@@ -15,10 +15,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { PendingLoginApi } from '../../api/Login'
 import { ElMessage } from 'element-plus'
+import { onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { PendingLoginApi } from '../../api/User'
 
 const router = useRouter()
 const isLoading = ref(false)
