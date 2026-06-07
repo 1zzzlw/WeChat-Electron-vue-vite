@@ -9,3 +9,5 @@ export const listApi = (sortWay, id) => request.get(`/moments/list`, {
 })
 
 export const likeedApi = (momentId) => request.post(`/moments/like/${momentId}`)
+
+export const momentDetail = (momentId) => request.get(`moments/detail/${momentId}`)

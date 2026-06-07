@@ -30,7 +30,7 @@ import UserConversationListView from '../views/user/UserConversationList.vue'
 import CreateGroupView from '../views/user/UserCreateGroup.vue'
 import FriendAddView from '../views/user/UserFriendAdd.vue'
 import UserListView from '../views/user/UserList.vue'
-
+import MomentInfoView from '../views/moments/MomentInfo.vue'
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -79,6 +79,11 @@ const router = createRouter({
       path: '/createMomentView',
       name: 'createMomentView',
       component: createMomentView
+    },
+    {
+      path: '/MomentInfoView',
+      name: 'MomentInfoView',
+      component: MomentInfoView
     },
     {
       path: '/setting',

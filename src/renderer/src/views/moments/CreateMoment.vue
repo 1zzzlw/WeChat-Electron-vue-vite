@@ -122,6 +122,7 @@ import { ElMessage } from 'element-plus'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { publishApi, uploadImageApi } from '../../api/Moments.js'
 import WindowControls from '../../components/WindowControls.vue'
+import { eventEmitter } from '../../utils/eventEmitter';
 
 const fileInput = ref<HTMLInputElement | null>(null)
 const showLinkDialog = ref(false)
@@ -377,6 +378,8 @@ const saveContent = async () => {
     ElMessage.success('发布成功')
 
     setTimeout(() => {
+        eventEmitter.emit('moments:updated');
+
         (window as any).windowToolApi.windowControls('createMomentView', 'closeWindow')
     }, 1000)
 }
@@ -689,6 +692,7 @@ const saveContent = async () => {
 .editor-content-wrapper {
     flex: 1;
     min-width: 0;
+    width: fit-content;
 }
 
 /* 标题体系规范化样式 */
@@ -698,10 +702,37 @@ const saveContent = async () => {
     outline: none;
     color: #f0f2f5;
     line-height: 1.8;
-    /* 27px (15 * 1.8) */
     font-size: 15px;
-    max-width: 900px;
     margin: 0;
+    width: auto;
+    display: inline-block;
+    min-width: 150px;
+    padding: 15px;
+    /* 允许在任何字符间断行，防止长英文撑爆宽度 */
+    word-break: break-all;
+    /* 保留空格和换行，但允许自动换行 */
+    white-space: pre-wrap;
+
+    caret-color: #43f3ff;
+
+    filter:
+        drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4)) drop-shadow(0 0 3px rgba(0, 0, 0, 0.2));
+
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+:deep(.ProseMirror:focus) {
+    filter:
+        drop-shadow(0 3px 8px rgba(0, 0, 0, 0.5)) drop-shadow(0 0 5px rgba(0, 0, 0, 0.3));
+    transition: filter 0.2s ease;
+}
+
+@keyframes cursor-blink {
+    50% {
+        opacity: 0;
+    }
 }
 
 :deep(.ProseMirror h1) {

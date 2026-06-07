@@ -12,6 +12,7 @@ export interface MomentsItem {
     isFollowed: boolean
     showComments: boolean
     comments: Comment[]
+    likers: Like[]
 }
 
 // 评论回复
@@ -32,4 +33,10 @@ interface Comment {
     liked: boolean
     likeCount: number
     replies: CommentReply[]
+}
+
+interface Like {
+    id: number
+    avatar: string
+    username: string
 }

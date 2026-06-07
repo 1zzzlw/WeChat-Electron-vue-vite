@@ -21,6 +21,8 @@ body {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  /* 全局彻底隐藏原生滚动条 */
+  scrollbar-width: none;
 }
 
 #app {

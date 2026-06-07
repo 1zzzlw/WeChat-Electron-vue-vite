@@ -24,7 +24,8 @@ const WINDOW_CONFIGS = {
         imagePreview: '/imagePreview',
         videoPreview: '/videoPreview',
         createNote: '/createNote',
-        createMomentView: '/createMomentView'
+        createMomentView: '/createMomentView',
+        momentInfoView: '/momentInfoView'
         // TODO 可以继续添加其他路由页面
     }
 }

@@ -13,6 +13,8 @@ const createNote_width = 700
 const createNote_height = 500
 const createMomentView_width = 750
 const createMomentView_height = 950
+const momentInfo_width = 750
+const momentInfo_height = 950
 
 let addFriendWindow = null
 let createGroupWindow = null
@@ -20,6 +22,7 @@ let settingViewWindow = null
 let mediaPreviewWindow = null
 let createNoteWindow = null
 let createMomentViewWindow = null
+let momentInfoWindow = null
 
 ipcMain.on('create-new-window', (e, windowType, data) => {
     console.log(windowType)
@@ -80,6 +83,15 @@ ipcMain.on('create-new-window', (e, windowType, data) => {
                 resizable: true,
             }
             createMomentViewWindow = createExtraWindow('createMomentView', options, 'vue', data)
+            break
+        }
+        case 'momentInfoView': {
+            const options = {
+                minWidth: momentInfo_width,
+                minHeight: momentInfo_height,
+                resizable: true,
+            }
+            momentInfoWindow = createExtraWindow('momentInfoView', options, 'vue', data)
         }
     }
 })

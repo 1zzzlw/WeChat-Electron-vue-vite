@@ -83,3 +83,10 @@ npm install @tiptap/extension-table  # 表格
 
 将文件复制到剪贴板上，可以复制文件
 clipboard-files
+
+
+专业瀑布流
+npm install masonry-layout
+
+文本编辑时的文本光标
+npm install @tiptap/extension-collaboration-cursor@^3

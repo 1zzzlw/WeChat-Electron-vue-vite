@@ -30,6 +30,35 @@ const formatMessageTime = (timestamp) => {
     return msgTime.format('MM-DD HH:mm')
 }
 
+// 最新时间的展示
+const formatMomentsTime = (timestamp) => {
+    if (!timestamp) return undefined
+
+    const now = dayjs()
+    const msgTime = dayjs(timestamp)
+    const diffMs = now.diff(msgTime)
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+
+    // 小于1小时：显示几分钟前
+    if (diffHours < 1) {
+        const diffMinutes = Math.floor(diffMs / (1000 * 60))
+        if (diffMinutes < 1) {
+            return '刚刚'
+        }
+        return `${diffMinutes}分钟前`
+    }
+
+    // 24小时内：显示几小时前
+    if (diffHours < 24) {
+        return `${diffHours}小时前`
+    }
+
+    // 超过24小时：显示详细的年月日和时间
+    return msgTime.format('YYYY-MM-DD HH:mm')
+}
+
+
 const base64ToBlob = (base64) => {
     // 提取 mimeType（如 image/png）
     const mimeType = base64.match(/data:([^;]+);/)[1];
@@ -53,5 +82,6 @@ const blobToBase64 = (blob) => {
 export {
     formatMessageTime,
     base64ToBlob,
-    blobToBase64
+    blobToBase64,
+    formatMomentsTime
 }

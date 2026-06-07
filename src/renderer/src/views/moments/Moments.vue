@@ -48,8 +48,8 @@
 
     <!-- 帖子列表 -->
     <div class="moments-content">
-      <el-scrollbar ref="scrollbarRef" @scroll="handleScroll" style="height: 100%; width: 100%">
-        <div class="post-list" :class="{ 'is-reflowing': isReflowing }">
+      <el-scrollbar ref="scrollbarRef" style="height: 100%; width: 100%">
+        <div class="post-list" ref="postListRef">
           <div v-if="postList.length === 0" class="empty-state">
             <p>还没有动态，快来发布第一条吧！</p>
           </div>
@@ -58,27 +58,29 @@
           <div class="post-item" v-for="post in postList" :key="post.id">
             <!-- 用户信息头部 -->
             <div class="post-header">
-              <div class="user-info">
-                <img :src="post.avatar" alt="头像" class="user-avatar" />
-                <div class="user-details">
+              <div class="user-info" @click="openInfo(post.id)">
+                <img :src="post.avatar" alt="头像" class="user-avatar" loading="lazy" />
+                <div class="user-details" @click="openInfo(post.id)">
                   <div class="username">{{ post.username }}</div>
-                  <div class="post-time">{{ post.publishTime }}</div>
+                  <div class="post-time">{{ formatMomentsTime(post.publishTime) }}</div>
                 </div>
               </div>
               <div class="follow-btn" v-if="!post.isFollowed" @click="handleFollow(post.id)">
                 <el-icon>
                   <Plus />
-                </el-icon> 关注
+                </el-icon>
+                关注
               </div>
               <div class="followed-btn" v-else>
                 <el-icon>
                   <Check />
-                </el-icon> 已关注
+                </el-icon>
+                已关注
               </div>
             </div>
 
             <!-- 动态内容 -->
-            <div class="post-content">
+            <div class="post-content" @click="openInfo(post.id)">
               <div class="post-text-wrapper" v-html="post.content"></div>
             </div>
 
@@ -90,7 +92,7 @@
                 </el-icon>
                 <span>{{ post.likeCount > 0 ? post.likeCount : '点赞' }}</span>
               </div>
-              <div class="action-item" :class="{ active: post.showComments }" @click="handleComment(post.id)">
+              <div class="action-item" :class="{ active: post.showComments }" @click="openInfo(post.id)">
                 <el-icon>
                   <ChatLineRound />
                 </el-icon>
@@ -103,46 +105,22 @@
                 <span>打赏</span>
               </div>
             </div>
+          </div>
+        </div>
 
-            <Transition name="comment-slide">
-              <!-- 评论列表 -->
-              <div class="comment-list" v-if="post.showComments && post.comments && post.comments.length > 0">
-                <div class="comment-item" v-for="comment in post.comments" :key="comment.id">
-                  <img :src="comment.avatar" class="comment-avatar" />
-                  <div class="comment-content">
-                    <div class="comment-user">{{ comment.username }}</div>
-                    <div class="comment-text">{{ comment.content }}</div>
-                    <div class="comment-footer">
-                      <span class="comment-time">{{ comment.time }}</span>
-                      <div class="comment-actions">
-                        <div class="comment-action" :class="{ active: comment.liked }"
-                          @click="handleCommentLike(post.id, comment.id)">
-                          <el-icon>
-                            <i class="iconfont icon-xihuan" :class="{ 'is-liked': comment.liked }" />
-                          </el-icon>
-                          <span v-if="comment.likeCount > 0">{{ comment.likeCount }}</span>
-                        </div>
-                        <div class="comment-action" @click="handleCommentReply(post.id, comment.id, comment.username)">
-                          <el-icon>
-                            <ChatLineRound />
-                          </el-icon>
-                          <span>回复</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- 回复列表 -->
-                    <div class="reply-list" v-if="comment.replies && comment.replies.length > 0">
-                      <div class="reply-item" v-for="reply in comment.replies" :key="reply.id">
-                        <span class="reply-user">{{ reply.username }}</span>
-                        <span class="reply-to" v-if="reply.replyTo"> 回复 {{ reply.replyTo }}</span>
-                        <span class="reply-text">: {{ reply.content }}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </Transition>
+        <!-- 探测器：只要它出现在屏幕里，就代表到底了 -->
+        <div ref="loadMoreRef" class="load-more-trigger">
+          <div v-if="loading" class="loading-status">
+            <el-icon class="is-loading">
+              <Loading />
+            </el-icon>
+            <span>正在加载更多...</span>
+          </div>
+          <div v-else-if="noMore" class="no-more-status">
+            <span>— 没有更多动态了 —</span>
+          </div>
+          <div v-else class="ready-status">
+            <!-- 初始状态显示一个透明的占位，确保探测器有高度 -->
           </div>
         </div>
       </el-scrollbar>
@@ -154,64 +132,46 @@
         <Plus />
       </el-icon>
     </div>
-
   </div>
 </template>
 
 <script setup lang="ts">
-import { ChatLineRound, Check, Coin, Plus, Search } from '@element-plus/icons-vue'
-import { onMounted, ref } from 'vue'
+import { ChatLineRound, Check, Coin, Plus, Search, Loading } from '@element-plus/icons-vue'
+import { onMounted, ref, onUnmounted, nextTick, watch } from 'vue'
 import { listApi, likeedApi } from '../../api/Moments'
 import { MomentsItem } from '../../types/moments'
 import type { ScrollbarDirection } from 'element-plus'
+import Masonry from 'masonry-layout'
+import { eventEmitter } from '../../utils/eventEmitter';
+import { formatMomentsTime } from '../../utils/utils'
 
-const scrollbarRef = ref()
 const searchKeyword = ref('')
 const activeTag = ref('all')
-const isReflowing = ref(false)
 const label = ref('0')
 
 const postList = ref<MomentsItem[]>([])
 const hotTags = ref([])
 
+// 监听帖子列表变化，自动刷新布局，主要是因为Masonry不是响应式布局，每次新增都需要重新排列
+watch(postList, async () => {
+  await nextTick()
+  if (masonry) {
+    masonry.reloadItems?.()
+    observeImages()
+    masonry.layout?.()
+  }
+}, { deep: true })
+
+const loadMoreRef = ref()
+let observer: IntersectionObserver | null = null
 // 添加加载状态
 const loading = ref(false)
 // 添加是否加载完毕状态
 const noMore = ref(false)
-
-// 模拟热门标签数据
-// const hotTags = ref([
-//   { id: 'all', name: '全部' },
-//   { id: 'tech', name: '技术分享' },
-//   { id: 'life', name: '日常生活' },
-//   { id: 'photo', name: '摄影' },
-//   { id: 'game', name: '游戏' },
-//   { id: 'food', name: '美食' },
-//   { id: 'travel', name: '旅行' },
-//   { id: 'study', name: '学习打卡' },
-//   { id: 'code', name: '代码' },
-//   { id: 'electron', name: 'Electron' },
-//   { id: 'vue3', name: 'Vue3' },
-//   { id: 'ai', name: 'AI' },
-// ])
-
-// 滚动底部监听
-async function handleScroll({ scrollTop }: { scrollTop: number }) {
-  if (loading.value || noMore.value) return
-
-  const scrollbar = scrollbarRef.value
-  if (!scrollbar) return
-
-  // 获取内部滚动的容器
-  const wrapRef = scrollbar.wrapRef
-  if (!wrapRef) return
-
-  const { scrollHeight, clientHeight } = wrapRef
-
-  if (scrollTop + clientHeight >= scrollHeight - 1) {
-    loadMore('bottom')
-  }
-}
+// 帖子列表容器引用
+const postListRef = ref<HTMLElement | null>(null)
+// Masonry 实例
+let masonry: any = null
 
 // 滚动底部监听
 async function loadMore(direction: ScrollbarDirection | string) {
@@ -219,16 +179,28 @@ async function loadMore(direction: ScrollbarDirection | string) {
     if (loading.value || noMore.value) return
 
     loading.value = true
-    console.log("正在查询下一页...")
+    console.log('正在查询下一页...')
 
     try {
       // 查询最后一条帖子的id
       const lastId = postList.value[postList.value.length - 1].id
       // 查询下一页，累加到帖子集合里
       console.log(lastId)
+      const sortWay = label.value
+      const res = await listApi(sortWay, lastId)
+      res.data.forEach((n: any) => {
+        postList.value.push(n)
+      })
 
+      // 新数据加载完成后，触发 Masonry 重新布局
+      await nextTick()
+      if (masonry) {
+        masonry.reloadItems?.() // 重新扫描子元素
+        observeImages() // 监听新加载的图片
+        masonry.layout?.() // 重新布局
+      }
     } catch (error) {
-      console.error("加载失败", error)
+      console.error('加载失败', error)
     } finally {
       loading.value = false
     }
@@ -245,6 +217,14 @@ async function changeSortWay() {
     postList.value.push(n)
   })
   console.log(postList.value)
+
+  // 排序切换后重新布局
+  await nextTick()
+  if (masonry) {
+    masonry.reloadItems?.()
+    observeImages() // 重新监听新数据的图片
+    masonry.layout?.()
+  }
 }
 
 // 搜索事件
@@ -260,13 +240,17 @@ const handleTagClick = (tagId: string) => {
   // TODO: 实现标签筛选逻辑
 }
 
+const openInfo = (id: number) => {
+  console.log(id);
+  (window as any).windowToolApi.createNewWindow('momentInfoView', id)
+}
+
 const openPublishWindow = () => {
-  console.log('打开发布动态窗口');
-  (window as any).windowToolApi.createNewWindow("createMomentView", null)
+  (window as any).windowToolApi.createNewWindow('createMomentView', null)
 }
 
 const handleLike = (postId: number) => {
-  const post = postList.value.find(p => p.id === postId)
+  const post = postList.value.find((p) => p.id === postId)
   if (post) {
     post.liked = !post.liked
     post.likeCount += post.liked ? 1 : -1
@@ -275,15 +259,8 @@ const handleLike = (postId: number) => {
   likeedApi(postId)
 }
 
-const handleComment = (postId: number) => {
-  const post = postList.value.find(p => p.id === postId)
-  if (post) {
-    post.showComments = !post.showComments
-  }
-}
-
 const handleFollow = (postId: number) => {
-  const post = postList.value.find(p => p.id === postId)
+  const post = postList.value.find((p) => p.id === postId)
   if (post) {
     post.isFollowed = true
   }
@@ -295,9 +272,9 @@ const handleReward = (postId: number) => {
 }
 
 const handleCommentLike = (postId: number, commentId: number) => {
-  const post = postList.value.find(p => p.id === postId)
+  const post = postList.value.find((p) => p.id === postId)
   if (post && post.comments) {
-    const comment = post.comments.find(c => c.id === commentId)
+    const comment = post.comments.find((c) => c.id === commentId)
     if (comment) {
       comment.liked = !comment.liked
       comment.likeCount += comment.liked ? 1 : -1
@@ -310,7 +287,8 @@ const handleCommentReply = (postId: number, commentId: number, username: string)
   console.log('回复评论:', postId, commentId, '回复用户:', username)
 }
 
-onMounted(async () => {
+// 初始化帖子
+const listMoments = async () => {
   const sortWay = label.value
   // 首页加载
   const res = await listApi(sortWay, 0)
@@ -319,6 +297,155 @@ onMounted(async () => {
     postList.value.push(n)
   })
   console.log(postList.value)
+}
+
+// 初始化底部监测器
+const initObserver = () => {
+  // 创建观察器
+  observer = new IntersectionObserver(
+    (entries) => {
+      // entries[0].isIntersecting 为 true 表示探测器进入了视野
+      if (entries[0].isIntersecting && !loading.value && !noMore.value) {
+        console.log('探测到触底，触发加载')
+        loadMore('bottom')
+      }
+    },
+    {
+      // rootMargin 可以提前触发。比如 '100px' 表示距离底部还有 100px 就开始预加载
+      rootMargin: '10px'
+    }
+  )
+
+  // 开始观察探测器元素
+  if (loadMoreRef.value) {
+    observer.observe(loadMoreRef.value)
+  }
+}
+
+// 初始化 Masonry
+const initMasonry = () => {
+  if (!postListRef.value) return
+
+  // 如果已经存在实例，先销毁
+  if (masonry) {
+    masonry.destroy?.()
+  }
+
+  masonry = new Masonry(postListRef.value, {
+    // 必需配置
+    itemSelector: '.post-item',
+    columnWidth: '.post-item',
+
+    // 可选配置
+    gutter: 15, // 列间距
+    fitWidth: true, // 容器自适应宽度
+    originLeft: true, // 从左到右排列（设为 false 从右到左）
+    originTop: true, // 从上到下排列
+    percentPosition: false, // 使用像素定位（true 为百分比）
+    horizontalOrder: true, // 保持水平顺序
+
+    // 动画配置
+    transitionDuration: '0',
+    stagger: 0, // 交错动画延迟（ms）
+
+    // 性能优化
+    resize: true, // 窗口resize时自动重排
+    initLayout: true // 初始化时自动布局
+  })
+}
+
+// 监听图片加载并刷新 Masonry
+let layoutTimer: any = null
+const debouncedLayout = () => {
+  if (layoutTimer) clearTimeout(layoutTimer)
+  layoutTimer = setTimeout(() => {
+    if (masonry) {
+      // 在重排前重置容器宽度，让 Masonry 重新计算可用空间
+      if (postListRef.value) {
+        postListRef.value.style.width = ''
+      }
+      masonry.reloadItems?.()
+      masonry.layout?.()
+    }
+  }, 100)
+}
+
+const observeImages = () => {
+  if (!postListRef.value) return
+
+  const images = postListRef.value.querySelectorAll('img')
+  images.forEach((img) => {
+    if (img.getAttribute('data-observed')) return
+    img.setAttribute('data-observed', 'true')
+
+    if (img.complete) {
+      debouncedLayout()
+    } else {
+      img.addEventListener('load', debouncedLayout)
+      img.addEventListener('error', debouncedLayout)
+    }
+  })
+}
+
+// 监听新帖子发布事件：重新获取数据并重新布局
+const handleNewPostPublished = async () => {
+  console.log('检测到新帖子发布，重新加载数据')
+
+  // 重置列表和状态
+  postList.value = []
+  noMore.value = false
+
+  // 重新获取最新数据
+  await listMoments()
+
+  // 等待 DOM 更新后重新布局
+  await nextTick()
+
+  if (masonry) {
+    masonry.reloadItems?.()
+    observeImages()
+    masonry.layout?.()
+  }
+}
+
+let resizeObserver: ResizeObserver | null = null
+
+onMounted(async () => {
+  await listMoments()
+
+  // DOM 更新后初始化 Masonry
+  await nextTick()
+  initMasonry()
+  // 监听图片加载
+  observeImages()
+  if (masonry) {
+    masonry.layout?.()
+  }
+
+  initObserver()
+
+  // 监听父级容器（.moments-content）的尺寸变化，实现全自动布局
+  // parentElement.parentElement 指向 el-scrollbar 的外层 div
+  const parentEl = postListRef.value?.parentElement?.parentElement
+  if (parentEl) {
+    resizeObserver = new ResizeObserver(() => {
+      debouncedLayout()
+    })
+    resizeObserver.observe(parentEl)
+  }
+
+  eventEmitter.on('moments:updated', handleNewPostPublished)
+})
+
+// 销毁实例
+onUnmounted(() => {
+  if (observer) observer.disconnect()
+  if (resizeObserver) resizeObserver.disconnect()
+  if (masonry) {
+    masonry.destroy?.()
+  }
+  if (layoutTimer) clearTimeout(layoutTimer)
+  eventEmitter.off('moments:updated', handleNewPostPublished)
 })
 </script>
 
@@ -386,7 +513,9 @@ onMounted(async () => {
   background: rgba(255, 255, 255, 0.1) !important;
   border: 1px solid rgba(255, 255, 255, 0.2) !important;
   border-right: none !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
   border-radius: 8px 0 0 8px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -394,13 +523,17 @@ onMounted(async () => {
 :deep(.search-box .el-input__wrapper:hover) {
   border-color: rgba(67, 243, 255, 0.5) !important;
   background: rgba(255, 255, 255, 0.15) !important;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+  box-shadow:
+    0 6px 16px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
 }
 
 :deep(.search-box .el-input__wrapper.is-focus) {
   border-color: #43f3ff !important;
   background: rgba(255, 255, 255, 0.2) !important;
-  box-shadow: 0 0 15px rgba(67, 243, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+  box-shadow:
+    0 0 15px rgba(67, 243, 255, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
 }
 
 :deep(.search-box .el-input__inner) {
@@ -435,14 +568,18 @@ onMounted(async () => {
   margin: 0;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   outline: none !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
 }
 
 :deep(.search-box .el-button:hover) {
   background: rgba(255, 255, 255, 0.15) !important;
   color: #fff;
   border-color: rgba(67, 243, 255, 0.5) !important;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+  box-shadow:
+    0 6px 16px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
 }
 
 :deep(.search-box .el-button:active) {
@@ -459,7 +596,9 @@ onMounted(async () => {
   background: rgba(255, 255, 255, 0.1) !important;
   border: 1px solid rgba(255, 255, 255, 0.2) !important;
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -467,13 +606,17 @@ onMounted(async () => {
   background: rgba(255, 255, 255, 0.15) !important;
   border-color: rgba(67, 243, 255, 0.5) !important;
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+  box-shadow:
+    0 6px 16px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
 }
 
 :deep(.toolbar-right .el-select .el-select__wrapper.is-focus) {
   background: rgba(255, 255, 255, 0.2) !important;
   border-color: #43f3ff !important;
-  box-shadow: 0 0 15px rgba(67, 243, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+  box-shadow:
+    0 0 15px rgba(67, 243, 255, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
 }
 
 :deep(.toolbar-right .el-select .el-select__placeholder) {
@@ -544,18 +687,67 @@ onMounted(async () => {
   height: 100%;
 }
 
-.post-list {
-  column-width: 280px;
-  column-gap: 15px;
-  padding: 15px;
+.load-more-trigger {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 30px 0;
+  color: rgba(67, 243, 255, 0.6);
+  font-size: 14px;
+  min-height: 20px;
+  /* 确保始终有高度 */
   width: 100%;
-  box-sizing: border-box;
+  clear: both;
 }
 
-/* 强制在窗口较小时也要有 3 列 */
-@media (max-width: 800px) {
-  .post-list {
-    column-count: 3;
+.loading-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.no-more-status {
+  opacity: 0.5;
+  letter-spacing: 1px;
+}
+
+.post-list {
+  padding: 15px;
+  box-sizing: border-box;
+  position: relative;
+  margin: 0 auto;
+  /* 强制容器跟随父级缩小，触发 Masonry 响应 */
+  max-width: 100% !important;
+}
+
+.post-item {
+  width: 295px;
+  margin-bottom: 15px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  border: 1px solid rgba(67, 243, 255, 0.15);
+  backdrop-filter: blur(10px);
+  transition: opacity 0.4s, background 0.4s, border-color 0.4s, box-shadow 0.4s, filter 0.4s;
+  animation: cardEnter 0.4s ease-out forwards;
+  opacity: 0;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  display: block;
+
+  /* 性能优化：强制开启 GPU 硬件加速，不影响布局计算 */
+  will-change: transform, opacity;
+  transform: translateZ(0);
+}
+
+@keyframes cardEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
   }
 }
 
@@ -583,7 +775,9 @@ onMounted(async () => {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(67, 243, 255, 0.4), 0 0 0 1px rgba(67, 243, 255, 0.3);
+  box-shadow:
+    0 4px 16px rgba(67, 243, 255, 0.4),
+    0 0 0 1px rgba(67, 243, 255, 0.3);
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   color: #000;
   z-index: 1000;
@@ -592,7 +786,9 @@ onMounted(async () => {
 .fab-button:hover {
   background: rgba(67, 243, 255, 0.95);
   transform: scale(1.1) translateY(-2px);
-  box-shadow: 0 8px 24px rgba(67, 243, 255, 0.6), 0 0 0 2px rgba(67, 243, 255, 0.5);
+  box-shadow:
+    0 8px 24px rgba(67, 243, 255, 0.6),
+    0 0 0 2px rgba(67, 243, 255, 0.5);
 }
 
 .fab-button:active {
@@ -600,34 +796,12 @@ onMounted(async () => {
   box-shadow: 0 4px 12px rgba(67, 243, 255, 0.5);
 }
 
-.post-item {
-  /* 瀑布流卡片 “防撕裂”、“防断裂”、“保完整” */
-  break-inside: avoid-column;
-  width: 100%;
-  margin-bottom: 15px;
-  padding: 20px;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 12px;
-  border: 1px solid rgba(67, 243, 255, 0.15);
-  backdrop-filter: blur(10px);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  animation: cardEnter 0.5s ease forwards;
-  opacity: 0;
-  transform: translateY(20px);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-}
-
-@keyframes cardEnter {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 .post-item:hover {
   background: rgba(255, 255, 255, 0.06);
   border-color: rgba(67, 243, 255, 0.4);
-  box-shadow: 0 8px 25px rgba(67, 243, 255, 0.15), inset 0 0 10px rgba(67, 243, 255, 0.05);
+  box-shadow:
+    0 8px 25px rgba(67, 243, 255, 0.15),
+    inset 0 0 10px rgba(67, 243, 255, 0.05);
   transform: translateY(-4px);
 }
 
@@ -708,6 +882,8 @@ onMounted(async () => {
 
 .post-content {
   margin-bottom: 12px;
+  max-height: 400px;
+  overflow: hidden;
 }
 
 /* 富文本排版样式 */
@@ -717,15 +893,22 @@ onMounted(async () => {
   color: #f0f2f5;
   margin-bottom: 12px;
   word-break: break-word;
+  max-height: 300px;
+  overflow: hidden;
 }
 
 :deep(.post-text-wrapper img) {
-  max-width: 30%;
+  max-width: 100%;
+  /* 修正宽度 */
+  min-height: 100px;
+  /* 预留最小高度，减少重排剧烈程度 */
+  background: rgba(255, 255, 255, 0.05);
   border-radius: 8px;
   margin: 8px auto;
   border: 2px solid rgba(67, 243, 255, 0.2);
   box-shadow: 0 2px 8px rgba(67, 243, 255, 0.15);
   transition: all 0.3s ease;
+  display: block;
 }
 
 :deep(.post-text-wrapper img:hover) {
@@ -733,7 +916,6 @@ onMounted(async () => {
   box-shadow: 0 4px 12px rgba(67, 243, 255, 0.3);
   transform: scale(1.02);
 }
-
 
 :deep(.post-text-wrapper h1) {
   font-size: 18px;
@@ -827,148 +1009,6 @@ onMounted(async () => {
 
 .action-item.active:hover {
   background: rgba(255, 71, 87, 0.1);
-}
-
-.comment-list {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid rgba(67, 243, 255, 0.15);
-}
-
-.comment-item {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 10px;
-  padding: 8px;
-  border-radius: 8px;
-  background: rgba(67, 243, 255, 0.05);
-  transition: all 0.3s ease;
-}
-
-.comment-item:hover {
-  background: rgba(67, 243, 255, 0.08);
-}
-
-.comment-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: 1px solid rgba(67, 243, 255, 0.2);
-  flex-shrink: 0;
-}
-
-.comment-content {
-  flex: 1;
-}
-
-.comment-user {
-  font-size: 13px;
-  font-weight: 500;
-  color: #43f3ff;
-  margin-bottom: 4px;
-}
-
-.comment-text {
-  font-size: 13px;
-  color: #f0f2f5;
-  line-height: 1.5;
-  margin-bottom: 4px;
-}
-
-.comment-time {
-  font-size: 11px;
-  color: rgba(67, 243, 255, 0.6);
-}
-
-.comment-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 6px;
-}
-
-.comment-actions {
-  display: flex;
-  gap: 12px;
-}
-
-.comment-action {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  color: rgba(67, 243, 255, 0.7);
-  cursor: pointer;
-  transition: all 0.3s ease;
-  background: rgba(67, 243, 255, 0.08);
-}
-
-.comment-action:hover {
-  background: rgba(67, 243, 255, 0.15);
-  color: #43f3ff;
-}
-
-.comment-action.active {
-  color: #ff4757;
-  background: rgba(255, 71, 87, 0.12);
-}
-
-.comment-action.active:hover {
-  background: rgba(255, 71, 87, 0.2);
-}
-
-.comment-action .el-icon {
-  font-size: 13px;
-}
-
-/* 评论展开/收起动画 */
-.comment-slide-enter-active,
-.comment-slide-leave-active {
-  transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  overflow: hidden;
-}
-
-.comment-slide-enter-from,
-.comment-slide-leave-to {
-  max-height: 0;
-  opacity: 0;
-  margin-top: 0;
-  padding-top: 0;
-}
-
-.comment-slide-enter-to,
-.comment-slide-leave-from {
-  max-height: 1000px;
-  opacity: 1;
-}
-
-.reply-list {
-  margin-top: 8px;
-  padding-left: 12px;
-  border-left: 2px solid rgba(67, 243, 255, 0.2);
-}
-
-.reply-item {
-  padding: 6px 0;
-  font-size: 12px;
-  line-height: 1.5;
-  color: #e0e0e0;
-}
-
-.reply-user {
-  color: #43f3ff;
-  font-weight: 500;
-}
-
-.reply-to {
-  color: rgba(67, 243, 255, 0.7);
-  margin: 0 4px;
-}
-
-.reply-text {
-  color: #f0f2f5;
 }
 
 :deep(.el-scrollbar__thumb) {
