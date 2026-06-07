@@ -1,0 +1,35 @@
+// 朋友圈单条数据
+export interface MomentsItem {
+    id: number
+    user_id: number
+    username: string
+    avatar: string
+    publishTime: string
+    content: string
+    liked: boolean
+    likeCount: number
+    commentCount: number
+    isFollowed: boolean
+    showComments: boolean
+    comments: Comment[]
+}
+
+// 评论回复
+interface CommentReply {
+    id: number
+    username: string
+    replyTo: string
+    content: string
+}
+
+// 单条评论
+interface Comment {
+    id: number
+    username: string
+    avatar: string
+    content: string
+    time: string
+    liked: boolean
+    likeCount: number
+    replies: CommentReply[]
+}

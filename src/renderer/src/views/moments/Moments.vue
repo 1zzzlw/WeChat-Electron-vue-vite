@@ -5,9 +5,50 @@
       <div class="header-title">世界频道</div>
     </div>
 
+    <div class="moments-toolbar">
+      <!-- 左侧占位 -->
+      <div class="toolbar-left"></div>
+
+      <!-- 搜索框 -->
+      <div class="toolbar-center">
+        <div class="search-box">
+          <div class="search-group">
+            <el-input v-model="searchKeyword" placeholder="搜索动态、用户、标签..." spellcheck="false" clearable
+              @keyup.enter="handleSearch">
+              <template #prefix>
+                <el-icon>
+                  <Search />
+                </el-icon>
+              </template>
+              <template #append>
+                <el-button @click="handleSearch">搜索</el-button>
+              </template>
+            </el-input>
+          </div>
+        </div>
+      </div>
+
+      <!-- 选择器 -->
+      <div class="toolbar-right">
+        <el-select v-model="label" @change="changeSortWay" placeholder="最热" style="width: 120px"
+          popper-class="moments-select-popper">
+          <el-option label="最新" value="1" />
+          <el-option label="最热" value="0" />
+        </el-select>
+      </div>
+    </div>
+
+    <!-- TODO 暂时不需要这个标签，因为比较麻烦，后期再添加 -->
+    <div class="tag-bar">
+      <!-- <div class="tag-item" :class="{ active: activeTag === tag.id }" v-for="tag in hotTags" :key="tag.id"
+        @click="handleTagClick(tag.id)">
+        # {{ tag.name }}
+      </div> -->
+    </div>
+
     <!-- 帖子列表 -->
     <div class="moments-content">
-      <el-scrollbar ref="scrollbarRef" style="height: 100%; width: 100%">
+      <el-scrollbar ref="scrollbarRef" @scroll="handleScroll" style="height: 100%; width: 100%">
         <div class="post-list" :class="{ 'is-reflowing': isReflowing }">
           <div v-if="postList.length === 0" class="empty-state">
             <p>还没有动态，快来发布第一条吧！</p>
@@ -21,7 +62,7 @@
                 <img :src="post.avatar" alt="头像" class="user-avatar" />
                 <div class="user-details">
                   <div class="username">{{ post.username }}</div>
-                  <div class="post-time">{{ post.time }}</div>
+                  <div class="post-time">{{ post.publishTime }}</div>
                 </div>
               </div>
               <div class="follow-btn" v-if="!post.isFollowed" @click="handleFollow(post.id)">
@@ -38,20 +79,14 @@
 
             <!-- 动态内容 -->
             <div class="post-content">
-              <div class="post-text">{{ post.content }}</div>
-              <!-- 图片展示 -->
-              <div class="post-images" v-if="post.images && post.images.length > 0">
-                <img v-for="(img, index) in post.images" :key="index" :src="img" class="post-image" loading="lazy"
-                  @click="previewImage(post.images, index)" />
-              </div>
+              <div class="post-text-wrapper" v-html="post.content"></div>
             </div>
 
             <!-- 互动区域 -->
             <div class="post-actions">
-              <div class="action-item" :class="{ active: post.isLiked }" @click="handleLike(post.id)">
+              <div class="action-item" :class="{ active: post.liked }" @click="handleLike(post.id)">
                 <el-icon>
-                  <StarFilled v-if="post.isLiked" />
-                  <Star v-else />
+                  <i class="iconfont icon-xihuan" :class="{ 'is-liked': post.liked }" />
                 </el-icon>
                 <span>{{ post.likeCount > 0 ? post.likeCount : '点赞' }}</span>
               </div>
@@ -80,11 +115,10 @@
                     <div class="comment-footer">
                       <span class="comment-time">{{ comment.time }}</span>
                       <div class="comment-actions">
-                        <div class="comment-action" :class="{ active: comment.isLiked }"
+                        <div class="comment-action" :class="{ active: comment.liked }"
                           @click="handleCommentLike(post.id, comment.id)">
                           <el-icon>
-                            <StarFilled v-if="comment.isLiked" />
-                            <Star v-else />
+                            <i class="iconfont icon-xihuan" :class="{ 'is-liked': comment.liked }" />
                           </el-icon>
                           <span v-if="comment.likeCount > 0">{{ comment.likeCount }}</span>
                         </div>
@@ -121,316 +155,124 @@
       </el-icon>
     </div>
 
-    <!-- 发布动态对话框（已移除，改用新窗口） -->
   </div>
 </template>
 
 <script setup lang="ts">
-import { ChatLineRound, Check, Coin, Plus, Star, StarFilled } from '@element-plus/icons-vue'
-import { ref } from 'vue'
+import { ChatLineRound, Check, Coin, Plus, Search } from '@element-plus/icons-vue'
+import { onMounted, ref } from 'vue'
+import { listApi, likeedApi } from '../../api/Moments'
+import { MomentsItem } from '../../types/moments'
+import type { ScrollbarDirection } from 'element-plus'
 
 const scrollbarRef = ref()
-
+const searchKeyword = ref('')
+const activeTag = ref('all')
 const isReflowing = ref(false)
-let resizeTimer: NodeJS.Timeout | null = null
+const label = ref('0')
 
-// const postList = ref([])
+const postList = ref<MomentsItem[]>([])
+const hotTags = ref([])
 
-// 模拟数据
-const postList = ref([
-  {
-    id: 1,
-    username: '张三',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix',
-    time: '2小时前',
-    content: '今天天气真不错，适合出去走走！分享一些随手拍的照片～',
-    images: [
-      'https://picsum.photos/id/10/800/600',
-      'https://picsum.photos/id/11/800/600'
-    ],
-    isLiked: false,
-    likeCount: 23,
-    commentCount: 2,
-    isFollowed: false,
-    showComments: false,
-    comments: [
-      {
-        id: 1,
-        username: '李四',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka',
-        content: '照片拍得真好看！',
-        time: '1小时前',
-        isLiked: false,
-        likeCount: 3,
-        replies: [
-          {
-            id: 101,
-            username: '张三',
-            replyTo: '李四',
-            content: '谢谢夸奖！'
-          }
-        ]
-      },
-      {
-        id: 2,
-        username: '王五',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=James',
-        content: '在哪里拍的呀？',
-        time: '50分钟前',
-        isLiked: true,
-        likeCount: 1,
-        replies: []
-      }
-    ]
-  },
-  {
-    id: 2,
-    username: '李四',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka',
-    time: '3小时前',
-    content: '最近在研究 Electron + Vue3，感觉这套组合真的很强大！',
-    images: [
-      'https://picsum.photos/id/20/800/600'
-    ],
-    isLiked: true,
-    likeCount: 15,
-    commentCount: 3,
-    isFollowed: true,
-    showComments: false,
-    comments: [
-      {
-        id: 3,
-        username: '张三',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix',
-        content: '确实，开发效率很高。',
-        time: '2小时前',
-        isLiked: false,
-        likeCount: 2,
-        replies: []
-      },
-      {
-        id: 4,
-        username: '小明',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Spooky',
-        content: '求教程分享！',
-        time: '1小时前',
-        isLiked: true,
-        likeCount: 5,
-        replies: []
-      },
-      {
-        id: 5,
-        username: '小红',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Fluffy',
-        content: '我也在学，一起交流。',
-        time: '30分钟前',
-        isLiked: false,
-        likeCount: 0,
-        replies: []
-      }
-    ]
-  },
-  {
-    id: 3,
-    username: '王五',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=James',
-    time: '5小时前',
-    content: '周末的咖啡时光 ☕️',
-    images: [
-      'https://picsum.photos/id/30/800/600',
-      'https://picsum.photos/id/31/800/600',
-      'https://picsum.photos/id/32/800/600'
-    ],
-    isLiked: false,
-    likeCount: 45,
-    commentCount: 1,
-    isFollowed: false,
-    showComments: false,
-    comments: [
-      {
-        id: 6,
-        username: '小美',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Cuddles',
-        content: '这家店在哪？看着不错。',
-        time: '4小时前',
-        isLiked: true,
-        likeCount: 3,
-        replies: []
-      }
-    ]
-  },
-  {
-    id: 4,
-    username: '赵六',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Tigger',
-    time: '昨天',
-    content: '新买的机械键盘，手感绝了！',
-    images: [
-      'https://picsum.photos/id/40/800/600'
-    ],
-    isLiked: true,
-    likeCount: 88,
-    commentCount: 2,
-    isFollowed: false,
-    showComments: false,
-    comments: [
-      {
-        id: 7,
-        username: '阿强',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Bear',
-        content: '什么轴的？',
-        time: '20小时前',
-        isLiked: false,
-        likeCount: 1,
-        replies: [
-          {
-            id: 102,
-            username: '赵六',
-            replyTo: '阿强',
-            content: '红轴，打字很舒服。'
-          }
-        ]
-      },
-      {
-        id: 8,
-        username: '老王',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Oliver',
-        content: '入坑预警！',
-        time: '18小时前',
-        isLiked: true,
-        likeCount: 10,
-        replies: []
-      }
-    ]
-  },
-  {
-    id: 8,
-    username: '小明',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Spooky',
-    time: '1小时前',
-    content: '瀑布流布局测试中... 这是一个比较长的动态内容，用来测试不同高度的卡片在瀑布流中的排列效果。技术改变生活，代码编织世界！我们需要更多的内容来填充这个区域。',
-    images: [],
-    isLiked: false,
-    likeCount: 10,
-    commentCount: 1,
-    isFollowed: false,
-    showComments: false,
-    comments: [
-      {
-        id: 9,
-        username: '张三',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix',
-        content: '效果看着很棒！',
-        time: '30分钟前',
-        isLiked: true,
-        likeCount: 2,
-        replies: []
-      }
-    ]
-  },
-  {
-    id: 9,
-    username: '小红',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Fluffy',
-    time: '30分钟前',
-    content: '今天也要元气满满哦！',
-    images: [
-      'https://picsum.photos/id/50/800/600'
-    ],
-    isLiked: true,
-    likeCount: 99,
-    commentCount: 2,
-    isFollowed: true,
-    showComments: false,
-    comments: [
-      {
-        id: 10,
-        username: '小明',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Spooky',
-        content: '加油加油！',
-        time: '20分钟前',
-        isLiked: false,
-        likeCount: 1,
-        replies: []
-      },
-      {
-        id: 11,
-        username: '小美',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Cuddles',
-        content: '元气少女上线。',
-        time: '10分钟前',
-        isLiked: true,
-        likeCount: 5,
-        replies: []
-      }
-    ]
-  },
-  {
-    id: 10,
-    username: '阿强',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Bear',
-    time: '10分钟前',
-    content: '分享一组极简风摄影，希望大家喜欢。',
-    images: [
-      'https://picsum.photos/id/60/800/600',
-      'https://picsum.photos/id/61/800/600'
-    ],
-    isLiked: false,
-    likeCount: 15,
-    commentCount: 1,
-    isFollowed: false,
-    showComments: false,
-    comments: [
-      {
-        id: 12,
-        username: '老王',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Oliver',
-        content: '构图很有深度。',
-        time: '5分钟前',
-        isLiked: true,
-        likeCount: 2,
-        replies: []
-      }
-    ]
-  },
-  {
-    id: 11,
-    username: '老王',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Oliver',
-    time: '刚刚',
-    content: '这就是全屏下动态增加列数的秘密！大家觉得这个瀑布流怎么样？',
-    images: [],
-    isLiked: true,
-    likeCount: 66,
-    commentCount: 1,
-    isFollowed: true,
-    showComments: false,
-    comments: [
-      {
-        id: 13,
-        username: '阿强',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Bear',
-        content: '非常丝滑！',
-        time: '刚刚',
-        isLiked: false,
-        likeCount: 0,
-        replies: []
-      }
-    ]
+// 添加加载状态
+const loading = ref(false)
+// 添加是否加载完毕状态
+const noMore = ref(false)
+
+// 模拟热门标签数据
+// const hotTags = ref([
+//   { id: 'all', name: '全部' },
+//   { id: 'tech', name: '技术分享' },
+//   { id: 'life', name: '日常生活' },
+//   { id: 'photo', name: '摄影' },
+//   { id: 'game', name: '游戏' },
+//   { id: 'food', name: '美食' },
+//   { id: 'travel', name: '旅行' },
+//   { id: 'study', name: '学习打卡' },
+//   { id: 'code', name: '代码' },
+//   { id: 'electron', name: 'Electron' },
+//   { id: 'vue3', name: 'Vue3' },
+//   { id: 'ai', name: 'AI' },
+// ])
+
+// 滚动底部监听
+async function handleScroll({ scrollTop }: { scrollTop: number }) {
+  if (loading.value || noMore.value) return
+
+  const scrollbar = scrollbarRef.value
+  if (!scrollbar) return
+
+  // 获取内部滚动的容器
+  const wrapRef = scrollbar.wrapRef
+  if (!wrapRef) return
+
+  const { scrollHeight, clientHeight } = wrapRef
+
+  if (scrollTop + clientHeight >= scrollHeight - 1) {
+    loadMore('bottom')
   }
-])
+}
+
+// 滚动底部监听
+async function loadMore(direction: ScrollbarDirection | string) {
+  if (direction === 'bottom') {
+    if (loading.value || noMore.value) return
+
+    loading.value = true
+    console.log("正在查询下一页...")
+
+    try {
+      // 查询最后一条帖子的id
+      const lastId = postList.value[postList.value.length - 1].id
+      // 查询下一页，累加到帖子集合里
+      console.log(lastId)
+
+    } catch (error) {
+      console.error("加载失败", error)
+    } finally {
+      loading.value = false
+    }
+  }
+}
+
+async function changeSortWay() {
+  postList.value = []
+  const sortWay = label.value
+  // 首页加载
+  const res = await listApi(sortWay, 0)
+  const moments = res.data
+  moments.forEach((n: any) => {
+    postList.value.push(n)
+  })
+  console.log(postList.value)
+}
+
+// 搜索事件
+const handleSearch = () => {
+  console.log('搜索关键词:', searchKeyword.value)
+  // TODO: 实现搜索逻辑
+}
+
+// 标签点击事件
+const handleTagClick = (tagId: string) => {
+  activeTag.value = tagId
+  console.log('选中标签:', tagId)
+  // TODO: 实现标签筛选逻辑
+}
 
 const openPublishWindow = () => {
-  // TODO: 创建新窗口来发布动态
-  console.log('打开发布动态窗口')
+  console.log('打开发布动态窗口');
+  (window as any).windowToolApi.createNewWindow("createMomentView", null)
 }
 
 const handleLike = (postId: number) => {
   const post = postList.value.find(p => p.id === postId)
   if (post) {
-    post.isLiked = !post.isLiked
-    post.likeCount += post.isLiked ? 1 : -1
+    post.liked = !post.liked
+    post.likeCount += post.liked ? 1 : -1
   }
+  // 发送点赞请求
+  likeedApi(postId)
 }
 
 const handleComment = (postId: number) => {
@@ -440,11 +282,6 @@ const handleComment = (postId: number) => {
   }
 }
 
-const handleReward = (postId: number) => {
-  // TODO: 实现打赏功能
-  console.log('打赏帖子:', postId)
-}
-
 const handleFollow = (postId: number) => {
   const post = postList.value.find(p => p.id === postId)
   if (post) {
@@ -452,9 +289,9 @@ const handleFollow = (postId: number) => {
   }
 }
 
-const previewImage = (images: string[], index: number) => {
-  // TODO: 实现图片预览功能
-  console.log('预览图片:', images, index)
+const handleReward = (postId: number) => {
+  // TODO: 实现打赏功能
+  console.log('打赏帖子:', postId)
 }
 
 const handleCommentLike = (postId: number, commentId: number) => {
@@ -462,8 +299,8 @@ const handleCommentLike = (postId: number, commentId: number) => {
   if (post && post.comments) {
     const comment = post.comments.find(c => c.id === commentId)
     if (comment) {
-      comment.isLiked = !comment.isLiked
-      comment.likeCount += comment.isLiked ? 1 : -1
+      comment.liked = !comment.liked
+      comment.likeCount += comment.liked ? 1 : -1
     }
   }
 }
@@ -472,6 +309,17 @@ const handleCommentReply = (postId: number, commentId: number, username: string)
   // TODO: 实现回复功能
   console.log('回复评论:', postId, commentId, '回复用户:', username)
 }
+
+onMounted(async () => {
+  const sortWay = label.value
+  // 首页加载
+  const res = await listApi(sortWay, 0)
+  const moments = res.data
+  moments.forEach((n: any) => {
+    postList.value.push(n)
+  })
+  console.log(postList.value)
+})
 </script>
 
 <style scoped>
@@ -490,6 +338,191 @@ const handleCommentReply = (postId: number, commentId: number, username: string)
   font-weight: 600;
   color: #43f3ff;
   text-shadow: 0 0 8px rgba(67, 243, 255, 0.3);
+}
+
+.moments-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.toolbar-left,
+.toolbar-right {
+  flex: 1;
+  display: flex;
+}
+
+.toolbar-right {
+  justify-content: flex-end;
+}
+
+.toolbar-center {
+  flex: 2;
+  display: flex;
+  justify-content: center;
+}
+
+/* 搜索框样式 */
+.search-box {
+  width: 100%;
+  max-width: 500px;
+}
+
+.search-group {
+  display: flex;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.search-group:hover {
+  transform: translateY(-1px);
+}
+
+:deep(.search-box .el-input__wrapper) {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-right: none !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+  border-radius: 8px 0 0 8px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:deep(.search-box .el-input__wrapper:hover) {
+  border-color: rgba(67, 243, 255, 0.5) !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+}
+
+:deep(.search-box .el-input__wrapper.is-focus) {
+  border-color: #43f3ff !important;
+  background: rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 0 15px rgba(67, 243, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+}
+
+:deep(.search-box .el-input__inner) {
+  color: #f0f2f5;
+  font-size: 14px;
+}
+
+:deep(.search-box .el-input__inner::placeholder) {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+:deep(.search-box .el-input__prefix) {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+:deep(.search-box .el-input-group__append) {
+  background: transparent;
+  border: none;
+  padding: 0;
+  box-shadow: none !important;
+}
+
+:deep(.search-box .el-button) {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-left: none;
+  border-radius: 0 8px 8px 0;
+  color: #f0f2f5 !important;
+  font-size: 14px;
+  padding: 0 25px;
+  height: 40px;
+  margin: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+}
+
+:deep(.search-box .el-button:hover) {
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: #fff;
+  border-color: rgba(67, 243, 255, 0.5) !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+}
+
+:deep(.search-box .el-button:active) {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* 选择器样式优化 */
+:deep(.toolbar-right .el-select) {
+  --el-select-border-color-hover: rgba(67, 243, 255, 0.5);
+  --el-select-input-focus-border-color: #43f3ff;
+}
+
+:deep(.toolbar-right .el-select .el-select__wrapper) {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:deep(.toolbar-right .el-select .el-select__wrapper:hover) {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(67, 243, 255, 0.5) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+}
+
+:deep(.toolbar-right .el-select .el-select__wrapper.is-focus) {
+  background: rgba(255, 255, 255, 0.2) !important;
+  border-color: #43f3ff !important;
+  box-shadow: 0 0 15px rgba(67, 243, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+}
+
+:deep(.toolbar-right .el-select .el-select__placeholder) {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+:deep(.toolbar-right .el-select .el-select__selected-item) {
+  color: #f0f2f5 !important;
+}
+
+:deep(.toolbar-right .el-select .el-select__caret) {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.tag-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  padding: 10px 0;
+  width: 100%;
+}
+
+.tag-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  color: #000000;
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.tag-item:hover {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.3);
+  transform: translateY(-1px);
+}
+
+.tag-item.active {
+  background: rgba(0, 0, 0, 0.1);
+  border-color: rgba(0, 0, 0, 0.5);
+  font-weight: 600;
 }
 
 .moments-count {
@@ -572,27 +605,16 @@ const handleCommentReply = (postId: number, commentId: number, username: string)
   break-inside: avoid-column;
   width: 100%;
   margin-bottom: 15px;
-  padding: 16px;
-  background: rgba(67, 243, 255, 0.05);
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.03);
   border-radius: 12px;
-  border: 1px solid rgba(67, 243, 255, 0.25);
-  transition: all 0.3s ease;
+  border: 1px solid rgba(67, 243, 255, 0.15);
+  backdrop-filter: blur(10px);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   animation: cardEnter 0.5s ease forwards;
   opacity: 0;
   transform: translateY(20px);
-}
-
-/* 给每个卡片加延迟，形成错落效果 */
-.post-item:nth-child(3n+1) {
-  animation-delay: 0.1s;
-}
-
-.post-item:nth-child(3n+2) {
-  animation-delay: 0.2s;
-}
-
-.post-item:nth-child(3n+3) {
-  animation-delay: 0.3s;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 @keyframes cardEnter {
@@ -603,17 +625,17 @@ const handleCommentReply = (postId: number, commentId: number, username: string)
 }
 
 .post-item:hover {
-  background: rgba(67, 243, 255, 0.08);
+  background: rgba(255, 255, 255, 0.06);
   border-color: rgba(67, 243, 255, 0.4);
-  box-shadow: 0 6px 20px rgba(67, 243, 255, 0.2);
-  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(67, 243, 255, 0.15), inset 0 0 10px rgba(67, 243, 255, 0.05);
+  transform: translateY(-4px);
 }
 
 .post-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 15px;
 }
 
 .user-info {
@@ -623,34 +645,34 @@ const handleCommentReply = (postId: number, commentId: number, username: string)
 }
 
 .user-avatar {
-  width: 45px;
-  height: 45px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
-  border: 2px solid rgba(67, 243, 255, 0.3);
+  border: 1.5px solid rgba(67, 243, 255, 0.2);
   flex-shrink: 0;
   transition: all 0.3s ease;
 }
 
 .user-avatar:hover {
   border-color: rgba(67, 243, 255, 0.6);
-  box-shadow: 0 0 12px rgba(67, 243, 255, 0.3);
+  transform: rotate(15deg);
 }
 
 .user-details {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .username {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: #43f3ff;
 }
 
 .post-time {
-  font-size: 12px;
-  color: rgba(67, 243, 255, 0.6);
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
 }
 
 .follow-btn,
@@ -658,29 +680,29 @@ const handleCommentReply = (postId: number, commentId: number, username: string)
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 6px 14px;
+  padding: 5px 12px;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 12px;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .follow-btn {
-  background: rgba(67, 243, 255, 0.15);
+  background: rgba(67, 243, 255, 0.1);
   color: #43f3ff;
-  border: 1px solid rgba(67, 243, 255, 0.4);
+  border: 1px solid rgba(67, 243, 255, 0.3);
 }
 
 .follow-btn:hover {
-  background: rgba(67, 243, 255, 0.25);
-  box-shadow: 0 0 12px rgba(67, 243, 255, 0.3);
-  transform: translateY(-1px);
+  background: rgba(67, 243, 255, 0.2);
+  border-color: rgba(67, 243, 255, 0.5);
+  transform: scale(1.05);
 }
 
 .followed-btn {
-  background: rgba(102, 217, 102, 0.2);
-  color: rgba(102, 217, 102, 0.9);
-  border: 1px solid rgba(102, 217, 102, 0.3);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   cursor: default;
 }
 
@@ -688,7 +710,8 @@ const handleCommentReply = (postId: number, commentId: number, username: string)
   margin-bottom: 12px;
 }
 
-.post-text {
+/* 富文本排版样式 */
+.post-text-wrapper {
   font-size: 14px;
   line-height: 1.6;
   color: #f0f2f5;
@@ -696,87 +719,114 @@ const handleCommentReply = (postId: number, commentId: number, username: string)
   word-break: break-word;
 }
 
-.post-images {
-  display: grid;
-  gap: 8px;
-  grid-template-columns: repeat(3, 1fr);
-  opacity: 0;
-  animation: imageFadeIn 0.4s ease forwards;
-}
-
-@keyframes imageFadeIn {
-  to {
-    opacity: 1;
-  }
-}
-
-.post-images:has(img:only-child) {
-  grid-template-columns: 1fr;
-}
-
-.post-images:has(img:nth-child(2):last-child) {
-  grid-template-columns: repeat(2, 1fr);
-}
-
-.post-image {
-  width: 100%;
-  height: auto;
-  max-height: 200px;
-  object-fit: cover;
+:deep(.post-text-wrapper img) {
+  max-width: 30%;
   border-radius: 8px;
-  cursor: pointer;
-  border: 1px solid rgba(67, 243, 255, 0.2);
+  margin: 8px auto;
+  border: 2px solid rgba(67, 243, 255, 0.2);
+  box-shadow: 0 2px 8px rgba(67, 243, 255, 0.15);
   transition: all 0.3s ease;
 }
 
-.post-image:hover {
+:deep(.post-text-wrapper img:hover) {
   border-color: rgba(67, 243, 255, 0.4);
-  box-shadow: 0 0 12px rgba(67, 243, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(67, 243, 255, 0.3);
   transform: scale(1.02);
+}
+
+
+:deep(.post-text-wrapper h1) {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  margin: 10px 0 6px;
+  border-bottom: 1px solid rgba(67, 243, 255, 0.2);
+  padding-bottom: 4px;
+}
+
+:deep(.post-text-wrapper h2) {
+  font-size: 16px;
+  font-weight: 600;
+  color: #e0faff;
+  margin: 8px 0 5px;
+  display: flex;
+  align-items: center;
+}
+
+:deep(.post-text-wrapper h2::before) {
+  content: '';
+  width: 3px;
+  height: 14px;
+  background: #43f3ff;
+  margin-right: 8px;
+  border-radius: 2px;
+}
+
+:deep(.post-text-wrapper h3) {
+  font-size: 15px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 6px 0 4px;
+}
+
+:deep(.post-text-wrapper strong) {
+  color: #43f3ff;
+  font-weight: 600;
+}
+
+:deep(.post-text-wrapper blockquote) {
+  border-left: 3px solid rgba(67, 243, 255, 0.4);
+  background: rgba(67, 243, 255, 0.03);
+  padding: 8px 12px;
+  margin: 10px 0;
+  border-radius: 0 4px 4px 0;
+  color: rgba(255, 255, 255, 0.7);
+  font-style: italic;
+  font-size: 13px;
+}
+
+:deep(.post-text-wrapper p) {
+  margin: 6px 0;
 }
 
 .post-actions {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  /* 按钮之间均匀分布 */
-  gap: 8px;
-  padding-top: 12px;
-  border-top: 1px solid rgba(67, 243, 255, 0.15);
+  gap: 12px;
+  padding-top: 15px;
+  margin-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .action-item {
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 6px;
-  padding: 6px 4px;
-  border-radius: 6px;
   font-size: 13px;
-  color: rgba(67, 243, 255, 0.8);
+  color: rgba(255, 255, 255, 0.5);
   cursor: pointer;
   transition: all 0.3s ease;
-  background: rgba(67, 243, 255, 0.1);
-  white-space: nowrap;
-  flex: 1;
-  max-width: 90px;
-  height: 32px;
+  padding: 4px 8px;
+  border-radius: 4px;
 }
 
 .action-item:hover {
-  background: rgba(67, 243, 255, 0.2);
   color: #43f3ff;
-  box-shadow: 0 0 10px rgba(67, 243, 255, 0.2);
-  transform: translateY(-1px);
+  background: rgba(67, 243, 255, 0.05);
 }
 
 .action-item.active {
-  color: #ffd700;
-  background: rgba(255, 215, 0, 0.15);
+  color: #ff4757;
+}
+
+.action-item.active .iconfont.icon-xihuan {
+  color: #ff4757;
+  filter: drop-shadow(0 0 5px rgba(255, 71, 87, 0.4));
 }
 
 .action-item.active:hover {
-  background: rgba(255, 215, 0, 0.25);
+  background: rgba(255, 71, 87, 0.1);
 }
 
 .comment-list {
@@ -861,12 +911,12 @@ const handleCommentReply = (postId: number, commentId: number, username: string)
 }
 
 .comment-action.active {
-  color: #ffd700;
-  background: rgba(255, 215, 0, 0.12);
+  color: #ff4757;
+  background: rgba(255, 71, 87, 0.12);
 }
 
 .comment-action.active:hover {
-  background: rgba(255, 215, 0, 0.2);
+  background: rgba(255, 71, 87, 0.2);
 }
 
 .comment-action .el-icon {
@@ -932,5 +982,44 @@ const handleCommentReply = (postId: number, commentId: number, username: string)
 
 .follow-btn:active {
   transform: scale(0.95);
+}
+</style>
+
+<style>
+/* 全局样式覆盖 el-select 下拉框 popper，因为 popper 默认挂载在 body 上 */
+.moments-select-popper.el-popper {
+  background: rgba(28, 38, 50, 0.8) !important;
+  backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(67, 243, 255, 0.3) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3) !important;
+}
+
+.moments-select-popper .el-select-dropdown__item {
+  color: rgba(255, 255, 255, 0.8) !important;
+  background-color: transparent !important;
+  transition: all 0.2s ease !important;
+}
+
+.moments-select-popper .el-select-dropdown__item.hover,
+.moments-select-popper .el-select-dropdown__item:hover {
+  background: rgba(67, 243, 255, 0.25) !important;
+  color: #43f3ff !important;
+}
+
+.moments-select-popper .el-select-dropdown__item.selected {
+  color: #43f3ff !important;
+  font-weight: 600 !important;
+  background: rgba(67, 243, 255, 0.15) !important;
+}
+
+.moments-select-popper .el-select-dropdown__item.selected.hover,
+.moments-select-popper .el-select-dropdown__item.selected:hover {
+  background: rgba(67, 243, 255, 0.3) !important;
+}
+
+.moments-select-popper .el-popper__arrow::before {
+  background: rgba(28, 38, 50, 0.8) !important;
+  border: 1px solid rgba(67, 243, 255, 0.3) !important;
 }
 </style>

@@ -1,8 +1,7 @@
-import { BrowserWindow, shell, app, nativeImage } from 'electron'
-import { join } from 'path'
 import { is } from '@electron-toolkit/utils'
+import { app, BrowserWindow, shell } from 'electron'
+import { join } from 'path'
 import { pathToFileURL } from 'url'
-import { mainWindow } from '../index'
 
 // 管理窗口的集合
 const windowPool = new Map()
@@ -24,7 +23,8 @@ const WINDOW_CONFIGS = {
         setting: '/setting',
         imagePreview: '/imagePreview',
         videoPreview: '/videoPreview',
-        createNote: '/createNote'
+        createNote: '/createNote',
+        createMomentView: '/createMomentView'
         // TODO 可以继续添加其他路由页面
     }
 }
@@ -190,6 +190,5 @@ function getWindowLoadConfig(windowType, loadType = 'vue') {
 }
 
 export {
-    windowPool,
-    createExtraWindow
+    createExtraWindow, windowPool
 }

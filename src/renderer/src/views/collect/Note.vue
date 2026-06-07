@@ -19,11 +19,11 @@
     </div>
 </template>
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
-import { getFavorites, addFavorites } from '../../db/dualDB';
-import { formatMessageTime } from '../../utils/utils'
-import { getFavoritesApi } from '../../api/Favorites'
-import { eventEmitter } from '../../utils/eventEmitter'
+import { onMounted, onUnmounted, ref } from 'vue';
+import { getFavoritesApi } from '../../api/Favorites';
+import { addFavorites, getFavorites } from '../../db/dualDB';
+import { eventEmitter } from '../../utils/eventEmitter';
+import { formatMessageTime } from '../../utils/utils';
 
 const favoritesList = ref<any>([])
 
@@ -174,8 +174,7 @@ onUnmounted(() => {
 }
 
 :deep(.note-content-html img) {
-    max-width: 50%;
-    height: auto;
+    max-width: 30%;
     border-radius: 8px;
     margin: 8px auto;
     border: 2px solid rgba(67, 243, 255, 0.2);

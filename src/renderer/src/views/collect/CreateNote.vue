@@ -115,17 +115,17 @@
     </div>
 </template>
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useEditor, EditorContent } from '@tiptap/vue-3'
+import { EditorContent, useEditor } from '@tiptap/vue-3';
+import { onMounted, ref } from 'vue';
 // 基础功能包（加粗、斜体、列表等）
-import StarterKit from '@tiptap/starter-kit'
-import WindowControls from '../../components/WindowControls.vue';
 import Image from '@tiptap/extension-image';
-import Link from '@tiptap/extension-link'
-import { uploadImageApi } from '../../api/Favorites'
-import { insertNewNote, updateOldNote } from '../../db/syncDB'
+import Link from '@tiptap/extension-link';
+import StarterKit from '@tiptap/starter-kit';
 import { ElMessage } from 'element-plus';
-import { eventEmitter } from '../../utils/eventEmitter'
+import { uploadImageApi } from '../../api/Favorites';
+import WindowControls from '../../components/WindowControls.vue';
+import { insertNewNote, updateOldNote } from '../../db/syncDB';
+import { eventEmitter } from '../../utils/eventEmitter';
 
 const pendingImages = ref<any>([])
 const showLinkDialog = ref(false)
@@ -279,7 +279,6 @@ const saveContent = async () => {
         const tempUrl = pendingImages.value[index].tempUrl
         replaceTempUrl(tempUrl, url)
     })
-
 
     const html = editor.value.getHTML()
 

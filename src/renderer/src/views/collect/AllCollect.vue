@@ -60,9 +60,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { Star, Delete } from '@element-plus/icons-vue'
+import { Delete, Star } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { onMounted, ref } from 'vue'
 import { formatMessageTime } from '../../utils/utils'
 
 // 收藏列表数据
@@ -260,9 +260,12 @@ onMounted(() => {
 }
 
 @keyframes pulse {
-    0%, 100% {
+
+    0%,
+    100% {
         opacity: 0.5;
     }
+
     50% {
         opacity: 1;
     }
@@ -331,7 +334,6 @@ onMounted(() => {
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
-    -webkit-line-clamp: 4;
     -webkit-box-orient: vertical;
     word-break: break-all;
     white-space: pre-wrap;

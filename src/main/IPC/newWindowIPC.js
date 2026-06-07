@@ -1,6 +1,5 @@
 import { ipcMain } from 'electron'
-import { createExtraWindow } from '../Util/createNewWindow'
-import { windowPool } from '../Util/createNewWindow'
+import { createExtraWindow, windowPool } from '../Util/createNewWindow'
 
 const friendAdd_width = 350
 const friendAdd_height = 520
@@ -12,12 +11,15 @@ const mediaPreview_width = 1200
 const mediaPreview_height = 800
 const createNote_width = 700
 const createNote_height = 500
+const createMomentView_width = 750
+const createMomentView_height = 950
 
 let addFriendWindow = null
 let createGroupWindow = null
 let settingViewWindow = null
 let mediaPreviewWindow = null
 let createNoteWindow = null
+let createMomentViewWindow = null
 
 ipcMain.on('create-new-window', (e, windowType, data) => {
     console.log(windowType)
@@ -70,6 +72,14 @@ ipcMain.on('create-new-window', (e, windowType, data) => {
             }
             createNoteWindow = createExtraWindow('createNote', options, 'vue', data)
             break
+        }
+        case 'createMomentView': {
+            const options = {
+                minWidth: createMomentView_width,
+                minHeight: createMomentView_height,
+                resizable: true,
+            }
+            createMomentViewWindow = createExtraWindow('createMomentView', options, 'vue', data)
         }
     }
 })

@@ -1,34 +1,35 @@
-import { createRouter, createWebHistory, createWebHashHistory } from 'vue-router'
+import { createRouter, createWebHashHistory } from 'vue-router'
 
-import LoginView from '../views/login/Login.vue'
-import RegisterView from '../views/register/Register.vue'
-import PendingLogin from '../views/pendingLogin/PendingLogin.vue'
-import RegisterUserInfoView from '../views/register/RegisterUserInfo.vue'
-import UploadAvatarView from '../views/register/uploadAvatar.vue'
-import LayoutView from '../views/layout/Main.vue'
-import UserConversationListView from '../views/user/UserConversationList.vue'
-import UserListView from '../views/user/UserList.vue'
-import CollectList from '../views/user/CollectList.vue'
-import AllCollectView from '../views/collect/AllCollect.vue'
-import NoteView from '../views/collect/Note.vue'
-import ChatView from '../views/chat/Chat.vue'
 import AiChatView from '../views/chat/Ai-chat.vue'
-import FriendAddView from '../views/user/UserFriendAdd.vue'
+import ChatView from '../views/chat/Chat.vue'
+import AllCollectView from '../views/collect/AllCollect.vue'
+import CreateNoteView from '../views/collect/CreateNote.vue'
+import NoteView from '../views/collect/Note.vue'
 import FriendApplyView from '../views/friend/FriendApply.vue'
 import FriendInfoView from '../views/friend/FriendInfo.vue'
-import CreateGroupView from '../views/user/UserCreateGroup.vue'
-import MomentsView from '../views/moments/Moments.vue'
-import SetUserInfoView from '../views/setting/SetUserInfo.vue'
-import AccountVue from '../views/setting/Account.vue'
-import StoreLocationView from '../views/setting/StoreLocation.vue'
-import ShortcutKeyVue from '../views/setting/ShortcutKey.vue'
-import InformSetVue from '../views/setting/InformSet.vue'
-import AboutVue from '../views/setting/About.vue'
-import ImagePreviewView from '../views/media/imagePreview.vue'
-import VideoPreviewView from '../views/media/videoPreview.vue'
-import CreateNoteView from '../views/collect/CreateNote.vue'
 import groupApplyView from '../views/group/groupApply.vue'
 import groupInfoView from '../views/group/groupInfo.vue'
+import LayoutView from '../views/layout/Main.vue'
+import LoginView from '../views/login/Login.vue'
+import ImagePreviewView from '../views/media/imagePreview.vue'
+import VideoPreviewView from '../views/media/videoPreview.vue'
+import createMomentView from '../views/moments/CreateMoment.vue'
+import MomentsView from '../views/moments/Moments.vue'
+import PendingLogin from '../views/pendingLogin/PendingLogin.vue'
+import RegisterView from '../views/register/Register.vue'
+import RegisterUserInfoView from '../views/register/RegisterUserInfo.vue'
+import UploadAvatarView from '../views/register/uploadAvatar.vue'
+import AboutVue from '../views/setting/About.vue'
+import AccountVue from '../views/setting/Account.vue'
+import InformSetVue from '../views/setting/InformSet.vue'
+import SetUserInfoView from '../views/setting/SetUserInfo.vue'
+import ShortcutKeyVue from '../views/setting/ShortcutKey.vue'
+import StoreLocationView from '../views/setting/StoreLocation.vue'
+import CollectList from '../views/user/CollectList.vue'
+import UserConversationListView from '../views/user/UserConversationList.vue'
+import CreateGroupView from '../views/user/UserCreateGroup.vue'
+import FriendAddView from '../views/user/UserFriendAdd.vue'
+import UserListView from '../views/user/UserList.vue'
 
 
 const router = createRouter({
@@ -73,6 +74,11 @@ const router = createRouter({
       path: '/createNote',
       name: 'createNote',
       component: CreateNoteView
+    },
+    {
+      path: '/createMomentView',
+      name: 'createMomentView',
+      component: createMomentView
     },
     {
       path: '/setting',
