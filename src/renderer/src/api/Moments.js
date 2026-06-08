@@ -8,6 +8,12 @@ export const listApi = (sortWay, id) => request.get(`/moments/list`, {
     params: { sortWay: sortWay, lastId: id }
 })
 
-export const likeedApi = (momentId) => request.post(`/moments/like/${momentId}`)
+export const likedApi = (momentId) => request.post(`/moments/like/${momentId}`)
 
 export const momentDetail = (momentId) => request.get(`moments/detail/${momentId}`)
+
+export const publishComment = (data) => request.post('/moments/comment/publish', data)
+
+export const comments = (pageDTO) => request.get('/moments/comments/query', {
+    params: pageDTO
+})

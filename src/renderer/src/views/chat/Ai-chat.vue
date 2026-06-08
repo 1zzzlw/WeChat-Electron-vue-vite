@@ -324,9 +324,27 @@ img {
     color: #f0f0f0;
     box-shadow: none;
     border: 1px solid rgba(66, 153, 225, 0.2);
+    resize: none;
 
     &::placeholder {
         color: rgba(240, 240, 240, 0.5);
+    }
+
+    &::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: rgba(66, 153, 225, 0.3);
+        border-radius: 3px;
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+        background: rgba(66, 153, 225, 0.5);
+    }
+
+    &::-webkit-scrollbar-track {
+        background: transparent;
     }
 }
 

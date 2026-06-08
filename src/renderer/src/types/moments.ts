@@ -1,7 +1,7 @@
 // 朋友圈单条数据
 export interface MomentsItem {
     id: number
-    user_id: number
+    userId: number
     username: string
     avatar: string
     publishTime: string
@@ -26,10 +26,11 @@ interface CommentReply {
 // 单条评论
 interface Comment {
     id: number
+    userId: number
     username: string
     avatar: string
     content: string
-    time: string
+    publishTime: string
     liked: boolean
     likeCount: number
     replies: CommentReply[]

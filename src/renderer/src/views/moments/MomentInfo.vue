@@ -81,6 +81,22 @@
                     </div>
                 </div>
 
+                <!-- 评论输入框 -->
+                <div class="comment-input-area">
+                    <img :src="userAvatar" alt="我的头像" class="my-avatar" />
+                    <div class="input-wrapper">
+                        <textarea v-model="commentContent" placeholder="写下你的评论..." class="comment-textarea"
+                            @keydown.enter.ctrl="handleSendComment" spellcheck="false"></textarea>
+                        <div class="input-actions">
+                            <span class="tip-text">Ctrl + Enter 发送</span>
+                            <el-button type="primary" class="send-btn" :disabled="!commentContent.trim()"
+                                @click="handleSendComment">
+                                发送
+                            </el-button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- 评论区 -->
                 <div class="comments-section">
                     <div class="comments-header">
@@ -93,7 +109,7 @@
                                 <div class="comment-user">{{ comment.username }}</div>
                                 <div class="comment-text">{{ comment.content }}</div>
                                 <div class="comment-footer">
-                                    <span class="comment-time">{{ comment.time }}</span>
+                                    <span class="comment-time">{{ comment.publishTime }}</span>
                                     <div class="comment-actions">
                                         <div class="comment-action" :class="{ active: comment.liked }"
                                             @click="handleCommentLike(comment.id)">
@@ -117,6 +133,9 @@
                                         <span class="reply-to" v-if="reply.replyTo"> 回复 {{ reply.replyTo }}</span>
                                         <span class="reply-text">: {{ reply.content }}</span>
                                     </div>
+                                    <div class="load-more-replies" @click="handleLoadMoreReplies(comment.id)">
+                                        查看更多回复
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -132,16 +151,27 @@
 
 <script lang="ts" setup>
 import { ChatLineRound, Check, Coin, Expand, Fold, Plus } from '@element-plus/icons-vue'
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import WindowControls from '../../components/WindowControls.vue'
-import { momentDetail } from '../../api/Moments.js'
+import { momentDetail, publishComment, comments } from '../../api/Moments.js'
 import { MomentsItem } from '../../types/moments.ts'
+import { ElMessage } from 'element-plus'
 
 const isSidebarCollapsed = ref(false)
 const contentMainRef = ref<HTMLElement | null>(null)
 const activeHeadingIndex = ref(-1)
-
+const userAvatar = ref()
 const momentInfo = ref<MomentsItem>()
+const commentContent = ref('')
+const pageDTO = ref({
+    momentId: 1,
+    // 页码
+    page: 1,
+    // 每页展示评论数量
+    pageSize: 10
+})
+// 总评论页数
+const totalPage = ref()
 
 // 提取标题列表
 const headings = computed(() => {
@@ -160,7 +190,7 @@ const headings = computed(() => {
     return list
 })
 
-// 处理滚动：ScrollSpy
+// 处理滚动
 const handleScroll = (e: Event) => {
     const target = e.target as HTMLElement
     if (!contentMainRef.value) return
@@ -212,16 +242,82 @@ const handleCommentReply = (commentId: number, username: string) => {
     console.log('回复评论:', commentId, '用户:', username)
 }
 
-onMounted(() => {
-    console.log('MomentInfo 组件挂载');
+const handleSendComment = async () => {
+    const content = commentContent.value
+    commentContent.value = ''
+    const data = {
+        momentId: momentInfo.value?.id,
+        content: content
+    }
+    const res = await publishComment(data)
+    if (momentInfo.value) {
+        if (!momentInfo.value.comments) {
+            momentInfo.value.comments = []
+        }
+        // 临时生成一个时间
+        const time = new Date().getTime()
+        res.data.publishTime = time
+        // 推进去
+        momentInfo.value.comments.unshift(res.data)
+
+        // 评论数量 +1
+        if (momentInfo.value.commentCount != null) {
+            momentInfo.value.commentCount += 1
+        }
+    }
+    ElMessage.success("发布评论成功")
+}
+
+const handleLoadMoreReplies = (commentId: number) => {
+    console.log('加载更多回复:', commentId)
+    pageDTO.value.page += 1
+    getComments()
+}
+
+// electron通信
+const windowIPC = async () => {
     (window as any).windowToolApi.sendWindowInfo(async (e: any, data: any) => {
         const res = await momentDetail(data)
         momentInfo.value = res.data
-    })
-})
 
-onBeforeUnmount(() => {
-    console.log('MomentInfo 组件卸载')
+        pageDTO.value.momentId = res.data.id
+        await getComments()
+    })
+
+    userAvatar.value = await (window as any).userInfoApi.storeGetUserInfo('avatar')
+}
+
+// 评论获取
+const getComments = async () => {
+    if (!pageDTO.value.momentId) return
+
+    console.log(pageDTO.value)
+    const res = await comments(pageDTO.value)
+
+    if (res.data) {
+        totalPage.value = res.data.total
+
+        // 确保 comments 数组存在
+        if (!momentInfo.value?.comments) {
+            if (momentInfo.value) {
+                momentInfo.value.comments = []
+            }
+        }
+
+        // 如果是第一页，直接赋值；如果是加载更多，则 push
+        if (pageDTO.value.page === 1) {
+            if (momentInfo.value) {
+                momentInfo.value.comments = res.data.data || []
+            }
+        } else {
+            res.data.data?.forEach((comment: any) => {
+                momentInfo.value?.comments.push(comment)
+            })
+        }
+    }
+}
+onMounted(async () => {
+    await windowIPC()
 })
 </script>
 
@@ -758,6 +854,126 @@ onBeforeUnmount(() => {
 
 .reply-text {
     color: #f0f2f5;
+}
+
+.load-more-replies {
+    margin-top: 8px;
+    padding: 6px 12px;
+    font-size: 12px;
+    color: rgba(67, 243, 255, 0.7);
+    background: rgba(67, 243, 255, 0.08);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-block;
+    text-align: center;
+}
+
+.load-more-replies:hover {
+    background: rgba(67, 243, 255, 0.15);
+    color: #43f3ff;
+}
+
+/* 评论输入区 */
+.comment-input-area {
+    padding: 20px 40px;
+    border-top: 1px solid rgba(67, 243, 255, 0.15);
+    background: rgba(67, 243, 255, 0.02);
+    display: flex;
+    gap: 12px;
+}
+
+.my-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid rgba(67, 243, 255, 0.3);
+    flex-shrink: 0;
+}
+
+.input-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.comment-textarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 12px 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(67, 243, 255, 0.2);
+    border-radius: 8px;
+    color: #f0f2f5;
+    font-size: 14px;
+    line-height: 1.6;
+    resize: vertical;
+    outline: none;
+    transition: all 0.3s ease;
+    font-family: inherit;
+    resize: none;
+}
+
+.comment-textarea::placeholder {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.comment-textarea:focus {
+    border-color: rgba(67, 243, 255, 0.5);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 0 3px rgba(67, 243, 255, 0.1);
+}
+
+.comment-textarea::-webkit-scrollbar {
+    width: 6px;
+}
+
+.comment-textarea::-webkit-scrollbar-thumb {
+    background: rgba(67, 243, 255, 0.2);
+    border-radius: 3px;
+}
+
+.comment-textarea::-webkit-scrollbar-thumb:hover {
+    background: rgba(67, 243, 255, 0.4);
+}
+
+.comment-textarea::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.input-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tip-text {
+    font-size: 12px;
+    color: rgba(67, 243, 255, 0.5);
+}
+
+.send-btn {
+    background: rgba(67, 243, 255, 0.2) !important;
+    border: 1px solid rgba(67, 243, 255, 0.4) !important;
+    color: #43f3ff !important;
+    border-radius: 6px;
+    padding: 8px 24px;
+    font-weight: 600;
+    font-size: 13px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+}
+
+.send-btn:hover:not(:disabled) {
+    background: rgba(67, 243, 255, 0.35) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(67, 243, 255, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+}
+
+.send-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
 }
 
 /* 滚动条 */

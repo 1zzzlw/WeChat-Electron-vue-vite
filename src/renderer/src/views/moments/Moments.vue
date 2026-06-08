@@ -138,7 +138,7 @@
 <script setup lang="ts">
 import { ChatLineRound, Check, Coin, Plus, Search, Loading } from '@element-plus/icons-vue'
 import { onMounted, ref, onUnmounted, nextTick, watch } from 'vue'
-import { listApi, likeedApi } from '../../api/Moments'
+import { listApi, likedApi } from '../../api/Moments'
 import { MomentsItem } from '../../types/moments'
 import type { ScrollbarDirection } from 'element-plus'
 import Masonry from 'masonry-layout'
@@ -256,7 +256,7 @@ const handleLike = (postId: number) => {
     post.likeCount += post.liked ? 1 : -1
   }
   // 发送点赞请求
-  likeedApi(postId)
+  likedApi(postId)
 }
 
 const handleFollow = (postId: number) => {
