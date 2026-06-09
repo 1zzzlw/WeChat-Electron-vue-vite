@@ -138,7 +138,7 @@
 <script setup lang="ts">
 import { ChatLineRound, Check, Coin, Plus, Search, Loading } from '@element-plus/icons-vue'
 import { onMounted, ref, onUnmounted, nextTick, watch } from 'vue'
-import { listApi, likedApi } from '../../api/Moments'
+import { listByNewApi, likedApi, listByHot } from '../../api/Moments'
 import { MomentsItem } from '../../types/moments'
 import type { ScrollbarDirection } from 'element-plus'
 import Masonry from 'masonry-layout'
@@ -148,7 +148,10 @@ import { formatMomentsTime } from '../../utils/utils'
 const searchKeyword = ref('')
 const activeTag = ref('all')
 const label = ref('0')
-
+const pageDTO = ref({
+  page: 1,
+  pageSize: 20
+})
 const postList = ref<MomentsItem[]>([])
 const hotTags = ref([])
 
@@ -182,16 +185,26 @@ async function loadMore(direction: ScrollbarDirection | string) {
     console.log('正在查询下一页...')
 
     try {
-      // 查询最后一条帖子的id
-      const lastId = postList.value[postList.value.length - 1].id
       // 查询下一页，累加到帖子集合里
-      console.log(lastId)
       const sortWay = label.value
-      const res = await listApi(sortWay, lastId)
-      res.data.forEach((n: any) => {
+      let moments
+      if (sortWay == '0') {
+        // 最热
+        pageDTO.value.page += 1
+        const page = pageDTO.value.page
+        const pageSize = pageDTO.value.pageSize
+        const res = await listByHot(page, pageSize)
+        moments = res.data.data
+      } else {
+        // 查询最后一条帖子的id
+        const lastId = postList.value[postList.value.length - 1].id
+        const res = await listByNewApi(lastId)
+        moments = res.data
+      }
+
+      moments.forEach((n: any) => {
         postList.value.push(n)
       })
-
       // 新数据加载完成后，触发 Masonry 重新布局
       await nextTick()
       if (masonry) {
@@ -210,9 +223,19 @@ async function loadMore(direction: ScrollbarDirection | string) {
 async function changeSortWay() {
   postList.value = []
   const sortWay = label.value
+  let moments
   // 首页加载
-  const res = await listApi(sortWay, 0)
-  const moments = res.data
+  if (sortWay == '0') {
+    // 最热
+    const pageSize = pageDTO.value.pageSize
+    const res = await listByHot(1, pageSize)
+    moments = res.data.data
+  } else {
+    // 最新
+    const res = await listByNewApi(0)
+    moments = res.data
+  }
+
   moments.forEach((n: any) => {
     postList.value.push(n)
   })
@@ -241,7 +264,6 @@ const handleTagClick = (tagId: string) => {
 }
 
 const openInfo = (id: number) => {
-  console.log(id);
   (window as any).windowToolApi.createNewWindow('momentInfoView', id)
 }
 
@@ -271,28 +293,12 @@ const handleReward = (postId: number) => {
   console.log('打赏帖子:', postId)
 }
 
-const handleCommentLike = (postId: number, commentId: number) => {
-  const post = postList.value.find((p) => p.id === postId)
-  if (post && post.comments) {
-    const comment = post.comments.find((c) => c.id === commentId)
-    if (comment) {
-      comment.liked = !comment.liked
-      comment.likeCount += comment.liked ? 1 : -1
-    }
-  }
-}
-
-const handleCommentReply = (postId: number, commentId: number, username: string) => {
-  // TODO: 实现回复功能
-  console.log('回复评论:', postId, commentId, '回复用户:', username)
-}
-
 // 初始化帖子
 const listMoments = async () => {
-  const sortWay = label.value
   // 首页加载
-  const res = await listApi(sortWay, 0)
-  const moments = res.data
+  const pageSize = pageDTO.value.pageSize
+  const res = await listByHot(1, pageSize)
+  const moments = res.data.data
   moments.forEach((n: any) => {
     postList.value.push(n)
   })

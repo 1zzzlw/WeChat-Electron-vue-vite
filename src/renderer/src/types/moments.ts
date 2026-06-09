@@ -15,25 +15,36 @@ export interface MomentsItem {
     likers: Like[]
 }
 
-// 评论回复
-interface CommentReply {
+// 一级评论
+export interface Comment {
     id: number
-    username: string
-    replyTo: string
-    content: string
-}
-
-// 单条评论
-interface Comment {
-    id: number
+    momentId: number
     userId: number
     username: string
     avatar: string
     content: string
     publishTime: string
+    parentId: number
     liked: boolean
     likeCount: number
-    replies: CommentReply[]
+    replyToUserId?: number
+    replyToUsername?: string
+    replies: Reply[]
+}
+
+// 二级评论（回复）
+export interface Reply {
+    id: number
+    momentId: number
+    userId: number
+    username: string
+    avatar: string
+    content: string
+    publishTime: string
+    parentId: number
+    replyToUserId: number
+    replyToUsername: string
+    likeCount: number
 }
 
 interface Like {

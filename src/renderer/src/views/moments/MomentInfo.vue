@@ -109,7 +109,7 @@
                                 <div class="comment-user">{{ comment.username }}</div>
                                 <div class="comment-text">{{ comment.content }}</div>
                                 <div class="comment-footer">
-                                    <span class="comment-time">{{ comment.publishTime }}</span>
+                                    <span class="comment-time">{{ formatMomentsTime(comment.publishTime) }}</span>
                                     <div class="comment-actions">
                                         <div class="comment-action" :class="{ active: comment.liked }"
                                             @click="handleCommentLike(comment.id)">
@@ -130,15 +130,33 @@
                                 <div class="reply-list" v-if="comment.replies && comment.replies.length > 0">
                                     <div class="reply-item" v-for="reply in comment.replies" :key="reply.id">
                                         <span class="reply-user">{{ reply.username }}</span>
-                                        <span class="reply-to" v-if="reply.replyTo"> 回复 {{ reply.replyTo }}</span>
+                                        <span class="reply-to" v-if="reply.replyToUsername"> 回复 {{ reply.replyToUsername }}</span>
                                         <span class="reply-text">: {{ reply.content }}</span>
                                     </div>
-                                    <div class="load-more-replies" @click="handleLoadMoreReplies(comment.id)">
+                                    <div class="load-more-replies" v-if="hasMoreReplies(comment.id)" @click="handleLoadMoreReplies(comment.id)">
                                         查看更多回复
+                                    </div>
+                                </div>
+                                <!-- 回复输入框 -->
+                                <div class="reply-input-area" v-if="replyingToCommentId === comment.id">
+                                    <textarea v-model="replyCommentContent"
+                                        :placeholder="'回复 ' + replyingToUsername + '...'"
+                                        class="reply-textarea" @keydown.enter.ctrl="handleSendReply"
+                                        spellcheck="false"></textarea>
+                                    <div class="reply-input-actions">
+                                        <span class="tip-text">Ctrl + Enter 发送</span>
+                                        <el-button type="primary" class="reply-send-btn"
+                                            :disabled="!replyCommentContent.trim()" @click="handleSendReply">
+                                            发送
+                                        </el-button>
+                                        <div class="reply-cancel-btn" @click="handleCancelReply">取消</div>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                    </div>
+                    <div class="load-more-comments" v-if="hasMoreComments" @click="handleLoadMoreComments">
+                        加载更多评论
                     </div>
                 </div>
             </div>
@@ -153,9 +171,10 @@
 import { ChatLineRound, Check, Coin, Expand, Fold, Plus } from '@element-plus/icons-vue'
 import { computed, onMounted, ref } from 'vue'
 import WindowControls from '../../components/WindowControls.vue'
-import { momentDetail, publishComment, comments } from '../../api/Moments.js'
+import { momentDetail, publishComment, comments, replies } from '../../api/Moments.js'
 import { MomentsItem } from '../../types/moments.ts'
 import { ElMessage } from 'element-plus'
+import { formatMomentsTime } from '../../utils/utils.js'
 
 const isSidebarCollapsed = ref(false)
 const contentMainRef = ref<HTMLElement | null>(null)
@@ -163,15 +182,28 @@ const activeHeadingIndex = ref(-1)
 const userAvatar = ref()
 const momentInfo = ref<MomentsItem>()
 const commentContent = ref('')
-const pageDTO = ref({
-    momentId: 1,
-    // 页码
+
+// 一级评论分页状态
+const commentPageDTO = ref({
+    momentId: 0,
     page: 1,
-    // 每页展示评论数量
     pageSize: 10
 })
-// 总评论页数
-const totalPage = ref()
+const totalCommentCount = ref(0)
+const hasMoreComments = computed(() => {
+    if (!momentInfo.value?.comments) return false
+    return momentInfo.value.comments.length < totalCommentCount.value
+})
+
+// 二级评论分页状态：每条一级评论独立维护
+const replyPageMap = ref<Map<number, { page: number, pageSize: number, total: number }>>(new Map())
+const hasMoreReplies = (commentId: number): boolean => {
+    const state = replyPageMap.value.get(commentId)
+    if (!state) return false
+    const comment = momentInfo.value?.comments?.find(c => c.id === commentId)
+    if (!comment?.replies) return false
+    return comment.replies.length < state.total
+}
 
 // 提取标题列表
 const headings = computed(() => {
@@ -238,8 +270,25 @@ const handleCommentLike = (commentId: number) => {
     console.log('点赞评论:', commentId)
 }
 
+// 回复输入框状态：同一时刻只显示一个
+const replyingToCommentId = ref<number | null>(null)
+const replyingToUsername = ref('')
+const replyCommentContent = ref('')
+
 const handleCommentReply = (commentId: number, username: string) => {
-    console.log('回复评论:', commentId, '用户:', username)
+    replyingToCommentId.value = commentId
+    replyingToUsername.value = username
+    replyCommentContent.value = ''
+}
+
+const handleCancelReply = () => {
+    replyingToCommentId.value = null
+    replyingToUsername.value = ''
+    replyCommentContent.value = ''
+}
+
+const handleSendReply = () => {
+    console.log('发送回复, parentId:', replyingToCommentId.value, '内容:', replyCommentContent.value)
 }
 
 const handleSendComment = async () => {
@@ -256,7 +305,7 @@ const handleSendComment = async () => {
         }
         // 临时生成一个时间
         const time = new Date().getTime()
-        res.data.publishTime = time
+        res.data.publishTime = formatMomentsTime(time)
         // 推进去
         momentInfo.value.comments.unshift(res.data)
 
@@ -268,10 +317,21 @@ const handleSendComment = async () => {
     ElMessage.success("发布评论成功")
 }
 
-const handleLoadMoreReplies = (commentId: number) => {
-    console.log('加载更多回复:', commentId)
-    pageDTO.value.page += 1
+// 加载更多一级评论
+const handleLoadMoreComments = () => {
+    commentPageDTO.value.page += 1
     getComments()
+}
+
+// 加载更多二级评论
+const handleLoadMoreReplies = (commentId: number) => {
+    const state = replyPageMap.value.get(commentId)
+    if (!state) {
+        replyPageMap.value.set(commentId, { page: 1, pageSize: 5, total: 0 })
+    }
+    const replyState = replyPageMap.value.get(commentId)!
+    replyState.page += 1
+    getReplies(commentId)
 }
 
 // electron通信
@@ -280,22 +340,22 @@ const windowIPC = async () => {
         const res = await momentDetail(data)
         momentInfo.value = res.data
 
-        pageDTO.value.momentId = res.data.id
+        commentPageDTO.value.momentId = res.data.id
         await getComments()
     })
 
     userAvatar.value = await (window as any).userInfoApi.storeGetUserInfo('avatar')
 }
 
-// 评论获取
+// 一级评论获取
 const getComments = async () => {
-    if (!pageDTO.value.momentId) return
+    if (!commentPageDTO.value.momentId) return
 
-    console.log(pageDTO.value)
-    const res = await comments(pageDTO.value)
+    console.log(commentPageDTO.value)
+    const res = await comments(commentPageDTO.value)
 
     if (res.data) {
-        totalPage.value = res.data.total
+        totalCommentCount.value = res.data.total
 
         // 确保 comments 数组存在
         if (!momentInfo.value?.comments) {
@@ -304,14 +364,51 @@ const getComments = async () => {
             }
         }
 
-        // 如果是第一页，直接赋值；如果是加载更多，则 push
-        if (pageDTO.value.page === 1) {
+        // 如果是第一页，直接赋值；如果是加载更多，则追加
+        if (commentPageDTO.value.page === 1) {
             if (momentInfo.value) {
                 momentInfo.value.comments = res.data.data || []
             }
+            // 初始化每条一级评论的回复分页状态
+            momentInfo.value?.comments?.forEach(comment => {
+                if (!replyPageMap.value.has(comment.id)) {
+                    replyPageMap.value.set(comment.id, { page: 1, pageSize: 5, total: 0 })
+                }
+            })
         } else {
             res.data.data?.forEach((comment: any) => {
-                momentInfo.value?.comments.push(comment)
+                momentInfo.value?.comments?.push(comment)
+                if (!replyPageMap.value.has(comment.id)) {
+                    replyPageMap.value.set(comment.id, { page: 1, pageSize: 5, total: 0 })
+                }
+            })
+        }
+    }
+}
+
+// 二级评论获取
+const getReplies = async (commentId: number) => {
+    const state = replyPageMap.value.get(commentId)
+    if (!state) return
+
+    console.log('加载回复, parentId:', commentId, 'page:', state.page)
+    const res = await replies({ parentId: commentId, page: state.page, pageSize: state.pageSize })
+
+    if (res.data) {
+        state.total = res.data.total
+
+        const comment = momentInfo.value?.comments?.find(c => c.id === commentId)
+        if (!comment) return
+
+        if (!comment.replies) {
+            comment.replies = []
+        }
+
+        if (state.page === 1) {
+            comment.replies = res.data.data || []
+        } else {
+            res.data.data?.forEach((reply: any) => {
+                comment.replies.push(reply)
             })
         }
     }
@@ -874,7 +971,121 @@ onMounted(async () => {
     color: #43f3ff;
 }
 
+/* 回复输入框 */
+.reply-input-area {
+    margin-top: 10px;
+    padding: 10px 12px;
+    background: rgba(67, 243, 255, 0.05);
+    border: 1px solid rgba(67, 243, 255, 0.2);
+    border-radius: 6px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.reply-textarea {
+    width: 100%;
+    min-height: 50px;
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(67, 243, 255, 0.15);
+    border-radius: 4px;
+    color: #f0f2f5;
+    font-size: 12px;
+    line-height: 1.5;
+    resize: none;
+    outline: none;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+.reply-textarea::placeholder {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.reply-textarea:focus {
+    border-color: rgba(67, 243, 255, 0.4);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 0 2px rgba(67, 243, 255, 0.1);
+}
+
+.reply-textarea::-webkit-scrollbar {
+    width: 6px;
+}
+
+.reply-textarea::-webkit-scrollbar-thumb {
+    background: rgba(67, 243, 255, 0.2);
+    border-radius: 3px;
+}
+
+.reply-textarea::-webkit-scrollbar-thumb:hover {
+    background: rgba(67, 243, 255, 0.4);
+}
+
+.reply-textarea::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.reply-input-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 6px;
+}
+
+.reply-send-btn {
+    background: rgba(67, 243, 255, 0.2) !important;
+    border: 1px solid rgba(67, 243, 255, 0.4) !important;
+    color: #43f3ff !important;
+    border-radius: 4px;
+    padding: 4px 16px;
+    font-weight: 600;
+    font-size: 12px;
+    transition: all 0.3s ease;
+}
+
+.reply-send-btn:hover:not(:disabled) {
+    background: rgba(67, 243, 255, 0.35) !important;
+}
+
+.reply-send-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.reply-cancel-btn {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.4);
+    cursor: pointer;
+    padding: 4px 10px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.reply-cancel-btn:hover {
+    color: rgba(255, 255, 255, 0.7);
+    background: rgba(255, 255, 255, 0.05);
+}
+
 /* 评论输入区 */
+
+/* 加载更多一级评论 */
+.load-more-comments {
+    margin-top: 15px;
+    padding: 10px 0;
+    text-align: center;
+    font-size: 13px;
+    color: rgba(67, 243, 255, 0.7);
+    background: rgba(67, 243, 255, 0.08);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.load-more-comments:hover {
+    background: rgba(67, 243, 255, 0.15);
+    color: #43f3ff;
+}
+
 .comment-input-area {
     padding: 20px 40px;
     border-top: 1px solid rgba(67, 243, 255, 0.15);
