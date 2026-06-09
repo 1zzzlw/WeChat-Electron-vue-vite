@@ -22,6 +22,10 @@ export const comments = (pageDTO) => request.get('/moments/comments/query', {
     params: pageDTO
 })
 
-export const replies = (pageDTO) => request.get('/moments/comments/replies', {
-    params: pageDTO
+export const commentReplies = (commentId, page, pageSize) => request.get(`/moments/comment/reply/${commentId}`, {
+    params: { page: page, pageSize: pageSize }
 })
+
+export const publishCommentReply = (data) => request.post('/moments/comment/reply/publish', data)
+
+export const likeComment = (commentId) => request.post(`/moments/comment/like/${commentId}`)

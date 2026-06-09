@@ -130,19 +130,20 @@
                                 <div class="reply-list" v-if="comment.replies && comment.replies.length > 0">
                                     <div class="reply-item" v-for="reply in comment.replies" :key="reply.id">
                                         <span class="reply-user">{{ reply.username }}</span>
-                                        <span class="reply-to" v-if="reply.replyToUsername"> 回复 {{ reply.replyToUsername }}</span>
+                                        <span class="reply-to" v-if="reply.replyToUsername"> 回复 {{ reply.replyToUsername
+                                            }}</span>
                                         <span class="reply-text">: {{ reply.content }}</span>
                                     </div>
-                                    <div class="load-more-replies" v-if="hasMoreReplies(comment.id)" @click="handleLoadMoreReplies(comment.id)">
+                                    <div class="load-more-replies" v-if="hasMoreReplies(comment.id)"
+                                        @click="handleLoadMoreReplies(comment.id)">
                                         查看更多回复
                                     </div>
                                 </div>
                                 <!-- 回复输入框 -->
                                 <div class="reply-input-area" v-if="replyingToCommentId === comment.id">
                                     <textarea v-model="replyCommentContent"
-                                        :placeholder="'回复 ' + replyingToUsername + '...'"
-                                        class="reply-textarea" @keydown.enter.ctrl="handleSendReply"
-                                        spellcheck="false"></textarea>
+                                        :placeholder="'回复 ' + replyingToUsername + '...'" class="reply-textarea"
+                                        @keydown.enter.ctrl="handleSendReply" spellcheck="false"></textarea>
                                     <div class="reply-input-actions">
                                         <span class="tip-text">Ctrl + Enter 发送</span>
                                         <el-button type="primary" class="reply-send-btn"
@@ -171,7 +172,7 @@
 import { ChatLineRound, Check, Coin, Expand, Fold, Plus } from '@element-plus/icons-vue'
 import { computed, onMounted, ref } from 'vue'
 import WindowControls from '../../components/WindowControls.vue'
-import { momentDetail, publishComment, comments, replies } from '../../api/Moments.js'
+import { momentDetail, publishComment, comments, commentReplies, publishCommentReply, likeComment } from '../../api/Moments.js'
 import { MomentsItem } from '../../types/moments.ts'
 import { ElMessage } from 'element-plus'
 import { formatMomentsTime } from '../../utils/utils.js'
@@ -266,8 +267,25 @@ const handleReward = () => {
     console.log('打赏')
 }
 
-const handleCommentLike = (commentId: number) => {
-    console.log('点赞评论:', commentId)
+const handleCommentLike = async (commentId: number) => {
+    const comment = momentInfo.value?.comments?.find(c => c.id === commentId)
+    if (!comment) return
+
+    // 乐观更新UI
+    const wasLiked = comment.liked
+    comment.liked = !comment.liked
+    comment.likeCount = (comment.likeCount || 0) + (comment.liked ? 1 : -1)
+
+    try {
+        // 发送点赞请求
+        await likeComment(commentId)
+        console.log('点赞评论:', commentId)
+    } catch (error) {
+        // 失败时回滚
+        comment.liked = wasLiked
+        comment.likeCount = (comment.likeCount || 0) + (wasLiked ? 1 : -1)
+        ElMessage.error('操作失败，请重试')
+    }
 }
 
 // 回复输入框状态：同一时刻只显示一个
@@ -287,8 +305,48 @@ const handleCancelReply = () => {
     replyCommentContent.value = ''
 }
 
-const handleSendReply = () => {
-    console.log('发送回复, parentId:', replyingToCommentId.value, '内容:', replyCommentContent.value)
+const handleSendReply = async () => {
+    if (!replyCommentContent.value.trim()) return
+    if (!replyingToCommentId.value || !momentInfo.value?.id) return
+
+    const content = replyCommentContent.value
+    const parentId = replyingToCommentId.value
+    const replyToUsername = replyingToUsername.value
+
+    try {
+        const data = {
+            momentId: momentInfo.value.id,
+            content: content,
+            parentId: parentId,
+            replyToUserId: null, // 如果需要可以传递被回复者的userId
+            replyToUsername: replyToUsername
+        }
+
+        const res = await publishCommentReply(data)
+
+        // 找到对应的评论，添加回复
+        const comment = momentInfo.value?.comments?.find(c => c.id === parentId)
+        if (comment) {
+            if (!comment.replies) {
+                comment.replies = []
+            }
+            // 将新回复添加到列表
+            comment.replies.push(res.data)
+        }
+
+        // 评论数量 +1
+        if (momentInfo.value.commentCount != null) {
+            momentInfo.value.commentCount += 1
+        }
+
+        // 清空输入框并关闭回复区
+        handleCancelReply()
+
+        ElMessage.success('回复成功')
+    } catch (error) {
+        console.error('发送回复失败:', error)
+        ElMessage.error('发送失败，请重试')
+    }
 }
 
 const handleSendComment = async () => {
@@ -369,19 +427,25 @@ const getComments = async () => {
             if (momentInfo.value) {
                 momentInfo.value.comments = res.data.data || []
             }
-            // 初始化每条一级评论的回复分页状态
+            // 初始化每条一级评论的回复分页状态，并自动加载第一页回复
+            const loadRepliesPromises: Promise<void>[] = []
             momentInfo.value?.comments?.forEach(comment => {
                 if (!replyPageMap.value.has(comment.id)) {
                     replyPageMap.value.set(comment.id, { page: 1, pageSize: 5, total: 0 })
                 }
+                loadRepliesPromises.push(getReplies(comment.id))
             })
+            await Promise.all(loadRepliesPromises)
         } else {
+            const loadRepliesPromises: Promise<void>[] = []
             res.data.data?.forEach((comment: any) => {
                 momentInfo.value?.comments?.push(comment)
                 if (!replyPageMap.value.has(comment.id)) {
                     replyPageMap.value.set(comment.id, { page: 1, pageSize: 5, total: 0 })
                 }
+                loadRepliesPromises.push(getReplies(comment.id))
             })
+            await Promise.all(loadRepliesPromises)
         }
     }
 }
@@ -392,7 +456,7 @@ const getReplies = async (commentId: number) => {
     if (!state) return
 
     console.log('加载回复, parentId:', commentId, 'page:', state.page)
-    const res = await replies({ parentId: commentId, page: state.page, pageSize: state.pageSize })
+    const res = await commentReplies(commentId, state.page, state.pageSize)
 
     if (res.data) {
         state.total = res.data.total
