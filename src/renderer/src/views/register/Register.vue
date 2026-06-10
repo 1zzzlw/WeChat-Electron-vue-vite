@@ -51,6 +51,7 @@
 
 <script lang="ts" setup>
 import { ElMessage, FormInstance, FormRules } from 'element-plus'
+import { User, Phone } from '@element-plus/icons-vue'
 import { onMounted, onUnmounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { sendPhoneCodeApi } from '../../api/User'
@@ -129,7 +130,6 @@ const startCountdown = () => {
 }
 
 const returnLogin = () => {
-  console.info('返回登录页');
   (window as any).windowToolApi.resizeWindow('login')
   router.push('/login')
 }
@@ -140,7 +140,6 @@ const handleEnterRegister = () => {
 }
 
 const nextStep = async (formEl: FormInstance | undefined, type: 'username') => {
-  console.log('registerForm: ', registerForm)
   if (!formEl) return
   try {
     await formEl.validateField(type)
@@ -169,7 +168,6 @@ const nextStep = async (formEl: FormInstance | undefined, type: 'username') => {
 
 onMounted(() => {
   const registerInfo = registerInfoStore.getRegisterOneInfo()
-  console.log(registerInfo)
   registerForm.username = registerInfo.userName
   registerForm.phone = registerInfo.phoneNumber
 })

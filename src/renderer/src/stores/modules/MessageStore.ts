@@ -30,17 +30,35 @@ export const messageInfo = defineStore('messageInfo', {
   },
   actions: {
     loadMessageMap(conversationId: string, message: Message) {
-      // 如果该会话ID还没有数组，先初始化一个空数组
       if (!this.messageMap[conversationId]) {
         this.messageMap[conversationId] = []
       }
+      // ID 去重：避免 REST 拉取与 WS 推送并发时产生重复消息
+      if (message.id && this.messageMap[conversationId].some(m => m.id === message.id)) {
+        return
+      }
       // 再添加消息，需要在头部拼接消息
       this.messageMap[conversationId].unshift(message)
+    },
+    // New: batch load for history messages (more efficient than repeated unshift)
+    batchLoadMessages(conversationId: string, messages: Message[]) {
+      if (!this.messageMap[conversationId]) {
+        this.messageMap[conversationId] = []
+      }
+      // ID 去重：过滤掉已存在的消息（REST 拉取与 WS 推送并发场景）
+      const existingIds = new Set(this.messageMap[conversationId].map(m => m.id))
+      const newMessages = messages.filter(m => !m.id || !existingIds.has(m.id))
+      // Prepend all messages at once instead of repeated unshift
+      this.messageMap[conversationId] = [...newMessages, ...this.messageMap[conversationId]]
     },
     addMessageMap(conversationId: string, message: Message) {
       // 如果该会话ID还没有数组，先初始化一个空数组
       if (!this.messageMap[conversationId]) {
         this.messageMap[conversationId] = []
+      }
+      // ID 去重：避免 WS 推送和 REST 拉取并发时产生重复消息
+      if (message.id && this.messageMap[conversationId].some(m => m.id === message.id)) {
+        return
       }
       // 再添加消息，需要在尾部拼接消息
       this.messageMap[conversationId].push(message)
@@ -112,7 +130,8 @@ export const messageInfo = defineStore('messageInfo', {
      * 文本消息
      */
     sendMessage(message: Message, conversationId: string, receiverIds: string[] = []) {
-      const wsType = receiverIds.length > 0 ? 3 : 1
+      const isGroup = receiverIds.length > 0 || conversationId?.startsWith('g_')
+      const wsType = isGroup ? 3 : 1
       return this._sendOutgoing(message, conversationId, {
         wsType,
         receiverIds,
@@ -125,7 +144,8 @@ export const messageInfo = defineStore('messageInfo', {
      * 和文本的差异：允许“复用已存在的消息”（HTTP 先插入 or UI 先插入的场景）
      */
     sendFileMessage(message: Message, conversationId: string, receiverIds: string[] = []) {
-      const wsType = receiverIds.length > 0 ? 3 : 1
+      const isGroup = receiverIds.length > 0 || conversationId?.startsWith('g_')
+      const wsType = isGroup ? 3 : 1
       return this._sendOutgoing(message, conversationId, {
         wsType,
         receiverIds,

@@ -40,6 +40,7 @@
 
 <script setup lang="ts">
 import { reactive, watch } from 'vue'
+import { Close } from '@element-plus/icons-vue'
 import { FileBaseInfo } from '../types/fileBaseInfo'
 
 const props = defineProps({
@@ -53,7 +54,6 @@ const emit = defineEmits(['delete-file'])
 const fileList = reactive([...props.fileInfoList])
 
 const closePreview = (fileId: string) => {
-  console.info('删除索引为', fileId, '的文件预览')
   emit('delete-file', fileId)
 }
 

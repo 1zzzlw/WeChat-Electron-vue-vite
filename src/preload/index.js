@@ -90,7 +90,7 @@ const dbApi = {
     ipcRenderer.send('update:note', condition, data)
   },
   addFavorites: (favoritesPackList) => {
-    ipcRenderer.send('add:note', favoritesPackList)
+    return ipcRenderer.invoke('add:note', favoritesPackList)
   },
   clearHistoryMessage: (conversationId) => {
     ipcRenderer.send('clear:historyMessage', conversationId)
@@ -106,6 +106,15 @@ const dbApi = {
   },
   getNodeCount: () => {
     return ipcRenderer.invoke('query:nodeCount')
+  },
+  queryFavoritesList: () => {
+    return ipcRenderer.invoke('query:favoritesAll')
+  },
+  deleteFavorite: (favoriteId) => {
+    ipcRenderer.send('delete:favorite', favoriteId)
+  },
+  updateFriendRelation: (condition, data) => {
+    ipcRenderer.send('update:friendRelation', condition, data)
   }
 }
 
@@ -153,11 +162,15 @@ const windowToolApi = {
     ipcRenderer.send('create-new-window', windowType, data)
   },
   destroyNewWindow: (windowType) => {
-    ipcRenderer.send('destory-window', windowType)
+    ipcRenderer.send('destroy-window', windowType)
   },
   // 向新建窗口发送窗口信息
   sendWindowInfo: (windowInfo) => {
     ipcRenderer.on('newWindowInfo', windowInfo)
+  },
+  // 懒加载组件挂载后主动拉取待发送数据（解决路由懒加载时序问题）
+  getPendingData: () => {
+    return ipcRenderer.invoke('window:getPendingData')
   },
   sendWindowWallpaper: (imagePath) => {
     ipcRenderer.send('send:wallpaper', imagePath)
@@ -237,6 +250,16 @@ const piniaShareApi = {
   }
 }
 
+const soundApi = {
+  // 主进程通知播放消息提示音
+  onPlayMessageSound: (callback) => {
+    const handler = (_event, soundUrl) => callback(soundUrl)
+    ipcRenderer.on('play:messageSound', handler)
+    // 返回移除监听器的函数
+    return () => ipcRenderer.removeListener('play:messageSound', handler)
+  }
+}
+
 // 只有在启用上下文隔离的情况下，才使用contextBridge API 向渲染器暴露 Electron API；否则，只需将其添加到 DOM 全局变量中。
 if (process.contextIsolated) {
   try {
@@ -250,6 +273,7 @@ if (process.contextIsolated) {
     contextBridge.exposeInMainWorld('mediaHandleApi', mediaHandleApi)
     contextBridge.exposeInMainWorld('chatToolApi', chatToolApi)
     contextBridge.exposeInMainWorld('piniaShareApi', piniaShareApi)
+    contextBridge.exposeInMainWorld('soundApi', soundApi)
   } catch (error) {
     console.error(error)
   }
@@ -264,4 +288,5 @@ if (process.contextIsolated) {
   window.mediaHandleApi = mediaHandleApi
   window.chatToolApi = chatToolApi
   window.piniaShareApi = piniaShareApi
+  window.soundApi = soundApi
 }

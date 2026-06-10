@@ -159,6 +159,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
+import { ElMessage } from 'element-plus'
 
 const appVersion = ref('v1.0.0')
 const electronVersion = ref('38.1.2')
@@ -180,17 +181,20 @@ const memoryUsagePercent = computed(() => {
 
 onMounted(async () => {
   try {
-    // 获取应用信息
+    // 获取系统信息
     const appInfo = await (window as any).windowToolApi.getWindowInfo()
-    // 直接赋值完整对象，不再拼接字符串
     systemInfo.value = appInfo
 
-    // 可选：如果需要展示Electron版本
+    // 获取Electron版本
     if ((window as any).process?.versions?.electron) {
       electronVersion.value = (window as any).process.versions.electron
     }
 
-    console.log('系统信息:', appInfo)
+    // 尝试获取应用版本
+    const appVer = await (window as any).userInfoApi.storeGetUserInfo('appVersion')
+    if (appVer) {
+      appVersion.value = appVer
+    }
   } catch (error) {
     console.error('获取系统信息失败:', error)
   }
@@ -199,9 +203,22 @@ onMounted(async () => {
 const checkForUpdates = async () => {
   checking.value = true
   try {
-    // await ipcRenderer.invoke('check-for-updates')
+    // 从GitHub releases检查最新版本
+    const response = await fetch('https://api.github.com/repos/1zzzlw/WeChat-Electron-vue-vite/releases/latest')
+    if (response.ok) {
+      const data = await response.json()
+      const latestVersion = data.tag_name || data.name
+      if (latestVersion && latestVersion !== appVersion.value) {
+        ElMessage.info(`发现新版本 ${latestVersion}，请前往GitHub下载`)
+      } else {
+        ElMessage.success('当前已是最新版本')
+      }
+    } else {
+      ElMessage.warning('检查更新失败，请稍后重试')
+    }
   } catch (error) {
     console.error('检查更新失败:', error)
+    ElMessage.error('网络错误，无法检查更新')
   } finally {
     checking.value = false
   }
@@ -225,7 +242,7 @@ const openWebsite = () => {
   display: flex;
   flex-direction: column;
   -webkit-app-region: no-drag;
-  color: #222;
+  color: #f0f0f0;
   font-size: 11px;
 }
 
@@ -243,19 +260,19 @@ const openWebsite = () => {
   width: 48px;
   height: 48px;
   margin: 0 auto 5px;
-  color: #222;
+  color: rgba(66, 153, 225, 0.8);
 }
 
 .app-name {
   font-size: 18px;
   font-weight: 600;
   margin: 0 0 2px;
-  color: #222;
+  color: #f0f0f0;
 }
 
 .app-tagline {
   font-size: 10px;
-  color: #444;
+  color: rgba(240, 240, 240, 0.5);
   margin: 0;
 }
 
@@ -276,29 +293,30 @@ const openWebsite = () => {
 
 .version-item .label {
   font-size: 9px;
-  color: #444;
+  color: rgba(240, 240, 240, 0.5);
 }
 
 .version-item .value {
   font-size: 11px;
   font-weight: 500;
-  color: #222;
+  color: #f0f0f0;
 }
 
 .update-btn {
   padding: 4px 15px;
-  background: transparent;
-  color: #222;
-  border: none;
-  border-radius: 0;
+  background: rgba(66, 153, 225, 0.2);
+  color: #f0f0f0;
+  border: 1px solid rgba(66, 153, 225, 0.3);
+  border-radius: 4px;
   font-size: 10px;
   cursor: pointer;
-  transition: color 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .update-btn:hover {
-  background: transparent;
-  color: #000;
+  background: rgba(66, 153, 225, 0.35);
+  border-color: rgba(66, 153, 225, 0.5);
+  color: #fff;
 }
 
 .tech-stack,
@@ -312,7 +330,7 @@ const openWebsite = () => {
   font-size: 12px;
   font-weight: 600;
   margin: 0 0 6px;
-  color: #222;
+  color: #f0f0f0;
 }
 
 .tech-tags {
@@ -323,18 +341,18 @@ const openWebsite = () => {
 
 .tech-tag {
   padding: 2px 7px;
-  background: transparent;
-  color: #222;
-  border-radius: 0;
+  background: rgba(66, 153, 225, 0.15);
+  color: rgba(66, 153, 225, 0.9);
+  border-radius: 3px;
   font-size: 9px;
-  border: none;
+  border: 1px solid rgba(66, 153, 225, 0.2);
   cursor: default;
 }
 
 .info-group {
   margin-bottom: 8px;
   padding-bottom: 8px;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid rgba(66, 153, 225, 0.15);
 }
 
 .info-group:last-child {
@@ -345,14 +363,14 @@ const openWebsite = () => {
 
 .info-label {
   font-size: 11px;
-  color: #444;
+  color: rgba(240, 240, 240, 0.5);
   margin-bottom: 4px;
   font-weight: 500;
 }
 
 .info-content {
   font-size: 10px;
-  color: #222;
+  color: #f0f0f0;
   line-height: 1.4;
 }
 
@@ -382,12 +400,12 @@ const openWebsite = () => {
 }
 
 .detail-label {
-  color: #444;
+  color: rgba(240, 240, 240, 0.5);
   font-size: 9px;
 }
 
 .detail-value {
-  color: #222;
+  color: #f0f0f0;
   font-size: 10px;
 }
 
@@ -410,32 +428,33 @@ const openWebsite = () => {
 .memory-used {
   font-size: 10px;
   font-weight: 600;
-  color: #222;
+  color: rgba(66, 153, 225, 0.9);
 }
 
 .memory-total {
   font-size: 9px;
-  color: #444;
+  color: rgba(240, 240, 240, 0.5);
 }
 
 .memory-progress-container {
   width: 100%;
   height: 6px;
-  background: #ddd;
+  background: rgba(28, 38, 50, 0.6);
   border-radius: 3px;
   overflow: hidden;
+  border: 1px solid rgba(66, 153, 225, 0.15);
 }
 
 .memory-progress-bar {
   height: 100%;
-  background: #222;
+  background: linear-gradient(90deg, rgba(66, 153, 225, 0.5), rgba(66, 153, 225, 0.8));
   border-radius: 2px;
   transition: width 0.5s ease;
 }
 
 .memory-details {
   font-size: 9px;
-  color: #444;
+  color: rgba(240, 240, 240, 0.5);
 }
 
 .links-section {
@@ -452,30 +471,31 @@ const openWebsite = () => {
   justify-content: center;
   gap: 4px;
   padding: 4px 8px;
-  background: transparent;
-  color: #222;
-  border: none;
-  border-radius: 0;
+  background: rgba(66, 153, 225, 0.15);
+  color: rgba(66, 153, 225, 0.9);
+  border: 1px solid rgba(66, 153, 225, 0.25);
+  border-radius: 4px;
   font-size: 10px;
   cursor: pointer;
-  transition: color 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .link-btn:hover {
-  background: transparent;
-  color: #000;
+  background: rgba(66, 153, 225, 0.3);
+  border-color: rgba(66, 153, 225, 0.5);
+  color: #fff;
 }
 
 .copyright {
   text-align: center;
   padding-top: 8px;
-  border-top: 1px solid #ddd;
+  border-top: 1px solid rgba(66, 153, 225, 0.15);
   margin-top: auto;
 }
 
 .copyright p {
   margin: 0;
   font-size: 9px;
-  color: #151515;
+  color: rgba(240, 240, 240, 0.4);
 }
 </style>

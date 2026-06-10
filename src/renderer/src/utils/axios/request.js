@@ -37,35 +37,35 @@ server.interceptors.response.use(
     return response.data
   },
   async (error) => {
-    // 如果是401错误，且不是刷新token的请求
-    if (error.response.status === 401 && !isRefreshToken(error.config)) {
-      console.info('token过期,刷新token')
-      const userId = await window.userInfoApi.storeGetUserInfo('userId')
-      // 刷新token
-      const isSuccess = await refreshToken(userId)
-      if (isSuccess) {
-        // 更新请求头中的token（以及经过一次刷新token的请求，所以旧的token已经被新的token替换了）
-        server.defaults.headers.Authorization = `${getAccessToken()}`
-        error.config.headers.Authorization = `${getAccessToken()}`
-        const resp = await server.request(error.config)
-        // 重新发送请求，沿用之前的配置
-        return resp
-      } else {
-        console.info('刷新token失败，返回登录界面')
-        window.api.resizeWindow('login')
-        window.location.href = '#/login'
-        WSManager.disconnect()
-        return Promise.reject(error)
-      }
-    } else {
-      // 其他错误，直接返回
-      console.error('其他错误', error)
-      // 返回登录界面，重新登录
-      window.api.resizeWindow('login')
-      window.location.href = '#/login'
-      WSManager.disconnect()
+    const status = error.response?.status
+
+    // 网络断开或服务无响应（error.response 为 undefined）
+    if (!error.response) {
+      console.error('网络异常或服务端无响应', error.message)
       return Promise.reject(error)
     }
+
+    // 401 token 过期，尝试刷新
+    if (status === 401 && !isRefreshToken(error.config)) {
+      console.info('token过期,刷新token')
+      const userId = await window.userInfoApi.storeGetUserInfo('userId')
+      const isSuccess = await refreshToken(userId)
+      if (isSuccess) {
+        server.defaults.headers.Authorization = `${getAccessToken()}`
+        error.config.headers.Authorization = `${getAccessToken()}`
+        return await server.request(error.config)
+      } else {
+        console.info('刷新token失败，返回登录界面')
+        window.userInfoApi.storeSetUserInfo('token', '')
+        window.userInfoApi.storeSetUserInfo('accessToken', '')
+        window.location.href = '#/login'
+        return Promise.reject(error)
+      }
+    }
+
+    // 其他 HTTP 错误：仅打印日志，不粗暴跳转登录
+    console.error(`HTTP ${status} 错误:`, error.config?.url, error.response?.data)
+    return Promise.reject(error)
   }
 )
 

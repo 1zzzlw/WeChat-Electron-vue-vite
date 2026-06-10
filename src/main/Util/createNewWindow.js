@@ -1,10 +1,13 @@
 import { is } from '@electron-toolkit/utils'
-import { app, BrowserWindow, shell } from 'electron'
+import { app, BrowserWindow, shell, ipcMain } from 'electron'
 import { join } from 'path'
 import { pathToFileURL } from 'url'
 
 // 管理窗口的集合
 const windowPool = new Map()
+
+// 子窗口待发送数据缓存（解决懒加载组件来不及注册监听器的问题）
+const pendingWindowData = new Map()
 
 /**
  * 窗口加载器配置
@@ -25,7 +28,8 @@ const WINDOW_CONFIGS = {
         videoPreview: '/videoPreview',
         createNote: '/createNote',
         createMomentView: '/createMomentView',
-        momentInfoView: '/momentInfoView'
+        momentInfoView: '/momentInfoView',
+        standaloneChat: '/standaloneChat'
         // TODO 可以继续添加其他路由页面
     }
 }
@@ -62,13 +66,11 @@ function createExtraWindow(windowType, options = {}, loadType = 'vue', data) {
         // 使窗口背景透明（窗口区域会显示桌面或下层窗口的内容）
         // transparent: true,
         // 设置父窗口
-        backgroundColor: '#00000000',
+        backgroundColor: '#1a1a2e',
         ...(process.platform === 'linux' ? { icon: iconPath } : {}),
         webPreferences: {
-            // 关闭网页安全限制（允许加载本地文件）
             webSecurity: false,
-            nodeIntegration: true,
-            // 默认上下文隔离开启
+            nodeIntegration: false,
             contextIsolation: true,
             preload: join(__dirname, '../preload/index.js'),
             sandbox: false
@@ -76,26 +78,43 @@ function createExtraWindow(windowType, options = {}, loadType = 'vue', data) {
     }
 
     // 合并选项，后面的相同属性会覆盖前面的属性
-    const finalOptions = Object.assign(defaultOptions, options)
+    const finalOptions = { ...defaultOptions, ...options }
     const window = new BrowserWindow(finalOptions)
 
     // 加载窗口内容
     loadWindowContent(window, windowType, loadType)
 
+    // 加载超时保护：15 秒内窗口未能就绪则记录警告并关闭
+    const loadTimeout = setTimeout(() => {
+        console.warn(`窗口 ${windowType} 加载超时`)
+        if (!window.isDestroyed()) {
+            windowPool.delete(windowType)
+            window.close()
+        }
+    }, 15000)
+
     window.on('ready-to-show', () => {
+        clearTimeout(loadTimeout)
         window.show()
         window.setTitle('EasyChat')
     })
 
     window.on('closed', () => {
+        clearTimeout(loadTimeout)
         windowPool.delete(windowType)
+        pendingWindowData.delete(windowType)
     })
 
     if (data != undefined) {
-        // 向渲染进程发送数据
+        // 缓存数据，供懒加载组件挂载后主动拉取
+        pendingWindowData.set(windowType, data)
+
+        // 快速通道：组件如果已经挂载，show 时直接推送
         window.once('show', () => {
-            console.log(data)
-            window.webContents.send('newWindowInfo', data)
+            if (!window.isDestroyed()) {
+                console.log(data)
+                window.webContents.send('newWindowInfo', data)
+            }
         })
     }
 
@@ -149,7 +168,7 @@ function getWindowLoadConfig(windowType, loadType = 'vue') {
 
         // const filePath = isDev
         //     ? `public/${fileName}`  // 开发环境路径
-        //     : `out/renderer/${fileName}`  // 生产环境路径
+        //     ? `out/renderer/${fileName}`  // 生产环境路径
 
         const filePath = isDev
             ? join(process.cwd(), 'public', fileName)
@@ -190,6 +209,36 @@ function getWindowLoadConfig(windowType, loadType = 'vue') {
     }
 }
 
+/**
+ * 安全获取窗口实例，自动清理已销毁的过期条目
+ * @param windowType - 窗口类型
+ * @returns 窗口实例，若不存在或已销毁则返回 null
+ */
+function getWindow(windowType) {
+    const win = windowPool.get(windowType)
+    if (win && !win.isDestroyed()) return win
+    windowPool.delete(windowType) // 清理过期条目
+    return null
+}
+
+/**
+ * IPC：懒加载的子窗口组件挂载完成后，主动拉取待发送数据
+ * 解决路由懒加载导致 window.once('show') 发数据时组件尚未挂载的问题
+ */
+ipcMain.handle('window:getPendingData', (event) => {
+    // 遍历缓存，找到数据所属的窗口
+    for (const [type, data] of pendingWindowData) {
+        const win = windowPool.get(type)
+        if (win && !win.isDestroyed() && win.webContents === event.sender) {
+            pendingWindowData.delete(type)
+            return data
+        }
+    }
+    return null
+})
+
 export {
-    createExtraWindow, windowPool
+    createExtraWindow,
+    getWindow,
+    windowPool
 }

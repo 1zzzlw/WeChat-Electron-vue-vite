@@ -1,41 +1,4 @@
-// 状态类型的只读map集合
-export const statusMap = {
-    fail: {
-        value: 'fail',
-        desc: '失败',
-        icon: 'close'
-    },
-    preview: {
-        value: 'preview',
-        desc: '预览中',
-        icon: 'clock'
-    },
-    uploading: {
-        value: 'uploading',
-        desc: '上传中',
-        icon: 'upload'
-    },
-    upload_finish: {
-        value: 'upload_finish',
-        desc: '已完成',
-        icon: 'success'
-    },
-    upload_seconds: {
-        value: 'upload_seconds',
-        desc: '秒传',
-        icon: 'success'
-    },
-    downloading: {
-        value: 'downloading',
-        desc: '下载中',
-        icon: 'success'
-    },
-    download_finish: {
-        value: 'download_finish',
-        desc: '下载完成',
-        icon: 'success'
-    }
-} as const
+import type { statusMap } from '../utils/constants'
 
 // 从statusMap里提取状态类型
 export type UploadStatus = typeof statusMap[keyof typeof statusMap]['value'];

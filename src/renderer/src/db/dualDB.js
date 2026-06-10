@@ -195,7 +195,7 @@ const updateOldNoteContent = async (condition, data) => {
 }
 
 const addFavorites = async (favoritesPackList) => {
-    await window.dbApi.addFavorites(favoritesPackList)
+    return await window.dbApi.addFavorites(favoritesPackList)
 }
 
 const clearHistoryMessage = async (conversationId) => {
@@ -216,6 +216,31 @@ const deleteConversation = async (conversationId) => {
 
 const getNodeCount = async () => {
     return await window.dbApi.getNodeCount()
+}
+
+/**
+ * 获取所有收藏（包括笔记和消息收藏）
+ */
+const getFavoritesAll = async () => {
+    const favoritesList = await window.dbApi.queryFavoritesList()
+    return favoritesList
+}
+
+/**
+ * 删除收藏项
+ * @param favoriteId -- 收藏项id
+ */
+const deleteFavorite = async (favoriteId) => {
+    await window.dbApi.deleteFavorite(favoriteId)
+}
+
+/**
+ * 更新好友关系表（本地SQLite）
+ * @param condition -- 条件对象，如 { friendId: '123' }
+ * @param data -- 要更新的字段，如 { remark: '新备注' } 或 { relationStatus: 2 }
+ */
+const updateFriendRelation = async (condition, data) => {
+    await window.dbApi.updateFriendRelation(condition, data)
 }
 
 export {
@@ -240,5 +265,8 @@ export {
     deleteMessage,
     deleteFriend,
     deleteConversation,
-    getNodeCount
+    getNodeCount,
+    getFavoritesAll,
+    deleteFavorite,
+    updateFriendRelation
 }

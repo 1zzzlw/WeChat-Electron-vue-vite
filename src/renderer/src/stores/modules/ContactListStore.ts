@@ -1,9 +1,10 @@
 import { defineStore } from 'pinia'
 import { Friend } from '../../types/friend'
+import { checkCache } from '../../utils/cache'
 
 // 用来临时存储联系人列表
 
-export const friendInfo = defineStore('friendListInfo', {
+export const friendInfo = defineStore('friendInfo', {
   state: () => {
     return {
       // Record<键类型, 值类型>：键是string/number，值是userInfo
@@ -41,14 +42,9 @@ export const friendInfo = defineStore('friendListInfo', {
   },
   actions: {
     initCache(userId: string) {
-      const currentCacheVersion = `${userId}_${Date.now()}`
-      // 缓存有效期
-      const cacheAccess = Date.now() - this._cacheTimestamp
-      if (!this._cacheVersion.startsWith(userId) || cacheAccess > 5 * 60 * 1000) {
-        // 缓存过期，清空数据
+      const valid = checkCache(this, userId)
+      if (!valid) {
         this.friendInfoMap = {}
-        this._cacheVersion = currentCacheVersion
-        this._cacheTimestamp = Date.now()
         return false
       }
       console.info('好友信息缓存没有过期')
@@ -73,6 +69,9 @@ export const friendInfo = defineStore('friendListInfo', {
       }
     },
     isUserOnline(friendId: string) {
+      if (!this.friendInfoMap[friendId]) {
+        return false
+      }
       if (this.friendInfoMap[friendId].isOnline === undefined) {
         this.friendInfoMap[friendId].isOnline = false
       }

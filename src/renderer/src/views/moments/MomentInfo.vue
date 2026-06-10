@@ -131,7 +131,7 @@
                                     <div class="reply-item" v-for="reply in comment.replies" :key="reply.id">
                                         <span class="reply-user">{{ reply.username }}</span>
                                         <span class="reply-to" v-if="reply.replyToUsername"> 回复 {{ reply.replyToUsername
-                                            }}</span>
+                                        }}</span>
                                         <span class="reply-text">: {{ reply.content }}</span>
                                     </div>
                                     <div class="load-more-replies" v-if="hasMoreReplies(comment.id)"
@@ -172,10 +172,10 @@
 import { ChatLineRound, Check, Coin, Expand, Fold, Plus } from '@element-plus/icons-vue'
 import { computed, onMounted, ref } from 'vue'
 import WindowControls from '../../components/WindowControls.vue'
-import { momentDetail, publishComment, comments, commentReplies, publishCommentReply, likeComment } from '../../api/Moments.js'
-import { MomentsItem } from '../../types/moments.ts'
+import { momentDetail, publishComment, comments, commentReplies, publishCommentReply, likeComment } from '../../api/Moments'
+import { MomentsItem } from '../../types/moments'
 import { ElMessage } from 'element-plus'
-import { formatMomentsTime } from '../../utils/utils.js'
+import { formatMomentsTime } from '../../utils/utils'
 
 const isSidebarCollapsed = ref(false)
 const contentMainRef = ref<HTMLElement | null>(null)
@@ -394,12 +394,26 @@ const handleLoadMoreReplies = (commentId: number) => {
 
 // electron通信
 const windowIPC = async () => {
-    (window as any).windowToolApi.sendWindowInfo(async (e: any, data: any) => {
+    let momentDataReceived = false
+    const handleMomentData = async (data: any) => {
+        if (!data || momentDataReceived) return
+        momentDataReceived = true
+        console.log('momentInfo received data:', data)
         const res = await momentDetail(data)
         momentInfo.value = res.data
 
         commentPageDTO.value.momentId = res.data.id
         await getComments()
+    }
+
+    // 先尝试主动拉取缓存数据（解决路由懒加载导致组件挂载晚于 show 事件的问题）
+    const pendingData = await (window as any).windowToolApi.getPendingData()
+    if (pendingData) {
+        await handleMomentData(pendingData)
+    }
+    // 兜底：如果 show 事件在组件挂载后才触发，仍能通过监听器接收
+    ;(window as any).windowToolApi.sendWindowInfo(async (_e: any, data: any) => {
+        await handleMomentData(data)
     })
 
     userAvatar.value = await (window as any).userInfoApi.storeGetUserInfo('avatar')

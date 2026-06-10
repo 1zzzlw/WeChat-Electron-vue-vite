@@ -142,7 +142,7 @@ import { listByNewApi, likedApi, listByHot } from '../../api/Moments'
 import { MomentsItem } from '../../types/moments'
 import type { ScrollbarDirection } from 'element-plus'
 import Masonry from 'masonry-layout'
-import { eventEmitter } from '../../utils/eventEmitter';
+import emitter from '../../utils/mitt';
 import { formatMomentsTime } from '../../utils/utils'
 
 const searchKeyword = ref('')
@@ -182,7 +182,6 @@ async function loadMore(direction: ScrollbarDirection | string) {
     if (loading.value || noMore.value) return
 
     loading.value = true
-    console.log('正在查询下一页...')
 
     try {
       // 查询下一页，累加到帖子集合里
@@ -239,7 +238,6 @@ async function changeSortWay() {
   moments.forEach((n: any) => {
     postList.value.push(n)
   })
-  console.log(postList.value)
 
   // 排序切换后重新布局
   await nextTick()
@@ -252,14 +250,12 @@ async function changeSortWay() {
 
 // 搜索事件
 const handleSearch = () => {
-  console.log('搜索关键词:', searchKeyword.value)
   // TODO: 实现搜索逻辑
 }
 
 // 标签点击事件
 const handleTagClick = (tagId: string) => {
   activeTag.value = tagId
-  console.log('选中标签:', tagId)
   // TODO: 实现标签筛选逻辑
 }
 
@@ -290,7 +286,6 @@ const handleFollow = (postId: number) => {
 
 const handleReward = (postId: number) => {
   // TODO: 实现打赏功能
-  console.log('打赏帖子:', postId)
 }
 
 // 初始化帖子
@@ -302,7 +297,6 @@ const listMoments = async () => {
   moments.forEach((n: any) => {
     postList.value.push(n)
   })
-  console.log(postList.value)
 }
 
 // 初始化底部监测器
@@ -312,7 +306,6 @@ const initObserver = () => {
     (entries) => {
       // entries[0].isIntersecting 为 true 表示探测器进入了视野
       if (entries[0].isIntersecting && !loading.value && !noMore.value) {
-        console.log('探测到触底，触发加载')
         loadMore('bottom')
       }
     },
@@ -395,8 +388,6 @@ const observeImages = () => {
 
 // 监听新帖子发布事件：重新获取数据并重新布局
 const handleNewPostPublished = async () => {
-  console.log('检测到新帖子发布，重新加载数据')
-
   // 重置列表和状态
   postList.value = []
   noMore.value = false
@@ -440,7 +431,7 @@ onMounted(async () => {
     resizeObserver.observe(parentEl)
   }
 
-  eventEmitter.on('moments:updated', handleNewPostPublished)
+  emitter.on('moments:updated', handleNewPostPublished)
 })
 
 // 销毁实例
@@ -451,7 +442,7 @@ onUnmounted(() => {
     masonry.destroy?.()
   }
   if (layoutTimer) clearTimeout(layoutTimer)
-  eventEmitter.off('moments:updated', handleNewPostPublished)
+  emitter.off('moments:updated', handleNewPostPublished)
 })
 </script>
 

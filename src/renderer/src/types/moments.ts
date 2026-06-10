@@ -47,7 +47,7 @@ export interface Reply {
     likeCount: number
 }
 
-interface Like {
+export interface Like {
     id: number
     avatar: string
     username: string

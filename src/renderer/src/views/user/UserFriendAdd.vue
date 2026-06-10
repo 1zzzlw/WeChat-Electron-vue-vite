@@ -76,7 +76,6 @@ const searchUser = () => {
     ElMessage.error('输入框为空')
     return
   }
-  console.info(searchInput.value)
   searchFriendApi(searchInput.value).then((res) => {
     userInfo.id = res.data.id
     userInfo.username = res.data.username
@@ -93,12 +92,9 @@ const sendApply = async () => {
   applyInfo.toUserId = userInfo.id
   applyInfo.applyMsg = applyMessage.value
   const res: any = await sendApplyApi(applyInfo)
-  console.info(res)
   const applyId = res.data
-  console.info(applyId)
   if (res.code === 1) {
     ElMessage.success(`发送好友申请成功`)
-    console.info('好友申请表ID：' + applyId);
     // 发送好友申请，成功后，通知对方好友申请列表更新
     (window as any).wsApi.sendMessage(5, 0, {
       applyId: applyId,

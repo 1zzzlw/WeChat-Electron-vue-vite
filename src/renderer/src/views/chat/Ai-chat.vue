@@ -53,13 +53,13 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
 import { useRoute } from 'vue-router'
-import { Conversation, initConversation } from '../../types/conversation.ts'
+import { Conversation, initConversation } from '../../types/conversation'
 import ChatAIHeader from '../../components/ChatAIHeader.vue'
 import ContextMenu from '../../components/ContextMenu.vue'
-import { loadMessage, sendAIMessageApi } from '../../api/AIMessage.js'
-import { AIMessage } from '../../types/aiMessage.ts'
-import { aiMessageInfo } from '../../stores/modules/AIMessageStore.ts'
-import { conversationInfo } from '../../stores/modules/ConversationStore.ts';
+import { loadMessage, sendAIMessageApi } from '../../api/AIMessage'
+import { AIMessage } from '../../types/aiMessage'
+import { aiMessageInfo } from '../../stores/modules/AIMessageStore'
+import { conversationInfo } from '../../stores/modules/ConversationStore';
 
 const avatarUrl = ref('')
 const message = ref('')
@@ -75,7 +75,6 @@ let conversation = ref<Conversation>(initConversation())
 const selectImage = async () => {
     // 获取文件的信息
     const file = await (window as any).uploadFileApi.selectFile('uploadFile')
-    console.log(file)
     if (!file) {
         return
     }
@@ -143,10 +142,7 @@ const sendApi = async (AIMessagePack: AIMessage) => {
 // 滚动监听
 async function handleScroll({ scrollTop }: any) {
     if (scrollTop === 0) {
-        console.log('加载更多...');
         const lastMessageId = aiMessageArr.value.at(0)?.id
-
-        console.log(lastMessageId)
 
         // await loadAIMessage()
 
@@ -196,7 +192,6 @@ const aiMessageArr = computed(() => {
 
 const loadAIMessage = async () => {
     const res = await loadMessage()
-    console.log(res.data)
     res.data.forEach((messagePack: AIMessage) => aiMessageInfoStore.loadMessageMap(convId.value, messagePack))
 }
 

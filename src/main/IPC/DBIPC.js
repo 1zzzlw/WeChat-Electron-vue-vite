@@ -1,9 +1,9 @@
 import { ipcMain } from 'electron'
 import { store } from '../index'
-import { queryConversation, queryFriend, loadMessage, getFriendInfoById, getConversationInfoById, getImageUrlList, getVideoUrlList, getFavorites, getNodeCount } from '../DB/select'
+import { queryConversation, queryFriend, loadMessage, getFriendInfoById, getConversationInfoById, getImageUrlList, getVideoUrlList, getFavorites, getFavoritesAll, getNodeCount } from '../DB/select'
 import { saveSentMessage, saveLoadMessage, addConversation, addFriendRelation, uploadNoteContent, addFavorites } from '../DB/insert'
-import { updateConversation, updateMessage, updateOldNoteContent } from '../DB/update'
-import { clearHistoryMessage, deleteMessage, deleteFriend, deleteConversation } from '../DB/delete'
+import { updateConversation, updateMessage, updateOldNoteContent, updateFriendRelation } from '../DB/update'
+import { clearHistoryMessage, deleteMessage, deleteFriend, deleteConversation, deleteFavorite } from '../DB/delete'
 
 ipcMain.handle('query:conversation', (e) => {
     const userId = store.get('userId')
@@ -92,9 +92,19 @@ ipcMain.on('update:note', (e, condition, data) => {
     updateOldNoteContent(condition, data)
 })
 
-ipcMain.on('add:note', (e, favoritesPack) => {
-    console.log(favoritesPack)
-    addFavorites(favoritesPack)
+ipcMain.handle('add:note', (e, favoritesPack) => {
+    console.log('添加收藏:', favoritesPack)
+    try {
+        const result = addFavorites(favoritesPack)
+        if (result === undefined) {
+            console.error('添加收藏失败：数据库操作返回 undefined')
+            return { success: false, error: '数据库写入失败' }
+        }
+        return { success: true }
+    } catch (error) {
+        console.error('添加收藏失败:', error)
+        return { success: false, error: error.message }
+    }
 })
 
 ipcMain.on('clear:historyMessage', (e, conversationId) => {
@@ -119,4 +129,22 @@ ipcMain.on('delete:conversation', (e, conversationId) => {
 ipcMain.handle('query:nodeCount', () => {
     const userId = String(store.get('userId'))
     return getNodeCount(userId)
+})
+
+ipcMain.handle('query:favoritesAll', () => {
+    const userId = String(store.get('userId'))
+    return getFavoritesAll(userId)
+})
+
+ipcMain.on('delete:favorite', (e, favoriteId) => {
+    const userId = String(store.get('userId'))
+    console.log(`删除收藏${favoriteId}，用户${userId}`)
+    deleteFavorite(userId, favoriteId)
+})
+
+ipcMain.on('update:friendRelation', (e, condition, data) => {
+    const userId = String(store.get('userId'))
+    condition.userId = userId
+    console.log(`更新好友关系`, condition, data)
+    updateFriendRelation(condition, data)
 })

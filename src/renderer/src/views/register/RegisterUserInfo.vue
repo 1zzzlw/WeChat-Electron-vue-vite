@@ -46,6 +46,7 @@
 
 <script lang="ts" setup>
 import { ElMessage, FormInstance } from 'element-plus'
+import { Lock } from '@element-plus/icons-vue'
 import { onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useRegisterInfoStore } from '../../stores/modules/RegisterInfoStore'
@@ -102,7 +103,6 @@ const nextStep = async (formRef: FormInstance | undefined) => {
   }
   try {
     await formRef.validate()
-    console.log(registerUserInfoForm)
     registerInfoStore.setRegisterInfo({
       userName: registerUserInfoForm.username,
       phoneNumber: registerUserInfoForm.phone,

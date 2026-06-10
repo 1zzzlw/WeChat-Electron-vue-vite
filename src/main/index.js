@@ -11,16 +11,7 @@ import {
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import Store from 'electron-store'
-import './IPC/userInfoStoreIPC.js'
-import './IPC/windowToolIPC.js'
-import './IPC/newWindowIPC.js'
-import './IPC/DBIPC.js'
-import './IPC/initDataIPC.js'
-import './IPC/updateNewDataIPC.js'
-import './IPC/uploadFileIPC.js'
-import './IPC/websocketIPC.js'
-import './IPC/mediaHandleIPC.js'
-import './IPC/piniaStoreIPC.js'
+import { loadDeferredIPC } from './IPC/index.js'
 import { initTable, initTableColumnsMap } from './DB/mainDB.js'
 
 // 初始化store实例，指定存储文件名（会生成user-token.json文件）
@@ -32,9 +23,26 @@ export const store = new Store({
 })
 
 export let mainWindow = null
-let tray = null
+export let tray = null
 const login_width = 300
 const login_height = 370
+
+// 获取应用图标路径
+export function getIconPath() {
+  return app.isPackaged
+    ? join(process.resourcesPath, 'icon.png')
+    : join(__dirname, '../../resources/icon.png')
+}
+
+// 获取正常托盘图标
+export function getTrayIcon() {
+  return nativeImage.createFromPath(getIconPath())
+}
+
+// 获取空白托盘图标（用于闪动效果）
+export function getEmptyTrayIcon() {
+  return nativeImage.createEmpty()
+}
 
 app.setAppUserModelId('com.easychat.im')
 
@@ -63,18 +71,14 @@ function createMainWindow() {
     // alwaysOnTop: true,
     // 使窗口背景透明（窗口区域会显示桌面或下层窗口的内容）
     // transparent: true,
-    backgroundColor: '#00000000',
+    backgroundColor: '#1a1a2e',
     opacity: 0.98,
     ...(process.platform === 'linux' ? { icon: iconPath } : {}),
     webPreferences: {
-      // 关闭网页安全限制（允许加载本地文件）
       webSecurity: false,
-      nodeIntegration: true,
-      // 默认上下文隔离开启
+      nodeIntegration: false,
       contextIsolation: true,
       preload: join(__dirname, '../preload/index.js'),
-      // 禁用渲染进程的沙箱模式，当设置为false时，渲染进程可以访问完整的Node.js API和系统功能
-      // 这在需要在渲染进程中执行系统级操作时很有用，但会降低安全性，默认情况下，Electron 5.0+中sandbox为true以提高安全性
       sandbox: false
     }
   })
@@ -132,13 +136,8 @@ function createTray() {
   ]
   const menu = Menu.buildFromTemplate(template)
 
-  // 动态获取 icon 路径
-  const iconPath = app.isPackaged
-    ? join(process.resourcesPath, 'icon.png')
-    : join(__dirname, '../../resources/icon.png')
-
   // 创建托盘并设置图标
-  tray = new Tray(nativeImage.createFromPath(iconPath))
+  tray = new Tray(getTrayIcon())
   tray.setToolTip('IM 客户端')
   tray.setContextMenu(menu)
 
@@ -160,28 +159,34 @@ app.whenReady().then(() => {
   // 禁用一些快捷键 比如强制刷新，F11全屏
   Menu.setApplicationMenu(null)
 
-  initTable()
-
-  initTableColumnsMap()
-
   createMainWindow()
 
   createTray()
 
-  // 注册全局快捷键打开开发者工具（F12 或 Ctrl+Shift+I）
-  globalShortcut.register('F12', () => {
-    const focusedWindow = BrowserWindow.getFocusedWindow()
-    if (focusedWindow) {
-      focusedWindow.webContents.toggleDevTools()
-    }
+  // 将 SQLite 初始化延迟到窗口创建之后，避免阻塞窗口显示
+  setImmediate(() => {
+    initTable()
+    initTableColumnsMap()
+    // 加载非关键 IPC 模块（新窗口、文件上传、媒体处理等）
+    loadDeferredIPC()
   })
-  
-  globalShortcut.register('CommandOrControl+Shift+I', () => {
-    const focusedWindow = BrowserWindow.getFocusedWindow()
-    if (focusedWindow) {
-      focusedWindow.webContents.toggleDevTools()
-    }
-  })
+
+  // 仅在开发模式下注册全局快捷键打开开发者工具
+  if (is.dev) {
+    globalShortcut.register('F12', () => {
+      const focusedWindow = BrowserWindow.getFocusedWindow()
+      if (focusedWindow) {
+        focusedWindow.webContents.toggleDevTools()
+      }
+    })
+
+    globalShortcut.register('CommandOrControl+Shift+I', () => {
+      const focusedWindow = BrowserWindow.getFocusedWindow()
+      if (focusedWindow) {
+        focusedWindow.webContents.toggleDevTools()
+      }
+    })
+  }
 
   app.on('activate', function () {
     // 在 macOS 系统上，当点击程序坞图标且没有其他窗口打开时，在应用中重新创建一个窗口是很常见的做法。

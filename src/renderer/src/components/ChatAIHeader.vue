@@ -84,6 +84,7 @@
 
 <script lang="ts" setup>
 import { ref, watch, computed } from 'vue';
+import { MoreFilled, Plus } from '@element-plus/icons-vue';
 import { deletePersonality, switchPersonality, updatePersonality, createPersonality, listPersonality } from '../api/AIMessage'
 import { Personality } from '../types/personality'
 import { aiPersonalityInfo } from '../stores/modules/PersonalityStore'
@@ -151,7 +152,6 @@ const DeleteForm = async () => {
 }
 
 const submitForm = () => {
-    console.log('填写的内容：', form.value);
     if (form.value.content !== '' && form.value.name !== '') {
         const roleName = form.value.name
         const content = form.value.content
@@ -182,7 +182,6 @@ const submitForm = () => {
                 isActive: 0,
                 isPreset: 0
             }
-            console.log(personalityPack)
             // 表单信息加入缓存中
             aiPersonalityStore.addPersonality(id, personalityPack)
         })
@@ -211,7 +210,6 @@ const loadPersonality = async () => {
     const cache = Object.keys(aiPersonalityStore.aiPersonalityMap).length > 0
 
     if (cache) {
-        console.info('ai个性化列表缓存非空:', cache)
         return
     }
 

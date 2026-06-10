@@ -19,6 +19,8 @@ extraResources:
       - '**/*'
   - from: resources/icon.png
     to: icon.png
+  - from: resources/message-sound.mp3
+    to: message-sound.mp3
 asarUnpack:
   - resources/**
   - node_modules/ffmpeg-static/**

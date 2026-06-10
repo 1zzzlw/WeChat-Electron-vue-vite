@@ -1,7 +1,7 @@
 import { toRaw } from 'vue'
 import { messageInfo } from '../stores/modules/MessageStore'
 import { fileStatusListInfo } from '../stores/modules/FileStatusInfoStore'
-import { statusMap } from '../types/fileBaseInfo'
+import { statusMap } from '../utils/constants'
 import { updateMessageFileSendStatusApi } from '../api/Message'
 import { updateMessage } from '../db/dualDB'
 
@@ -61,7 +61,7 @@ export function registerFileTransferHandlers() {
                 downloadStatus: 1
             }
         } else {
-            console.log('上传失败')
+            console.log('下载失败')
             fileStatusListInfo().updateFileDownloadStatus(fileId, statusMap.fail.value, 0)
             data = {
                 downloadStatus: 2

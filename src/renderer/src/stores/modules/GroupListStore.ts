@@ -31,10 +31,7 @@ export const groupListInfo = defineStore('groupListInfo', {
       }
     },
     isOwner(groupId: string, userId: string | number) {
-      console.log(this.groupListMap)
-      console.log(this.groupListMap[groupId])
       if (this.groupListMap[groupId]) {
-        console.log(this.groupListMap[groupId])
         return this.groupListMap[groupId].ownerId === userId
       }
     }

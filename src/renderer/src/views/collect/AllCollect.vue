@@ -2,7 +2,7 @@
     <div class="favorite-count">
         <div class="favorite-content">
             <div class="title">
-                <span>我的收藏</span>
+                <span>全部收藏</span>
                 <span class="count-badge">{{ favoritesList.length }}</span>
             </div>
 
@@ -21,29 +21,47 @@
                     <div v-for="item in favoritesList" :key="item.id" class="favorite-item"
                         @click="handleItemClick(item)">
                         <!-- 类型标签 -->
-                        <div class="item-type" :class="item.type === 'image' ? 'type-image' : 'type-text'">
-                            {{ item.type === 'image' ? '图片' : '文本' }}
+                        <div class="item-type" :class="getTypeClass(item.type)">
+                            {{ getTypeLabel(item.type) }}
+                        </div>
+
+                        <!-- 标题（笔记类型显示标题） -->
+                        <div v-if="item.type === 0 && item.title" class="item-title">
+                            {{ item.title }}
                         </div>
 
                         <!-- 内容区域 -->
                         <div class="item-body">
-                            <!-- 文本内容 -->
-                            <div v-if="item.type === 'text'" class="text-content">
-                                {{ item.content }}
+                            <!-- 笔记内容（tiptap HTML） -->
+                            <div v-if="item.type === 0" class="note-content-html" v-html="item.content"></div>
+
+                            <!-- 文本消息（HTML格式） -->
+                            <div v-else-if="item.type === 1" class="text-content" v-html="item.content"></div>
+
+                            <!-- 图片消息 -->
+                            <div v-else-if="item.type === 2" class="image-content">
+                                <img :src="item.content" alt="收藏图片" @error="handleImageError">
                             </div>
 
-                            <!-- 图片内容 -->
-                            <div v-else-if="item.type === 'image'" class="image-content">
-                                <img :src="item.content" alt="收藏图片" @error="handleImageError">
+                            <!-- 视频消息 -->
+                            <div v-else-if="item.type === 3" class="file-content">
+                                <el-icon><VideoCamera /></el-icon>
+                                <span>视频消息</span>
+                            </div>
+
+                            <!-- 文件消息 -->
+                            <div v-else class="file-content">
+                                <el-icon><Document /></el-icon>
+                                <span>{{ item.title || '文件消息' }}</span>
                             </div>
                         </div>
 
                         <!-- 底部信息 -->
                         <div class="item-footer">
-                            <span class="source" v-if="item.source_username">
-                                来自: {{ item.source_username }}
+                            <span class="source" v-if="item.sourceUsername">
+                                来自: {{ item.sourceUsername }}
                             </span>
-                            <span class="time">{{ formatMessageTime(item.updated_at || item.created_at) }}</span>
+                            <span class="time">{{ formatMessageTime(item.updatedAt || item.createdAt) }}</span>
 
                             <!-- 操作按钮 -->
                             <div class="item-actions" @click.stop>
@@ -60,9 +78,12 @@
 </template>
 
 <script setup lang="ts">
-import { Delete, Star } from '@element-plus/icons-vue'
+import { Delete, Star, VideoCamera, Document } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { onMounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
+import { getFavoritesAll, deleteFavorite } from '../../db/dualDB'
+import { getFavoritesAllApi, deleteFavoriteApi } from '../../api/Favorites'
+import emitter from '../../utils/mitt'
 import { formatMessageTime } from '../../utils/utils'
 
 // 收藏列表数据
@@ -72,36 +93,63 @@ const favoritesList = ref<any[]>([])
 const scrollbarRef = ref()
 
 /**
+ * 获取类型标签文字
+ */
+const getTypeLabel = (type: number) => {
+    const map: Record<number, string> = {
+        0: '笔记',
+        1: '文本',
+        2: '图片',
+        3: '视频',
+        4: '文件'
+    }
+    return map[type] || '其他'
+}
+
+/**
+ * 获取类型标签CSS class
+ */
+const getTypeClass = (type: number) => {
+    const map: Record<number, string> = {
+        0: 'type-note',
+        1: 'type-text',
+        2: 'type-image',
+        3: 'type-video',
+        4: 'type-file'
+    }
+    return map[type] || 'type-text'
+}
+
+/**
  * 处理点击收藏项
- * @param item 收藏项数据
  */
 const handleItemClick = (item: any) => {
-    if (item.type === 'image') {
-        // 图片类型：可以打开预览
-        previewImage(item.content)
-    } else {
-        // 文本类型：可以复制到剪贴板
-        copyToClipboard(item.content)
+    if (item.type === 0) {
+        // 笔记类型：打开笔记编辑窗口
+        const data = { ...item }
+        ;(window as any).windowToolApi.createNewWindow('createNote', data)
+    } else if (item.type === 2) {
+        // 图片类型：打开图片预览（构造与 imagePreview.vue 兼容的数据格式）
+        const imageUrl = item.content
+        const imageItem = {
+            fileId: imageUrl,
+            fileName: item.title || '收藏图片',
+            fileSize: 0,
+            remoteUrl: imageUrl
+        }
+        ;(window as any).windowToolApi.createNewWindow('imagePreview', {
+            remoteUrl: imageUrl,
+            currentImageId: imageUrl,
+            imageUrlList: [imageItem]
+        })
+    } else if (item.type === 1) {
+        // 文本类型：复制到剪贴板
+        navigator.clipboard.writeText(item.content).then(() => {
+            ElMessage.success('已复制到剪贴板')
+        }).catch(() => {
+            ElMessage.warning('复制失败')
+        })
     }
-}
-
-/**
- * 预览图片
- * @param url 图片URL
- */
-const previewImage = (url: string) => {
-    // TODO: 实现图片预览功能
-    console.log('预览图片:', url)
-    // 可以使用 ElImageViewer 或自定义弹窗
-}
-
-/**
- * 复制文本到剪贴板
- * @param text 要复制的文本
- */
-const copyToClipboard = (text: string) => {
-    // TODO: 实现复制功能
-    console.log('复制文本:', text)
 }
 
 /**
@@ -109,12 +157,11 @@ const copyToClipboard = (text: string) => {
  */
 const handleImageError = (e: Event) => {
     const target = e.target as HTMLImageElement
-    target.src = '/placeholder.png' // 替换为默认图片
+    target.style.display = 'none'
 }
 
 /**
  * 确认删除收藏
- * @param id 收藏ID
  */
 const confirmDelete = async (id: string | number) => {
     try {
@@ -124,60 +171,57 @@ const confirmDelete = async (id: string | number) => {
             type: 'warning'
         })
 
-        await deleteFavorite(id)
+        // 从本地数据库删除
+        deleteFavorite(id)
+
+        // 从列表中移除
+        favoritesList.value = favoritesList.value.filter(item => String(item.id) !== String(id))
+
+        ElMessage.success('删除成功')
+
+        // 异步同步删除到服务端（不阻塞本地操作，失败静默记录）
+        deleteFavoriteApi(id).catch(err => {
+            console.warn('收藏删除同步到服务端失败（本地已删除）:', err)
+        })
     } catch (error) {
         // 用户取消
     }
 }
 
 /**
- * 删除收藏
- * @param id 收藏ID
- */
-const deleteFavorite = async (id: string | number) => {
-    try {
-        // TODO: 1. 调用服务端API删除
-        // await deleteFavoriteApi(id)
-
-        // 2. 从本地列表中移除
-        const index = favoritesList.value.findIndex(item => item.id === id)
-        if (index !== -1) {
-            favoritesList.value.splice(index, 1)
-        }
-
-        // 3. 从本地SQLite删除
-        // await deleteFavoriteFromSQLite(id)
-
-        ElMessage.success('删除成功')
-    } catch (error) {
-        ElMessage.error('删除失败')
-    }
-}
-
-/**
- * 加载收藏列表
+ * 加载收藏列表（优先从服务端加载，失败回退本地数据库）
  */
 const loadFavorites = async () => {
     try {
-        // TODO: 1. 从本地SQLite加载
-        // favoritesList.value = await getFavoritesFromSQLite()
-
-        // 2. 如果本地为空，从服务端同步
-        // if (favoritesList.value.length === 0) {
-        //   const res = await getFavoritesApi()
-        //   favoritesList.value = res.data
-        //   // 同步到本地SQLite
-        //   await syncFavoritesToSQLite(favoritesList.value)
-        // }
-
-        console.log('收藏列表:', favoritesList.value)
+        // 优先从服务端获取全量收藏
+        const res = await getFavoritesAllApi()
+        if (res && res.data) {
+            favoritesList.value = res.data
+            console.log('收藏列表（服务端）:', favoritesList.value)
+            return
+        }
     } catch (error) {
-        console.error('加载收藏失败:', error)
+        console.warn('从服务端加载收藏失败，回退本地数据库:', error)
+    }
+
+    // 回退到本地数据库
+    try {
+        favoritesList.value = await getFavoritesAll()
+        console.log('收藏列表（本地）:', favoritesList.value)
+    } catch (error) {
+        console.error('加载本地收藏失败:', error)
     }
 }
 
 onMounted(() => {
     loadFavorites()
+
+    // 监听笔记更新事件，刷新列表
+    emitter.on('note:updated', loadFavorites)
+})
+
+onUnmounted(() => {
+    emitter.off('note:updated', loadFavorites)
 })
 </script>
 
@@ -196,6 +240,7 @@ onMounted(() => {
 .favorite-content {
     width: 90%;
     height: 90%;
+    min-height: 0;
     display: flex;
     flex-direction: column;
     border-radius: 12px;
@@ -235,8 +280,8 @@ onMounted(() => {
 
 .favorite-content-view {
     width: 100%;
-    height: 100%;
     flex: 1;
+    min-height: 0;
     display: flex;
     background: rgba(35, 45, 60, 0.6);
     overflow: hidden;
@@ -290,6 +335,7 @@ onMounted(() => {
     transition: all 0.3s ease;
     position: relative;
     cursor: pointer;
+    -webkit-app-region: no-drag;
 }
 
 .favorite-item:hover {
@@ -311,6 +357,11 @@ onMounted(() => {
     opacity: 0.9;
 }
 
+.item-type.type-note {
+    background: rgba(66, 153, 225, 0.6);
+    box-shadow: 0 0 8px rgba(66, 153, 225, 0.3);
+}
+
 .item-type.type-text {
     background: rgba(67, 243, 255, 0.6);
     box-shadow: 0 0 8px rgba(67, 243, 255, 0.3);
@@ -319,6 +370,27 @@ onMounted(() => {
 .item-type.type-image {
     background: rgba(255, 118, 224, 0.6);
     box-shadow: 0 0 8px rgba(255, 118, 224, 0.3);
+}
+
+.item-type.type-video {
+    background: rgba(255, 165, 0, 0.6);
+    box-shadow: 0 0 8px rgba(255, 165, 0, 0.3);
+}
+
+.item-type.type-file {
+    background: rgba(144, 147, 153, 0.6);
+    box-shadow: 0 0 8px rgba(144, 147, 153, 0.3);
+}
+
+.item-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #43f3ff;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid rgba(67, 243, 255, 0.2);
+    text-shadow: 0 0 6px rgba(67, 243, 255, 0.2);
+    padding-right: 50px;
 }
 
 .item-body {
@@ -332,11 +404,13 @@ onMounted(() => {
     line-height: 1.6;
     max-height: 80px;
     overflow: hidden;
-    text-overflow: ellipsis;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
     word-break: break-all;
-    white-space: pre-wrap;
+    white-space: normal;
+}
+
+:deep(.text-content p) {
+    margin: 0;
+    padding: 0;
 }
 
 .image-content {
@@ -359,6 +433,138 @@ onMounted(() => {
 .image-content img:hover {
     border-color: rgba(67, 243, 255, 0.4);
     box-shadow: 0 0 12px rgba(67, 243, 255, 0.3);
+}
+
+.file-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: rgba(67, 243, 255, 0.08);
+    border-radius: 6px;
+    border: 1px solid rgba(67, 243, 255, 0.15);
+}
+
+.file-content .el-icon {
+    font-size: 20px;
+    color: rgba(67, 243, 255, 0.7);
+}
+
+.file-content span {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* tiptap HTML渲染样式 */
+.note-content-html {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.9);
+    line-height: 1.6;
+    max-height: 100px;
+    overflow: hidden;
+}
+
+:deep(.note-content-html img) {
+    max-width: 30%;
+    border-radius: 8px;
+    margin: 8px auto;
+    border: 2px solid rgba(67, 243, 255, 0.2);
+    box-shadow: 0 2px 8px rgba(67, 243, 255, 0.15);
+}
+
+:deep(.note-content-html strong),
+:deep(.note-content-html b) {
+    font-weight: 900;
+    color: #43f3ff;
+    background: rgba(67, 243, 255, 0.15);
+    padding: 0 3px;
+    border-radius: 2px;
+}
+
+:deep(.note-content-html em),
+:deep(.note-content-html i) {
+    font-style: italic;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+:deep(.note-content-html h1) {
+    font-size: 1.5em;
+    font-weight: bold;
+    margin: 0.5em 0 0.3em;
+    color: #43f3ff;
+}
+
+:deep(.note-content-html h2) {
+    font-size: 1.3em;
+    font-weight: bold;
+    margin: 0.4em 0 0.2em;
+    color: #43f3ff;
+}
+
+:deep(.note-content-html h3) {
+    font-size: 1.1em;
+    font-weight: bold;
+    margin: 0.3em 0 0.2em;
+    color: rgba(67, 243, 255, 0.9);
+}
+
+:deep(.note-content-html p) {
+    margin: 0.3em 0;
+}
+
+:deep(.note-content-html ul),
+:deep(.note-content-html ol) {
+    padding-left: 1.5rem;
+    margin: 0.5em 0;
+}
+
+:deep(.note-content-html blockquote) {
+    border-left: 3px solid rgba(67, 243, 255, 0.6);
+    padding-left: 0.8rem;
+    margin: 0.5em 0;
+    color: rgba(255, 255, 255, 0.7);
+    font-style: italic;
+    background: rgba(67, 243, 255, 0.05);
+    padding: 0.3em 0.8rem;
+    border-radius: 0 4px 4px 0;
+}
+
+:deep(.note-content-html code) {
+    background: rgba(67, 243, 255, 0.15);
+    color: #43f3ff;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 0.9em;
+}
+
+:deep(.note-content-html pre) {
+    background: rgba(25, 30, 40, 0.8);
+    border: 1px solid rgba(67, 243, 255, 0.3);
+    border-radius: 6px;
+    padding: 8px;
+    margin: 0.5em 0;
+    overflow-x: auto;
+}
+
+:deep(.note-content-html pre code) {
+    background: none;
+    color: #43f3ff;
+    padding: 0;
+    font-size: 0.9em;
+    line-height: 1.5;
+}
+
+:deep(.note-content-html a) {
+    color: #43f3ff;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+:deep(.note-content-html hr) {
+    border: none;
+    border-top: 1px solid rgba(67, 243, 255, 0.3);
+    margin: 1em 0;
 }
 
 .item-footer {

@@ -23,3 +23,5 @@ export const searchFriendApi = (number) => request.get('/user/search', {
     params: { number }
 })
 
+export const updateUserInfoApi = (data) => request.post('/user/updateInfo', data)
+

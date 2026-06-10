@@ -1,4 +1,4 @@
-import { ipcMain, globalShortcut, app, clipboard, nativeImage } from "electron"
+import { ipcMain, globalShortcut, app, clipboard, nativeImage, BrowserWindow } from "electron"
 import { mainWindow } from '../index'
 import { createExtraWindow, windowPool } from "../Util/createNewWindow"
 const crypto = require('crypto')
@@ -6,21 +6,42 @@ const path = require('path')
 const fs = require('fs');
 
 let captureWindow = null
+// 记录触发截屏的窗口，用于截屏结束后恢复显示和回传图片
+let captureSourceWindow = null
+
+/**
+ * 安全关闭截屏窗口（防止重复关闭导致崩溃）
+ */
+const closeCaptureWindow = () => {
+    if (captureWindow && !captureWindow.isDestroyed()) {
+        windowPool.delete('capture')
+        captureWindow.close()
+    }
+    captureWindow = null
+    // 恢复触发截屏的窗口显示
+    if (captureSourceWindow && !captureSourceWindow.isDestroyed()) {
+        captureSourceWindow.show()
+    }
+    captureSourceWindow = null
+}
 
 ipcMain.on('window:capture-open', async (e) => {
-    // 隐藏主窗口
-    mainWindow.hide()
+    // 找到触发截屏的窗口并隐藏
+    const senderWindow = BrowserWindow.fromWebContents(e.sender)
+    if (senderWindow) {
+        captureSourceWindow = senderWindow
+        senderWindow.hide()
+    } else {
+        // fallback：隐藏主窗口
+        mainWindow.hide()
+        captureSourceWindow = mainWindow
+    }
 
     await createCaptureWindow()
 })
 
 ipcMain.on('window:close-capture', () => {
-    if (captureWindow) {
-        windowPool.delete('capture')
-        captureWindow.close()
-        captureWindow = null
-    }
-    mainWindow.show()
+    closeCaptureWindow()
 })
 
 ipcMain.on('window:save-capture', (e, uint8Array) => {
@@ -29,13 +50,10 @@ ipcMain.on('window:save-capture', (e, uint8Array) => {
     const image = nativeImage.createFromBuffer(buffer)
     // 复制图片到剪贴板
     clipboard.writeImage(image)
-    // // 保存图片到指定路径
+    // 保存图片到指定路径
     const fileName = `screenshot_${Date.now()}.png`
     const savePath = path.join(app.getPath('pictures'), fileName)
     fs.writeFileSync(savePath, buffer);
-
-    windowPool.delete('capture')
-    captureWindow.close()
 
     // 获取文件信息
     const stats = fs.statSync(savePath);
@@ -66,12 +84,16 @@ ipcMain.on('window:save-capture', (e, uint8Array) => {
         base64Preview = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
     }
 
-    windowPool.delete('capture')
-    captureWindow.close()
+    // 先保存目标窗口引用，再关闭截屏窗口（closeCaptureWindow 会清除 captureSourceWindow）
+    const targetWindow = captureSourceWindow || mainWindow
 
-    if (mainWindow) {
+    // 关闭截屏窗口（统一入口，不再重复调用）
+    closeCaptureWindow()
+
+    // 将截屏图片发送回触发截屏的窗口
+    if (targetWindow && !targetWindow.isDestroyed()) {
         // 发送完整的文件信息对象
-        mainWindow.webContents.send('capture:image', {
+        targetWindow.webContents.send('capture:image', {
             fileId,           // 唯一文件ID
             fileName,         // 文件名，如 "screenshot_1700000000000.png"
             fileSize: stats.size, // 文件大小（字节）
@@ -145,10 +167,9 @@ export async function createCaptureWindow() {
     })
 
     captureWindow.on('close', () => {
-        mainWindow.show()
-
         // 注销全局快捷键
         globalShortcut.unregister('Esc')
+        captureWindow = null
     })
 }
 
@@ -167,6 +188,7 @@ ipcMain.on('copy:file', async (e, content, remoteUrl, msgType, fileName) => {
             const image = nativeImage.createFromBuffer(uint8Buffer)
             // 复制图片到剪贴板
             clipboard.writeImage(image)
+            break
         }
         default: {
             // 其他文件(视频，音频，文件)

@@ -31,6 +31,11 @@
         </router-link>
       </div>
       <div class="main-count-left-bottom">
+        <router-link tag="div" to="/wallet" class="left-icon">
+          <el-icon size="28">
+            <Wallet />
+          </el-icon>
+        </router-link>
         <el-icon class="left-icon" size="30" @click="openSettingView">
           <MoreFilled />
         </el-icon>
@@ -46,6 +51,7 @@
 
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue'
+import { ChatRound, UserFilled, Star, MoreFilled, Wallet } from '@element-plus/icons-vue'
 import WindowControls from '../../components/WindowControls.vue'
 import UserOnlineStatus from '../../components/UserOnlineStatus.vue'
 import UserInfoCart from '../../components/UserInfoCart.vue'

@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { Conversation } from '../../types/conversation'
+import { checkCache } from '../../utils/cache'
 
 // 会话列表存储模块
 
@@ -24,20 +25,12 @@ export const conversationInfo = defineStore('conversationMap', {
   actions: {
     // 初始化缓存
     initCache(userId: string) {
-      // 本次登录生成的唯一版本号
-      const currentCacheVersion = `${userId}_${Date.now()}`
-      // 缓存的有效期
-      const cacheAccess = Date.now() - this._cacheTimestamp
-      // 设置缓存的有效期为 5 分钟，所以如果在五分钟内连续登录和退出，缓存并不会更新
-      if (!this._cacheVersion.startsWith(userId) || cacheAccess > 5 * 60 * 1000) {
-        // 缓存过期，清空数据
+      const valid = checkCache(this, userId)
+      if (!valid) {
         this.conversationMap = {}
-        this._cacheVersion = currentCacheVersion
-        this._cacheTimestamp = Date.now()
         return false
       }
-      console.info('会话信息缓存没有过期,')
-      // 缓存没有过期
+      console.info('会话信息缓存没有过期')
       return true
     },
     // 会话id为键，传入部分数据进行更新
@@ -50,9 +43,16 @@ export const conversationInfo = defineStore('conversationMap', {
       }
     },
     getGroupConversationList() {
-      return Object.entries(this.conversationMap)
-        .filter(([conversationId]) => conversationId.startsWith('g'))
-        .map(([, conversation]) => conversation)
+      return Object.values(this.conversationMap)
+        .filter((conversation) => conversation.type === 1)
+    },
+    getSortedConversationList() {
+      return Object.values(this.conversationMap).sort((a, b) => {
+        // Pinned conversations first
+        if (a.isTop !== b.isTop) return (b.isTop ?? 0) - (a.isTop ?? 0)
+        // Then sort by latest message time (descending)
+        return (b.latestMsgTime ?? 0) - (a.latestMsgTime ?? 0)
+      })
     },
     getGroupConversationInfo(conversationId: string) {
       return this.conversationMap[conversationId];

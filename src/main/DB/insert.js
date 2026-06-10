@@ -45,7 +45,7 @@ const uploadNoteContent = (data) => {
  * @param favoritesPack -- 笔记内容 
  */
 const addFavorites = (favoritesPack) => {
-    multipleInsert(`insert`, 'favorites', favoritesPack)
+    return multipleInsert(`insert`, 'favorites', favoritesPack)
 }
 
 export {

@@ -125,7 +125,7 @@ import { ElMessage } from 'element-plus';
 import { uploadImageApi } from '../../api/Favorites';
 import WindowControls from '../../components/WindowControls.vue';
 import { insertNewNote, updateOldNote } from '../../db/syncDB';
-import { eventEmitter } from '../../utils/eventEmitter';
+import emitter from '../../utils/mitt';
 
 const pendingImages = ref<any>([])
 const showLinkDialog = ref(false)
@@ -241,7 +241,6 @@ const handleFileChange = (e: any) => {
 // 上次文本中的图片到服务端
 const saveImage = async () => {
     if (pendingImages.value.length === 0) {
-        console.log(111)
         return []
     }
 
@@ -307,16 +306,29 @@ const saveContent = async () => {
     }
 
     // 发送笔记更新事件
-    eventEmitter.emit('note:updated')
+    emitter.emit('note:updated')
 }
 
-onMounted(() => {
-    (window as any).windowToolApi.sendWindowInfo((e: any, data: any) => {
-        console.log(data)
-        editor.value?.commands.setContent(data.content)
-        title.value = data.title
-        noteId.value = data.id
-        isUpdate.value = true
+let noteDataReceived = false
+const handleNoteData = (data: any) => {
+    if (!data || noteDataReceived) return
+    noteDataReceived = true
+    console.log('createNote received data:', data)
+    editor.value?.commands.setContent(data.content)
+    title.value = data.title
+    noteId.value = data.id
+    isUpdate.value = true
+}
+
+onMounted(async () => {
+    // 先尝试主动拉取缓存数据（解决路由懒加载导致组件挂载晚于 show 事件的问题）
+    const pendingData = await (window as any).windowToolApi.getPendingData()
+    if (pendingData) {
+        handleNoteData(pendingData)
+    }
+    // 兜底：如果 show 事件在组件挂载后才触发，仍能通过监听器接收
+    ;(window as any).windowToolApi.sendWindowInfo((_e: any, data: any) => {
+        handleNoteData(data)
     })
 })
 

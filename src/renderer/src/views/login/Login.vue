@@ -45,9 +45,10 @@
 
 <script lang="ts" setup>
 import { ElMessage, FormInstance, FormRules } from 'element-plus'
+import { User, Lock } from '@element-plus/icons-vue'
 import { onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { loginApi, verifyCodeApi } from '../../api/User.js'
+import { loginApi, verifyCodeApi } from '../../api/User'
 import WindowControls from '../../components/WindowControls.vue'
 
 onMounted(() => {
@@ -92,7 +93,6 @@ const handleEnterLogin = () => {
 
 const Login = async (formEl: FormInstance | undefined) => {
   if (!formEl) return
-  console.info('登录表单数据:', loginForm)
   try {
     // 验证成功会进入这里，失败会直接跳去 catch
     await formEl.validate()
@@ -111,7 +111,6 @@ const Login = async (formEl: FormInstance | undefined) => {
       const isNeed = await (window as any).loadApi.isNeedInitData()
       if (!isNeed) {
         // 不需要，更新离线数据
-        console.info('更新离线数据')
         // 等待更新成功的通知
         await (window as any).dbApi.updateDBData()
         await router.push('/main')
@@ -121,7 +120,6 @@ const Login = async (formEl: FormInstance | undefined) => {
         await new Promise(resolve => {
           (window as any).loadApi.onDataInitComplete(resolve)
         })
-        console.info('初始化完成, 进入main界面');
         await router.push('/main')
         await (window as any).windowToolApi.resizeWindow('main')
       }
@@ -137,7 +135,6 @@ const Login = async (formEl: FormInstance | undefined) => {
 }
 
 const Register = () => {
-  console.log('注册')
   router.push('/register');
   (window as any).windowToolApi.resizeWindow('register')
 }

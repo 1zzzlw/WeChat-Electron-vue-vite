@@ -108,6 +108,13 @@ import WindowControls from '../../components/WindowControls.vue'
   border-left: 2px solid rgba(255, 255, 255, 0.8);
 }
 
+/* Vue Router active tab state */
+.router-link-exact-active .setting-button-item {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  border-left: 2px solid #43f3ff;
+}
+
 .setting-right {
   flex: 1;
   padding: 24px 32px;

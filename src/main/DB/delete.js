@@ -30,9 +30,18 @@ const deleteConversation = (conversationId) => {
     deletes('conversation', condition)
 }
 
+const deleteFavorite = (userId, favoriteId) => {
+    const condition = {
+        userId: userId,
+        id: favoriteId
+    }
+    deletes('favorites', condition)
+}
+
 export {
     clearHistoryMessage,
     deleteMessage,
     deleteFriend,
-    deleteConversation
+    deleteConversation,
+    deleteFavorite
 }

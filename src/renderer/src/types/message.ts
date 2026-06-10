@@ -12,6 +12,8 @@ export interface Message {
     sendTime: string
     isRevoked?: number
     quoteMsgId?: number | null
+    quoteContent?: string | null
+    quoteMsgType?: number | null
     fileId?: string | null
     fileName?: string | null
     fileSize?: number | null

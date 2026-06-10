@@ -15,7 +15,7 @@
         <div>
           生日: {{ birthday }}
         </div>
-        <a @click="showLinkDialog = true">修改账号信息</a>
+        <a @click="openEditDialog">修改账号信息</a>
       </div>
     </div>
     <div class="wallpaper">
@@ -46,7 +46,7 @@
         </el-form-item>
         <el-form-item class="button">
           <el-button type="primary" @click="onSubmit">保存</el-button>
-          <el-button>取消</el-button>
+          <el-button @click="showLinkDialog = false">取消</el-button>
         </el-form-item>
       </el-form>
     </el-dialog>
@@ -55,6 +55,8 @@
 
 <script setup>
 import { onMounted, ref } from 'vue'
+import { ElMessage } from 'element-plus'
+import { updateUserInfoApi } from '../../api/User'
 
 const avatarUrl = ref('')
 const imagePath = ref(new URL('/wallpaper/1.jpg', import.meta.url).href)
@@ -79,16 +81,36 @@ const birthdayTemp = ref()
 
 const showLinkDialog = ref(false)
 
-const onSubmit = () => {
+const openEditDialog = () => {
+  accountTemp.value = account.value
+  emailTemp.value = email.value === '无' ? '' : email.value
+  birthdayTemp.value = birthday.value === '无' ? '' : birthday.value
+  showLinkDialog.value = true
+}
+
+const onSubmit = async () => {
   account.value = accountTemp.value
   email.value = emailTemp.value
   birthday.value = birthdayTemp.value
 
-  const data = {
-    account: accountTemp.value,
-    email: emailTemp.value,
-    birthday: birthdayTemp.value
+  // 保存到electron-store
+  await window.userInfoApi.storeSetUserInfo('account', accountTemp.value)
+  await window.userInfoApi.storeSetUserInfo('email', emailTemp.value)
+  await window.userInfoApi.storeSetUserInfo('birthday', birthdayTemp.value)
+
+  // 调用服务端API更新
+  try {
+    await updateUserInfoApi({
+      account: accountTemp.value,
+      email: emailTemp.value,
+      birthday: birthdayTemp.value
+    })
+    ElMessage.success('修改成功')
+  } catch (error) {
+    ElMessage.error('修改失败')
   }
+
+  showLinkDialog.value = false
 }
 
 const selectWallpaper = (current, prev) => {
@@ -96,7 +118,6 @@ const selectWallpaper = (current, prev) => {
 }
 
 const changeWallpaper = () => {
-  console.log(imagePath.value)
   document.body.style.backgroundImage = `url(${imagePath.value})`
   window.windowToolApi.sendWindowWallpaper(imagePath.value)
 }
@@ -105,6 +126,8 @@ onMounted(async () => {
   avatarUrl.value = await window.userInfoApi.storeGetUserInfo('avatar')
   account.value = await window.userInfoApi.storeGetUserInfo('account')
   phone.value = await window.userInfoApi.storeGetUserInfo('phone')
+  email.value = await window.userInfoApi.storeGetUserInfo('email') || '无'
+  birthday.value = await window.userInfoApi.storeGetUserInfo('birthday') || '无'
 })
 </script>
 

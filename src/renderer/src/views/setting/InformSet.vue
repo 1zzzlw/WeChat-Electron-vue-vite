@@ -170,7 +170,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
+import { ElMessage } from 'element-plus'
 
 const settings = reactive({
   enableNotification: true,
@@ -189,10 +190,30 @@ const settings = reactive({
 })
 
 onMounted(async () => {
-  // 加载保存的设置
-  // const savedSettings = await ipcRenderer.invoke('get-notification-settings')
-  // Object.assign(settings, savedSettings)
+  try {
+    const savedSettings = await (window as any).userInfoApi.storeGetUserInfo('notificationSettings')
+    if (savedSettings) {
+      const parsed = typeof savedSettings === 'string' ? JSON.parse(savedSettings) : savedSettings
+      Object.assign(settings, parsed)
+    }
+  } catch (error) {
+    console.error('加载通知设置失败:', error)
+  }
 })
+
+let saveTimer: ReturnType<typeof setTimeout> | null = null
+
+watch(settings, async (newSettings) => {
+  if (saveTimer) clearTimeout(saveTimer)
+  saveTimer = setTimeout(async () => {
+    try {
+      await (window as any).userInfoApi.storeSetUserInfo('notificationSettings', JSON.stringify(newSettings))
+      ElMessage.success('设置已保存')
+    } catch (error) {
+      console.error('保存通知设置失败:', error)
+    }
+  }, 500)
+}, { deep: true })
 </script>
 
 <style scoped>
@@ -208,7 +229,7 @@ onMounted(async () => {
 .settings-section {
   margin-bottom: 32px;
   padding-bottom: 24px;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid rgba(66, 153, 225, 0.2);
 }
 
 .settings-section:last-child {
@@ -219,7 +240,7 @@ onMounted(async () => {
   font-size: 16px;
   font-weight: 600;
   margin: 0 0 20px;
-  color: var(--text-primary);
+  color: #f0f0f0;
 }
 
 .setting-item {
@@ -227,7 +248,7 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: center;
   padding: 16px 0;
-  border-bottom: 1px solid var(--border-light);
+  border-bottom: 1px solid rgba(66, 153, 225, 0.1);
 }
 
 .setting-item:last-child {
@@ -242,13 +263,13 @@ onMounted(async () => {
 .setting-label {
   font-size: 14px;
   font-weight: 500;
-  color: var(--text-primary);
+  color: #f0f0f0;
   margin-bottom: 4px;
 }
 
 .setting-desc {
   font-size: 12px;
-  color: var(--text-secondary);
+  color: rgba(240, 240, 240, 0.5);
 }
 
 /* 开关样式 */
@@ -273,10 +294,10 @@ onMounted(async () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: var(--bg-secondary);
+  background-color: rgba(35, 45, 60, 0.7);
   transition: 0.3s;
   border-radius: 24px;
-  border: 1px solid var(--border-color);
+  border: 1px solid rgba(66, 153, 225, 0.2);
 }
 
 .slider:before {
@@ -286,14 +307,14 @@ onMounted(async () => {
   width: 18px;
   left: 2px;
   bottom: 2px;
-  background-color: var(--text-secondary);
+  background-color: rgba(240, 240, 240, 0.5);
   transition: 0.3s;
   border-radius: 50%;
 }
 
 input:checked+.slider {
-  background-color: var(--primary-color);
-  border-color: var(--primary-color);
+  background-color: rgba(66, 153, 225, 0.5);
+  border-color: rgba(66, 153, 225, 0.6);
 }
 
 input:checked+.slider:before {
@@ -304,17 +325,18 @@ input:checked+.slider:before {
 /* 下拉选择 */
 .select-input {
   padding: 6px 12px;
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
+  background: rgba(20, 25, 35, 0.8);
+  border: 1px solid rgba(66, 153, 225, 0.3);
   border-radius: 6px;
   font-size: 13px;
-  color: var(--text-primary);
+  color: #f0f0f0;
   cursor: pointer;
   outline: none;
+  color-scheme: dark;
 }
 
 .select-input:hover {
-  border-color: var(--primary-color);
+  border-color: rgba(66, 153, 225, 0.6);
 }
 
 /* 时间范围选择 */
@@ -326,22 +348,23 @@ input:checked+.slider:before {
 
 .time-input {
   padding: 6px 10px;
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
+  background: rgba(20, 25, 35, 0.8);
+  border: 1px solid rgba(66, 153, 225, 0.3);
   border-radius: 6px;
   font-size: 13px;
-  color: var(--text-primary);
+  color: #f0f0f0;
   cursor: pointer;
   outline: none;
+  color-scheme: dark;
 }
 
 .time-input:hover {
-  border-color: var(--primary-color);
+  border-color: rgba(66, 153, 225, 0.6);
 }
 
 .time-separator {
   font-size: 13px;
-  color: var(--text-secondary);
+  color: rgba(240, 240, 240, 0.5);
 }
 
 /* 滚动条样式 */
@@ -354,11 +377,11 @@ input:checked+.slider:before {
 }
 
 .notification-container::-webkit-scrollbar-thumb {
-  background: var(--scrollbar-thumb);
+  background: rgba(66, 153, 225, 0.3);
   border-radius: 3px;
 }
 
 .notification-container::-webkit-scrollbar-thumb:hover {
-  background: var(--scrollbar-thumb-hover);
+  background: rgba(66, 153, 225, 0.5);
 }
 </style>

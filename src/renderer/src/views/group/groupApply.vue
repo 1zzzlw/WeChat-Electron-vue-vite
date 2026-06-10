@@ -39,7 +39,7 @@ import { useRoute } from 'vue-router'
 import { userApplyListInfo } from '../../stores/modules/UserApplyListStore'
 import { ElMessage } from 'element-plus'
 import { getGroupMemberListApi } from '../../api/Conversation'
-import { groupMemberInfo } from '../../stores/modules/GroupMemberStores'
+import { groupMemberInfo } from '../../stores/modules/GroupMemberStore'
 import { addConversation } from '../../db/dualDB'
 import { conversationInfo } from '../../stores/modules/ConversationStore'
 import { dealGroupApplyApi } from '../../api/Apply'
@@ -58,13 +58,10 @@ const messageStore = messageInfo()
 
 // 同意申请
 const agreeButton = async () => {
-    console.info(groupApplyInfo)
     isLoading.value = true
     const userId = await (window as any).userInfoApi.storeGetUserInfo('userId')
     const username = await (window as any).userInfoApi.storeGetUserInfo('username')
     const avatar = await (window as any).userInfoApi.storeGetUserInfo('avatar')
-
-    console.info('用户', userId, '同意入群');
 
     // 获取群成员信息列表
     const groupMemberList: any = await getGroupMemberListApi(groupApplyInfo.value?.conversationId)
@@ -72,13 +69,10 @@ const agreeButton = async () => {
     const avatarUrlList = groupMemberList.data.map((userInfo: any) => userInfo.avatar)
     const receiverIds = groupMemberList.data.map((userInfo: any) => userInfo.userId)
     avatarUrlList.push(avatar)
-    console.log(avatarUrlList)
 
     // 更新群聊头像
     const groupAvatar = await (window as any).mediaHandleApi.updateGroupAvatar(avatarUrlList)
     const groupAvatarBlob = new Blob([groupAvatar])
-
-    console.log(groupAvatarBlob)
 
     const formData = new FormData()
     formData.append('groupAvatarBlob', groupAvatarBlob)
@@ -88,7 +82,6 @@ const agreeButton = async () => {
     formData.append('status', '2')
 
     const conversationRes: any = await dealGroupApplyApi(formData)
-    console.log(conversationRes)
     if (conversationRes.code === 1) {
         ElMessage.success('入群成功')
         // 更新群聊申请状态
@@ -136,7 +129,6 @@ const refuseButton = async () => {
     formData.append('memberId', userId)
     formData.append('status', '3')
 
-    console.info('用户', userId, '忽略入群:')
     dealGroupApplyApi(formData).then((res: any) => {
         if (res.code === 1) {
             ElMessage.success('忽略入群成功')

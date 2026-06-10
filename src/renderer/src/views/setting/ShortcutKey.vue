@@ -10,15 +10,22 @@
       <div class="shortcuts-section">
         <h3 class="section-title">通用</h3>
         <div class="shortcuts-list">
-          <div v-for="item in filteredGeneralShortcuts" :key="item.action" class="shortcut-item">
+          <div v-for="item in filteredGeneralShortcuts" :key="item.action" class="shortcut-item"
+               @click="startEditShortcut(item.action)"
+               @keydown="(e) => handleKeyCapture(e, item.action)" tabindex="0">
             <div class="shortcut-info">
               <div class="shortcut-name">{{ item.name }}</div>
               <div class="shortcut-desc">{{ item.description }}</div>
             </div>
             <div class="shortcut-keys">
-              <kbd v-for="(key, index) in item.keys" :key="index" class="key-tag">
-                {{ key }}
-              </kbd>
+              <template v-if="editingAction === item.action">
+                <kbd class="key-tag editing">按下新快捷键...</kbd>
+              </template>
+              <template v-else>
+                <kbd v-for="(key, index) in (customShortcuts[item.action] || item.keys)" :key="index" class="key-tag">
+                  {{ key }}
+                </kbd>
+              </template>
             </div>
           </div>
         </div>
@@ -28,15 +35,22 @@
       <div class="shortcuts-section">
         <h3 class="section-title">聊天</h3>
         <div class="shortcuts-list">
-          <div v-for="item in filteredChatShortcuts" :key="item.action" class="shortcut-item">
+          <div v-for="item in filteredChatShortcuts" :key="item.action" class="shortcut-item"
+               @click="startEditShortcut(item.action)"
+               @keydown="(e) => handleKeyCapture(e, item.action)" tabindex="0">
             <div class="shortcut-info">
               <div class="shortcut-name">{{ item.name }}</div>
               <div class="shortcut-desc">{{ item.description }}</div>
             </div>
             <div class="shortcut-keys">
-              <kbd v-for="(key, index) in item.keys" :key="index" class="key-tag">
-                {{ key }}
-              </kbd>
+              <template v-if="editingAction === item.action">
+                <kbd class="key-tag editing">按下新快捷键...</kbd>
+              </template>
+              <template v-else>
+                <kbd v-for="(key, index) in (customShortcuts[item.action] || item.keys)" :key="index" class="key-tag">
+                  {{ key }}
+                </kbd>
+              </template>
             </div>
           </div>
         </div>
@@ -46,15 +60,22 @@
       <div class="shortcuts-section">
         <h3 class="section-title">导航</h3>
         <div class="shortcuts-list">
-          <div v-for="item in filteredNavigationShortcuts" :key="item.action" class="shortcut-item">
+          <div v-for="item in filteredNavigationShortcuts" :key="item.action" class="shortcut-item"
+               @click="startEditShortcut(item.action)"
+               @keydown="(e) => handleKeyCapture(e, item.action)" tabindex="0">
             <div class="shortcut-info">
               <div class="shortcut-name">{{ item.name }}</div>
               <div class="shortcut-desc">{{ item.description }}</div>
             </div>
             <div class="shortcut-keys">
-              <kbd v-for="(key, index) in item.keys" :key="index" class="key-tag">
-                {{ key }}
-              </kbd>
+              <template v-if="editingAction === item.action">
+                <kbd class="key-tag editing">按下新快捷键...</kbd>
+              </template>
+              <template v-else>
+                <kbd v-for="(key, index) in (customShortcuts[item.action] || item.keys)" :key="index" class="key-tag">
+                  {{ key }}
+                </kbd>
+              </template>
             </div>
           </div>
         </div>
@@ -64,15 +85,22 @@
       <div class="shortcuts-section">
         <h3 class="section-title">系统</h3>
         <div class="shortcuts-list">
-          <div v-for="item in filteredSystemShortcuts" :key="item.action" class="shortcut-item">
+          <div v-for="item in filteredSystemShortcuts" :key="item.action" class="shortcut-item"
+               @click="startEditShortcut(item.action)"
+               @keydown="(e) => handleKeyCapture(e, item.action)" tabindex="0">
             <div class="shortcut-info">
               <div class="shortcut-name">{{ item.name }}</div>
               <div class="shortcut-desc">{{ item.description }}</div>
             </div>
             <div class="shortcut-keys">
-              <kbd v-for="(key, index) in item.keys" :key="index" class="key-tag">
-                {{ key }}
-              </kbd>
+              <template v-if="editingAction === item.action">
+                <kbd class="key-tag editing">按下新快捷键...</kbd>
+              </template>
+              <template v-else>
+                <kbd v-for="(key, index) in (customShortcuts[item.action] || item.keys)" :key="index" class="key-tag">
+                  {{ key }}
+                </kbd>
+              </template>
             </div>
           </div>
         </div>
@@ -89,10 +117,50 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 
 const searchQuery = ref('')
+
+const customShortcuts = reactive<Record<string, string[]>>({})
+const editingAction = ref<string | null>(null)
+
+onMounted(async () => {
+  try {
+    const saved = await (window as any).userInfoApi.storeGetUserInfo('customShortcuts')
+    if (saved) {
+      const parsed = typeof saved === 'string' ? JSON.parse(saved) : saved
+      Object.assign(customShortcuts, parsed)
+    }
+  } catch (error) {
+    console.error('加载自定义快捷键失败:', error)
+  }
+})
+
+const startEditShortcut = (action: string) => {
+  editingAction.value = action
+}
+
+const handleKeyCapture = (event: KeyboardEvent, action: string) => {
+  if (editingAction.value !== action) return
+
+  event.preventDefault()
+  const keys: string[] = []
+  if (event.ctrlKey) keys.push('Ctrl')
+  if (event.shiftKey) keys.push('Shift')
+  if (event.altKey) keys.push('Alt')
+
+  const mainKey = event.key
+  if (!['Control', 'Shift', 'Alt', 'Meta'].includes(mainKey)) {
+    keys.push(mainKey.toUpperCase())
+    customShortcuts[action] = keys
+    editingAction.value = null
+
+    // Save to electron-store
+    ;(window as any).userInfoApi.storeSetUserInfo('customShortcuts', JSON.stringify(customShortcuts))
+    ElMessage.success('快捷键已更新')
+  }
+}
 
 // 快捷键数据
 const shortcutsData = [
@@ -296,10 +364,14 @@ const filteredSystemShortcuts = computed(() =>
   filterShortcuts(systemShortcuts.value)
 )
 
-const resetToDefaults = () => {
-  // 重置快捷键为默认值
-  // await ipcRenderer.invoke('reset-shortcuts-to-default')
-  ElMessage.success('已重置为默认快捷键')
+const resetToDefaults = async () => {
+  Object.keys(customShortcuts).forEach(key => delete customShortcuts[key])
+  try {
+    await (window as any).userInfoApi.storeSetUserInfo('customShortcuts', JSON.stringify({}))
+    ElMessage.success('已重置为默认快捷键')
+  } catch (error) {
+    ElMessage.error('重置失败')
+  }
 }
 </script>
 
@@ -323,9 +395,9 @@ const resetToDefaults = () => {
   font-size: 16px;
   font-weight: 600;
   margin: 0 0 20px;
-  color: var(--text-primary);
+  color: #f0f0f0;
   padding-bottom: 12px;
-  border-bottom: 2px solid var(--primary-color);
+  border-bottom: 2px solid rgba(66, 153, 225, 0.5);
 }
 
 .shortcuts-list {
@@ -339,15 +411,22 @@ const resetToDefaults = () => {
   justify-content: space-between;
   align-items: center;
   padding: 16px;
-  background: var(--bg-secondary);
+  background: rgba(35, 45, 60, 0.7);
   border-radius: 8px;
-  border: 1px solid var(--border-color);
+  border: 1px solid rgba(66, 153, 225, 0.2);
   transition: all 0.3s;
+  cursor: pointer;
+  outline: none;
 }
 
 .shortcut-item:hover {
-  border-color: var(--primary-color);
+  border-color: rgba(66, 153, 225, 0.5);
   transform: translateX(4px);
+}
+
+.shortcut-item:focus {
+  border-color: rgba(66, 153, 225, 0.6);
+  box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.2);
 }
 
 .shortcut-info {
@@ -357,13 +436,13 @@ const resetToDefaults = () => {
 .shortcut-name {
   font-size: 14px;
   font-weight: 500;
-  color: var(--text-primary);
+  color: #f0f0f0;
   margin-bottom: 4px;
 }
 
 .shortcut-desc {
   font-size: 12px;
-  color: var(--text-secondary);
+  color: rgba(240, 240, 240, 0.5);
 }
 
 .shortcut-keys {
@@ -377,20 +456,64 @@ const resetToDefaults = () => {
   align-items: center;
   justify-content: center;
   padding: 6px 12px;
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
+  background: rgba(20, 25, 35, 0.8);
+  border: 1px solid rgba(66, 153, 225, 0.3);
   border-radius: 6px;
   font-size: 12px;
   font-weight: 500;
-  color: var(--text-primary);
+  color: #f0f0f0;
   font-family: 'SF Mono', Monaco, monospace;
-  box-shadow: 0 2px 0 var(--border-color);
+  box-shadow: 0 2px 0 rgba(66, 153, 225, 0.2);
+}
+
+.key-tag.editing {
+  background: rgba(66, 153, 225, 0.3);
+  color: #fff;
+  border-color: rgba(66, 153, 225, 0.6);
+  animation: blink 1s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
 .reset-section {
   margin-top: 40px;
   padding-top: 24px;
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid rgba(66, 153, 225, 0.2);
   text-align: center;
+}
+
+/* Element Plus 暗色主题覆盖 */
+:deep(.el-input__wrapper) {
+  background: rgba(20, 25, 35, 0.8);
+  border: 1px solid rgba(66, 153, 225, 0.3);
+  border-radius: 6px;
+  box-shadow: none;
+}
+
+:deep(.el-input__wrapper:focus-within) {
+  border-color: rgba(66, 153, 225, 0.6);
+}
+
+:deep(.el-input__inner) {
+  color: #f0f0f0;
+  background: transparent;
+}
+
+:deep(.el-input__inner::placeholder) {
+  color: rgba(240, 240, 240, 0.4);
+}
+
+:deep(.el-button--primary) {
+  background: rgba(66, 153, 225, 0.4);
+  border-color: rgba(66, 153, 225, 0.6);
+  color: #fff;
+}
+
+:deep(.el-button--primary:hover) {
+  background: rgba(66, 153, 225, 0.6);
+  border-color: rgba(66, 153, 225, 0.8);
 }
 </style>

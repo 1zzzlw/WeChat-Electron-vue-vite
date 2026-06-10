@@ -6,6 +6,7 @@ interface groupMember {
   username: string
   role: number
   avatar: string
+  isMute?: number
 }
 
 export const groupMemberInfo = defineStore('groupMemberInfo', {

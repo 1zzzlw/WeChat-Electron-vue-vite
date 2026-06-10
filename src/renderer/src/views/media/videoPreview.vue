@@ -84,19 +84,32 @@ const getCurrentFileInfo = (fileBaseInfo: any) => {
     fileInfo.value.remoteUrl = fileBaseInfo.remoteUrl
 }
 
-onMounted(() => {
+let videoDataReceived = false
+const handleVideoData = (data: any) => {
+    if (!data || videoDataReceived) return
+    videoDataReceived = true
+    console.log('videoPreview received data:', data)
+    const videoUrlList = data.videoUrlList
+    dPlayer.value.switchVideo({
+        url: data.remoteUrl,
+    })
+    videoList.value = videoUrlList
+    console.log(videoList.value.length)
+    currVideoIndex.value = videoUrlList.findIndex((item: any) => item.fileId === data.currentVideoId)
+    getCurrentFileInfo(videoUrlList[currVideoIndex.value])
+}
+
+onMounted(async () => {
     initPlayer();
 
-    (window as any).windowToolApi.sendWindowInfo((e: any, data: any) => {
-        console.log(data)
-        const videoUrlList = data.videoUrlList
-        dPlayer.value.switchVideo({
-            url: data.remoteUrl,
-        })
-        videoList.value = videoUrlList
-        console.log(videoList.value.length)
-        currVideoIndex.value = videoUrlList.findIndex((item: any) => item.fileId === data.currentVideoId)
-        getCurrentFileInfo(videoUrlList[currVideoIndex.value])
+    // 先尝试主动拉取缓存数据（解决路由懒加载导致组件挂载晚于 show 事件的问题）
+    const pendingData = await (window as any).windowToolApi.getPendingData()
+    if (pendingData) {
+        handleVideoData(pendingData)
+    }
+    // 兜底：如果 show 事件在组件挂载后才触发，仍能通过监听器接收
+    ;(window as any).windowToolApi.sendWindowInfo((_e: any, data: any) => {
+        handleVideoData(data)
     })
 })
 

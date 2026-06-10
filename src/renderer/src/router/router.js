@@ -1,232 +1,239 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 
-import AiChatView from '../views/chat/Ai-chat.vue'
-import ChatView from '../views/chat/Chat.vue'
-import AllCollectView from '../views/collect/AllCollect.vue'
-import CreateNoteView from '../views/collect/CreateNote.vue'
-import NoteView from '../views/collect/Note.vue'
-import FriendApplyView from '../views/friend/FriendApply.vue'
-import FriendInfoView from '../views/friend/FriendInfo.vue'
-import groupApplyView from '../views/group/groupApply.vue'
-import groupInfoView from '../views/group/groupInfo.vue'
-import LayoutView from '../views/layout/Main.vue'
-import LoginView from '../views/login/Login.vue'
-import ImagePreviewView from '../views/media/imagePreview.vue'
-import VideoPreviewView from '../views/media/videoPreview.vue'
-import createMomentView from '../views/moments/CreateMoment.vue'
-import MomentsView from '../views/moments/Moments.vue'
-import PendingLogin from '../views/pendingLogin/PendingLogin.vue'
-import RegisterView from '../views/register/Register.vue'
-import RegisterUserInfoView from '../views/register/RegisterUserInfo.vue'
-import UploadAvatarView from '../views/register/uploadAvatar.vue'
-import AboutVue from '../views/setting/About.vue'
-import AccountVue from '../views/setting/Account.vue'
-import InformSetVue from '../views/setting/InformSet.vue'
-import SetUserInfoView from '../views/setting/SetUserInfo.vue'
-import ShortcutKeyVue from '../views/setting/ShortcutKey.vue'
-import StoreLocationView from '../views/setting/StoreLocation.vue'
-import CollectList from '../views/user/CollectList.vue'
-import UserConversationListView from '../views/user/UserConversationList.vue'
-import CreateGroupView from '../views/user/UserCreateGroup.vue'
-import FriendAddView from '../views/user/UserFriendAdd.vue'
-import UserListView from '../views/user/UserList.vue'
-import MomentInfoView from '../views/moments/MomentInfo.vue'
-
 const router = createRouter({
   history: createWebHashHistory(),
   routes: [
     {
       path: '/login',
       name: 'login',
-      component: LoginView
+      component: () => import('../views/login/Login.vue')
     },
     {
       path: '/register',
       name: 'register',
-      component: RegisterView
+      component: () => import('../views/register/Register.vue')
     },
     {
       path: '/pendingLogin',
       name: 'pendingLogin',
-      component: PendingLogin
+      component: () => import('../views/pendingLogin/PendingLogin.vue')
     },
     {
       path: '/registerUserInfo',
       name: 'registerUserInfo',
-      component: RegisterUserInfoView
+      component: () => import('../views/register/RegisterUserInfo.vue')
     },
     {
       path: '/uploadAvatar',
       name: 'uploadAvatar',
-      component: UploadAvatarView
+      component: () => import('../views/register/UploadAvatar.vue')
     },
     {
       path: '/friendAdd',
       name: 'friendAdd',
-      component: FriendAddView
+      component: () => import('../views/user/UserFriendAdd.vue')
     },
     {
       path: '/createGroup',
       name: 'createGroup',
-      component: CreateGroupView
+      component: () => import('../views/user/UserCreateGroup.vue')
     },
     {
       path: '/createNote',
       name: 'createNote',
-      component: CreateNoteView
+      component: () => import('../views/collect/CreateNote.vue')
     },
     {
       path: '/createMomentView',
       name: 'createMomentView',
-      component: createMomentView
+      component: () => import('../views/moments/CreateMoment.vue')
     },
     {
       path: '/MomentInfoView',
       name: 'MomentInfoView',
-      component: MomentInfoView
+      component: () => import('../views/moments/MomentInfo.vue')
     },
     {
       path: '/setting',
       name: 'setting',
-      component: SetUserInfoView,
+      component: () => import('../views/setting/SetUserInfo.vue'),
       children: [
         {
           path: '/account',
           name: 'account',
-          component: AccountVue
+          component: () => import('../views/setting/Account.vue')
         },
         {
           path: '/storeLocation',
           name: 'storeLocation',
-          component: StoreLocationView
+          component: () => import('../views/setting/StoreLocation.vue')
         },
         {
           path: '/shortcutKey',
           name: 'shortcutKey',
-          component: ShortcutKeyVue
+          component: () => import('../views/setting/ShortcutKey.vue')
         },
         {
           path: '/informSet',
           name: 'informSet',
-          component: InformSetVue
+          component: () => import('../views/setting/InformSet.vue')
         },
         {
           path: '/about',
           name: 'about',
-          component: AboutVue
+          component: () => import('../views/setting/About.vue')
         }
       ]
     },
     {
       path: '/imagePreview',
       name: 'imagePreview',
-      component: ImagePreviewView
+      component: () => import('../views/media/imagePreview.vue')
     },
     {
       path: '/videoPreview',
       name: 'videoPreview',
-      component: VideoPreviewView
+      component: () => import('../views/media/videoPreview.vue')
+    },
+    {
+      path: '/standaloneChat',
+      name: 'standaloneChat',
+      component: () => import('../views/chat/StandaloneChat.vue')
     },
     {
       path: '/main',
       name: 'layout',
       redirect: '/messageList',
-      component: LayoutView,
+      component: () => import('../views/layout/Main.vue'),
       children: [
         {
           path: '/list',
           name: 'userList',
-          component: UserListView,
+          component: () => import('../views/user/UserList.vue'),
           children: [
             {
               path: '/friendApply',
               name: 'friendApply',
-              component: FriendApplyView
+              component: () => import('../views/friend/FriendApply.vue')
             },
             {
               path: '/friendInfo',
               name: 'friendInfo',
-              component: FriendInfoView
+              component: () => import('../views/friend/FriendInfo.vue')
             },
             {
               path: '/groupApply',
               name: 'groupApply',
-              component: groupApplyView
+              component: () => import('../views/group/GroupApply.vue')
             },
             {
               path: '/groupInfo',
               name: 'groupInfo',
-              component: groupInfoView
+              component: () => import('../views/group/GroupInfo.vue')
             }
           ]
         },
         {
           path: '/messageList',
           name: 'messageList',
-          component: UserConversationListView,
+          component: () => import('../views/user/UserConversationList.vue'),
           children: [
             {
               path: '/chat',
               name: 'chat',
-              component: ChatView
+              component: () => import('../views/chat/Chat.vue')
             },
             {
               path: '/aiChat',
               name: 'aiChat',
-              component: AiChatView
+              component: () => import('../views/chat/Ai-chat.vue')
             }
           ]
         },
         {
           path: '/collectList',
           name: 'collectList',
-          component: CollectList,
+          component: () => import('../views/user/CollectList.vue'),
           children: [
             {
               path: '/allCollectView',
               name: 'allCollectView',
-              component: AllCollectView
+              component: () => import('../views/collect/AllCollect.vue')
             },
             {
               path: '/note',
               name: 'note',
-              component: NoteView
+              component: () => import('../views/collect/Note.vue')
             }
           ]
         },
         {
           path: '/moments',
           name: 'moments',
-          component: MomentsView
+          component: () => import('../views/moments/Moments.vue')
+        },
+        {
+          path: '/wallet',
+          name: 'wallet',
+          component: () => import('../views/wallet/wallet.vue')
         }
       ]
     }
   ]
 })
 
+// 无需鉴权的白名单路由
+const authWhitelist = ['/login', '/register', '/registerUserInfo', '/uploadAvatar']
+
+// 子窗口路由白名单（通过 IPC 获取数据，不走 token 鉴权）
+const childWindowWhitelist = [
+  '/friendAdd',
+  '/createGroup',
+  '/createNote',
+  '/createMomentView',
+  '/MomentInfoView',
+  '/setting',
+  '/imagePreview',
+  '/videoPreview',
+  '/standaloneChat'
+]
+
 // 全局前置守卫：处理所有路由跳转的权限判断
 router.beforeEach(async (to, from, next) => {
-  if (to.path === '/friendAdd' || to.path === '/createGroup') {
+  // 白名单路由直接放行
+  if (authWhitelist.includes(to.path)) {
     next()
     return
   }
 
-  // 1. 获取token（调用主进程的IPC接口）
+  // 子窗口路由白名单直接放行（通过 IPC 传递数据）
+  if (childWindowWhitelist.includes(to.path)) {
+    next()
+    return
+  }
+
+  // 获取 token（调用主进程的 IPC 接口）
   const token = await window.userInfoApi.storeGetUserInfo('token')
 
-  // 2. 根路径 '/'：根据token动态跳转
+  // 根路径 '/'：根据 token 动态跳转
   if (to.path === '/') {
-    console.log(123)
     if (token) {
-      console.log('有登录信息，跳转待登录页')
-      next('/pendingLogin') // 有token→待登录页
+      next('/pendingLogin')
     } else {
-      console.log('无登录信息，跳转登录页')
-      next('/login') // 无token→登录页
+      next('/login')
     }
     return
   }
-  // 4. 其他页面（登录、注册等）直接放行
+
+  // /main 下的受保护路由：检查 token 是否存在
+  if (to.path.startsWith('/main') || to.matched.some((record) => record.path.startsWith('/main'))) {
+    if (!token) {
+      next('/login')
+      return
+    }
+  }
+
+  // 其他情况放行
   next()
 })
 

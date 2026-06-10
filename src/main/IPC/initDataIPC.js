@@ -52,23 +52,30 @@ ipcMain.on('close-loading-window', (e) => {
 
 // 初始化数据到数据库
 const initializationData = async () => {
-    const data = await fetchMySQLData()
+    try {
+        const data = await fetchMySQLData()
 
-    const keys = Object.keys(data);
-    console.info(keys)
-    // 将数据加载到本地数据库中
-    for (const tableName of keys) {
-        console.log(data[tableName])
-        if (data[tableName].length != 0) {
-            multipleInsert('insert or ignore', tableName, data[`${tableName}`])
+        const keys = Object.keys(data);
+        // 将数据加载到本地数据库中
+        for (const tableName of keys) {
+            if (data[tableName].length !== 0) {
+                multipleInsert('insert or ignore', tableName, data[`${tableName}`])
+            }
+        }
+
+        const userId = store.get('userId');
+        initAndUpdateUserLoginRecord(userId);
+
+        // 向加载窗口发送可以跳过动画的请求，直接进入聊天软件
+        if (loadingWindow && !loadingWindow.isDestroyed()) {
+            loadingWindow.webContents.send('skip')
+        }
+    } catch (err) {
+        console.error('数据初始化失败:', err.message)
+        if (loadingWindow && !loadingWindow.isDestroyed()) {
+            loadingWindow.webContents.send('skip')
         }
     }
-
-    const userId = store.get('userId');
-    initAndUpdateUserLoginRecord(userId);
-
-    // 向加载窗口发送可以跳过动画的请求，直接进入聊天软件
-    loadingWindow.webContents.send('skip')
 }
 
 // 拉取数据从服务端
@@ -76,14 +83,14 @@ const fetchMySQLData = async () => {
     // 发送 HTTP 请求获取会话列表
     const conversationResponse = await initConversationList(true)
 
-    const conversation = conversationResponse.data
+    const conversation = conversationResponse.data || []
 
     const conversationIds = conversation.map(c => c.id)
 
     // 发送 HTTP 请求获取好友列表
     const friendRelationResponse = await initFriendList(true)
 
-    const friend_relation = friendRelationResponse.data
+    const friend_relation = friendRelationResponse.data || []
 
     let message = []
 

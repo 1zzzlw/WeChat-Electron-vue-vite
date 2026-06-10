@@ -84,7 +84,6 @@ const groupCount = computed(() => conversationStore.getGroupConversationCount())
 const loadCountInfo = async () => {
   // 从本地数据库获得笔记数量
   noteCount.value = await getNodeCount()
-  console.log(noteCount.value)
 }
 
 // 组件挂载时加载数据

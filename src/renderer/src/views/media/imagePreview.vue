@@ -131,13 +131,26 @@ const getCurrentFileInfo = (fileBaseInfo: any) => {
     fileInfo.value.remoteUrl = fileBaseInfo.remoteUrl
 }
 
-onMounted(() => {
-    (window as any).windowToolApi.sendWindowInfo((e: any, data: any) => {
-        console.log(data)
-        imageUrl.value = data.remoteUrl
-        imageList.value = data.imageUrlList
-        currImageIndex.value = data.imageUrlList.findIndex((item: any) => item.fileId === data.currentImageId)
-        getCurrentFileInfo(imageList.value[currImageIndex.value])
+let dataReceived = false
+const handleWindowData = (data: any) => {
+    if (!data || dataReceived) return
+    dataReceived = true
+    console.log('imagePreview received data:', data)
+    imageUrl.value = data.remoteUrl
+    imageList.value = data.imageUrlList
+    currImageIndex.value = data.imageUrlList.findIndex((item: any) => item.fileId === data.currentImageId)
+    getCurrentFileInfo(imageList.value[currImageIndex.value])
+}
+
+onMounted(async () => {
+    // 先尝试主动拉取缓存数据（解决路由懒加载导致组件挂载晚于 show 事件的问题）
+    const pendingData = await (window as any).windowToolApi.getPendingData()
+    if (pendingData) {
+        handleWindowData(pendingData)
+    }
+    // 兜底：如果 show 事件在组件挂载后才触发，仍能通过监听器接收
+    ;(window as any).windowToolApi.sendWindowInfo((_e: any, data: any) => {
+        handleWindowData(data)
     })
     // 添加滚轮事件监听
     window.addEventListener('wheel', onWheel)
@@ -192,8 +205,23 @@ onUnmounted(() => {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 16px;
-    overflow: auto;
+    padding: 0;
+    overflow: hidden;
+    background-color: #2d2d2d;
+    position: relative;
+}
+
+.image-content :deep(.viewer-container) {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #2d2d2d;
+}
+
+.image-content :deep(.viewer-canvas) {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
 }
 
 .image-content img {

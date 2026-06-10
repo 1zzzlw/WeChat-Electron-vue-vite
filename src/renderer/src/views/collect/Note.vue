@@ -22,7 +22,7 @@
 import { onMounted, onUnmounted, ref } from 'vue';
 import { getFavoritesApi } from '../../api/Favorites';
 import { addFavorites, getFavorites } from '../../db/dualDB';
-import { eventEmitter } from '../../utils/eventEmitter';
+import emitter from '../../utils/mitt';
 import { formatMessageTime } from '../../utils/utils';
 
 const favoritesList = ref<any>([])
@@ -72,13 +72,13 @@ onMounted(async () => {
     getFavoritesList()
 
     // 监听笔记更新事件
-    eventEmitter.on('note:updated', getFavoritesList)
+    emitter.on('note:updated', getFavoritesList)
 
 })
 
 // 组件卸载时移除监听
 onUnmounted(() => {
-    eventEmitter.off('note:updated', getFavoritesList)
+    emitter.off('note:updated', getFavoritesList)
 })
 </script>
 <style scoped>

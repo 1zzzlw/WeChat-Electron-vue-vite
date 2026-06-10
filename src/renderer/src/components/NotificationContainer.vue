@@ -20,8 +20,6 @@ const MAX_NOTIFICATIONS = 4 // 定义最大数量
 emitter.on('addNotification', (payload) => {
     const { component, props, duration = 5000 } = payload || {}
 
-    console.log(props)
-
     const item = {
         id: id++,
         component: markRaw(component),

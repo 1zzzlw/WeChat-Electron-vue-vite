@@ -15,6 +15,8 @@ const init_table = [
     is_revoked        INTEGER  NOT NULL DEFAULT 0,
     is_deleted        INTEGER  NOT NULL DEFAULT 0,         -- 0=未删除, 1=删除
     quote_msg_id      INTEGER  DEFAULT NULL,
+    quote_content     TEXT DEFAULT NULL,                   -- 引用内容快照
+    quote_msg_type    INTEGER DEFAULT NULL,                -- 引用消息类型
     file_id           TEXT DEFAULT NULL,                   -- 文件的唯一id
     file_name         TEXT DEFAULT NULL,                   -- 文件名
     file_size         INTEGER DEFAULT 0,                   -- 文件大小（B）

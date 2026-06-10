@@ -1,4 +1,17 @@
 /**
+ * 文件上传/下载状态map
+ */
+export const statusMap = Object.freeze({
+    fail: { value: 'fail', desc: '失败', icon: 'close' },
+    preview: { value: 'preview', desc: '预览中', icon: 'clock' },
+    uploading: { value: 'uploading', desc: '上传中', icon: 'upload' },
+    upload_finish: { value: 'upload_finish', desc: '已完成', icon: 'success' },
+    upload_seconds: { value: 'upload_seconds', desc: '秒传', icon: 'success' },
+    downloading: { value: 'downloading', desc: '下载中', icon: 'success' },
+    download_finish: { value: 'download_finish', desc: '下载完成', icon: 'success' }
+})
+
+/**
  * 系统消息类型枚举 (msgType: 99)
  * 用于细分 sub_type 字段
  */

@@ -80,7 +80,6 @@ const conversationStore = conversationInfo()
 // 联系人列表默认展开
 const activeNames = ref(['4'])
 const handleChange = (val: CollapseModelValue) => {
-  console.info(val)
 }
 
 const router = useRouter()
@@ -90,13 +89,11 @@ const activeGroup = ref('')
 const activeFriend = ref()
 
 const startApply = (activeApply: any) => {
-  console.info(activeApply.applyId)
   router.push({ path: '/friendApply', query: { applyId: activeApply.applyId } })
 }
 
 const startGroupApply = (activeApply: any) => {
   activeGroupApply.value = activeApply.id
-  console.log(activeApply.id)
   router.push({ path: '/groupApply', query: { applyId: activeApply.id } })
 }
 
@@ -106,7 +103,6 @@ const startGroupInfo = (group: any) => {
 }
 
 const starCall = (user: any) => {
-  console.info('用户', user.friendId, '点击了联系人')
   activeFriend.value = user.friendId
   router.push({ path: '/friendInfo', query: { friendId: user.friendId } })
 }
@@ -115,13 +111,11 @@ const fetchApplyList = () => {
   const cache = Object.keys(userApplyStore.userApplyMap).length > 0
   if (cache) {
     // 有缓存时，停止钩子函数的查询，防止接口的频繁发送
-    console.info('好友申请表缓存非空:', cache)
     return
   }
 
   // 没有缓存时，从后端获取好友申请列表
   getApplyListApi().then((res) => {
-    console.info('好友申请列表:', res.data)
     res.data.forEach((applyItem: any) => {
       userApplyStore.setUserApplyMap(applyItem.applyId, {
         applyId: applyItem.applyId,
@@ -145,12 +139,10 @@ const fetchApplyList = () => {
 const fetchGroupApplyList = () => {
   const cache = Object.keys(userApplyStore.groupApplyMap).length > 0
   if (cache) {
-    console.info('群聊申请列表缓存非空:', cache)
     return
   }
 
   getGroupApplyListApi().then((res) => {
-    console.info('群聊申请列表:', res.data)
     res.data.forEach((applyItem: any) => {
       userApplyStore.setGroupApplyMap(applyItem.id, {
         id: applyItem.id,

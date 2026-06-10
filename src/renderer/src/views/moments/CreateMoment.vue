@@ -120,9 +120,9 @@ import StarterKit from '@tiptap/starter-kit'
 import { EditorContent, useEditor } from '@tiptap/vue-3'
 import { ElMessage } from 'element-plus'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
-import { publishApi, uploadImageApi } from '../../api/Moments.js'
+import { publishApi, uploadImageApi } from '../../api/Moments'
 import WindowControls from '../../components/WindowControls.vue'
-import { eventEmitter } from '../../utils/eventEmitter';
+import emitter from '../../utils/mitt';
 
 const fileInput = ref<HTMLInputElement | null>(null)
 const showLinkDialog = ref(false)
@@ -330,7 +330,6 @@ const handleFileChange = (e: any) => {
 
 const saveImage = async () => {
     if (pendingImages.value.length === 0) {
-        console.log(111)
         return []
     }
 
@@ -378,7 +377,7 @@ const saveContent = async () => {
     ElMessage.success('发布成功')
 
     setTimeout(() => {
-        eventEmitter.emit('moments:updated');
+        emitter.emit('moments:updated');
 
         (window as any).windowToolApi.windowControls('createMomentView', 'closeWindow')
     }, 1000)

@@ -120,6 +120,9 @@ const createNote = () => {
 
 .collect-list-right {
     flex: 1;
-    -webkit-app-region: drag;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 </style>

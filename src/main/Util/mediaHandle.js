@@ -31,7 +31,7 @@ const generateImagePreview = async (fileSize, fileName, path) => {
         const base64 = `data:image/jpeg;base64,${buffer.toString('base64')}`
         return base64
     }
-    const targetPath = generatePath(fileName)
+    const targetPath = await generatePath(fileName)
     const cmd = pathToFfmpeg + ` -y -i "${path}" -vf scale=200:-1 -q:v 30 -compression_level 9 "${targetPath}"`
     await execCommand(cmd)
     const buffer = await fs.readFile(targetPath)
@@ -71,13 +71,13 @@ const generateVideoPreview = async (fileName, videoPath) => {
     result = result.substring(result.indexOf('=') + 1)
     const codec = result.substring(0, result.indexOf('['))
     if ('hevc' === codec) {
-        targetPath = generatePath(fileName)
+        targetPath = await generatePath(fileName)
         command = pathToFfmpeg + ` -y -i "${videoPath}" -c:v libx264 -crf 20 ${targetPath}`
         await execCommand(command)
     }
     // 生成缩略图
     const baseName = fileName.replace(path.extname(fileName), '') + '_thumb.jpg'
-    targetPath = generatePath(baseName)
+    targetPath = await generatePath(baseName)
     command = pathToFfmpeg + ` -y -ss 2 -i "${videoPath}" -vframes 1 -vf "scale=min(300\\,iw):min(300\\,ih):force_original_aspect_ratio=decrease" -q:v 8 -f mjpeg "${targetPath}"`
     await execCommand(command)
     // 生成缩略图的base64
@@ -92,14 +92,14 @@ const generateVideoPreview = async (fileName, videoPath) => {
  * 根据日期生成存储路径
  * @param fileName -- 文件名称
  */
-const generatePath = (fileName) => {
+const generatePath = async (fileName) => {
     // 获得当前时间
     const currentTime = dayjs().format('YYYY-MM-DD')
     // 获得存储文件路径
     const basePath = store.get('storeLocation') || app.getPath('downloads')
     const savePath = path.join(basePath, currentTime)
     // 根据当前日期创建文件夹
-    fs.mkdir(savePath, { recursive: true })
+    await fs.mkdir(savePath, { recursive: true })
     const filePath = savePath + '\\' + fileName
     return filePath
 }
@@ -189,9 +189,10 @@ const updateGroupAvatar = async (avatarUrlList) => {
 const execCommand = (command) => {
     return new Promise((resolve, reject) => {
         exec(command, (error, stdout, stderr) => {
-            // console.log('ffmpeg的命令:', command)
             if (error) {
-                console.log('错误', error)
+                console.error('命令执行失败:', command, error.message)
+                reject(error)
+                return
             }
             resolve(stdout)
         })

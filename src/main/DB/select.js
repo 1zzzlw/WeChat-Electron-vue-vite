@@ -113,6 +113,18 @@ const getFavorites = (userId) => {
     return result
 }
 
+/**
+ * 获得收藏表中的所有内容（包括笔记和消息收藏）
+ * @param userId -- 用户id
+ * @returns 
+ */
+const getFavoritesAll = (userId) => {
+    const sql = `select * from favorites where user_id = ? order by created_at desc`
+    const params = [userId]
+    const result = queryAll(sql, params)
+    return result
+}
+
 const getNodeCount = (userId) => {
     const sql = `select count(*) as total from favorites where user_id = ? and type = 0`
     const params = [userId]
@@ -130,5 +142,6 @@ export {
     getImageUrlList,
     getVideoUrlList,
     getFavorites,
+    getFavoritesAll,
     getNodeCount
 }

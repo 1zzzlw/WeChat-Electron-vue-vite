@@ -1,16 +1,16 @@
 import { createApp } from 'vue'
-import router from './router/router.js'
+import router from './router/router'
 import App from './App.vue'
-import pinia from './stores/index.ts'
+import pinia from './stores/index'
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
-import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import './assets/main.css'
+import { setupGlobalErrorHandlers } from './utils/errorHandler'
 
 const app = createApp(App)
-for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
-  app.component(key, component)
-}
+
+// 注册全局错误处理（Vue errorHandler + window.onerror + unhandledrejection）
+setupGlobalErrorHandlers(app)
 
 app.use(pinia)
 app.use(router)

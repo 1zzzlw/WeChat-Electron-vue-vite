@@ -29,13 +29,10 @@ import { FolderAdd, InfoFilled } from '@element-plus/icons-vue'
 const location = ref('')
 
 const choose = () => {
-  console.info('选择存储位置');
   (window as any).uploadFileApi.selectFile('storeLocation').then((filePath: any) => {
     if (filePath) {
       location.value = filePath.localPath
-      console.info('选择的存储位置:', filePath.localPath);
       (window as any).userInfoApi.storeSetUserInfo('storeLocation', filePath.localPath)
-      console.info('存储位置已保存')
     }
   })
 }

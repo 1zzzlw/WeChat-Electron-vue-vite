@@ -1,9 +1,70 @@
-import { store, mainWindow } from './index'
-import { app, Notification, nativeImage } from 'electron'
+import { store, mainWindow, tray, getTrayIcon, getEmptyTrayIcon } from './index'
+import { app, Notification, nativeImage, BrowserWindow } from 'electron'
 import { saveSentMessage, addConversation, addFriendRelation } from './DB/insert'
 import { deleteMessage } from './DB/delete'
 import { updateConversation } from './DB/update'
+import { getConversationInfoById } from './DB/select'
 import { join } from 'path'
+import { pathToFileURL } from 'url'
+
+// ===== 托盘闪动相关 =====
+let flashInterval = null
+let flashTimeout = null
+let isTrayVisible = true
+
+/**
+ * 托盘图标闪动5秒
+ * 如果已有闪动在进行中，只重置5秒结束计时器，不重复创建闪动定时器
+ */
+function flashTrayIcon() {
+    if (!tray) return
+
+    // 已有闪动在进行，只重置结束计时器
+    if (flashInterval) {
+        if (flashTimeout) {
+            clearTimeout(flashTimeout)
+            flashTimeout = setTimeout(stopTrayFlash, 5000)
+        }
+        return
+    }
+
+    // 开始新的闪动
+    isTrayVisible = true
+    flashInterval = setInterval(() => {
+        isTrayVisible = !isTrayVisible
+        try {
+            tray.setImage(isTrayVisible ? getTrayIcon() : getEmptyTrayIcon())
+        } catch (e) {
+            // tray 可能已被销毁
+            stopTrayFlash()
+        }
+    }, 500)
+
+    // 5秒后停止闪动
+    flashTimeout = setTimeout(stopTrayFlash, 5000)
+}
+
+/**
+ * 停止托盘闪动，恢复正常图标
+ */
+function stopTrayFlash() {
+    if (flashInterval) {
+        clearInterval(flashInterval)
+        flashInterval = null
+    }
+    if (flashTimeout) {
+        clearTimeout(flashTimeout)
+        flashTimeout = null
+    }
+    isTrayVisible = true
+    if (tray) {
+        try {
+            tray.setImage(getTrayIcon())
+        } catch (e) {
+            // tray 可能已被销毁
+        }
+    }
+}
 
 class WebSocketManager {
     constructor() {
@@ -73,6 +134,13 @@ class WebSocketManager {
         this.lockReconnect = false
         this.reconnectCount = 0
         this.ws.status = WebSocket.OPEN
+
+        // 窗口获得焦点时停止托盘闪动
+        if (mainWindow) {
+            mainWindow.on('focus', () => {
+                stopTrayFlash()
+            })
+        }
     }
 
     // 监听到消息
@@ -138,6 +206,37 @@ class WebSocketManager {
                     latestMsgTime: data.receiveTime
                 }
                 updateConversation(condition, messageData)
+
+                // 检查会话免打扰状态，决定是否闪动托盘 & 播放提示音
+                try {
+                    const userId = store.get('userId')
+                    const convInfo = getConversationInfoById(userId, data.conversationId)
+                    const isMute = convInfo && convInfo.length > 0 && convInfo[0].isMute === 1
+                    if (!isMute) {
+                        flashTrayIcon()
+                        // 检查通知设置，决定是否播放消息提示音
+                        try {
+                            const notifSettings = store.get('notificationSettings')
+                            if (notifSettings && notifSettings.playSound !== false) {
+                                const soundPath = app.isPackaged
+                                    ? join(process.resourcesPath, 'message-sound.mp3')
+                                    : join(__dirname, '../../resources/message-sound.mp3')
+                                const soundUrl = pathToFileURL(soundPath).href
+                                BrowserWindow.getAllWindows().forEach(win => {
+                                    if (win && !win.isDestroyed()) {
+                                        win.webContents.send('play:messageSound', soundUrl)
+                                    }
+                                })
+                            }
+                        } catch (e) {
+                            // 提示音播放失败不影响主流程
+                        }
+                    }
+                } catch (e) {
+                    console.warn('查询会话免打扰状态失败', e)
+                    // 查询失败时默认闪动
+                    flashTrayIcon()
+                }
             } else if (messageType === 13) {
                 // 保存到数据库里
                 saveSentMessage(data)
@@ -167,7 +266,12 @@ class WebSocketManager {
                 }
                 addFriendRelation(friendPack)
             }
-            mainWindow.webContents.send('ws:receive', messageType, data)
+            // 广播 WS 消息到所有窗口（包括独立窗口），各窗口的 wsHandlers 按 conversationId 自行过滤
+            BrowserWindow.getAllWindows().forEach(win => {
+              if (win && !win.isDestroyed()) {
+                win.webContents.send('ws:receive', messageType, data)
+              }
+            })
         } catch (e) {
             console.warn('消息解析失败', e)
         }

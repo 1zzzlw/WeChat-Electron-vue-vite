@@ -1,4 +1,5 @@
 import { app } from 'electron'
+import { is } from '@electron-toolkit/utils'
 const Database = require('better-sqlite3')
 import { init_table, table_index } from './tableInfo'
 import { toCamelCase, convertDBObjToCamelCase } from './utils'
@@ -10,7 +11,7 @@ const dbPath = join(userDataDir, 'local.db')
 console.log(dbPath)
 
 // 把 SQLite 内部执行的每一条 SQL 语句和相关信息输出到控制台，便于开发阶段调试。
-const db = new Database(dbPath, { verbose: console.log })
+const db = new Database(dbPath, is.dev ? { verbose: console.log } : {})
 
 // 全局的所有表结构的字段映射关系
 let globalColumnsMap = []
@@ -104,21 +105,26 @@ const queryAll = (sql, params) => {
 const multipleInsert = (insertPrefix, tableName, data) => {
     // 获得该表的字段映射关系
     const columnsMap = globalColumnsMap[tableName]
-    const fieldKeys = Object.keys(columnsMap)
-    // 获取数据库表形式的字段名
-    const tableFieldNames = fieldKeys.map(key => columnsMap[key])
+
+    // 只插入数据中实际包含的字段，未包含的字段由 SQLite DEFAULT 处理
+    // 避免因显式插入 null 而违反 NOT NULL DEFAULT 约束
+    const includedFields = []
+    for (const fieldKey of Object.keys(columnsMap)) {
+        if (data.some(values => values[fieldKey] !== undefined)) {
+            includedFields.push(fieldKey)
+        }
+    }
+
+    const tableFieldNames = includedFields.map(key => columnsMap[key])
 
     console.log('表名：', tableName, '数据：', tableFieldNames)
 
     // 插入数据数组 
     const allParams = []
     for (let values of data) {
-        for (let fieldKey of fieldKeys) {
-            if (columnsMap[fieldKey] != undefined) {
-                // 如果数据中没有这个字段，插入 null
-                const value = values[fieldKey] !== undefined ? values[fieldKey] : null
-                allParams.push(value)
-            }
+        for (let fieldKey of includedFields) {
+            const value = values[fieldKey] !== undefined ? values[fieldKey] : null
+            allParams.push(value)
         }
     }
 
@@ -143,11 +149,11 @@ const insert = (tableName, data) => {
     const tableFieldNames = []
     const params = []
     for (let item in data) {
-        if (data[item] != undefined && columnsMap[item] != undefined) {
+        if (data[item] !== undefined && columnsMap[item] != undefined) {
             // 加入数据库格式的的字段名
             tableFieldNames.push(columnsMap[item])
-            // 加入该字段的值
-            params.push(data[item])
+            // 加入该字段的值（null 值显式插入）
+            params.push(data[item] === null ? null : data[item])
         }
     }
     const placeholder = tableFieldNames.map(() => '?').join(',')
@@ -171,7 +177,7 @@ const update = (tableName, condition, data) => {
     const params = []
     // 拼接修改值的sql语句
     for (let item in data) {
-        if (data[item] != undefined && columnsMap[item] != undefined) {
+        if (data[item] !== undefined && columnsMap[item] != undefined) {
             // 加入数据库格式的的字段名
             dataTableFieldNames.push(`${columnsMap[item]} = ?`)
             // 加入该字段的值
