@@ -1,0 +1,45 @@
+/* Design Tokens - CSS Custom Properties for dark glass theme */
+:root {
+  /* Colors - Background */
+  --color-bg-primary: rgba(28, 38, 50, 0.95);
+  --color-bg-secondary: rgba(35, 45, 60, 0.7);
+  --color-bg-tertiary: rgba(40, 50, 65, 0.75);
+  --color-bg-hover: rgba(67, 243, 255, 0.1);
+
+  /* Colors - Text */
+  --color-text-primary: #f0f0f0;
+  --color-text-secondary: rgba(255, 255, 255, 0.7);
+  --color-text-accent: #43f3ff;
+
+  /* Colors - Border */
+  --color-border-primary: rgba(67, 243, 255, 0.25);
+  --color-border-hover: rgba(67, 243, 255, 0.4);
+
+  /* Colors - Accent & Status */
+  --color-accent: #43f3ff;
+  --color-accent-blue: rgba(66, 153, 225, 0.6);
+  --color-danger: #ff4757;
+  --color-warning: #ff884d;
+
+  /* Shadows */
+  --shadow-sm: 0 2px 8px rgba(67, 243, 255, 0.15);
+  --shadow-md: 0 8px 32px rgba(67, 243, 255, 0.15);
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.25);
+
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+
+  /* Border Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.3s ease;
+}
