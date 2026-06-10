@@ -66,11 +66,11 @@ function createExtraWindow(windowType, options = {}, loadType = 'vue', data) {
         // 使窗口背景透明（窗口区域会显示桌面或下层窗口的内容）
         // transparent: true,
         // 设置父窗口
-        backgroundColor: '#1a1a2e',
+        backgroundColor: '#00000000',
         ...(process.platform === 'linux' ? { icon: iconPath } : {}),
         webPreferences: {
             webSecurity: false,
-            nodeIntegration: false,
+            nodeIntegration: true,
             contextIsolation: true,
             preload: join(__dirname, '../preload/index.js'),
             sandbox: false
@@ -78,7 +78,7 @@ function createExtraWindow(windowType, options = {}, loadType = 'vue', data) {
     }
 
     // 合并选项，后面的相同属性会覆盖前面的属性
-    const finalOptions = { ...defaultOptions, ...options }
+    const finalOptions = Object.assign(defaultOptions, options)
     const window = new BrowserWindow(finalOptions)
 
     // 加载窗口内容

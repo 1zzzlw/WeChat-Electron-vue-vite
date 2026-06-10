@@ -519,6 +519,8 @@ onMounted(async () => {
     transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     flex-shrink: 0;
     z-index: 10;
+    -webkit-app-region: no-drag;
+    isolation: isolate;
 }
 
 .sidebar.is-collapsed {
@@ -548,6 +550,9 @@ onMounted(async () => {
     justify-content: center;
     border-radius: 4px;
     transition: background 0.2s;
+    -webkit-app-region: no-drag;
+    position: relative;
+    z-index: 1;
 }
 
 .toggle-btn:hover {

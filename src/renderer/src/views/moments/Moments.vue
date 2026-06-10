@@ -55,7 +55,7 @@
           </div>
 
           <!-- 单条动态 -->
-          <div class="post-item" v-for="post in postList" :key="post.id">
+          <div class="post-item" v-for="post in postList" :key="post.id" :data-post-id="post.id">
             <!-- 用户信息头部 -->
             <div class="post-header">
               <div class="user-info" @click="openInfo(post.id)">
@@ -144,6 +144,7 @@ import type { ScrollbarDirection } from 'element-plus'
 import Masonry from 'masonry-layout'
 import emitter from '../../utils/mitt';
 import { formatMomentsTime } from '../../utils/utils'
+import { useMomentsImageLazy } from '../../composables/useMomentsImageLazy'
 
 const searchKeyword = ref('')
 const activeTag = ref('all')
@@ -163,6 +164,7 @@ watch(postList, async () => {
     observeImages()
     masonry.layout?.()
   }
+  imageLazy.observeAll()
 }, { deep: true })
 
 const loadMoreRef = ref()
@@ -175,6 +177,34 @@ const noMore = ref(false)
 const postListRef = ref<HTMLElement | null>(null)
 // Masonry 实例
 let masonry: any = null
+// 帖子数量上限（防止无限增长导致内存溢出）
+const MAX_POSTS = 150
+
+// 图片懒加载 + DOM 裁剪 composable
+const imageLazy = useMomentsImageLazy(postListRef, {
+  preloadMargin: 800,
+  pruneThreshold: 3,
+  maxRenderedPosts: 80
+})
+
+/**
+ * 处理帖子列表数据：内容预处理 + 数量上限裁剪
+ */
+function processIncomingPosts(moments: any[]): any[] {
+  return moments.map((n: any) => ({
+    ...n,
+    content: imageLazy.processContent(n.content || '')
+  }))
+}
+
+/**
+ * 限制帖子总数，超出上限时移除最旧的
+ */
+function trimPostList() {
+  while (postList.value.length > MAX_POSTS) {
+    postList.value.shift()
+  }
+}
 
 // 滚动底部监听
 async function loadMore(direction: ScrollbarDirection | string) {
@@ -201,9 +231,11 @@ async function loadMore(direction: ScrollbarDirection | string) {
         moments = res.data
       }
 
+      moments = processIncomingPosts(moments)
       moments.forEach((n: any) => {
         postList.value.push(n)
       })
+      trimPostList()
       // 新数据加载完成后，触发 Masonry 重新布局
       await nextTick()
       if (masonry) {
@@ -235,6 +267,7 @@ async function changeSortWay() {
     moments = res.data
   }
 
+  moments = processIncomingPosts(moments)
   moments.forEach((n: any) => {
     postList.value.push(n)
   })
@@ -293,7 +326,8 @@ const listMoments = async () => {
   // 首页加载
   const pageSize = pageDTO.value.pageSize
   const res = await listByHot(1, pageSize)
-  const moments = res.data.data
+  let moments = res.data.data
+  moments = processIncomingPosts(moments)
   moments.forEach((n: any) => {
     postList.value.push(n)
   })
@@ -419,6 +453,21 @@ onMounted(async () => {
     masonry.layout?.()
   }
 
+  // 初始化图片懒加载 observer
+  imageLazy.initObserver()
+  imageLazy.observeAll()
+
+  // 当懒加载恢复内容或激活图片后，触发 masonry 重排
+  if (postListRef.value) {
+    postListRef.value.addEventListener('images-activated', debouncedLayout)
+    postListRef.value.addEventListener('content-restored', () => {
+      if (masonry) {
+        masonry.reloadItems?.()
+        masonry.layout?.()
+      }
+    })
+  }
+
   initObserver()
 
   // 监听父级容器（.moments-content）的尺寸变化，实现全自动布局
@@ -438,6 +487,7 @@ onMounted(async () => {
 onUnmounted(() => {
   if (observer) observer.disconnect()
   if (resizeObserver) resizeObserver.disconnect()
+  imageLazy.destroy()
   if (masonry) {
     masonry.destroy?.()
   }
@@ -731,9 +781,9 @@ onUnmounted(() => {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   display: block;
 
-  /* 性能优化：强制开启 GPU 硬件加速，不影响布局计算 */
-  will-change: transform, opacity;
-  transform: translateZ(0);
+  /* 浏览器跳过屏幕外卡片的渲染，但保留布局占位 —— 与 Masonry 完全兼容 */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 400px;
 }
 
 @keyframes cardEnter {

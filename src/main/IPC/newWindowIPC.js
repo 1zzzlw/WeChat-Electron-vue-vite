@@ -71,6 +71,8 @@ ipcMain.on('create-new-window', (e, windowType, data) => {
 
     const options = { width: config.width, height: config.height }
     if (config.resizable) {
+        delete options.width
+        delete options.height
         options.minWidth = config.width
         options.minHeight = config.height
         options.resizable = true
