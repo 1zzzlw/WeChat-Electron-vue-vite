@@ -118,6 +118,12 @@ const generateGroupAvatar = async () => {
     const cmd = pathToFfmpeg + ` -f lavfi -i color=white:size=201x201 -i "${avatarPath}" -filter_complex [1:v]scale=67:67[a];[0:v][a]overlay=0:0 -frames:v 1 -y "${groupTempAvatar}"`
     await execCommand(cmd)
     const buffer = await fs.readFile(groupTempAvatar)
+    // 清理临时文件
+    try {
+        await fs.unlink(groupTempAvatar)
+    } catch (e) {
+        console.warn('清理临时群头像文件失败', e)
+    }
     const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
     return arrayBuffer
 }
@@ -136,14 +142,34 @@ const updateGroupAvatar = async (avatarUrlList) => {
     const downloadPromises = avatarUrlList.map((url, index) => {
         return new Promise((resolve) => {
             const destPath = path.join(localPath, `${index}.png`)
-            http.get(url, (res) => {
+            const req = http.get(url, (res) => {
+                // 处理重定向
+                if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+                    http.get(res.headers.location, (redirectRes) => {
+                        const stream = createWriteStream(destPath)
+                        redirectRes.pipe(stream)
+                        stream.on('finish', () => {
+                            stream.close()
+                            resolve(destPath)
+                        })
+                        stream.on('error', () => resolve(null))
+                    }).on('error', () => resolve(null))
+                    return
+                }
                 const stream = createWriteStream(destPath)
                 res.pipe(stream)
                 stream.on('finish', () => {
                     stream.close()
                     resolve(destPath)
                 })
+                stream.on('error', () => resolve(null))
             })
+            // 10秒超时
+            req.setTimeout(10000, () => {
+                req.destroy()
+                resolve(null)
+            })
+            req.on('error', () => resolve(null))
         })
     })
 
@@ -182,6 +208,14 @@ const updateGroupAvatar = async (avatarUrlList) => {
 
     await execCommand(cmd)
     const buffer = await fs.readFile(outputPath)
+    // 清理下载的临时头像文件
+    for (const p of localPaths) {
+        if (p) {
+            try { await fs.unlink(p) } catch (e) { /* ignore */ }
+        }
+    }
+    // 清理生成的群头像临时文件
+    try { await fs.unlink(outputPath) } catch (e) { /* ignore */ }
     const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
     return arrayBuffer
 }

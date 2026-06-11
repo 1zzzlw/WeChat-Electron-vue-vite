@@ -12,7 +12,8 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import Store from 'electron-store'
 import { loadDeferredIPC } from './IPC/index.js'
-import { initTable, initTableColumnsMap } from './DB/mainDB.js'
+import { initTable, initTableColumnsMap, close as closeDB } from './DB/mainDB.js'
+import websocket from './websocket.js'
 
 // 初始化store实例，指定存储文件名（会生成user-token.json文件）
 export const store = new Store({
@@ -194,9 +195,18 @@ app.whenReady().then(() => {
   })
 })
 
-// 退出时注销全局快捷键
+// 退出时注销全局快捷键并清理资源
 app.on('will-quit', () => {
   globalShortcut.unregisterAll()
+  // 关闭 WebSocket 连接
+  if (websocket && websocket.ws && websocket.ws.websocket) {
+    try {
+      websocket.ws.websocket.close()
+      websocket.stopHeartbeat()
+    } catch (e) { /* ignore */ }
+  }
+  // 安全关闭数据库连接
+  closeDB()
 })
 
 // 当所有窗口都关闭时退出，但 macOS 除外。在 macOS 上，应用程序及其菜单栏通常会保持活跃状态，直到用户通过 Cmd + Q 明确退出。

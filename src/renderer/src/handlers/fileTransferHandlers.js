@@ -5,7 +5,12 @@ import { statusMap } from '../utils/constants'
 import { updateMessageFileSendStatusApi } from '../api/Message'
 import { updateMessage } from '../db/dualDB'
 
+let _fileTransferHandlersRegistered = false
+
 export function registerFileTransferHandlers() {
+    if (_fileTransferHandlersRegistered) return
+    _fileTransferHandlersRegistered = true
+
     window.uploadFileApi.updateUploadProgress((e, uploadStatus) => {
         const { fileId, uploadProgress, uploadSpeed } = uploadStatus
         fileStatusListInfo().updateFileUploadProgressStatus(fileId, uploadProgress, uploadSpeed)

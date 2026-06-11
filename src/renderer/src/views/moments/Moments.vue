@@ -403,10 +403,13 @@ const debouncedLayout = () => {
   }, 100)
 }
 
+// 记录已附加事件监听器的图片，便于卸载时清理
+const observedImages = new Set<HTMLImageElement>()
+
 const observeImages = () => {
   if (!postListRef.value) return
 
-  const images = postListRef.value.querySelectorAll('img')
+  const images = postListRef.value.querySelectorAll<HTMLImageElement>('img')
   images.forEach((img) => {
     if (img.getAttribute('data-observed')) return
     img.setAttribute('data-observed', 'true')
@@ -416,6 +419,7 @@ const observeImages = () => {
     } else {
       img.addEventListener('load', debouncedLayout)
       img.addEventListener('error', debouncedLayout)
+      observedImages.add(img)
     }
   })
 }
@@ -493,6 +497,12 @@ onUnmounted(() => {
   }
   if (layoutTimer) clearTimeout(layoutTimer)
   emitter.off('moments:updated', handleNewPostPublished)
+  // 清理图片事件监听器
+  observedImages.forEach((img) => {
+    img.removeEventListener('load', debouncedLayout)
+    img.removeEventListener('error', debouncedLayout)
+  })
+  observedImages.clear()
 })
 </script>
 

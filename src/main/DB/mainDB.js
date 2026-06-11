@@ -236,6 +236,18 @@ const run = (sql, params) => {
     }
 }
 
+/**
+ * 安全关闭数据库连接
+ */
+const close = () => {
+    try {
+        db.close()
+        console.log('数据库连接已关闭')
+    } catch (err) {
+        console.error('关闭数据库连接失败', err)
+    }
+}
+
 export {
     db,
     globalColumnsMap,
@@ -247,5 +259,6 @@ export {
     insert,
     update,
     deletes,
-    run
+    run,
+    close
 }

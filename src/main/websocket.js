@@ -84,6 +84,8 @@ class WebSocketManager {
         this.reconnectCountMax = 3
         // 重连锁
         this.lockReconnect = false
+        // 防止 onOpen 被多次调用时重复注册 focus 监听器
+        this._focusListenerRegistered = false
     }
 
     connect() {
@@ -135,8 +137,9 @@ class WebSocketManager {
         this.reconnectCount = 0
         this.ws.status = WebSocket.OPEN
 
-        // 窗口获得焦点时停止托盘闪动
-        if (mainWindow) {
+        // 窗口获得焦点时停止托盘闪动（只注册一次，防止重连时重复累积）
+        if (mainWindow && !this._focusListenerRegistered) {
+            this._focusListenerRegistered = true
             mainWindow.on('focus', () => {
                 stopTrayFlash()
             })

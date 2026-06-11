@@ -276,7 +276,12 @@ const messageHandlers = {
     18: handleGroupAccepted,
 }
 
+let _wsHandlersRegistered = false
+
 export function registerWsHandlers() {
+    if (_wsHandlersRegistered) return
+    _wsHandlersRegistered = true
+
     window.wsApi.onMessage((messageType, data) => {
         const handler = messageHandlers[messageType]
         if (handler) {

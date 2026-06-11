@@ -72,8 +72,31 @@ export const fileStatusListInfo = defineStore('fileStatusListInfo', {
         this.fileDownloadListMap[fileId].downloadProgress = downloadProgress
       }
     },
-    removeFinishedFile() {
-      // 待实现：清理已完成的上传/下载记录
+    removeFinishedFile(fileId?: string) {
+      if (fileId) {
+        // 移除指定文件
+        const uploadInfo = this.fileUploadListMap[fileId]
+        if (uploadInfo && (uploadInfo.uploadStatus === 'finish' || uploadInfo.uploadStatus === 'fail')) {
+          delete this.fileUploadListMap[fileId]
+        }
+        const downloadInfo = this.fileDownloadListMap[fileId]
+        if (downloadInfo && (downloadInfo.downloadStatus === 'finish' || downloadInfo.downloadStatus === 'fail')) {
+          delete this.fileDownloadListMap[fileId]
+        }
+      } else {
+        // 清除所有已完成/失败的上传记录
+        for (const [id, info] of Object.entries(this.fileUploadListMap)) {
+          if (info.uploadStatus === 'finish' || info.uploadStatus === 'fail') {
+            delete this.fileUploadListMap[id]
+          }
+        }
+        // 清除所有已完成/失败的下载记录
+        for (const [id, info] of Object.entries(this.fileDownloadListMap)) {
+          if (info.downloadStatus === 'finish' || info.downloadStatus === 'fail') {
+            delete this.fileDownloadListMap[id]
+          }
+        }
+      }
     },
   }
 })

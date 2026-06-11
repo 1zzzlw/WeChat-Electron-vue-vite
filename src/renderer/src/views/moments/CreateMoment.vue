@@ -294,6 +294,11 @@ onBeforeUnmount(() => {
     if (resizeObserver) {
         resizeObserver.disconnect()
     }
+    // 释放所有未上传的 blob URL
+    for (const img of pendingImages.value) {
+        URL.revokeObjectURL(img.tempUrl)
+    }
+    pendingImages.value = []
 })
 
 const openLinkDialog = () => {
@@ -367,6 +372,8 @@ const saveContent = async () => {
     urlList.forEach((url: string, index: number) => {
         const tempUrl = pendingImages.value[index].tempUrl
         replaceTempUrl(tempUrl, url)
+        // 释放 blob URL 以回收内存
+        URL.revokeObjectURL(tempUrl)
     })
 
     const data = {

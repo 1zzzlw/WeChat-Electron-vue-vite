@@ -43,7 +43,7 @@ const WINDOW_CONFIGS = {
  */
 function createExtraWindow(windowType, options = {}, loadType = 'vue', data) {
     console.log('打开', windowType)
-    if (windowPool.get(windowType) != null) {
+    if (getWindow(windowType) != null) {
         console.log('该窗口已存在')
         return
     }
@@ -228,8 +228,8 @@ function getWindow(windowType) {
 ipcMain.handle('window:getPendingData', (event) => {
     // 遍历缓存，找到数据所属的窗口
     for (const [type, data] of pendingWindowData) {
-        const win = windowPool.get(type)
-        if (win && !win.isDestroyed() && win.webContents === event.sender) {
+        const win = getWindow(type)
+        if (win && win.webContents === event.sender) {
             pendingWindowData.delete(type)
             return data
         }

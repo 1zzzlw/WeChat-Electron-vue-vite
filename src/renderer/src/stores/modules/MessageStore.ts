@@ -12,6 +12,9 @@ interface PendingMessageInfo {
 
 type EnqueueMode = 'append' | 'reuse_if_exists'
 
+// 每个会话最多缓存的消息数量，防止长期运行后内存无限增长
+const MAX_MESSAGES_PER_CONVERSATION = 500
+
 export const messageInfo = defineStore('messageInfo', {
   state: () => {
     return {
@@ -39,6 +42,7 @@ export const messageInfo = defineStore('messageInfo', {
       }
       // 再添加消息，需要在头部拼接消息
       this.messageMap[conversationId].unshift(message)
+      this._trimMessages(conversationId)
     },
     // New: batch load for history messages (more efficient than repeated unshift)
     batchLoadMessages(conversationId: string, messages: Message[]) {
@@ -62,6 +66,15 @@ export const messageInfo = defineStore('messageInfo', {
       }
       // 再添加消息，需要在尾部拼接消息
       this.messageMap[conversationId].push(message)
+      // 裁剪超量消息：保留最新的 MAX_MESSAGES_PER_CONVERSATION 条
+      this._trimMessages(conversationId)
+    },
+
+    _trimMessages(conversationId: string) {
+      const messages = this.messageMap[conversationId]
+      if (messages && messages.length > MAX_MESSAGES_PER_CONVERSATION) {
+        this.messageMap[conversationId] = messages.slice(-MAX_MESSAGES_PER_CONVERSATION)
+      }
     },
 
     _ensureMessageInMap(conversationId: string, message: Message, mode: EnqueueMode) {
@@ -312,7 +325,13 @@ export const messageInfo = defineStore('messageInfo', {
     },
     // 补充文件信息的路径
     addFileUrl(fileId: string, remoteUrl: string) {
-      this.fileMessgaeMap[fileId].remoteUrl = remoteUrl
+      if (this.fileMessgaeMap[fileId]) {
+        this.fileMessgaeMap[fileId].remoteUrl = remoteUrl
+      }
+    },
+    // 移除文件消息缓存（文件发送完成后调用）
+    removeFileMessage(fileId: string) {
+      delete this.fileMessgaeMap[fileId]
     }
   }
 })
