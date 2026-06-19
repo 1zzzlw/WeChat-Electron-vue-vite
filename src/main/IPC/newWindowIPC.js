@@ -13,6 +13,8 @@ const createNote_width = 700
 const createNote_height = 500
 const createMomentView_width = 750
 const createMomentView_height = 950
+const updateMomentView_width = 750
+const updateMomentView_height = 950
 const momentInfo_width = 750
 const momentInfo_height = 950
 const standaloneChat_width = 700
@@ -24,6 +26,7 @@ let settingViewWindow = null
 let mediaPreviewWindow = null
 let createNoteWindow = null
 let createMomentViewWindow = null
+let updateMomentViewWindow = null
 let momentInfoWindow = null
 let standaloneChatWindow = null
 
@@ -35,6 +38,7 @@ const createMapping = {
   videoPreview: { width: mediaPreview_width, height: mediaPreview_height, ref: 'mediaPreviewWindow' },
   createNote: { width: createNote_width, height: createNote_height, resizable: true, ref: 'createNoteWindow' },
   createMomentView: { width: createMomentView_width, height: createMomentView_height, resizable: true, ref: 'createMomentViewWindow' },
+  updateMomentView: { width: updateMomentView_width, height: updateMomentView_height, resizable: true, ref: 'updateMomentViewWindow' },
   momentInfoView: { width: momentInfo_width, height: momentInfo_height, resizable: true, ref: 'momentInfoWindow' },
   standaloneChat: { width: standaloneChat_width, height: standaloneChat_height, resizable: true, ref: 'standaloneChatWindow' }
 }
@@ -46,6 +50,7 @@ const refMap = {
   mediaPreviewWindow,
   createNoteWindow,
   createMomentViewWindow,
+  updateMomentViewWindow,
   momentInfoWindow,
   standaloneChatWindow
 }
@@ -65,6 +70,7 @@ ipcMain.on('create-new-window', (e, windowType, data) => {
         videoPreview: 'videoPreview',
         createNote: 'createNote',
         createMomentView: 'createMomentView',
+        updateMomentView: 'updateMomentView',
         momentInfoView: 'momentInfoView',
         standaloneChat: 'standaloneChat'
     }

@@ -1,47 +1,75 @@
 <template>
   <div>
-    <component :is="renderMessageContent()" />
+    <component :is="currentComponent" v-bind="currentProps" @open="handleRedPacketOpen" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { h, computed } from 'vue'
+import { computed } from 'vue'
 import ChatImageView from './ChatImageView.vue'
 import ChatVideoView from './ChatVideoView.vue'
 import ChatAudioView from './ChatAudioView.vue'
 import ChatFileView from './ChatFileView.vue'
-import { MessageContentManageProps } from '../types/message'
+import ChatRedPacketView from './ChatRedPacketView.vue'
+import type { MessageContentManageProps } from '../types/message'
 
 const props = defineProps<MessageContentManageProps>()
+const emit = defineEmits<{
+  'red-packet-open': [data: { redPacketId: string; id: string; conversationId: string }]
+}>()
 
-const renderMessageContent = () => {
-  const { msgType = 1 } = props
+const fileProps = computed(() => ({
+  sendStatus: props.sendStatus || 0,
+  fileId: props.fileId || '',
+  fileName: props.fileName || '',
+  fileSize: props.fileSize || 0,
+  localPath: props.localPath || '',
+  remoteUrl: props.remoteUrl || '',
+  previewBase64: props.previewBase64 || '',
+  downloadStatus: props.downloadStatus || 0,
+  receiveTime: props.receiveTime || '',
+  isUpload: props.isUpload || false
+}))
 
-  const fileProps = computed(() => ({
+const redPacketProps = computed(() => {
+  let parsed: any = {}
+  try { parsed = JSON.parse(props.content || '{}') } catch { /* ignore */ }
+  return {
+    redPacketId: parsed.redPacketId || '',
+    amount: parsed.amount || 0,
+    status: parsed.status ?? 0,
+    senderName: parsed.senderName || '',
     sendStatus: props.sendStatus || 0,
-    fileId: props.fileId || '',
-    fileName: props.fileName || '',
-    fileSize: props.fileSize || 0,
-    localPath: props.localPath || '',
-    remoteUrl: props.remoteUrl || '',
-    previewBase64: props.previewBase64 || '',
-    downloadStatus: props.downloadStatus || 0,
-    receiveTime: props.receiveTime || '',
-    isUpload: props.isUpload || false
-  }))
-
-  switch (msgType) {
-    case 2:
-      return h(ChatImageView, fileProps.value)
-    case 3:
-      return h(ChatVideoView, fileProps.value)
-    case 4:
-      return h(ChatAudioView, fileProps.value)
-    case 5:
-      return h(ChatFileView, fileProps.value)
-    default:
-      return h('div', '暂无此消息类型')
+    id: props.id,
+    conversationId: props.conversationId,
+    senderId: props.senderId
   }
+})
+
+const currentComponent = computed(() => {
+  switch (props.msgType) {
+    case 2: return ChatImageView
+    case 3: return ChatVideoView
+    case 4: return ChatAudioView
+    case 5: return ChatFileView
+    case 6: return ChatRedPacketView
+    default: return null
+  }
+})
+
+const currentProps = computed(() => {
+  switch (props.msgType) {
+    case 2: case 3: case 4: case 5:
+      return fileProps.value
+    case 6:
+      return redPacketProps.value
+    default:
+      return {}
+  }
+})
+
+const handleRedPacketOpen = (data: { redPacketId: string; id: string; conversationId: string }) => {
+  emit('red-packet-open', data)
 }
 </script>
 

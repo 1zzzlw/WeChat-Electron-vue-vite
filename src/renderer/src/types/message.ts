@@ -4,10 +4,10 @@ export interface Message {
     conversationId: string
     receiverId: string | number
     receiverIds?: string[]
-    msgType: number
+    msgType: number              // 1=text, 2=image, 3=video, 4=audio, 5=file, 6=redPacket, 99=system
     subType?: number
     content: string
-    sendStatus: number
+    sendStatus: number           // 0=sending, 1=sent, 2=failed
     readStatus?: number
     sendTime: string
     isRevoked?: number
@@ -20,7 +20,7 @@ export interface Message {
     remotePath?: string | null
     localPath?: string | null
     remoteUrl?: string | null
-    previewBase64?: String | null
+    previewBase64?: string | null
     downloadStatus?: number
     receiveTime?: string
 }

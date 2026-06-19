@@ -8,16 +8,12 @@
       </div>
       <!-- 下载 -->
       <div v-if="!isUpload">
-        <el-button v-if="downloadStatus === 0 && nowDownloadStatus === statusMap.preview.value" class="download-button"
-          @click="downloadFile">下载</el-button>
         <div v-if="downloadStatus === 0 && nowDownloadStatus === statusMap.downloading.value">
           <div class="file-process">
             <el-progress :percentage="downloadProgress > 100 ? 100 : downloadProgress" />
           </div>
           <div class="upload-speed">
             <span>下载进度 {{ downloadSpeed }} MB/s</span>
-            <el-button v-if="!pause" class="pause-button" @click="pauseDownload">暂停</el-button>
-            <el-button v-else class="pause-button" @click="startDownload">开始</el-button>
           </div>
         </div>
         <div class="file-status complete"
@@ -38,8 +34,6 @@
           </div>
           <div class="upload-speed">
             <span>上传进度 {{ uploadSpeed }} MB/s</span>
-            <el-button v-if="!pause" class="pause-button" @click="pauseUpload">暂停</el-button>
-            <el-button v-else class="pause-button" @click="startUpload">开始</el-button>
           </div>
         </div>
         <div class="file-status complete"
@@ -53,6 +47,22 @@
         </div>
       </div>
     </div>
+
+    <!-- 下载按钮（右下角） -->
+    <el-button v-if="!isUpload && downloadStatus === 0 && nowDownloadStatus === statusMap.preview.value"
+      class="action-btn-float" @click="downloadFile">下载</el-button>
+
+    <!-- 下载暂停/开始按钮（右下角） -->
+    <el-button v-if="!isUpload && downloadStatus === 0 && nowDownloadStatus === statusMap.downloading.value && !downloadPause"
+      class="action-btn-float" @click="pauseDownload">暂停</el-button>
+    <el-button v-if="!isUpload && downloadStatus === 0 && nowDownloadStatus === statusMap.downloading.value && downloadPause"
+      class="action-btn-float" @click="startDownload">开始</el-button>
+
+    <!-- 上传暂停/开始按钮（右下角） -->
+    <el-button v-if="isUpload && sendStatus === 0 && uploadStatus === statusMap.uploading.value && !pause"
+      class="action-btn-float" @click="pauseUpload">暂停</el-button>
+    <el-button v-if="isUpload && sendStatus === 0 && uploadStatus === statusMap.uploading.value && pause"
+      class="action-btn-float" @click="startUpload">开始</el-button>
   </div>
 </template>
 
@@ -134,10 +144,13 @@ const downloadProgress = computed(() =>
 const downloadSpeed = computed(() =>
   fileStatusListInfoStore.getFileDownloadInfo(props.fileId)?.downloadSpeed || 0
 )
+const downloadPause = computed(() =>
+  fileStatusListInfoStore.getFileDownloadInfo(props.fileId)?.pause || false
+)
 
 const downloadFile = () => {
   const fileId = props.fileId
-  fileStatusListInfoStore.addFileDownlaodInfo(fileId, {
+  fileStatusListInfoStore.addFileDownloadInfo(fileId, {
     fileId: fileId,
     downloadStatus: statusMap.downloading.value,
     downloadProgress: 0,
@@ -149,11 +162,13 @@ const downloadFile = () => {
 }
 
 const pauseDownload = () => {
-
+  fileStatusListInfoStore.updateFileDownloadPauseStatus(props.fileId, true)
+  ;(window as any).uploadFileApi.updateFileDownloadPauseStatus(props.fileId, true)
 }
 
 const startDownload = () => {
-
+  fileStatusListInfoStore.updateFileDownloadPauseStatus(props.fileId, false)
+  ;(window as any).uploadFileApi.updateFileDownloadPauseStatus(props.fileId, false, props.fileName, props.remoteUrl)
 }
 
 const pauseUpload = () => {
@@ -337,10 +352,30 @@ watch(
   color: rgba(255, 255, 255, 0.7);
   font-size: 12px;
   margin-top: 4px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  justify-content: space-between;
+}
+
+/* 下载/暂停/开始操作按钮（右下角） */
+.action-btn-float {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  height: 26px;
+  padding: 2px 14px;
+  font-size: 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  z-index: 2;
+}
+.action-btn-float:hover {
+  background: rgba(74, 144, 226, 0.25);
+  border-color: rgba(74, 144, 226, 0.45);
+  color: #4a90e2;
+  box-shadow: 0 2px 8px rgba(74, 144, 226, 0.2);
+  transform: translateY(-1px);
 }
 
 /* 为不同状态添加样式 */

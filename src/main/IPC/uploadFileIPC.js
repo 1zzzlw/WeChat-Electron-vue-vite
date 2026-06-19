@@ -1,6 +1,6 @@
 import { ipcMain, dialog } from "electron";
 import { getFileInfo, uploadFile, stopUpload } from '../File/fileUpload'
-import { downloadFile, saveAsMedia } from '../File/downloadFile'
+import { downloadFile, pauseDownload, saveAsMedia } from '../File/downloadFile'
 // 从本地选择文件或目录
 ipcMain.handle('select-file', async (e, file) => {
     let fileInfo = {}
@@ -47,6 +47,14 @@ ipcMain.on('update-pauseStatus', (e, file, isPause) => {
 })
 
 ipcMain.on('start-download', (e, fileId, fileName, remoteUrl) => {
+    downloadFile(fileId, fileName, remoteUrl)
+})
+
+ipcMain.on('pause-download', (e, fileId) => {
+    pauseDownload(fileId)
+})
+
+ipcMain.on('resume-download', (e, fileId, fileName, remoteUrl) => {
     downloadFile(fileId, fileName, remoteUrl)
 })
 

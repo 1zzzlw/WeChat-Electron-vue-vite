@@ -60,6 +60,11 @@ export const fileStatusListInfo = defineStore('fileStatusListInfo', {
     getFileDownloadInfo(fileId: string) {
       return this.fileDownloadListMap[fileId]
     },
+    updateFileDownloadPauseStatus(fileId: string, pause: boolean) {
+      if (this.fileDownloadListMap[fileId]) {
+        this.fileDownloadListMap[fileId].pause = pause
+      }
+    },
     updateFileDownloadProgressStatus(fileId: string, downloadProgress: number, downloadSpeed: number) {
       if (this.fileDownloadListMap[fileId]) {
         this.fileDownloadListMap[fileId].downloadProgress = downloadProgress

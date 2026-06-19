@@ -6,8 +6,10 @@
     </div>
 
     <div class="moments-toolbar">
-      <!-- 左侧占位 -->
-      <div class="toolbar-left"></div>
+      <!-- 左侧：我的帖子 -->
+      <div class="toolbar-left">
+        <button class="my-posts-btn" @click="goMyPosts" title="我的帖子">我的帖子</button>
+      </div>
 
       <!-- 搜索框 -->
       <div class="toolbar-center">
@@ -138,6 +140,7 @@
 <script setup lang="ts">
 import { ChatLineRound, Check, Coin, Plus, Search, Loading } from '@element-plus/icons-vue'
 import { onMounted, ref, onUnmounted, nextTick, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { listByNewApi, likedApi, listByHot } from '../../api/Moments'
 import { MomentsItem } from '../../types/moments'
 import type { ScrollbarDirection } from 'element-plus'
@@ -147,6 +150,7 @@ import { formatMomentsTime } from '../../utils/utils'
 import { useMomentsImageLazy } from '../../composables/useMomentsImageLazy'
 
 const searchKeyword = ref('')
+const router = useRouter()
 const activeTag = ref('all')
 const label = ref('0')
 const pageDTO = ref({
@@ -284,6 +288,10 @@ async function changeSortWay() {
 // 搜索事件
 const handleSearch = () => {
   // TODO: 实现搜索逻辑
+}
+
+const goMyPosts = () => {
+  router.push('/myPosts')
 }
 
 // 标签点击事件
@@ -539,6 +547,27 @@ onUnmounted(() => {
 .toolbar-right {
   flex: 1;
   display: flex;
+}
+
+.my-posts-btn {
+  display: flex;
+  align-items: center;
+  padding: 6px 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(67, 243, 255, 0.3);
+  background: rgba(67, 243, 255, 0.1);
+  color: #43f3ff;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  white-space: nowrap;
+}
+
+.my-posts-btn:hover {
+  background: rgba(67, 243, 255, 0.2);
+  border-color: rgba(67, 243, 255, 0.5);
+  box-shadow: 0 0 12px rgba(67, 243, 255, 0.2);
+  transform: translateY(-1px);
 }
 
 .toolbar-right {

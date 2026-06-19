@@ -29,3 +29,11 @@ export const commentReplies = (commentId, page, pageSize) => request.get(`/momen
 export const publishCommentReply = (data) => request.post('/moments/comment/reply/publish', data)
 
 export const likeComment = (commentId) => request.post(`/moments/comment/like/${commentId}`)
+
+export const listMyMomentsApi = (page, pageSize) => request.get('/moments/my', {
+    params: { page, pageSize }
+})
+
+export const deleteMomentApi = (momentId) => request.delete(`/moments/delete/${momentId}`)
+
+export const updateMomentApi = (data) => request.put('/moments/update', data)

@@ -31,7 +31,7 @@
                   </div>
                   <div> {{ message.content }} </div>
                 </div>
-                <MessageContentManage v-else v-bind="message" :isUpload="true" />
+                <MessageContentManage v-else v-bind="message" :isUpload="true" @red-packet-open="handleRedPacketOpenFromCard" />
                 <div class="icon send-load" v-if="message.sendStatus === 0">
                   <el-icon>
                     <Loading />
@@ -68,7 +68,7 @@
                     </div>
                     <div> {{ message.content }} </div>
                   </div>
-                  <MessageContentManage v-else v-bind="message" :isUpload="false" />
+                  <MessageContentManage v-else v-bind="message" :isUpload="false" @red-packet-open="handleRedPacketOpenFromCard" />
                 </ContextMenu>
               </div>
             </div>
@@ -101,8 +101,7 @@
       <el-button :icon="Folder" size="large" square @click="selectFile"></el-button>
       <el-button :icon="Scissor" size="large" square @click="captureBtn"></el-button>
       <el-button :icon="VideoCamera" size="large" square></el-button>
-      <!-- 群聊专属工具栏插槽 -->
-      <slot name="toolbar-extra" />
+      <el-button :icon="Money" size="large" square class="red-packet-btn" title="发红包" @click="showRedPacketDialog = true"></el-button>
     </div>
     <form class="chat-input">
       <el-input v-model="messageText" type="textarea" :rows="4" resize="none" placeholder="请输入消息" spellcheck="false"
@@ -112,6 +111,21 @@
       <el-button type="primary" @click="sendMessage">发送</el-button>
     </div>
   </div>
+
+  <!-- 发红包对话框 -->
+  <SendRedPacket v-model:visible="showRedPacketDialog" @send="handleSendRedPacket" />
+
+  <!-- 开红包弹窗 -->
+  <OpenRedPacket
+    v-if="openRedPacketData"
+    :visible="!!openRedPacketData"
+    :redPacketId="openRedPacketData.redPacketId"
+    :messageId="openRedPacketData.messageId"
+    :conversationId="openRedPacketData.conversationId"
+    :senderName="openRedPacketData.senderName"
+    @update:visible="openRedPacketData = null"
+    @opened="handleRedPacketOpened"
+  />
 </template>
 
 <script setup lang="ts">
@@ -128,7 +142,7 @@ import { statusMap } from '../../utils/constants'
 import { conversationInfo } from '../../stores/modules/ConversationStore'
 import { friendInfo } from '../../stores/modules/ContactListStore'
 import { fileStatusListInfo } from '../../stores/modules/FileStatusInfoStore'
-import { Eleme, Folder, Scissor, VideoCamera, Close, Loading, WarningFilled } from '@element-plus/icons-vue'
+import { Eleme, Folder, Scissor, VideoCamera, Close, Loading, WarningFilled, Money } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { groupMemberInfo } from '../../stores/modules/GroupMemberStore'
 import { getGroupMemberListApi } from '../../api/Conversation'
@@ -144,6 +158,8 @@ import ChatMessageSystem from '../../components/ChatMessageSystem.vue'
 import { createSystemMessagePack, createContentJson } from '../../utils/systemMessageUtil'
 import { SystemMsgSubType, getSystemMsgText } from '../../utils/constants'
 import { useChatScroll } from '../../composables/useChatScroll'
+import SendRedPacket from '../../components/SendRedPacket.vue'
+import OpenRedPacket from '../../components/OpenRedPacket.vue'
 
 // ==================== Props ====================
 const props = withDefaults(defineProps<{
@@ -188,6 +204,13 @@ const fileUrl = ref('')
 const scrollbarRef = ref()
 let fileInfoList = ref<FileBaseInfo[]>([])
 const quoteMessage = ref<Message | null>(null)
+const showRedPacketDialog = ref(false)
+const openRedPacketData = ref<{
+  redPacketId: string
+  messageId: string
+  conversationId: string
+  senderName: string
+} | null>(null)
 
 // ==================== 计算属性 ====================
 /** 优先使用 prop 传入的 convId（独立窗口），否则使用路由参数 */
@@ -213,6 +236,66 @@ function getNameForSender(senderId: string | number): string | undefined {
     return props.conversation.remark || props.conversation.name
   }
   return undefined // 群聊但未提供 getSenderName 时不显示名称
+}
+
+// ==================== 红包操作 ====================
+const handleSendRedPacket = (data: { amount: number; count: number; blessing: string }) => {
+  const convId = effectiveConvId.value
+  const isPrivate = props.conversation.type === 0
+  const receiverId = props.conversation.targetId || ''
+
+  const content = JSON.stringify({
+    redPacketId: '',     // 后端返回后更新
+    amount: data.amount,
+    count: data.count,
+    status: 0,
+    senderName: '',      // 从登录用户信息获取
+    blessing: data.blessing
+  })
+
+  const messagePack = createMessagePack(receiverId, convId, 6, content, null)
+
+  if (!isPrivate) {
+    messagePack.receiverIds = (
+      groupMemberStore.groupMemberMap[convId]
+        ?.filter((item) => item.userId !== props.userId)
+        .map((item) => item.userId) || []
+    ) as string[]
+  }
+
+  // 本地显示红包消息
+  messageStore.sendMessage(messagePack, convId, messagePack.receiverIds || [])
+  updateConversationInfo(messagePack)
+
+  // TODO: 调用后端 API 创建红包，获得 redPacketId 后更新消息
+  // sendRedPacketApi({ conversationId: convId, amount: data.amount, count: data.count, blessing: data.blessing })
+  //   .then(res => { messagePack.content = JSON.stringify({...parsed, redPacketId: res.data.redPacketId}) })
+
+  nextTick(() => scrollToBottom())
+}
+
+const handleRedPacketOpened = (data: { redPacketId: string; amount: number; messageId: string }) => {
+  // TODO: 更新消息状态——将红包标记为已领取
+  console.log('红包已打开', data)
+}
+
+const handleRedPacketOpenFromCard = (data: { redPacketId: string; id: string; conversationId: string }) => {
+  // 从消息中解析发送者名称
+  const messages = messageStore.messageMap[data.conversationId] || []
+  const msg = messages.find(m => m.id === data.id)
+  let senderName = ''
+  if (msg) {
+    try {
+      const parsed = JSON.parse(msg.content || '{}')
+      senderName = parsed.senderName || ''
+    } catch { /* ignore */ }
+  }
+  openRedPacketData.value = {
+    redPacketId: data.redPacketId,
+    messageId: data.id,
+    conversationId: data.conversationId,
+    senderName
+  }
 }
 
 // ==================== 文件操作 ====================
@@ -733,6 +816,11 @@ img {
 .chat-tool button:hover {
   color: rgba(66, 153, 225, 0.9);
   text-shadow: 0 0 6px rgba(66, 153, 225, 0.3);
+}
+
+.chat-tool .red-packet-btn:hover {
+  color: #ff5a5f !important;
+  text-shadow: 0 0 8px rgba(255, 90, 95, 0.4);
 }
 
 .upload-button {

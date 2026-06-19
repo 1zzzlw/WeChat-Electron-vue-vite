@@ -143,8 +143,12 @@ const uploadFileApi = {
   updateDownloadStatus: (callback) => {
     ipcRenderer.on('download-loadStatus', callback)
   },
-  updateFileDownloadPauseStatus: () => {
-
+  updateFileDownloadPauseStatus: (fileId, isPause, fileName, remoteUrl) => {
+    if (isPause) {
+      ipcRenderer.send('pause-download', fileId)
+    } else {
+      ipcRenderer.send('resume-download', fileId, fileName, remoteUrl)
+    }
   },
   saveAsMedia: (fileInfo) => {
     ipcRenderer.send('saveAs-media', fileInfo)
@@ -159,7 +163,13 @@ const windowToolApi = {
     ipcRenderer.send('window:controls', windowType, controlType, value)
   },
   createNewWindow: (windowType, data) => {
+    // 设置等待光标，给用户反馈窗口正在创建
+    document.body.style.cursor = 'wait'
     ipcRenderer.send('create-new-window', windowType, data)
+    // 1.5秒后恢复光标
+    setTimeout(() => {
+      document.body.style.cursor = ''
+    }, 1500)
   },
   destroyNewWindow: (windowType) => {
     ipcRenderer.send('destroy-window', windowType)

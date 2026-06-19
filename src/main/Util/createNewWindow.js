@@ -28,6 +28,7 @@ const WINDOW_CONFIGS = {
         videoPreview: '/videoPreview',
         createNote: '/createNote',
         createMomentView: '/createMomentView',
+        updateMomentView: '/updateMomentView',
         momentInfoView: '/momentInfoView',
         standaloneChat: '/standaloneChat'
         // TODO 可以继续添加其他路由页面
