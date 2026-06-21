@@ -433,6 +433,9 @@ const sendApi = (messagePack: Message) => {
       messagePack.remoteUrl = message.remoteUrl
       messageStore.addMessageMap(messagePack.conversationId, messagePack)
 
+      // 文件消息立即持久化到 IndexedDB，防止切换路由后上传组件消失
+      saveSentMessage({ ...messagePack, receiverIds: [] })
+
       conversationStore.setConversationMap(messagePack.conversationId, {
         latestMsg: messagePack.content,
         latestMsgTime: dayjs(messagePack.sendTime).format('HH:mm:ss')
@@ -657,6 +660,13 @@ async function loadMessage(newConversationId: any) {
     messageList.forEach((messagePcak: Message) => {
       messageStore.loadMessageMap(messagePcak.conversationId, messagePcak)
     })
+  }
+
+  // 恢复属于当前会话的进行中文件消息，防止上传中切换路由后上传组件消失
+  const pendingFileMessages = Object.values(messageStore.fileMessgaeMap)
+    .filter(msg => msg.conversationId === newConversationId)
+  for (const msg of pendingFileMessages) {
+    messageStore.addMessageMap(newConversationId, msg)
   }
 
   if (isFromServer && messageList.length > 0) {

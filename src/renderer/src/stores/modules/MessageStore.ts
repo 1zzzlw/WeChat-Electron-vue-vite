@@ -24,7 +24,7 @@ export const messageInfo = defineStore('messageInfo', {
       // 发送中的消息：用于超时检测
       pendingMessages: new Map<string, PendingMessageInfo>(),
       // 全局计时器
-      timeoutTimer: null as NodeJS.Timeout | null,
+      timeoutTimer: null as ReturnType<typeof setInterval> | null,
       // 超时时间（毫秒）
       timeoutDuration: 5000,
       // 检查间隔（毫秒）

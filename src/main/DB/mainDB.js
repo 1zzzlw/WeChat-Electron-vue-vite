@@ -142,7 +142,8 @@ const multipleInsert = (insertPrefix, tableName, data) => {
  * @param tableName -- 表名
  * @param data -- 插入数据
  * */
-const insert = (tableName, data) => {
+const insert = (tableName, data, options = {}) => {
+    const { replace = false } = options
     // 获得该表的字段映射关系
     const columnsMap = globalColumnsMap[tableName]
     // 数据库字段名数组
@@ -157,7 +158,8 @@ const insert = (tableName, data) => {
         }
     }
     const placeholder = tableFieldNames.map(() => '?').join(',')
-    const sql = `insert into ${tableName} (${tableFieldNames.join(',')}) values (${placeholder})`
+    const command = replace ? 'insert or replace' : 'insert'
+    const sql = `${command} into ${tableName} (${tableFieldNames.join(',')}) values (${placeholder})`
     console.log(sql)
     return run(sql, params)
 }

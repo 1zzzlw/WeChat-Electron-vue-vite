@@ -31,8 +31,10 @@ const updateConversationMuteStatus = async (conversationId, userId, status) => {
 }
 
 const insertNewNote = async (data) => {
-    await uploadNoteContentApi(data)
-    uploadNoteContent(data)
+    const res = await uploadNoteContentApi(data)
+    // 用后端返回的真实ID写入本地，保证前后端ID一致
+    const noteId = res.data
+    uploadNoteContent({ ...data, id: noteId })
 }
 
 const updateOldNote = async (condition, data) => {

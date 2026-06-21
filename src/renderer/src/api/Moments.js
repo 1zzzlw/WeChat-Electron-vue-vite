@@ -37,3 +37,5 @@ export const listMyMomentsApi = (page, pageSize) => request.get('/moments/my', {
 export const deleteMomentApi = (momentId) => request.delete(`/moments/delete/${momentId}`)
 
 export const updateMomentApi = (data) => request.put('/moments/update', data)
+
+export const rewardApi = (momentId, count) => request.post('/moments/reward', null, { params: { momentId, count } })

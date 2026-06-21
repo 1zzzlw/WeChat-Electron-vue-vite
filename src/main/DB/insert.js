@@ -5,7 +5,8 @@ import { multipleInsert, insert } from "./mainDB"
  * @param message -- 单条消息
  */
 const saveSentMessage = (message) => {
-    insert('message', message)
+    // 使用 replace 模式避免文件消息上传中切换路由后重复插入主键冲突
+    insert('message', message, { replace: true })
 }
 
 /**

@@ -141,7 +141,7 @@
 import { ChatLineRound, Check, Coin, Plus, Search, Loading } from '@element-plus/icons-vue'
 import { onMounted, ref, onUnmounted, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { listByNewApi, likedApi, listByHot } from '../../api/Moments'
+import { listByNewApi, likedApi, listByHot, rewardApi } from '../../api/Moments'
 import { MomentsItem } from '../../types/moments'
 import type { ScrollbarDirection } from 'element-plus'
 import Masonry from 'masonry-layout'
@@ -327,6 +327,7 @@ const handleFollow = (postId: number) => {
 
 const handleReward = (postId: number) => {
   // TODO: 实现打赏功能
+  // rewardApi()
 }
 
 // 初始化帖子

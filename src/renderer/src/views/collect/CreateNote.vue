@@ -293,7 +293,7 @@ const saveContent = async () => {
             content: html,
             sourceUsername: username,
         }
-        updateOldNote(condition, data)
+        await updateOldNote(condition, data)
     } else {
         // 不是更新，插入
         const data = {
@@ -302,7 +302,7 @@ const saveContent = async () => {
             sourceUsername: username,
             type: 0
         }
-        insertNewNote(data)
+        await insertNewNote(data)
     }
 
     // 发送笔记更新事件
