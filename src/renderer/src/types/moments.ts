@@ -12,6 +12,7 @@ export interface MomentsItem {
     isFollowed: boolean
     showComments: boolean
     comments: Comment[]
+    rewardAmount: number
     likers: Like[]
 }
 

@@ -104,7 +104,7 @@
                 <el-icon>
                   <Coin />
                 </el-icon>
-                <span>打赏</span>
+                <span>{{ post.rewardAmount > 0 ? '¥' + post.rewardAmount : '打赏' }}</span>
               </div>
             </div>
           </div>
@@ -128,6 +128,38 @@
       </el-scrollbar>
     </div>
 
+    <!-- 打赏弹窗 -->
+    <div v-if="rewardDialogVisible" class="reward-overlay" @click.self="rewardDialogVisible = false">
+      <div class="reward-dialog">
+        <div class="reward-title">打赏</div>
+        <div class="reward-presets">
+          <button
+            v-for="preset in rewardPresets"
+            :key="preset"
+            class="preset-btn"
+            :class="{ active: rewardAmount === preset }"
+            @click="rewardAmount = preset"
+          >¥{{ preset }}</button>
+        </div>
+        <div class="reward-custom">
+          <el-input
+            v-model="rewardCustomInput"
+            placeholder="自定义金额"
+            type="number"
+            @input="rewardAmount = rewardCustomInput ? Number(rewardCustomInput) : null"
+          >
+            <template #prefix>¥</template>
+          </el-input>
+        </div>
+        <div class="reward-actions">
+          <button class="reward-cancel-btn" @click="rewardDialogVisible = false">取消</button>
+          <button class="reward-confirm-btn" :disabled="rewardSubmitting" @click="submitReward">
+            {{ rewardSubmitting ? '处理中...' : '确认打赏' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- 右下角悬浮发布按钮 -->
     <div class="fab-button" @click="openPublishWindow">
       <el-icon :size="28">
@@ -144,6 +176,7 @@ import { useRouter } from 'vue-router'
 import { listByNewApi, likedApi, listByHot, rewardApi } from '../../api/Moments'
 import { MomentsItem } from '../../types/moments'
 import type { ScrollbarDirection } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import Masonry from 'masonry-layout'
 import emitter from '../../utils/mitt';
 import { formatMomentsTime } from '../../utils/utils'
@@ -159,6 +192,14 @@ const pageDTO = ref({
 })
 const postList = ref<MomentsItem[]>([])
 const hotTags = ref([])
+
+// 打赏弹窗状态
+const rewardDialogVisible = ref(false)
+const currentRewardPostId = ref<number | null>(null)
+const rewardAmount = ref<number | null>(null)
+const rewardCustomInput = ref('')
+const rewardSubmitting = ref(false)
+const rewardPresets = [1, 5, 10, 20, 50]
 
 // 监听帖子列表变化，自动刷新布局，主要是因为Masonry不是响应式布局，每次新增都需要重新排列
 watch(postList, async () => {
@@ -326,8 +367,31 @@ const handleFollow = (postId: number) => {
 }
 
 const handleReward = (postId: number) => {
-  // TODO: 实现打赏功能
-  // rewardApi()
+  currentRewardPostId.value = postId
+  rewardAmount.value = null
+  rewardCustomInput.value = ''
+  rewardDialogVisible.value = true
+}
+
+const submitReward = async () => {
+  if (!rewardAmount.value || rewardAmount.value < 0.01) {
+    ElMessage.warning('请选择或输入打赏金额')
+    return
+  }
+  if (rewardAmount.value > 200) {
+    ElMessage.warning('打赏金额不能超过 ¥200')
+    return
+  }
+  rewardSubmitting.value = true
+  try {
+    await rewardApi(currentRewardPostId.value, rewardAmount.value)
+    ElMessage.success('打赏成功，感谢支持！')
+    rewardDialogVisible.value = false
+  } catch (e) {
+    ElMessage.error('打赏失败，请稍后重试')
+  } finally {
+    rewardSubmitting.value = false
+  }
 }
 
 // 初始化帖子
@@ -1109,6 +1173,118 @@ onUnmounted(() => {
 
 .follow-btn:active {
   transform: scale(0.95);
+}
+
+/* 打赏弹窗 */
+.reward-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.reward-dialog {
+  width: 320px;
+  background: rgba(28, 38, 52, 0.95);
+  border: 1px solid rgba(67, 243, 255, 0.35);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.reward-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #43f3ff;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.reward-presets {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.preset-btn {
+  padding: 7px 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(67, 243, 255, 0.3);
+  background: rgba(67, 243, 255, 0.07);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.preset-btn:hover,
+.preset-btn.active {
+  background: rgba(67, 243, 255, 0.2);
+  border-color: #43f3ff;
+  color: #43f3ff;
+}
+
+.reward-custom {
+  margin-bottom: 20px;
+}
+
+:deep(.reward-custom .el-input__wrapper) {
+  background: rgba(255, 255, 255, 0.07) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  box-shadow: none !important;
+}
+
+:deep(.reward-custom .el-input__inner) {
+  color: #f0f2f5;
+}
+
+:deep(.reward-custom .el-input__prefix) {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.reward-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.reward-cancel-btn,
+.reward-confirm-btn {
+  flex: 1;
+  padding: 10px 0;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+
+.reward-cancel-btn {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.reward-cancel-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.reward-confirm-btn {
+  background: rgba(67, 243, 255, 0.8);
+  color: #000;
+  font-weight: 600;
+}
+
+.reward-confirm-btn:hover:not(:disabled) {
+  background: rgba(67, 243, 255, 1);
+}
+
+.reward-confirm-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 </style>
 

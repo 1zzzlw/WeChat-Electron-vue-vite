@@ -31,7 +31,8 @@
                   </div>
                   <div> {{ message.content }} </div>
                 </div>
-                <MessageContentManage v-else v-bind="message" :isUpload="true" @red-packet-open="handleRedPacketOpenFromCard" />
+                <MessageContentManage v-else v-bind="message" :isUpload="true"
+                  @red-packet-open="handleRedPacketOpenFromCard" />
                 <div class="icon send-load" v-if="message.sendStatus === 0">
                   <el-icon>
                     <Loading />
@@ -68,7 +69,8 @@
                     </div>
                     <div> {{ message.content }} </div>
                   </div>
-                  <MessageContentManage v-else v-bind="message" :isUpload="false" @red-packet-open="handleRedPacketOpenFromCard" />
+                  <MessageContentManage v-else v-bind="message" :isUpload="false"
+                    @red-packet-open="handleRedPacketOpenFromCard" />
                 </ContextMenu>
               </div>
             </div>
@@ -101,7 +103,8 @@
       <el-button :icon="Folder" size="large" square @click="selectFile"></el-button>
       <el-button :icon="Scissor" size="large" square @click="captureBtn"></el-button>
       <el-button :icon="VideoCamera" size="large" square></el-button>
-      <el-button :icon="Money" size="large" square class="red-packet-btn" title="发红包" @click="showRedPacketDialog = true"></el-button>
+      <el-button :icon="Money" size="large" square class="red-packet-btn" title="发红包"
+        @click="showRedPacketDialog = true"></el-button>
     </div>
     <form class="chat-input">
       <el-input v-model="messageText" type="textarea" :rows="4" resize="none" placeholder="请输入消息" spellcheck="false"
@@ -116,16 +119,11 @@
   <SendRedPacket v-model:visible="showRedPacketDialog" @send="handleSendRedPacket" />
 
   <!-- 开红包弹窗 -->
-  <OpenRedPacket
-    v-if="openRedPacketData"
-    :visible="!!openRedPacketData"
-    :redPacketId="openRedPacketData.redPacketId"
-    :messageId="openRedPacketData.messageId"
-    :conversationId="openRedPacketData.conversationId"
-    :senderName="openRedPacketData.senderName"
+  <OpenRedPacket v-if="openRedPacketData" :visible="!!openRedPacketData" :redPacketId="openRedPacketData.redPacketId"
+    :messageId="openRedPacketData.messageId" :conversationId="openRedPacketData.conversationId"
+    :senderName="openRedPacketData.senderName" :blessing="openRedPacketData.blessing"
     @update:visible="openRedPacketData = null"
-    @opened="handleRedPacketOpened"
-  />
+    @opened="handleRedPacketOpened" />
 </template>
 
 <script setup lang="ts">
@@ -160,6 +158,7 @@ import { SystemMsgSubType, getSystemMsgText } from '../../utils/constants'
 import { useChatScroll } from '../../composables/useChatScroll'
 import SendRedPacket from '../../components/SendRedPacket.vue'
 import OpenRedPacket from '../../components/OpenRedPacket.vue'
+import { sendRedPacketApi } from '../../api/RedPacket'
 
 // ==================== Props ====================
 const props = withDefaults(defineProps<{
@@ -210,10 +209,10 @@ const openRedPacketData = ref<{
   messageId: string
   conversationId: string
   senderName: string
+  blessing: string
 } | null>(null)
 
 // ==================== 计算属性 ====================
-/** 优先使用 prop 传入的 convId（独立窗口），否则使用路由参数 */
 const effectiveConvId = computed(() => {
   return props.convId || (route.query.conversationId as string)
 })
@@ -231,52 +230,75 @@ function getAvatarForSender(senderId: string | number): string {
 
 function getNameForSender(senderId: string | number): string | undefined {
   if (props.getSenderName) return props.getSenderName(senderId)
-  // 单聊：显示对方名称；群聊由 getSenderName 提供
+  // 单聊显示对方名称；群聊由 getSenderName 提供
   if (props.conversation.type === 0) {
     return props.conversation.remark || props.conversation.name
   }
-  return undefined // 群聊但未提供 getSenderName 时不显示名称
+  // 群聊但未提供 getSenderName 时不显示名称
+  return undefined
 }
 
 // ==================== 红包操作 ====================
-const handleSendRedPacket = (data: { amount: number; count: number; blessing: string }) => {
+const handleSendRedPacket = async (data: { amount: number; count: number; blessing: string; type: number }) => {
   const convId = effectiveConvId.value
   const isPrivate = props.conversation.type === 0
   const receiverId = props.conversation.targetId || ''
 
-  const content = JSON.stringify({
-    redPacketId: '',     // 后端返回后更新
-    amount: data.amount,
-    count: data.count,
-    status: 0,
-    senderName: '',      // 从登录用户信息获取
-    blessing: data.blessing
-  })
+  try {
+    // 先调后端创建红包，拿到真实 redPacketId
+    const res = await sendRedPacketApi({
+      conversationId: convId,
+      receiverId: receiverId,
+      totalAmount: (data.amount / 100).toFixed(2),  // 分 -> 元
+      totalCount: data.count,
+      type: data.type ?? 0,
+      greeting: data.blessing
+    })
+    const redPacketId = String(res.data?.id || '')
 
-  const messagePack = createMessagePack(receiverId, convId, 6, content, null)
+    // 获取当前用户名
+    const senderName = await (window as any).userInfoApi.storeGetUserInfo('username')
 
-  if (!isPrivate) {
-    messagePack.receiverIds = (
-      groupMemberStore.groupMemberMap[convId]
-        ?.filter((item) => item.userId !== props.userId)
-        .map((item) => item.userId) || []
-    ) as string[]
+    const content = JSON.stringify({
+      redPacketId,
+      amount: data.amount,
+      count: data.count,
+      status: 0,
+      senderName: senderName || '',
+      blessing: data.blessing
+    })
+
+    const messagePack = createMessagePack(receiverId, convId, 6, content, null)
+
+    if (!isPrivate) {
+      messagePack.receiverIds = (
+        groupMemberStore.groupMemberMap[convId]
+          ?.filter((item) => item.userId !== props.userId)
+          .map((item) => item.userId) || []
+      ) as string[]
+    }
+
+    messageStore.sendMessage(messagePack, convId, messagePack.receiverIds || [])
+    updateConversationInfo(messagePack)
+    nextTick(() => scrollToBottom())
+  } catch (e) {
+    ElMessage.error('发红包失败，请检查余额')
   }
-
-  // 本地显示红包消息
-  messageStore.sendMessage(messagePack, convId, messagePack.receiverIds || [])
-  updateConversationInfo(messagePack)
-
-  // TODO: 调用后端 API 创建红包，获得 redPacketId 后更新消息
-  // sendRedPacketApi({ conversationId: convId, amount: data.amount, count: data.count, blessing: data.blessing })
-  //   .then(res => { messagePack.content = JSON.stringify({...parsed, redPacketId: res.data.redPacketId}) })
-
-  nextTick(() => scrollToBottom())
 }
 
 const handleRedPacketOpened = (data: { redPacketId: string; amount: number; messageId: string }) => {
-  // TODO: 更新消息状态——将红包标记为已领取
-  console.log('红包已打开', data)
+  // 更新本地消息内容中的红包状态（已领取），避免再次点击
+  const convId = effectiveConvId.value
+  const messages = messageStore.messageMap[convId] || []
+  const msg = messages.find(m => m.id === data.messageId)
+  if (msg) {
+    try {
+      const parsed = JSON.parse(msg.content || '{}')
+      parsed.grabbed = true
+      parsed.grabbedAmount = data.amount
+      msg.content = JSON.stringify(parsed)
+    } catch { /* ignore */ }
+  }
 }
 
 const handleRedPacketOpenFromCard = (data: { redPacketId: string; id: string; conversationId: string }) => {
@@ -284,17 +306,20 @@ const handleRedPacketOpenFromCard = (data: { redPacketId: string; id: string; co
   const messages = messageStore.messageMap[data.conversationId] || []
   const msg = messages.find(m => m.id === data.id)
   let senderName = ''
+  let blessing = ''
   if (msg) {
     try {
       const parsed = JSON.parse(msg.content || '{}')
       senderName = parsed.senderName || ''
+      blessing = parsed.blessing || ''
     } catch { /* ignore */ }
   }
   openRedPacketData.value = {
     redPacketId: data.redPacketId,
     messageId: data.id,
     conversationId: data.conversationId,
-    senderName
+    senderName,
+    blessing
   }
 }
 
@@ -329,24 +354,24 @@ const handlerEmoji = (emoji: any) => {
 
 // ==================== 截图 ====================
 const captureBtn = () => {
-  ;(window as any).chatToolApi.openCapture()
-  ;(window as any).chatToolApi.sendImageToMain((fileInfo: any) => {
-    if (fileInfoList.value.length >= 3) {
-      ElMessage.error('最多3个文件')
-      return
-    }
-    fileInfoList.value.push({
-      base64: fileInfo.base64,
-      fileId: fileInfo.fileId,
-      fileName: fileInfo.fileName,
-      fileSize: fileInfo.fileSize,
-      fileType: 2,
-      content: fileInfo.content || '[照片]',
-      localPath: fileInfo.localPath,
-      remotePath: '',
+  ; (window as any).chatToolApi.openCapture()
+    ; (window as any).chatToolApi.sendImageToMain((fileInfo: any) => {
+      if (fileInfoList.value.length >= 3) {
+        ElMessage.error('最多3个文件')
+        return
+      }
+      fileInfoList.value.push({
+        base64: fileInfo.base64,
+        fileId: fileInfo.fileId,
+        fileName: fileInfo.fileName,
+        fileSize: fileInfo.fileSize,
+        fileType: 2,
+        content: fileInfo.content || '[照片]',
+        localPath: fileInfo.localPath,
+        remotePath: '',
+      })
+      ElMessage.success('截屏已添加到文件列表')
     })
-    ElMessage.success('截屏已添加到文件列表')
-  })
 }
 
 // ==================== 发送消息 ====================

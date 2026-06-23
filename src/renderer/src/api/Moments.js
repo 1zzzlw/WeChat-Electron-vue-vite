@@ -38,4 +38,4 @@ export const deleteMomentApi = (momentId) => request.delete(`/moments/delete/${m
 
 export const updateMomentApi = (data) => request.put('/moments/update', data)
 
-export const rewardApi = (momentId, count) => request.post('/moments/reward', null, { params: { momentId, count } })
+export const rewardApi = (momentId, amount) => request.post('/moments/reward', null, { params: { momentId, amount } })

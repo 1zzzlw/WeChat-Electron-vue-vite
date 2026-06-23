@@ -11,11 +11,3 @@ export const grabRedPacketApi = (redPacketId) =>
 /** 红包详情（含领取记录） */
 export const getRedPacketDetailApi = (redPacketId) =>
   request.get(`/redPacket/detail/${redPacketId}`)
-
-/**
- * 领取红包
- * @param redPacketId 红包ID
- */
-export const openRedPacketApi = (redPacketId) => {
-  return request.post(`/redPacket/open/${redPacketId}`)
-}
