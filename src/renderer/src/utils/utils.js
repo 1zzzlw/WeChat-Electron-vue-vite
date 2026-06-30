@@ -61,14 +61,19 @@ const formatMomentsTime = (timestamp) => {
 
 const base64ToBlob = (base64) => {
     // 提取 mimeType（如 image/png）
-    const mimeType = base64.match(/data:([^;]+);/)[1];
-    const byteString = atob(base64.split(',')[1]);
-    const arrayBuffer = new ArrayBuffer(byteString.length);
-    const uint8Array = new Uint8Array(arrayBuffer);
-    for (let i = 0; i < byteString.length; i++) {
-        uint8Array[i] = byteString.charCodeAt(i);
+    const match = base64.match(/data:([^;]+);/)
+    if (!match) {
+        console.warn('base64ToBlob: 非法 base64 字符串')
+        return null
     }
-    return new Blob([uint8Array], { type: mimeType });
+    const mimeType = match[1]
+    const byteString = atob(base64.split(',')[1])
+    const arrayBuffer = new ArrayBuffer(byteString.length)
+    const uint8Array = new Uint8Array(arrayBuffer)
+    for (let i = 0; i < byteString.length; i++) {
+        uint8Array[i] = byteString.charCodeAt(i)
+    }
+    return new Blob([uint8Array], { type: mimeType })
 }
 
 const blobToBase64 = (blob) => {

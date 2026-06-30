@@ -1,5 +1,5 @@
 import { ipcMain, globalShortcut, app, clipboard, nativeImage, BrowserWindow } from "electron"
-import { mainWindow } from '../index'
+import { refs } from '../shared.js'
 import { createExtraWindow, windowPool } from "../Util/createNewWindow"
 const crypto = require('crypto')
 const path = require('path')
@@ -33,8 +33,8 @@ ipcMain.on('window:capture-open', async (e) => {
         senderWindow.hide()
     } else {
         // fallback：隐藏主窗口
-        mainWindow.hide()
-        captureSourceWindow = mainWindow
+        refs.mainWindow.hide()
+        captureSourceWindow = refs.mainWindow
     }
 
     await createCaptureWindow()
@@ -85,7 +85,7 @@ ipcMain.on('window:save-capture', (e, uint8Array) => {
     }
 
     // 先保存目标窗口引用，再关闭截屏窗口（closeCaptureWindow 会清除 captureSourceWindow）
-    const targetWindow = captureSourceWindow || mainWindow
+    const targetWindow = captureSourceWindow || refs.mainWindow
 
     // 关闭截屏窗口（统一入口，不再重复调用）
     closeCaptureWindow()

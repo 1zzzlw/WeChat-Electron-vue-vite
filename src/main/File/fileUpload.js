@@ -1,5 +1,5 @@
 import fs from 'fs/promises'
-import { store, mainWindow } from '../index'
+import { store, refs } from '../shared.js'
 import { createHash } from 'crypto'
 import { FILE_TYPE_MAP, getFileName, getFileType } from './filterFileKind'
 import { createWorkerProcess, CHUNK_SIZE } from './createWorkerProcess'
@@ -213,7 +213,7 @@ const fileUpload = async (localPath, fileSize, fileId, fileName, fileType, verif
                 const speed = uploadedBytes / timeElapsed
                 const speedMB = (speed / 1024 / 1024).toFixed(2)
 
-                mainWindow.webContents.send('upload-progress', {
+                refs.mainWindow.webContents.send('upload-progress', {
                     fileId: fileId,
                     uploadProgress: progress,
                     uploadSpeed: speedMB
@@ -246,7 +246,7 @@ const fileUpload = async (localPath, fileSize, fileId, fileName, fileType, verif
             }).then(() => {
                 console.log('文件上传成功')
                 // 上传成功，修改发送状态
-                mainWindow.webContents.send('upload-loadStatus', {
+                refs.mainWindow.webContents.send('upload-loadStatus', {
                     fileId: fileId,
                     status: 1
                 })
@@ -254,7 +254,7 @@ const fileUpload = async (localPath, fileSize, fileId, fileName, fileType, verif
             }).catch(() => {
                 console.log('文件上传失败')
                 // 上传失败，修改发送状态
-                mainWindow.webContents.send('upload-loadStatus', {
+                refs.mainWindow.webContents.send('upload-loadStatus', {
                     fileId: fileId,
                     status: 2
                 })

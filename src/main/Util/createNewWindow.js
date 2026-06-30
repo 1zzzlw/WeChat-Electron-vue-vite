@@ -71,7 +71,7 @@ function createExtraWindow(windowType, options = {}, loadType = 'vue', data) {
         ...(process.platform === 'linux' ? { icon: iconPath } : {}),
         webPreferences: {
             webSecurity: false,
-            nodeIntegration: true,
+            nodeIntegration: false,
             contextIsolation: true,
             preload: join(__dirname, '../preload/index.js'),
             sandbox: false

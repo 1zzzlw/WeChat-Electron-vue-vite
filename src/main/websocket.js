@@ -1,4 +1,4 @@
-import { store, mainWindow, tray, getTrayIcon, getEmptyTrayIcon } from './index'
+import { store, refs, getTrayIcon, getEmptyTrayIcon } from './shared.js'
 import { app, Notification, nativeImage, BrowserWindow } from 'electron'
 import { saveSentMessage, addConversation, addFriendRelation } from './DB/insert'
 import { deleteMessage } from './DB/delete'
@@ -6,6 +6,7 @@ import { updateConversation } from './DB/update'
 import { getConversationInfoById } from './DB/select'
 import { join } from 'path'
 import { pathToFileURL } from 'url'
+import { encodeMessage, decodeMessage, bufferToHexString } from './protocol.js'
 
 // ===== 托盘闪动相关 =====
 let flashInterval = null
@@ -17,7 +18,7 @@ let isTrayVisible = true
  * 如果已有闪动在进行中，只重置5秒结束计时器，不重复创建闪动定时器
  */
 function flashTrayIcon() {
-    if (!tray) return
+    if (!refs.tray) return
 
     // 已有闪动在进行，只重置结束计时器
     if (flashInterval) {
@@ -33,7 +34,7 @@ function flashTrayIcon() {
     flashInterval = setInterval(() => {
         isTrayVisible = !isTrayVisible
         try {
-            tray.setImage(isTrayVisible ? getTrayIcon() : getEmptyTrayIcon())
+            refs.tray.setImage(isTrayVisible ? getTrayIcon() : getEmptyTrayIcon())
         } catch (e) {
             // tray 可能已被销毁
             stopTrayFlash()
@@ -57,9 +58,9 @@ function stopTrayFlash() {
         flashTimeout = null
     }
     isTrayVisible = true
-    if (tray) {
+    if (refs.tray) {
         try {
-            tray.setImage(getTrayIcon())
+            refs.tray.setImage(getTrayIcon())
         } catch (e) {
             // tray 可能已被销毁
         }
@@ -138,9 +139,9 @@ class WebSocketManager {
         this.ws.status = WebSocket.OPEN
 
         // 窗口获得焦点时停止托盘闪动（只注册一次，防止重连时重复累积）
-        if (mainWindow && !this._focusListenerRegistered) {
+        if (refs.mainWindow && !this._focusListenerRegistered) {
             this._focusListenerRegistered = true
-            mainWindow.on('focus', () => {
+            refs.mainWindow.on('focus', () => {
                 stopTrayFlash()
             })
         }
@@ -149,52 +150,7 @@ class WebSocketManager {
     // 监听到消息
     onMessage(event) {
         try {
-            const buffer = event.data
-            const view = new DataView(buffer)
-            let offset = 0
-
-            // 1.接收魔数4个字节，并检验，注意要和后端写入的魔数对应
-            const magic = [
-                view.getUint8(offset++),
-                view.getUint8(offset++),
-                view.getUint8(offset++),
-                view.getUint8(offset++)
-            ]
-
-            if (magic.join(',') !== '1,2,3,4') {
-                console.warn('非法消息，魔数错误')
-                return
-            }
-
-            // 2.版本号1个字节
-            const version = view.getUint8(offset++)
-
-            // 3.序列化方式1个字节
-            const serializeType = view.getUint8(offset++)
-
-            // 4.消息类型1个字节
-            const messageType = view.getUint8(offset++)
-            console.info('收到消息，类型:', messageType)
-
-            // 5.序列号4个字节
-            const sequenceId = view.getUint32(offset)
-            offset += 4
-
-            // 6.填充字节1个字节
-            const padding = view.getUint8(offset++)
-
-            // 7.正文长度4个字节
-            const bodyLength = view.getUint32(offset)
-            offset += 4
-
-            // 8.正文
-            const body = new Uint8Array(buffer, offset, bodyLength)
-
-            // 9.解析正文为 JSON 字符串
-            const jsonString = new TextDecoder().decode(body)
-            // 10.解析 JSON 字符串为对象
-            const data = JSON.parse(jsonString)
-
+            const { messageType, data } = decodeMessage(event.data)
             console.info(`收到WS消息-类型${messageType}:`, data);
 
             if (messageType === 2 || messageType === 4) {
@@ -308,52 +264,10 @@ class WebSocketManager {
             return
         }
 
-        // 将要发送的 JSON 转 UTF-8 bytes，和后端的二进制协议保持一致
-        const encoder = new TextEncoder()
-        // 编码 JSON 字符串为 UTF-8 字节数组
-        const jsonBytes = encoder.encode(JSON.stringify(jsonObject))
-
-        // 创建总长度的 ArrayBuffer
-        // 魔数4字节 + 版本号1字节 + 序列化方式1字节 + 消息类型1字节 + 序列号4字节 + 填充1字节 + 正文长度4字节 + 正文
-        const totalLength = 4 + 1 + 1 + 1 + 4 + 1 + 4 + jsonBytes.length
-        // 创建一个固定大小的二进制缓冲区（ArrayBuffer），容量为 totalLength 字节。
-        const buffer = new ArrayBuffer(totalLength)
-        // 创建一个DataView视图，用于读写ArrayBuffer中的二进制数据。
-        const view = new DataView(buffer)
-        // 定义偏移量，记录当前写入数据的位置（从缓冲区的第几个字节开始写）
-        let offset = 0
-        // 1.写魔数 1,2,3,4，注意要和后端写入的魔数对应
-        view.setUint8(offset++, 1)
-        view.setUint8(offset++, 2)
-        view.setUint8(offset++, 3)
-        view.setUint8(offset++, 4)
-
-        // 2.版本号
-        view.setUint8(offset++, 1)
-
-        // 3.序列化方式，0 = JSON
-        view.setUint8(offset++, 0)
-
-        // 3.消息类型
-        view.setUint8(offset++, messageType)
-
-        // 4.序列号
-        view.setUint32(offset, sequenceId)
-        offset += 4
-
-        // 5.填充字节
-        view.setUint8(offset++, 0xff)
-
-        // 6.正文长度
-        view.setUint32(offset, jsonBytes.length)
-        offset += 4
-
-        // 7.写正文
-        new Uint8Array(buffer, offset).set(jsonBytes)
-
+        const buffer = encodeMessage(messageType, sequenceId, jsonObject)
         console.log(buffer)
         console.log(bufferToHexString(buffer))
-        // 8.发送
+        // 发送
         this.send(buffer)
     }
 
@@ -402,7 +316,7 @@ class WebSocketManager {
 
             setTimeout(() => {
                 // 直接退出程序
-                mainWindow.destroy()
+                refs.mainWindow.destroy()
                 app.quit()
             }, 2000)
 
@@ -447,12 +361,4 @@ class WebSocketManager {
         }
     }
 }
-
-function bufferToHexString(buffer) {
-    return Array.from(new Uint8Array(buffer))
-        // 转十六进制 + 补零（确保单个数字是01而不是1） + 拼接成连续字符串
-        .map(byte => byte.toString(16).padStart(2, '0'))
-        .join('');
-}
-
 export default new WebSocketManager()

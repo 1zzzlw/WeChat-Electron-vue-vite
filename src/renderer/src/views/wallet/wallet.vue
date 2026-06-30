@@ -196,9 +196,8 @@
 
 <script lang="ts" setup>
 import { ref, reactive, onMounted, computed } from 'vue'
-import * as Icons from '@element-plus/icons-vue'
-const { View, Hide, Plus, CreditCard, Upload, Download, Document, Money, Gift, Wallet, Refresh, Star } = Icons as any
 import { ElMessage } from 'element-plus'
+import { View, Hide, Plus, CreditCard, Upload, Download, Money, Wallet, Refresh, Star } from '@element-plus/icons-vue'
 import { getWalletInfoApi, rechargeApi, withdrawApi, getWalletRecordsApi } from '../../api/Wallet'
 import dayjs from 'dayjs'
 

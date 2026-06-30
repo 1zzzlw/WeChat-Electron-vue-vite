@@ -1,4 +1,4 @@
-import { store } from '../index'
+import { store } from '../shared.js'
 import { ipcMain } from 'electron'
 
 // 存储用户信息

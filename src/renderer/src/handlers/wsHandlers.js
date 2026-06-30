@@ -70,6 +70,8 @@ function handleFriendOnline(data) {
 
 function handleBatchOnline(data) {
     console.log('登录成功，在线好友列表', data.friendIdList)
+    // 清除持久化缓存（仅清 localStorage，不影响当前内存中的 store 数据）
+    // 不能使用 $reset()：会话列表依赖已加载的持久化数据，reset 会导致会话消失
     localStorage.removeItem('friendInfo-store')
     localStorage.removeItem('conversation-store')
     friendInfo().addUserListOnline(data.friendIdList)
@@ -86,7 +88,13 @@ const handleSystemMessage = (data) => {
     const receiverId = data.receiverId
     const conversationId = data.conversationId
     const messageType = data.messageType
-    const content = JSON.parse(data.content)
+    let content
+    try {
+        content = JSON.parse(data.content)
+    } catch {
+        console.warn('系统消息 content 解析失败:', data.content)
+        return
+    }
     const tpl = content.tpl
     const messagePack = {
         id: data.id,

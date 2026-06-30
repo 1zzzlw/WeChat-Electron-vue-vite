@@ -1,5 +1,5 @@
 import { ipcMain } from "electron";
-import { store, mainWindow } from '../index'
+import { store, refs } from '../shared.js'
 import { isExistUserRecord } from '../DB/select'
 import { createExtraWindow } from '../Util/createNewWindow'
 import { multipleInsert } from '../DB/mainDB'
@@ -17,7 +17,7 @@ ipcMain.handle('loading-isNeedInit', (e) => {
     // 根据id查询表中是否有该用户的登录记录
     if (!isExistUserRecord(userId)) {
         // 如果没有，隐藏主窗口
-        mainWindow.hide()
+        refs.mainWindow.hide()
         // 展示加载动画界面
         const options = {
             width: loading_width,
@@ -47,7 +47,7 @@ ipcMain.on('close-loading-window', (e) => {
         loadingWindow = null;
     }
     // 通知渲染进程可以进入main界面
-    mainWindow.webContents.send('data-init-complete')
+    refs.mainWindow.webContents.send('data-init-complete')
 })
 
 // 初始化数据到数据库

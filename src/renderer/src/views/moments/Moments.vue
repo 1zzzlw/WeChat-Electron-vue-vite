@@ -349,21 +349,30 @@ const openPublishWindow = () => {
   (window as any).windowToolApi.createNewWindow('createMomentView', null)
 }
 
-const handleLike = (postId: number) => {
+const handleLike = async (postId: number) => {
   const post = postList.value.find((p) => p.id === postId)
-  if (post) {
-    post.liked = !post.liked
-    post.likeCount += post.liked ? 1 : -1
+  if (!post) return
+  // 乐观更新
+  const prevLiked = post.liked
+  const prevCount = post.likeCount
+  post.liked = !post.liked
+  post.likeCount += post.liked ? 1 : -1
+  try {
+    await likedApi(postId)
+  } catch {
+    // 请求失败，回滚
+    post.liked = prevLiked
+    post.likeCount = prevCount
+    ElMessage.error('操作失败，请重试')
   }
-  // 发送点赞请求
-  likedApi(postId)
 }
 
 const handleFollow = (postId: number) => {
   const post = postList.value.find((p) => p.id === postId)
-  if (post) {
-    post.isFollowed = true
-  }
+  if (!post) return
+  // TODO: 对接关注用户的 API
+  console.warn('关注功能暂未对接后端 API，仅前端状态变更')
+  post.isFollowed = true
 }
 
 const handleReward = (postId: number) => {

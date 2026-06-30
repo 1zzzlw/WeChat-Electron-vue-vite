@@ -4,7 +4,7 @@ import { createWriteStream } from 'fs';
 import pathToFfmpegStatic from 'ffmpeg-static'
 import ffmprobeStatic from 'ffprobe-static'
 import { exec } from 'child_process'
-import { store } from '../index'
+import { store } from '../shared.js'
 import path from 'path'
 import http from 'http';
 import { app } from 'electron'

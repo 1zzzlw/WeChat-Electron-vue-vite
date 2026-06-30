@@ -1,5 +1,5 @@
 import axios from "axios";
-import { store } from "../index";
+import { store } from '../shared.js'
 
 const server = axios.create(
     {
@@ -31,7 +31,9 @@ server.interceptors.response.use(
     }
 )
 
-// axios的请求 request 请求拦截器，在前端发送请求前进行预处理，获取store中的token，在请求头中增加token请求头
+// axios的请求 request 请求拦截器，在前端发送请求前进行预处理，获取 store 中的长期 token
+// 注意：主进程调用的 /message/verifyUploadToken、/message/merge 等路径在 Gateway 的
+// refreshPaths 中，必须使用长期 token（fresh-secret 签发），不能用短期 accessToken。
 server.interceptors.request.use(config => {
     const token = store.get('token')
     if (token) {

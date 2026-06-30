@@ -171,6 +171,11 @@ const insert = (tableName, data, options = {}) => {
  * @param data -- 更新数据
  */
 const update = (tableName, condition, data) => {
+    // 安全检查：空条件会生成非法 SQL（update 不带 where 子句）
+    if (!condition || Object.keys(condition).length === 0) {
+        console.error('update 操作必须提供非空条件，已拒绝执行')
+        return 0
+    }
     // 获得该表的字段映射关系
     const columnsMap = globalColumnsMap[tableName]
     // 数据库字段名数组
@@ -203,6 +208,11 @@ const update = (tableName, condition, data) => {
 }
 
 const deletes = (tableName, condition) => {
+    // 安全检查：空条件 → SQLite 会忽略空 WHERE 子句而删除全表数据
+    if (!condition || Object.keys(condition).length === 0) {
+        console.error('delete 操作必须提供非空条件，已拒绝执行')
+        return 0
+    }
     // 获得该表的字段映射关系
     const columnsMap = globalColumnsMap[tableName]
     // 数据库字段名数组

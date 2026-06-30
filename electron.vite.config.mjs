@@ -39,6 +39,19 @@ export default defineConfig({
     },
     // 启用 Vue 插件，支持 .vue 文件
     plugins: [vue()],
+    build: {
+      sourcemap: false,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'vendor-element': ['element-plus', '@element-plus/icons-vue'],
+            'vendor-tiptap': ['@tiptap/starter-kit', '@tiptap/extension-image', '@tiptap/extension-link', '@tiptap/vue-3'],
+            'vendor-viewer': ['viewerjs', 'v-viewer'],
+            'vendor-vue': ['vue', 'vue-router', 'pinia']
+          }
+        }
+      }
+    },
     server: {
       proxy: {
         '/api': {

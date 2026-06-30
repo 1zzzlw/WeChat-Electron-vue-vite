@@ -1,7 +1,14 @@
-import { mainWindow } from '../index'
+import { refs } from '../shared.js'
 import { generatePath } from '../Util/mediaHandle'
 import fs from 'fs'
 import http from 'http'
+import https from 'https'
+
+/** 根据 URL 协议自动选择 http 或 https 的 get 方法 */
+const smartGet = (url, options, callback) => {
+  const lib = url.startsWith('https:') ? https : http
+  return lib.get(url, options, callback)
+}
 
 // 管理活跃的下载任务
 // key: fileId, value: { req, redirectReq, stream, desc, downloadedSize, totalSize, startTime, fileName, remoteUrl, paused }
@@ -38,7 +45,7 @@ const downloadFile = (fileId, fileName, remoteUrl) => {
                 requestOptions.headers = { 'Range': `bytes=${existingSize}-` }
             }
 
-            const req = http.get(remoteUrl, requestOptions, (res) => {
+            const req = smartGet(remoteUrl, requestOptions, (res) => {
                 // 处理重定向
                 if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
                     const redirectUrl = res.headers.location
@@ -48,7 +55,7 @@ const downloadFile = (fileId, fileName, remoteUrl) => {
                         redirectOptions.headers = { 'Range': `bytes=${existingSize}-` }
                     }
 
-                    const redirectReq = http.get(redirectUrl, redirectOptions, (redirectRes) => {
+                    const redirectReq = smartGet(redirectUrl, redirectOptions, (redirectRes) => {
                         const contentRange = redirectRes.headers['content-range']
                         let totalSize = parseInt(redirectRes.headers['content-length'], 10)
                         // 206 Partial Content: Content-Range 格式 "bytes start-end/total"
@@ -74,8 +81,8 @@ const downloadFile = (fileId, fileName, remoteUrl) => {
                             const timeElapsed = Math.max((currentTime - startTime) / 1000, 0.1)
                             const speed = downloadedSize / timeElapsed
                             const speedMB = (speed / 1024 / 1024).toFixed(2)
-                            if (mainWindow && !mainWindow.isDestroyed()) {
-                                mainWindow.webContents.send('download-progress', {
+                            if (refs.mainWindow && !refs.mainWindow.isDestroyed()) {
+                                refs.mainWindow.webContents.send('download-progress', {
                                     fileId, downloadProgress: Math.min(progress, 100), downloadSpeed: speedMB,
                                 })
                             }
@@ -86,8 +93,8 @@ const downloadFile = (fileId, fileName, remoteUrl) => {
                         stream.on('finish', () => {
                             stream.close()
                             activeDownloads.delete(fileId)
-                            if (mainWindow && !mainWindow.isDestroyed()) {
-                                mainWindow.webContents.send('download-loadStatus', { fileId, status: 1 })
+                            if (refs.mainWindow && !refs.mainWindow.isDestroyed()) {
+                                refs.mainWindow.webContents.send('download-loadStatus', { fileId, status: 1 })
                             }
                             resolve(desc)
                         })
@@ -96,8 +103,8 @@ const downloadFile = (fileId, fileName, remoteUrl) => {
                             if (activeDownloads.get(fileId)?.paused) return
                             cleanup()
                             activeDownloads.delete(fileId)
-                            if (mainWindow && !mainWindow.isDestroyed()) {
-                                mainWindow.webContents.send('download-loadStatus', { fileId, status: 2 })
+                            if (refs.mainWindow && !refs.mainWindow.isDestroyed()) {
+                                refs.mainWindow.webContents.send('download-loadStatus', { fileId, status: 2 })
                             }
                             reject(err)
                         })
@@ -148,8 +155,8 @@ const downloadFile = (fileId, fileName, remoteUrl) => {
                     const timeElapsed = Math.max((currentTime - startTime) / 1000, 0.1)
                     const speed = downloadedSize / timeElapsed
                     const speedMB = (speed / 1024 / 1024).toFixed(2)
-                    if (mainWindow && !mainWindow.isDestroyed()) {
-                        mainWindow.webContents.send('download-progress', {
+                    if (refs.mainWindow && !refs.mainWindow.isDestroyed()) {
+                        refs.mainWindow.webContents.send('download-progress', {
                             fileId, downloadProgress: Math.min(progress, 100), downloadSpeed: speedMB,
                         })
                     }
@@ -160,8 +167,8 @@ const downloadFile = (fileId, fileName, remoteUrl) => {
                 stream.on('finish', () => {
                     stream.close()
                     activeDownloads.delete(fileId)
-                    if (mainWindow && !mainWindow.isDestroyed()) {
-                        mainWindow.webContents.send('download-loadStatus', { fileId, status: 1 })
+                    if (refs.mainWindow && !refs.mainWindow.isDestroyed()) {
+                        refs.mainWindow.webContents.send('download-loadStatus', { fileId, status: 1 })
                     }
                     resolve(desc)
                 })
@@ -170,8 +177,8 @@ const downloadFile = (fileId, fileName, remoteUrl) => {
                     if (activeDownloads.get(fileId)?.paused) return
                     cleanup()
                     activeDownloads.delete(fileId)
-                    if (mainWindow && !mainWindow.isDestroyed()) {
-                        mainWindow.webContents.send('download-loadStatus', { fileId, status: 2 })
+                    if (refs.mainWindow && !refs.mainWindow.isDestroyed()) {
+                        refs.mainWindow.webContents.send('download-loadStatus', { fileId, status: 2 })
                     }
                     reject(err)
                 })
@@ -225,8 +232,8 @@ const pauseDownload = (fileId) => {
     }
 
     // 通知渲染进程
-    if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('download-paused', {
+    if (refs.mainWindow && !refs.mainWindow.isDestroyed()) {
+        refs.mainWindow.webContents.send('download-paused', {
             fileId,
             downloadedSize: state.downloadedSize
         })
@@ -238,7 +245,7 @@ const pauseDownload = (fileId) => {
  */
 const saveAsMedia = (remoteUrl, filePath) => {
     return new Promise((resolve, reject) => {
-        const req = http.get(remoteUrl, (res) => {
+        const req = smartGet(remoteUrl, (res) => {
             const stream = fs.createWriteStream(filePath)
             res.pipe(stream)
             stream.on('finish', () => {
