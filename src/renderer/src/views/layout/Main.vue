@@ -3,7 +3,7 @@
     <div class="main-count-left">
       <div class="main-count-left-top">
         <el-popover trigger="click" transition="user-card-pop" popper-class="user-card-popover"
-          popper-style="width: 400px; height: 300px; padding: 0;" effect="dark" show-after="300" hide-after="150"
+          popper-style="width: 400px; height: 300px; padding: 0;" effect="dark" :show-after="300" :hide-after="150"
           placement="bottom" :offset="10" :persistent="false">
           <UserInfoCart />
           <template #reference>
@@ -52,11 +52,11 @@
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue'
 import { ChatRound, UserFilled, Star, MoreFilled, Wallet } from '@element-plus/icons-vue'
-import WindowControls from '../../components/WindowControls.vue'
-import UserOnlineStatus from '../../components/UserOnlineStatus.vue'
-import UserInfoCart from '../../components/UserInfoCart.vue'
-import '../../assets/iconfont/iconfont.css'
-import Notification from '../../components/NotificationContainer.vue'
+import WindowControls from '@/components/WindowControls.vue'
+import UserOnlineStatus from '@/components/UserOnlineStatus.vue'
+import UserInfoCart from '@/components/UserInfoCart.vue'
+import '@/assets/iconfont/iconfont.css'
+import Notification from '@/components/NotificationContainer.vue'
 
 const avatarUrl = ref('')
 const containerRef = ref(null)

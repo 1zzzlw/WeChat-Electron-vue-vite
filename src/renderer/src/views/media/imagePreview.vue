@@ -21,7 +21,7 @@
 </template>
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
-import WindowControls from '../../components/WindowControls.vue'
+import WindowControls from '@/components/WindowControls.vue'
 import { ElMessage } from 'element-plus';
 import { component as Viewer } from 'v-viewer';
 import 'viewerjs/dist/viewer.css';

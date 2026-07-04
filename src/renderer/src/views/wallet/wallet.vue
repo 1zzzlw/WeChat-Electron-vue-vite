@@ -7,128 +7,130 @@
 
         <!-- 下方内容 -->
         <div class="wallet-body">
-        <!-- 左侧：余额 + 操作 -->
-        <div class="wallet-left">
+            <!-- 左侧：余额 + 操作 -->
+            <div class="wallet-left">
 
-            <!-- 余额卡片 -->
-            <div class="balance-card">
-                <div class="bc-deco"></div>
-                <div class="bc-deco2"></div>
-                <div class="bc-body">
-                    <div class="bc-label">
-                        <span>可用余额</span>
-                        <span class="bc-eye" @click="showBalance = !showBalance">
-                            <el-icon>
-                                <View v-if="showBalance" />
-                                <Hide v-else />
-                            </el-icon>
-                        </span>
-                    </div>
-                    <div class="bc-amount">
-                        <span class="bc-currency">¥</span>
-                        <span class="bc-value">{{ showBalance ? formatAmount(walletInfo.balance) : '••••••' }}</span>
-                    </div>
-                    <div class="bc-meta">
-                        <div class="bc-meta-item">
-                            <span class="bc-meta-label">冻结金额</span>
-                            <span class="bc-meta-val freeze">¥{{ formatAmount(walletInfo.freezeBalance) }}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 快捷操作 -->
-            <div class="quick-actions">
-                <div class="qa-item" @click="showRecharge = true">
-                    <div class="qa-icon topup"><el-icon size="20">
-                            <Plus />
-                        </el-icon></div>
-                    <span>充值</span>
-                </div>
-                <div class="qa-item" @click="showWithdraw = true">
-                    <div class="qa-icon withdraw"><el-icon size="20">
-                            <CreditCard />
-                        </el-icon></div>
-                    <span>提现</span>
-                </div>
-                <div class="qa-item" @click="handleTransfer">
-                    <div class="qa-icon transfer"><el-icon size="20">
-                            <Upload />
-                        </el-icon></div>
-                    <span>转账</span>
-                </div>
-                <div class="qa-item" @click="handleReceive">
-                    <div class="qa-icon receive"><el-icon size="20">
-                            <Download />
-                        </el-icon></div>
-                    <span>收款</span>
-                </div>
-            </div>
-
-            <!-- 本月统计 -->
-            <div class="month-stats" v-if="monthStats.income > 0 || monthStats.expense > 0">
-                <div class="ms-title">本月账单</div>
-                <div class="ms-row">
-                    <div class="ms-item">
-                        <span class="ms-label">收入</span>
-                        <span class="ms-val income">+¥{{ formatAmount(monthStats.income) }}</span>
-                    </div>
-                    <div class="ms-divider"></div>
-                    <div class="ms-item">
-                        <span class="ms-label">支出</span>
-                        <span class="ms-val expense">-¥{{ formatAmount(monthStats.expense) }}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 右侧：账单流水 -->
-        <div class="wallet-right">
-            <div class="bill-header">
-                <span class="bill-title">账单流水</span>
-                <div class="bill-tabs">
-                    <span v-for="tab in tabs" :key="tab.type" class="bill-tab"
-                        :class="{ active: activeTab === tab.type }" @click="switchTab(tab.type)">{{ tab.label }}</span>
-                </div>
-            </div>
-
-            <el-scrollbar class="bill-scroll">
-                <div v-if="loading" class="bill-loading">
-                    <span class="spin"></span>加载中...
-                </div>
-                <template v-else-if="records.length > 0">
-                    <div class="bill-item" v-for="r in records" :key="r.id">
-                        <div class="bi-icon" :class="getTypeClass(r.type)">
-                            <el-icon size="15">
-                                <component :is="getTypeIcon(r.type)" />
-                            </el-icon>
-                        </div>
-                        <div class="bi-info">
-                            <span class="bi-name">{{ r.typeDesc }}</span>
-                            <span class="bi-remark" v-if="r.remark">{{ r.remark }}</span>
-                            <span class="bi-time">{{ formatTime(r.createTime) }}</span>
-                        </div>
-                        <div class="bi-right">
-                            <span class="bi-amount" :class="r.amount >= 0 ? 'income' : 'expense'">
-                                {{ r.amount >= 0 ? '+' : '' }}¥{{ Math.abs(r.amount).toFixed(2) }}
+                <!-- 余额卡片 -->
+                <div class="balance-card">
+                    <div class="bc-deco"></div>
+                    <div class="bc-deco2"></div>
+                    <div class="bc-body">
+                        <div class="bc-label">
+                            <span>可用余额</span>
+                            <span class="bc-eye" @click="showBalance = !showBalance">
+                                <el-icon>
+                                    <View v-if="showBalance" />
+                                    <Hide v-else />
+                                </el-icon>
                             </span>
-                            <span class="bi-balance">余额 ¥{{ Number(r.afterBalance).toFixed(2) }}</span>
+                        </div>
+                        <div class="bc-amount">
+                            <span class="bc-currency">¥</span>
+                            <span class="bc-value">{{ showBalance ? formatAmount(walletInfo.balance) : '••••••'
+                                }}</span>
+                        </div>
+                        <div class="bc-meta">
+                            <div class="bc-meta-item">
+                                <span class="bc-meta-label">冻结金额</span>
+                                <span class="bc-meta-val freeze">¥{{ formatAmount(walletInfo.freezeBalance) }}</span>
+                            </div>
                         </div>
                     </div>
-                    <!-- 加载更多 -->
-                    <div class="bill-more" v-if="hasMore" @click="loadMore">加载更多</div>
-                    <div class="bill-end" v-else>— 已加载全部 —</div>
-                </template>
-                <div v-else class="bill-empty">
-                    <el-icon size="36">
-                        <Document />
-                    </el-icon>
-                    <span>暂无账单记录</span>
                 </div>
-            </el-scrollbar>
+
+                <!-- 快捷操作 -->
+                <div class="quick-actions">
+                    <div class="qa-item" @click="showRecharge = true">
+                        <div class="qa-icon topup"><el-icon size="20">
+                                <Plus />
+                            </el-icon></div>
+                        <span>充值</span>
+                    </div>
+                    <div class="qa-item" @click="showWithdraw = true">
+                        <div class="qa-icon withdraw"><el-icon size="20">
+                                <CreditCard />
+                            </el-icon></div>
+                        <span>提现</span>
+                    </div>
+                    <div class="qa-item" @click="handleTransfer">
+                        <div class="qa-icon transfer"><el-icon size="20">
+                                <Upload />
+                            </el-icon></div>
+                        <span>转账</span>
+                    </div>
+                    <div class="qa-item" @click="handleReceive">
+                        <div class="qa-icon receive"><el-icon size="20">
+                                <Download />
+                            </el-icon></div>
+                        <span>收款</span>
+                    </div>
+                </div>
+
+                <!-- 本月统计 -->
+                <div class="month-stats" v-if="monthStats.income > 0 || monthStats.expense > 0">
+                    <div class="ms-title">本月账单</div>
+                    <div class="ms-row">
+                        <div class="ms-item">
+                            <span class="ms-label">收入</span>
+                            <span class="ms-val income">+¥{{ formatAmount(monthStats.income) }}</span>
+                        </div>
+                        <div class="ms-divider"></div>
+                        <div class="ms-item">
+                            <span class="ms-label">支出</span>
+                            <span class="ms-val expense">-¥{{ formatAmount(monthStats.expense) }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧：账单流水 -->
+            <div class="wallet-right">
+                <div class="bill-header">
+                    <span class="bill-title">账单流水</span>
+                    <div class="bill-tabs">
+                        <span v-for="tab in tabs" :key="tab.type" class="bill-tab"
+                            :class="{ active: activeTab === tab.type }" @click="switchTab(tab.type)">{{ tab.label
+                            }}</span>
+                    </div>
+                </div>
+
+                <el-scrollbar class="bill-scroll">
+                    <div v-if="loading" class="bill-loading">
+                        <span class="spin"></span>加载中...
+                    </div>
+                    <template v-else-if="records.length > 0">
+                        <div class="bill-item" v-for="r in records" :key="r.id">
+                            <div class="bi-icon" :class="getTypeClass(r.type)">
+                                <el-icon size="15">
+                                    <component :is="getTypeIcon(r.type)" />
+                                </el-icon>
+                            </div>
+                            <div class="bi-info">
+                                <span class="bi-name">{{ r.typeDesc }}</span>
+                                <span class="bi-remark" v-if="r.remark">{{ r.remark }}</span>
+                                <span class="bi-time">{{ formatTime(r.createTime) }}</span>
+                            </div>
+                            <div class="bi-right">
+                                <span class="bi-amount" :class="r.amount >= 0 ? 'income' : 'expense'">
+                                    {{ r.amount >= 0 ? '+' : '' }}¥{{ Math.abs(r.amount).toFixed(2) }}
+                                </span>
+                                <span class="bi-balance">余额 ¥{{ Number(r.afterBalance).toFixed(2) }}</span>
+                            </div>
+                        </div>
+                        <!-- 加载更多 -->
+                        <div class="bill-more" v-if="hasMore" @click="loadMore">加载更多</div>
+                        <div class="bill-end" v-else>— 已加载全部 —</div>
+                    </template>
+                    <div v-else class="bill-empty">
+                        <el-icon size="36">
+                            <Document />
+                        </el-icon>
+                        <span>暂无账单记录</span>
+                    </div>
+                </el-scrollbar>
+            </div>
         </div>
-    </div>
-    <!-- 关闭 wallet-body -->
+        <!-- 关闭 wallet-body -->
     </div>
 
     <!-- 充值弹窗 -->
@@ -197,8 +199,8 @@
 <script lang="ts" setup>
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
-import { View, Hide, Plus, CreditCard, Upload, Download, Money, Wallet, Refresh, Star } from '@element-plus/icons-vue'
-import { getWalletInfoApi, rechargeApi, withdrawApi, getWalletRecordsApi } from '../../api/Wallet'
+import { View, Hide, Plus, CreditCard, Upload, Download, Refresh, Star, Present, Document } from '@element-plus/icons-vue'
+import { getWalletInfoApi, rechargeApi, withdrawApi, getWalletRecordsApi } from '@/api/Wallet'
 import dayjs from 'dayjs'
 
 const showBalance = ref(true)
@@ -259,8 +261,8 @@ function getTypeIcon(type: number) {
         case 2: return CreditCard
         case 3: return Star
         case 4: return Star
-        case 5: return Gift
-        case 6: return Gift
+        case 5: return Present
+        case 6: return Present
         case 7: return Upload
         case 8: return Download
         default: return Refresh

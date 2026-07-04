@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { Message } from '../../types/message'
+import { Message } from '@/types/message'
 
 // 聊天记录存储模块
 interface PendingMessageInfo {

@@ -1,9 +1,9 @@
 import { toRaw } from 'vue'
-import { messageInfo } from '../stores/modules/MessageStore'
-import { fileStatusListInfo } from '../stores/modules/FileStatusInfoStore'
-import { statusMap } from '../utils/constants'
-import { updateMessageFileSendStatusApi } from '../api/Message'
-import { updateMessage } from '../db/dualDB'
+import { messageInfo } from '@/stores/modules/MessageStore'
+import { fileStatusListInfo } from '@/stores/modules/FileStatusInfoStore'
+import { statusMap } from '@/utils/constants'
+import { updateMessageFileSendStatusApi } from '@/api/Message'
+import { updateMessage } from '@/db/dualDB'
 
 let _fileTransferHandlersRegistered = false
 

@@ -31,14 +31,14 @@
     </div>
 </template>
 <script setup lang="ts">
-import AutocompleteSearch from '../../components/AutocompleteSearch.vue';
+import AutocompleteSearch from '@/components/AutocompleteSearch.vue';
 
 const createNote = () => {
     (window as any).windowToolApi.createNewWindow('createNote')
 }
 </script>
 <style scoped>
-@import "../../css/layout.css";
+@import "@/css/layout.css";
 
 .collect-mid {
     border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;

@@ -53,13 +53,13 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
 import { useRoute } from 'vue-router'
-import { Conversation, initConversation } from '../../types/conversation'
-import ChatAIHeader from '../../components/ChatAIHeader.vue'
-import ContextMenu from '../../components/ContextMenu.vue'
-import { loadMessage, sendAIMessageApi } from '../../api/AIMessage'
-import { AIMessage } from '../../types/aiMessage'
-import { aiMessageInfo } from '../../stores/modules/AIMessageStore'
-import { conversationInfo } from '../../stores/modules/ConversationStore';
+import { Conversation, initConversation } from '@/types/conversation'
+import ChatAIHeader from '@/components/ChatAIHeader.vue'
+import ContextMenu from '@/components/ContextMenu.vue'
+import { loadMessage, sendAIMessageApi } from '@/api/AIMessage'
+import { AIMessage } from '@/types/aiMessage'
+import { aiMessageInfo } from '@/stores/modules/AIMessageStore'
+import { conversationInfo } from '@/stores/modules/ConversationStore';
 
 const avatarUrl = ref('')
 const message = ref('')

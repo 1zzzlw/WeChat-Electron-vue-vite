@@ -1,8 +1,8 @@
-import { updateConversation, uploadNoteContent, updateOldNoteContent, clearHistoryMessage, deleteFriend, deleteConversation, updateFriendRelation } from "./dualDB";
-import { uploadNoteContentApi, updateOldNoteContentApi } from '../api/Favorites'
-import { updateConversationTopStatusApi, updateConversationMuteStatusApi, deleteConversationApi } from '../api/Conversation'
-import { clearHistoryMessageApi } from "../api/Message";
-import { deleteFriendApi, updateFriendRemarkApi, updateFriendStatusApi } from "../api/Friend";
+import { updateConversation, uploadNoteContent, updateOldNoteContent, clearHistoryMessage, deleteFriend, deleteConversation, updateFriendRelation } from "@/db/dualDB";
+import { uploadNoteContentApi, updateOldNoteContentApi } from '@/api/Favorites'
+import { updateConversationTopStatusApi, updateConversationMuteStatusApi, deleteConversationApi } from '@/api/Conversation'
+import { clearHistoryMessageApi } from "@/api/Message";
+import { deleteFriendApi, updateFriendRemarkApi, updateFriendStatusApi } from "@/api/Friend";
 
 /**
  * 同步更新会话置顶：先调服务端，成功后再写本地

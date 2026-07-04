@@ -1,4 +1,4 @@
-import request from '../utils/axios/request'
+import request from '@/utils/axios/request'
 
 export const sendMessageApi = (data) => request.post('/message/send', data)
 

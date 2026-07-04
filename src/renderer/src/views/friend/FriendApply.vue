@@ -26,16 +26,16 @@
 <script lang="ts" setup>
 import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { userApplyListInfo } from '../../stores/modules/UserApplyListStore'
-import { friendInfo } from '../../stores/modules/ContactListStore'
-import { conversationInfo } from '../../stores/modules/ConversationStore'
-import { dealApplyApi } from '../../api/Apply'
+import { userApplyListInfo } from '@/stores/modules/UserApplyListStore'
+import { friendInfo } from '@/stores/modules/ContactListStore'
+import { conversationInfo } from '@/stores/modules/ConversationStore'
+import { dealApplyApi } from '@/api/Apply'
 import { ElMessage } from 'element-plus'
-import { addConversation, addFriendRelation } from '../../db/dualDB'
-import { messageInfo } from '../../stores/modules/MessageStore'
-import { Message } from '../../types/message'
-import { createSystemMessagePack, createContentJson } from '../../utils/systemMessageUtil'
-import { SystemMsgSubType, getSystemMsgText } from '../../utils/constants'
+import { addConversation, addFriendRelation } from '@/db/dualDB'
+import { messageInfo } from '@/stores/modules/MessageStore'
+import { Message } from '@/types/message'
+import { createSystemMessagePack, createContentJson } from '@/utils/systemMessageUtil'
+import { SystemMsgSubType, getSystemMsgText } from '@/utils/constants'
 
 const route = useRoute()
 const userApplyStore = userApplyListInfo()

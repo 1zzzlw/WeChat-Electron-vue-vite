@@ -36,17 +36,17 @@
 <script lang="ts" setup>
 import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { userApplyListInfo } from '../../stores/modules/UserApplyListStore'
+import { userApplyListInfo } from '@/stores/modules/UserApplyListStore'
 import { ElMessage } from 'element-plus'
-import { getGroupMemberListApi } from '../../api/Conversation'
-import { groupMemberInfo } from '../../stores/modules/GroupMemberStore'
-import { addConversation } from '../../db/dualDB'
-import { conversationInfo } from '../../stores/modules/ConversationStore'
-import { dealGroupApplyApi } from '../../api/Apply'
-import { getSystemMsgText, SystemMsgSubType } from '../../utils/constants'
-import { createContentJson, createSystemMessagePack } from '../../utils/systemMessageUtil'
-import { messageInfo } from '../../stores/modules/MessageStore'
-import { Message } from '../../types/message'
+import { getGroupMemberListApi } from '@/api/Conversation'
+import { groupMemberInfo } from '@/stores/modules/GroupMemberStore'
+import { addConversation } from '@/db/dualDB'
+import { conversationInfo } from '@/stores/modules/ConversationStore'
+import { dealGroupApplyApi } from '@/api/Apply'
+import { getSystemMsgText, SystemMsgSubType } from '@/utils/constants'
+import { createContentJson, createSystemMessagePack } from '@/utils/systemMessageUtil'
+import { messageInfo } from '@/stores/modules/MessageStore'
+import { Message } from '@/types/message'
 
 const route = useRoute()
 const UserApplyListStore = userApplyListInfo()

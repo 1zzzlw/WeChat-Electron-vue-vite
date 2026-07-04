@@ -8,8 +8,8 @@
 </template>
 
 <script setup lang="ts">
-import ChatBase from './ChatBase.vue'
-import type { Conversation } from '../../types/conversation'
+import ChatBase from '@/views/chat/ChatBase.vue'
+import type { Conversation } from '@/types/conversation'
 
 // 单聊组件：无额外逻辑，直接使用 ChatBase 的默认行为
 // - 头像：直接使用 conversation.avatar（对方头像）

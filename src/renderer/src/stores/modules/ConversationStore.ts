@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
-import { Conversation } from '../../types/conversation'
-import { checkCache } from '../../utils/cache'
+import { Conversation } from '@/types/conversation'
+import { checkCache } from '@/utils/cache'
 
 // 会话列表存储模块
 

@@ -1,22 +1,19 @@
 <template>
   <div>
-    <component :is="currentComponent" v-bind="currentProps" @open="handleRedPacketOpen" />
+    <component :is="currentComponent" v-bind="currentProps" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import ChatImageView from './ChatImageView.vue'
-import ChatVideoView from './ChatVideoView.vue'
-import ChatAudioView from './ChatAudioView.vue'
-import ChatFileView from './ChatFileView.vue'
-import ChatRedPacketView from './ChatRedPacketView.vue'
-import type { MessageContentManageProps } from '../types/message'
+import ChatImageView from '@/components/ChatImageView.vue'
+import ChatVideoView from '@/components/ChatVideoView.vue'
+import ChatAudioView from '@/components/ChatAudioView.vue'
+import ChatFileView from '@/components/ChatFileView.vue'
+import ChatRedPacketView from '@/components/ChatRedPacketView.vue'
+import type { MessageContentManageProps } from '@/types/message'
 
 const props = defineProps<MessageContentManageProps>()
-const emit = defineEmits<{
-  'red-packet-open': [data: { redPacketId: string; id: string; conversationId: string }]
-}>()
 
 const fileProps = computed(() => ({
   sendStatus: props.sendStatus || 0,
@@ -31,23 +28,12 @@ const fileProps = computed(() => ({
   isUpload: props.isUpload || false
 }))
 
-const redPacketProps = computed(() => {
-  let parsed: any = {}
-  try { parsed = JSON.parse(props.content || '{}') } catch { /* ignore */ }
-  return {
-    redPacketId: parsed.redPacketId || '',
-    amount: parsed.amount || 0,
-    status: parsed.status ?? 0,
-    grabbed: parsed.grabbed ?? false,
-    grabbedAmount: parsed.grabbedAmount ?? 0,
-    blessing: parsed.blessing || '',
-    senderName: parsed.senderName || '',
-    sendStatus: props.sendStatus || 0,
-    id: props.id,
-    conversationId: props.conversationId,
-    senderId: props.senderId
-  }
-})
+const redPacketProps = computed(() => ({
+  redPacketId: props.redPacketId || '',
+  id: props.id,
+  conversationId: props.conversationId,
+  senderId: props.senderId
+}))
 
 const currentComponent = computed(() => {
   switch (props.msgType) {
@@ -71,9 +57,6 @@ const currentProps = computed(() => {
   }
 })
 
-const handleRedPacketOpen = (data: { redPacketId: string; id: string; conversationId: string }) => {
-  emit('red-packet-open', data)
-}
 </script>
 
 <style scoped></style>

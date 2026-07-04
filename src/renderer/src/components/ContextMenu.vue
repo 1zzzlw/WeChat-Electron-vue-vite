@@ -21,7 +21,7 @@
 </template>
 <script setup>
 import { ref } from 'vue'
-import useContextMenu from '../utils/useContextMenu';
+import useContextMenu from '@/utils/useContextMenu';
 
 // 声明自定义事件名
 const emit = defineEmits(['select']);

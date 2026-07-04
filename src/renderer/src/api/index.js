@@ -6,7 +6,7 @@ export {
   deletePersonality,
   listPersonality,
   sendAIMessageApi
-} from './AIMessage'
+} from '@/api/AIMessage'
 
 export {
   sendApplyApi,
@@ -14,7 +14,7 @@ export {
   dealApplyApi,
   getGroupApplyListApi,
   dealGroupApplyApi
-} from './Apply'
+} from '@/api/Apply'
 
 export {
   getConversationListApi,
@@ -33,7 +33,7 @@ export {
   transferOwnerApi,
   batchInviteMembersApi,
   clearUnreadApi
-} from './Conversation'
+} from '@/api/Conversation'
 
 export {
   uploadImageApi as favoritesUploadImageApi,
@@ -43,14 +43,14 @@ export {
   saveFavoriteApi,
   getFavoritesAllApi,
   deleteFavoriteApi
-} from './Favorites'
+} from '@/api/Favorites'
 
 export {
   getFriendListApi,
   deleteFriendApi,
   updateFriendRemarkApi,
   updateFriendStatusApi
-} from './Friend'
+} from '@/api/Friend'
 
 export {
   sendMessageApi,
@@ -58,7 +58,7 @@ export {
   updateMessageFileSendStatusApi,
   recallMessageApi,
   clearHistoryMessageApi
-} from './Message'
+} from '@/api/Message'
 
 export {
   uploadImageApi as momentsUploadImageApi,
@@ -72,13 +72,13 @@ export {
   commentReplies,
   publishCommentReply,
   likeComment
-} from './Moments'
+} from '@/api/Moments'
 
 export {
   sendRedPacketApi,
   grabRedPacketApi,
   getRedPacketDetailApi
-} from './RedPacket'
+} from '@/api/RedPacket'
 
 export {
   mainAvatarApi,
@@ -89,4 +89,4 @@ export {
   sendPhoneCodeApi,
   searchFriendApi,
   updateUserInfoApi
-} from './User'
+} from '@/api/User'

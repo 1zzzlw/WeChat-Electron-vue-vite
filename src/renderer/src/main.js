@@ -1,11 +1,11 @@
 import { createApp } from 'vue'
-import router from './router/router'
-import App from './App.vue'
-import pinia from './stores/index'
+import router from '@/router/router'
+import App from '@/App.vue'
+import pinia from '@/stores/index'
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
-import './assets/main.css'
-import { setupGlobalErrorHandlers } from './utils/errorHandler'
+import '@/assets/main.css'
+import { setupGlobalErrorHandlers } from '@/utils/errorHandler'
 
 const app = createApp(App)
 

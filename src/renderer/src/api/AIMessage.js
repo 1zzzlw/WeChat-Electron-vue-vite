@@ -1,7 +1,7 @@
-import request from '../utils/axios/request'
-import server from '../utils/axios/request' // 你的axios实例
-import { getAccessToken } from '../utils/axios/token'
-import { refreshToken, isRefreshToken } from '../utils/axios/refreshToken'
+import request from '@/utils/axios/request'
+import server from '@/utils/axios/request' // 你的axios实例
+import { getAccessToken } from '@/utils/axios/token'
+import { refreshToken, isRefreshToken } from '@/utils/axios/refreshToken'
 
 export const loadMessage = () => request.get('/ai-message/loadMessage')
 

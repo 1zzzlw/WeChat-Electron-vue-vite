@@ -21,10 +21,10 @@
 <script lang="ts" setup>
 import { ref, watch } from 'vue';
 import { MoreFilled } from '@element-plus/icons-vue';
-import { friendInfo } from '../stores/modules/ContactListStore';
-import ChatHeaderPrivateDrawer from './ChatHeaderPrivateDrawer.vue'
-import ChatHeaderGroupDrawer from './ChatHeaderGroupDrawer.vue'
-import ChatHeaderInviteDialog from './ChatHeaderInviteDialog.vue'
+import { friendInfo } from '@/stores/modules/ContactListStore';
+import ChatHeaderPrivateDrawer from '@/components/ChatHeaderPrivateDrawer.vue'
+import ChatHeaderGroupDrawer from '@/components/ChatHeaderGroupDrawer.vue'
+import ChatHeaderInviteDialog from '@/components/ChatHeaderInviteDialog.vue'
 
 const friendStore = friendInfo()
 

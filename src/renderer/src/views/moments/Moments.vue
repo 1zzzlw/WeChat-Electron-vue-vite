@@ -173,14 +173,14 @@
 import { ChatLineRound, Check, Coin, Plus, Search, Loading } from '@element-plus/icons-vue'
 import { onMounted, ref, onUnmounted, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { listByNewApi, likedApi, listByHot, rewardApi } from '../../api/Moments'
-import { MomentsItem } from '../../types/moments'
+import { listByNewApi, likedApi, listByHot, rewardApi } from '@/api/Moments'
+import { MomentsItem } from '@/types/moments'
 import type { ScrollbarDirection } from 'element-plus'
 import { ElMessage } from 'element-plus'
 import Masonry from 'masonry-layout'
-import emitter from '../../utils/mitt';
-import { formatMomentsTime } from '../../utils/utils'
-import { useMomentsImageLazy } from '../../composables/useMomentsImageLazy'
+import emitter from '@/utils/mitt';
+import { formatMomentsTime } from '@/utils/utils'
+import { useMomentsImageLazy } from '@/composables/useMomentsImageLazy'
 
 const searchKeyword = ref('')
 const router = useRouter()

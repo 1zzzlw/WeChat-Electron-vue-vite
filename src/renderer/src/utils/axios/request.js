@@ -1,6 +1,6 @@
 import axios from 'axios'
-import { getAccessToken } from './token'
-import { refreshToken, isRefreshToken } from './refreshToken'
+import { getAccessToken } from '@/utils/axios/token'
+import { refreshToken, isRefreshToken } from '@/utils/axios/refreshToken'
 
 const baseURL = import.meta.env.DEV
   ? '/api'

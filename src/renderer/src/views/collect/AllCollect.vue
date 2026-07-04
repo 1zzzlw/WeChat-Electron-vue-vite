@@ -81,10 +81,10 @@
 import { Delete, Star, VideoCamera, Document } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { onMounted, onUnmounted, ref } from 'vue'
-import { getFavoritesAll, deleteFavorite } from '../../db/dualDB'
-import { getFavoritesAllApi, deleteFavoriteApi } from '../../api/Favorites'
-import emitter from '../../utils/mitt'
-import { formatMessageTime } from '../../utils/utils'
+import { getFavoritesAll, deleteFavorite } from '@/db/dualDB'
+import { getFavoritesAllApi, deleteFavoriteApi } from '@/api/Favorites'
+import emitter from '@/utils/mitt'
+import { formatMessageTime } from '@/utils/utils'
 
 // 收藏列表数据
 const favoritesList = ref<any[]>([])

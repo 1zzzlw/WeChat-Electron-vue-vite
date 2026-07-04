@@ -41,7 +41,7 @@
 <script setup lang="ts">
 import { reactive, watch } from 'vue'
 import { Close } from '@element-plus/icons-vue'
-import { FileBaseInfo } from '../types/fileBaseInfo'
+import { FileBaseInfo } from '@/types/fileBaseInfo'
 
 const props = defineProps({
   fileInfoList: {

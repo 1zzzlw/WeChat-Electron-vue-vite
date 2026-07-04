@@ -70,9 +70,9 @@
 import { ref, computed, onMounted, watch, nextTick } from 'vue';
 import { Select, CloseBold } from '@element-plus/icons-vue';
 import { useRoute } from 'vue-router'
-import { FileUploadStatusInfo, FileDownloadStatusInfo } from '../types/fileBaseInfo';
-import { statusMap } from '../utils/constants';
-import { fileStatusListInfo } from '../stores/modules/FileStatusInfoStore';
+import { FileUploadStatusInfo, FileDownloadStatusInfo } from '@/types/fileBaseInfo';
+import { statusMap } from '@/utils/constants';
+import { fileStatusListInfo } from '@/stores/modules/FileStatusInfoStore';
 
 const props = defineProps<{
   sendStatus: number

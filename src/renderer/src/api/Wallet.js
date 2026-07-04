@@ -1,4 +1,4 @@
-import request from '../utils/axios/request'
+import request from '@/utils/axios/request'
 
 /** 查询钱包信息（余额 + 冻结金额） */
 export const getWalletInfoApi = () =>

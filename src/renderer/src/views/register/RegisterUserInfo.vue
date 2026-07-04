@@ -49,7 +49,7 @@ import { ElMessage, FormInstance } from 'element-plus'
 import { Lock } from '@element-plus/icons-vue'
 import { onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useRegisterInfoStore } from '../../stores/modules/RegisterInfoStore'
+import { useRegisterInfoStore } from '@/stores/modules/RegisterInfoStore'
 
 const registerInfoStore = useRegisterInfoStore()
 const router = useRouter()
@@ -117,7 +117,7 @@ const nextStep = async (formRef: FormInstance | undefined) => {
 </script>
 
 <style scoped>
-@import '../../css/account.css';
+@import '@/css/account.css';
 
 :deep(.el-select__wrapper) {
   background: rgba(0, 0, 0, 0.15) !important;

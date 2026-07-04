@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
-import { Friend } from '../../types/friend'
-import { checkCache } from '../../utils/cache'
+import { Friend } from '@/types/friend'
+import { checkCache } from '@/utils/cache'
 
 // 用来临时存储联系人列表
 

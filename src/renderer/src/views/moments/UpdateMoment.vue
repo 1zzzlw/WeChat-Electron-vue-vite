@@ -120,9 +120,9 @@ import StarterKit from '@tiptap/starter-kit'
 import { EditorContent, useEditor } from '@tiptap/vue-3'
 import { ElMessage } from 'element-plus'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
-import { updateMomentApi, uploadImageApi } from '../../api/Moments'
-import WindowControls from '../../components/WindowControls.vue'
-import emitter from '../../utils/mitt'
+import { updateMomentApi, uploadImageApi } from '@/api/Moments'
+import WindowControls from '@/components/WindowControls.vue'
+import emitter from '@/utils/mitt'
 
 const fileInput = ref<HTMLInputElement | null>(null)
 const showLinkDialog = ref(false)

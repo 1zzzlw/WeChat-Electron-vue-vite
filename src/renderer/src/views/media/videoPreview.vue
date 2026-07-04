@@ -12,7 +12,7 @@
     </div>
 </template>
 <script lang="ts" setup>
-import WindowControls from '../../components/WindowControls.vue'
+import WindowControls from '@/components/WindowControls.vue'
 import DPlayer from 'dplayer';
 import { ElMessage } from 'element-plus';
 import { onMounted, ref } from 'vue';

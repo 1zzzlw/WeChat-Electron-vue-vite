@@ -11,7 +11,7 @@
 </template>
 
 <script setup>
-import '../assets/iconfont/iconfont.css'
+import '@/assets/iconfont/iconfont.css'
 import { ref } from 'vue'
 
 let isTop = ref(false)

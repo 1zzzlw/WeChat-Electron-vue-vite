@@ -1,6 +1,6 @@
 import { createPinia } from "pinia";
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate';
-import { shareStorePlugin } from "./plugins/shareStorePlugin"
+import { shareStorePlugin } from "@/stores/plugins/shareStorePlugin"
 
 const pinia = createPinia()
 

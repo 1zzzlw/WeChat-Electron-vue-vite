@@ -48,8 +48,8 @@ import { ElMessage, FormInstance, FormRules } from 'element-plus'
 import { User, Lock } from '@element-plus/icons-vue'
 import { onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { loginApi, verifyCodeApi } from '../../api/User'
-import WindowControls from '../../components/WindowControls.vue'
+import { loginApi, verifyCodeApi } from '@/api/User'
+import WindowControls from '@/components/WindowControls.vue'
 
 onMounted(() => {
   refreshVerifyCode()
@@ -141,7 +141,7 @@ const Register = () => {
 </script>
 
 <style scoped>
-@import '../../css/account.css';
+@import '@/css/account.css';
 
 
 

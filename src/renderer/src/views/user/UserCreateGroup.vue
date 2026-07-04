@@ -41,11 +41,11 @@
 <script lang="ts" setup>
 import { ElMessage } from 'element-plus'
 import { onMounted, reactive, ref } from 'vue'
-import { sendGroupApplyApi } from '../../api/Conversation'
-import WindowControls from '../../components/WindowControls.vue'
-import { addConversation, getFriendList } from '../../db/dualDB'
-import { conversationInfo } from '../../stores/modules/ConversationStore'
-import { Conversation } from '../../types/conversation'
+import { sendGroupApplyApi } from '@/api/Conversation'
+import WindowControls from '@/components/WindowControls.vue'
+import { addConversation, getFriendList } from '@/db/dualDB'
+import { conversationInfo } from '@/stores/modules/ConversationStore'
+import { Conversation } from '@/types/conversation'
 
 const count = ref(0)
 const friendList = reactive<any>({ list: [] })

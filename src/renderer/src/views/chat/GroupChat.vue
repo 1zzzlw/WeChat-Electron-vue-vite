@@ -10,9 +10,9 @@
 </template>
 
 <script setup lang="ts">
-import ChatBase from './ChatBase.vue'
-import { groupMemberInfo } from '../../stores/modules/GroupMemberStore'
-import type { Conversation } from '../../types/conversation'
+import ChatBase from '@/views/chat/ChatBase.vue'
+import { groupMemberInfo } from '@/stores/modules/GroupMemberStore'
+import type { Conversation } from '@/types/conversation'
 
 const props = defineProps<{
   conversation: Conversation

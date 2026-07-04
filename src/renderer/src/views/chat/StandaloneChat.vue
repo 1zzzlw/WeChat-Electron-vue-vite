@@ -16,13 +16,13 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
-import WindowControls from '../../components/WindowControls.vue'
-import PrivateChat from './PrivateChat.vue'
-import GroupChat from './GroupChat.vue'
-import { type Conversation, initConversation } from '../../types/conversation'
-import emitter from '../../utils/mitt'
-import { registerWsHandlers } from '../../handlers/wsHandlers'
-import { registerFileTransferHandlers } from '../../handlers/fileTransferHandlers'
+import WindowControls from '@/components/WindowControls.vue'
+import PrivateChat from '@/views/chat/PrivateChat.vue'
+import GroupChat from '@/views/chat/GroupChat.vue'
+import { type Conversation, initConversation } from '@/types/conversation'
+import emitter from '@/utils/mitt'
+import { registerWsHandlers } from '@/handlers/wsHandlers'
+import { registerFileTransferHandlers } from '@/handlers/fileTransferHandlers'
 
 const userId = ref<string | number>('')
 const avatarUrl = ref('')

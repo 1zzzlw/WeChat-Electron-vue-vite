@@ -31,8 +31,7 @@
                   </div>
                   <div> {{ message.content }} </div>
                 </div>
-                <MessageContentManage v-else v-bind="message" :isUpload="true"
-                  @red-packet-open="handleRedPacketOpenFromCard" />
+                <MessageContentManage v-else v-bind="message" :isUpload="true" />
                 <div class="icon send-load" v-if="message.sendStatus === 0">
                   <el-icon>
                     <Loading />
@@ -69,8 +68,7 @@
                     </div>
                     <div> {{ message.content }} </div>
                   </div>
-                  <MessageContentManage v-else v-bind="message" :isUpload="false"
-                    @red-packet-open="handleRedPacketOpenFromCard" />
+                  <MessageContentManage v-else v-bind="message" :isUpload="false" />
                 </ContextMenu>
               </div>
             </div>
@@ -118,47 +116,40 @@
   <!-- 发红包对话框 -->
   <SendRedPacket v-model:visible="showRedPacketDialog" @send="handleSendRedPacket" />
 
-  <!-- 开红包弹窗 -->
-  <OpenRedPacket v-if="openRedPacketData" :visible="!!openRedPacketData" :redPacketId="openRedPacketData.redPacketId"
-    :messageId="openRedPacketData.messageId" :conversationId="openRedPacketData.conversationId"
-    :senderName="openRedPacketData.senderName" :blessing="openRedPacketData.blessing"
-    @update:visible="openRedPacketData = null"
-    @opened="handleRedPacketOpened" />
 </template>
 
 <script setup lang="ts">
 import { computed, nextTick, ref, watch, onUnmounted, toRaw } from 'vue'
 import { useRoute } from 'vue-router'
-import emojis from '../../emoji/emoji'
-import { sendMessageApi, recallMessageApi } from '../../api/Message'
-import { saveFavoriteApi } from '../../api/Favorites'
-import { messageInfo } from '../../stores/modules/MessageStore'
+import emojis from '@/emoji/emoji'
+import { sendMessageApi, recallMessageApi } from '@/api/Message'
+import { saveFavoriteApi } from '@/api/Favorites'
+import { messageInfo } from '@/stores/modules/MessageStore'
 import dayjs from 'dayjs'
-import { Conversation, initConversation } from '../../types/conversation'
-import { FileBaseInfo, FileUploadStatusInfo } from '../../types/fileBaseInfo'
-import { statusMap } from '../../utils/constants'
-import { conversationInfo } from '../../stores/modules/ConversationStore'
-import { friendInfo } from '../../stores/modules/ContactListStore'
-import { fileStatusListInfo } from '../../stores/modules/FileStatusInfoStore'
+import { Conversation, initConversation } from '@/types/conversation'
+import { FileBaseInfo, FileUploadStatusInfo } from '@/types/fileBaseInfo'
+import { statusMap } from '@/utils/constants'
+import { conversationInfo } from '@/stores/modules/ConversationStore'
+import { friendInfo } from '@/stores/modules/ContactListStore'
+import { fileStatusListInfo } from '@/stores/modules/FileStatusInfoStore'
 import { Eleme, Folder, Scissor, VideoCamera, Close, Loading, WarningFilled, Money } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { groupMemberInfo } from '../../stores/modules/GroupMemberStore'
-import { getGroupMemberListApi } from '../../api/Conversation'
-import MessageContentManage from '../../components/MessageContentManage.vue'
-import FilePreviewView from '../../components/FilePreviewView.vue'
-import ChatHeader from '../../components/ChatHeader.vue'
-import { getMessageList, saveSentMessage, saveLoadMessage, updateConversation, updateMessage, addFavorites, deleteMessage } from '../../db/dualDB'
-import { Message } from '../../types/message'
+import { groupMemberInfo } from '@/stores/modules/GroupMemberStore'
+import { getGroupMemberListApi } from '@/api/Conversation'
+import MessageContentManage from '@/components/MessageContentManage.vue'
+import FilePreviewView from '@/components/FilePreviewView.vue'
+import ChatHeader from '@/components/ChatHeader.vue'
+import { getMessageList, saveSentMessage, saveLoadMessage, updateConversation, updateMessage, addFavorites, deleteMessage } from '@/db/dualDB'
+import { Message } from '@/types/message'
 import { Snowflake } from '@theinternetfolks/snowflake'
-import ContextMenu from '../../components/ContextMenu.vue'
-import ChatMessageTime from '../../components/ChatMessageTime.vue'
-import ChatMessageSystem from '../../components/ChatMessageSystem.vue'
-import { createSystemMessagePack, createContentJson } from '../../utils/systemMessageUtil'
-import { SystemMsgSubType, getSystemMsgText } from '../../utils/constants'
-import { useChatScroll } from '../../composables/useChatScroll'
-import SendRedPacket from '../../components/SendRedPacket.vue'
-import OpenRedPacket from '../../components/OpenRedPacket.vue'
-import { sendRedPacketApi } from '../../api/RedPacket'
+import ContextMenu from '@/components/ContextMenu.vue'
+import ChatMessageTime from '@/components/ChatMessageTime.vue'
+import ChatMessageSystem from '@/components/ChatMessageSystem.vue'
+import { createSystemMessagePack, createContentJson } from '@/utils/systemMessageUtil'
+import { SystemMsgSubType, getSystemMsgText } from '@/utils/constants'
+import { useChatScroll } from '@/composables/useChatScroll'
+import SendRedPacket from '@/components/SendRedPacket.vue'
+import { sendRedPacketApi } from '@/api/RedPacket'
 
 // ==================== Props ====================
 const props = withDefaults(defineProps<{
@@ -204,13 +195,6 @@ const scrollbarRef = ref()
 let fileInfoList = ref<FileBaseInfo[]>([])
 const quoteMessage = ref<Message | null>(null)
 const showRedPacketDialog = ref(false)
-const openRedPacketData = ref<{
-  redPacketId: string
-  messageId: string
-  conversationId: string
-  senderName: string
-  blessing: string
-} | null>(null)
 
 // ==================== 计算属性 ====================
 const effectiveConvId = computed(() => {
@@ -244,9 +228,19 @@ const handleSendRedPacket = async (data: { amount: number; count: number; blessi
   const isPrivate = props.conversation.type === 0
   const receiverId = props.conversation.targetId || ''
 
+  // 1. 预先生成消息ID（雪花ID），用于双向关联：
+  //    - message.red_packet_id → red_packet.id
+  //    - red_packet.message_id → message.id
+  const messageId = String(Snowflake.generate())
+
+  // 2. 创建消息包（先准备好，拿到 redPacketId 后再发送）
+  const messagePack = createMessagePack(receiverId, convId, 6, '[红包]', null)
+  messagePack.id = messageId  // 覆盖 createMessagePack 内部生成的ID
+
   try {
-    // 先调后端创建红包，拿到真实 redPacketId
+    // 3. 调后端创建红包，传入 messageId
     const res = await sendRedPacketApi({
+      messageId: messageId,
       conversationId: convId,
       receiverId: receiverId,
       totalAmount: (data.amount / 100).toFixed(2),  // 分 -> 元
@@ -254,21 +248,9 @@ const handleSendRedPacket = async (data: { amount: number; count: number; blessi
       type: data.type ?? 0,
       greeting: data.blessing
     })
-    const redPacketId = String(res.data?.id || '')
-
-    // 获取当前用户名
-    const senderName = await (window as any).userInfoApi.storeGetUserInfo('username')
-
-    const content = JSON.stringify({
-      redPacketId,
-      amount: data.amount,
-      count: data.count,
-      status: 0,
-      senderName: senderName || '',
-      blessing: data.blessing
-    })
-
-    const messagePack = createMessagePack(receiverId, convId, 6, content, null)
+    // axios拦截器已处理ID字符串化，直接使用
+    const redPacketId = res.data?.id || res.id || ''
+    messagePack.redPacketId = String(redPacketId)
 
     if (!isPrivate) {
       messagePack.receiverIds = (
@@ -278,48 +260,12 @@ const handleSendRedPacket = async (data: { amount: number; count: number; blessi
       ) as string[]
     }
 
+    // 4. 发送消息（content='[红包]', redPacketId=红包ID）
     messageStore.sendMessage(messagePack, convId, messagePack.receiverIds || [])
     updateConversationInfo(messagePack)
     nextTick(() => scrollToBottom())
   } catch (e) {
     ElMessage.error('发红包失败，请检查余额')
-  }
-}
-
-const handleRedPacketOpened = (data: { redPacketId: string; amount: number; messageId: string }) => {
-  // 更新本地消息内容中的红包状态（已领取），避免再次点击
-  const convId = effectiveConvId.value
-  const messages = messageStore.messageMap[convId] || []
-  const msg = messages.find(m => m.id === data.messageId)
-  if (msg) {
-    try {
-      const parsed = JSON.parse(msg.content || '{}')
-      parsed.grabbed = true
-      parsed.grabbedAmount = data.amount
-      msg.content = JSON.stringify(parsed)
-    } catch { /* ignore */ }
-  }
-}
-
-const handleRedPacketOpenFromCard = (data: { redPacketId: string; id: string; conversationId: string }) => {
-  // 从消息中解析发送者名称
-  const messages = messageStore.messageMap[data.conversationId] || []
-  const msg = messages.find(m => m.id === data.id)
-  let senderName = ''
-  let blessing = ''
-  if (msg) {
-    try {
-      const parsed = JSON.parse(msg.content || '{}')
-      senderName = parsed.senderName || ''
-      blessing = parsed.blessing || ''
-    } catch { /* ignore */ }
-  }
-  openRedPacketData.value = {
-    redPacketId: data.redPacketId,
-    messageId: data.id,
-    conversationId: data.conversationId,
-    senderName,
-    blessing
   }
 }
 
@@ -506,6 +452,7 @@ const getMessageSnapshot = (msg: Message): string => {
   if (msg.msgType === 2) return '[图片]'
   if (msg.msgType === 3) return '[视频]'
   if (msg.msgType === 4) return `[文件] ${msg.fileName || ''}`
+  if (msg.msgType === 6) return '[红包]'
   return msg.content?.substring(0, 60) || '[消息]'
 }
 

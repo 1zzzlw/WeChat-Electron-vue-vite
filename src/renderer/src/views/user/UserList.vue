@@ -66,12 +66,12 @@
 <script lang="ts" setup>
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { getApplyListApi, getGroupApplyListApi } from '../../api/Apply'
+import { getApplyListApi, getGroupApplyListApi } from '@/api/Apply'
 import { CollapseModelValue } from 'element-plus'
-import { userApplyListInfo } from '../../stores/modules/UserApplyListStore'
-import { friendInfo } from '../../stores/modules/ContactListStore'
-import { conversationInfo } from '../../stores/modules/ConversationStore'
-import AutocompleteSearch from '../../components/AutocompleteSearch.vue'
+import { userApplyListInfo } from '@/stores/modules/UserApplyListStore'
+import { friendInfo } from '@/stores/modules/ContactListStore'
+import { conversationInfo } from '@/stores/modules/ConversationStore'
+import AutocompleteSearch from '@/components/AutocompleteSearch.vue'
 
 const userId = ref()
 const userApplyStore = userApplyListInfo()
@@ -179,7 +179,7 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-@import "../../css/layout.css";
+@import "@/css/layout.css";
 
 .online-status {
   color: rgba(102, 217, 102, 0.9);

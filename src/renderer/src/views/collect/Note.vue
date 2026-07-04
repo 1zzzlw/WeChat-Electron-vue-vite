@@ -20,10 +20,10 @@
 </template>
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue';
-import { getFavoritesApi } from '../../api/Favorites';
-import { addFavorites, getFavorites } from '../../db/dualDB';
-import emitter from '../../utils/mitt';
-import { formatMessageTime } from '../../utils/utils';
+import { getFavoritesApi } from '@/api/Favorites';
+import { addFavorites, getFavorites } from '@/db/dualDB';
+import emitter from '@/utils/mitt';
+import { formatMessageTime } from '@/utils/utils';
 
 const favoritesList = ref<any>([])
 

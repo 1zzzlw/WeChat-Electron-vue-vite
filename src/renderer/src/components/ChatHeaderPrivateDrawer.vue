@@ -28,14 +28,14 @@
 <script lang="ts" setup>
 import { ref, computed, watch } from 'vue';
 import { ElMessage } from 'element-plus';
-import { updateConversationTopStatus, updateConversationMuteStatus, clearHistoryMessageSync, deleteFriendSync, deleteConversationSync } from '../db/syncDB';
-import { messageInfo } from '../stores/modules/MessageStore';
-import { friendInfo } from '../stores/modules/ContactListStore';
-import { conversationInfo } from '../stores/modules/ConversationStore';
+import { updateConversationTopStatus, updateConversationMuteStatus, clearHistoryMessageSync, deleteFriendSync, deleteConversationSync } from '@/db/syncDB';
+import { messageInfo } from '@/stores/modules/MessageStore';
+import { friendInfo } from '@/stores/modules/ContactListStore';
+import { conversationInfo } from '@/stores/modules/ConversationStore';
 import { useRouter } from 'vue-router';
-import { createContentJson, createSystemMessagePack } from '../utils/systemMessageUtil';
-import { getSystemMsgText, SystemMsgSubType } from '../utils/constants';
-import { Message } from '../types/message';
+import { createContentJson, createSystemMessagePack } from '@/utils/systemMessageUtil';
+import { getSystemMsgText, SystemMsgSubType } from '@/utils/constants';
+import { Message } from '@/types/message';
 
 const messageStore = messageInfo()
 const friendStore = friendInfo()

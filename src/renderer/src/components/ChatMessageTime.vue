@@ -6,7 +6,7 @@
     </div>
 </template>
 <script setup lang="ts">
-import { formatMessageTime } from '../utils/utils'
+import { formatMessageTime } from '@/utils/utils'
 
 const props = defineProps({
     dataTime: String

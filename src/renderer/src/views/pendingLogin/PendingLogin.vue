@@ -18,7 +18,7 @@
 import { ElMessage } from 'element-plus'
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { PendingLoginApi } from '../../api/User'
+import { PendingLoginApi } from '@/api/User'
 
 const router = useRouter()
 const isLoading = ref(false)
@@ -53,7 +53,7 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-@import '../../css/account.css';
+@import '@/css/account.css';
 
 .pending-login-top {
   text-align: center;

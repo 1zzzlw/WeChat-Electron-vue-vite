@@ -1,4 +1,4 @@
-import type { statusMap } from '../utils/constants'
+import type { statusMap } from '@/utils/constants'
 
 // 从statusMap里提取状态类型
 export type UploadStatus = typeof statusMap[keyof typeof statusMap]['value'];

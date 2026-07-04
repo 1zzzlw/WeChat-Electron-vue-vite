@@ -6,7 +6,7 @@
 </template>
 
 <script setup lang="ts">
-import { getVideoUrlList } from '../db/dualDB'
+import { getVideoUrlList } from '@/db/dualDB'
 
 const openVideo = async () => {
   const videoUrlList = await getVideoUrlList();

@@ -26,8 +26,8 @@ import { Plus } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { registerApi } from '../../api/User'
-import { useRegisterInfoStore } from '../../stores/modules/RegisterInfoStore'
+import { registerApi } from '@/api/User'
+import { useRegisterInfoStore } from '@/stores/modules/RegisterInfoStore'
 
 interface UserInfo {
   username: string
@@ -126,7 +126,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-@import '../../css/account.css';
+@import '@/css/account.css';
 
 .title {
   text-align: center;

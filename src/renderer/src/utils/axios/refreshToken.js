@@ -1,5 +1,5 @@
-import request from './request'
-import { getRefreshToken } from './token'
+import request from '@/utils/axios/request'
+import { getRefreshToken } from '@/utils/axios/token'
 
 // 刷新token的promise，避免重复刷新token
 let promise

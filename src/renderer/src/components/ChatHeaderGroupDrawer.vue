@@ -85,17 +85,17 @@
 import { ref, computed, watch } from 'vue';
 import { Edit, Plus, ArrowRight, More, Bell, Delete, SwitchButton } from '@element-plus/icons-vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { updateConversationTopStatus, updateConversationMuteStatus, deleteConversationSync } from '../db/syncDB';
-import { messageInfo } from '../stores/modules/MessageStore';
-import { groupMemberInfo } from '../stores/modules/GroupMemberStore';
-import { conversationInfo } from '../stores/modules/ConversationStore';
-import ContextMenu from './ContextMenu.vue'
-import GroupMemberItem from './GroupMemberItem.vue'
+import { updateConversationTopStatus, updateConversationMuteStatus, deleteConversationSync } from '@/db/syncDB';
+import { messageInfo } from '@/stores/modules/MessageStore';
+import { groupMemberInfo } from '@/stores/modules/GroupMemberStore';
+import { conversationInfo } from '@/stores/modules/ConversationStore';
+import ContextMenu from '@/components/ContextMenu.vue'
+import GroupMemberItem from '@/components/GroupMemberItem.vue'
 import { useRouter } from 'vue-router';
-import { createContentJson, createSystemMessagePack } from '../utils/systemMessageUtil';
-import { getSystemMsgText, SystemMsgSubType } from '../utils/constants';
-import { Message } from '../types/message';
-import { GroupNumberExitApi, dissolveGroupApi, kickMemberApi, setAdminApi, muteMemberApi, transferOwnerApi, updateGroupInfoApi } from '../api/Conversation';
+import { createContentJson, createSystemMessagePack } from '@/utils/systemMessageUtil';
+import { getSystemMsgText, SystemMsgSubType } from '@/utils/constants';
+import { Message } from '@/types/message';
+import { GroupNumberExitApi, dissolveGroupApi, kickMemberApi, setAdminApi, muteMemberApi, transferOwnerApi, updateGroupInfoApi } from '@/api/Conversation';
 
 const messageStore = messageInfo()
 const groupMemberStore = groupMemberInfo()

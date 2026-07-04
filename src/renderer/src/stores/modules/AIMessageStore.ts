@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { AIMessage } from '../../types/aiMessage'
+import { AIMessage } from '@/types/aiMessage'
 
 export const aiMessageInfo = defineStore('aiMessageInfo', {
     state: () => {

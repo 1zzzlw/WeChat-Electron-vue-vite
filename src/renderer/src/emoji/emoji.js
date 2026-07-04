@@ -1,4 +1,4 @@
-import emojiText from '../emoji/emojiText.json'
+import emojiText from '@/emoji/emojiText.json'
 
 const emojis = emojiText
 

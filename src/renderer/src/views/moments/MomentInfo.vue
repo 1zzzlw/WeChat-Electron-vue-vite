@@ -171,11 +171,11 @@
 <script lang="ts" setup>
 import { ChatLineRound, Check, Coin, Expand, Fold, Plus } from '@element-plus/icons-vue'
 import { computed, onMounted, ref } from 'vue'
-import WindowControls from '../../components/WindowControls.vue'
-import { momentDetail, publishComment, comments, commentReplies, publishCommentReply, likeComment } from '../../api/Moments'
-import { MomentsItem } from '../../types/moments'
+import WindowControls from '@/components/WindowControls.vue'
+import { momentDetail, publishComment, comments, commentReplies, publishCommentReply, likeComment } from '@/api/Moments'
+import { MomentsItem } from '@/types/moments'
 import { ElMessage } from 'element-plus'
-import { formatMomentsTime } from '../../utils/utils'
+import { formatMomentsTime } from '@/utils/utils'
 
 const isSidebarCollapsed = ref(false)
 const contentMainRef = ref<HTMLElement | null>(null)

@@ -1,4 +1,4 @@
-import request from '../utils/axios/request'
+import request from '@/utils/axios/request'
 
 /** 发送红包 */
 export const sendRedPacketApi = (data) =>

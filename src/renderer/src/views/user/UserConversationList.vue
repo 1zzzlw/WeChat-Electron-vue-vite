@@ -65,19 +65,19 @@
 <script lang="ts" setup>
 import { ref, onMounted, computed, toRaw } from 'vue'
 import { useRouter } from 'vue-router'
-import { conversationInfo } from '../../stores/modules/ConversationStore'
+import { conversationInfo } from '@/stores/modules/ConversationStore'
 import { Plus } from '@element-plus/icons-vue'
-import { Conversation } from '../../types/conversation'
-import AutocompleteSearch from '../../components/AutocompleteSearch.vue'
-import UnreadCounts from '../../components/UnreadCounts.vue'
-import ContextMenu from '../../components/ContextMenu.vue';
-import { getConversationList, updateConversation } from '../../db/dualDB'
-import { formatMessageTime } from '../../utils/utils'
-import { updateConversationTopStatus, updateConversationMuteStatus } from '../../db/syncDB'
-import { clearUnreadApi } from '../../api/Conversation'
-import { Friend } from '../../types/friend'
-import { getFriendList } from '../../db/dualDB'
-import { friendInfo } from '../../stores/modules/ContactListStore'
+import { Conversation } from '@/types/conversation'
+import AutocompleteSearch from '@/components/AutocompleteSearch.vue'
+import UnreadCounts from '@/components/UnreadCounts.vue'
+import ContextMenu from '@/components/ContextMenu.vue';
+import { getConversationList, updateConversation } from '@/db/dualDB'
+import { formatMessageTime } from '@/utils/utils'
+import { updateConversationTopStatus, updateConversationMuteStatus } from '@/db/syncDB'
+import { clearUnreadApi } from '@/api/Conversation'
+import { Friend } from '@/types/friend'
+import { getFriendList } from '@/db/dualDB'
+import { friendInfo } from '@/stores/modules/ContactListStore'
 
 const router = useRouter()
 const active = ref<string | undefined>('')
@@ -249,7 +249,7 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-@import "../../css/layout.css";
+@import "@/css/layout.css";
 
 .mid-message {
   flex: 1;

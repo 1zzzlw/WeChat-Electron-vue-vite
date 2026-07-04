@@ -122,10 +122,10 @@ import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
 import StarterKit from '@tiptap/starter-kit';
 import { ElMessage } from 'element-plus';
-import { uploadImageApi } from '../../api/Favorites';
-import WindowControls from '../../components/WindowControls.vue';
-import { insertNewNote, updateOldNote } from '../../db/syncDB';
-import emitter from '../../utils/mitt';
+import { uploadImageApi } from '@/api/Favorites';
+import WindowControls from '@/components/WindowControls.vue';
+import { insertNewNote, updateOldNote } from '@/db/syncDB';
+import emitter from '@/utils/mitt';
 
 const pendingImages = ref<any>([])
 const showLinkDialog = ref(false)

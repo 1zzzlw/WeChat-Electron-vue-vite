@@ -54,9 +54,9 @@ import { ElMessage, FormInstance, FormRules } from 'element-plus'
 import { User, Phone } from '@element-plus/icons-vue'
 import { onMounted, onUnmounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { sendPhoneCodeApi } from '../../api/User'
-import WindowControls from '../../components/WindowControls.vue'
-import { useRegisterInfoStore } from '../../stores/modules/RegisterInfoStore'
+import { sendPhoneCodeApi } from '@/api/User'
+import WindowControls from '@/components/WindowControls.vue'
+import { useRegisterInfoStore } from '@/stores/modules/RegisterInfoStore'
 
 const registerInfoStore = useRegisterInfoStore()
 const router = useRouter()
@@ -181,7 +181,7 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-@import '../../css/account.css';
+@import '@/css/account.css';
 
 :deep(.el-input-group__append) {
   /* 适配注册页的红粉色系，更柔和不刺眼 */

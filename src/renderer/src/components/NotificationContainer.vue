@@ -10,7 +10,7 @@
 
 <script setup>
 import { ref, markRaw } from 'vue'
-import emitter from '../utils/mitt'
+import emitter from '@/utils/mitt'
 
 const notifications = ref([])
 let id = 0

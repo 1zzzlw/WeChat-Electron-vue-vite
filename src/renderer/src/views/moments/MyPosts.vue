@@ -96,7 +96,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Loading, Edit, Delete } from '@element-plus/icons-vue'
-import { listMyMomentsApi, deleteMomentApi } from '../../api/Moments'
+import { listMyMomentsApi, deleteMomentApi } from '@/api/Moments'
 import dayjs from 'dayjs'
 
 const router = useRouter()

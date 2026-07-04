@@ -1,4 +1,4 @@
-import { pullMessageListApi } from "../api/Message"
+import { pullMessageListApi } from "@/api/Message"
 
 /**
  * 从本地获取会话列表，本地会话列表已经是全量数据，不需要从服务端拉取，本地没有服务端就没有

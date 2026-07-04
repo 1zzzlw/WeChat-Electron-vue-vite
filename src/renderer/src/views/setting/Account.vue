@@ -56,7 +56,7 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import { updateUserInfoApi } from '../../api/User'
+import { updateUserInfoApi } from '@/api/User'
 
 const avatarUrl = ref('')
 const imagePath = ref(new URL('/wallpaper/1.jpg', import.meta.url).href)

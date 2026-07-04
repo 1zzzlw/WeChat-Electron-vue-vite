@@ -39,8 +39,8 @@
 </template>
 
 <script setup lang="ts">
-import '../../assets/iconfont/iconfont.css'
-import WindowControls from '../../components/WindowControls.vue'
+import '@/assets/iconfont/iconfont.css'
+import WindowControls from '@/components/WindowControls.vue'
 </script>
 
 <style scoped>

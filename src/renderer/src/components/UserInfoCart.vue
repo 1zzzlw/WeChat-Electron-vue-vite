@@ -54,10 +54,10 @@
 <script setup lang="ts">
 import { onMounted, ref, computed } from 'vue'
 import { Male, Female, Iphone } from '@element-plus/icons-vue'
-import { friendInfo } from '../stores/modules/ContactListStore'
-import { conversationInfo } from '../stores/modules/ConversationStore'
-import '../assets/iconfont/iconfont.css'
-import { getNodeCount } from '../db/dualDB'
+import { friendInfo } from '@/stores/modules/ContactListStore'
+import { conversationInfo } from '@/stores/modules/ConversationStore'
+import '@/assets/iconfont/iconfont.css'
+import { getNodeCount } from '@/db/dualDB'
 
 const friendInfoStore = friendInfo()
 const conversationStore = conversationInfo()

@@ -49,9 +49,9 @@
 import { Search } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { reactive, ref, watch } from 'vue'
-import { sendApplyApi } from '../../api/Apply'
-import { searchFriendApi } from '../../api/User'
-import WindowControls from '../../components/WindowControls.vue'
+import { sendApplyApi } from '@/api/Apply'
+import { searchFriendApi } from '@/api/User'
+import WindowControls from '@/components/WindowControls.vue'
 
 const applyMessage = ref('')
 const searchInput = ref('')

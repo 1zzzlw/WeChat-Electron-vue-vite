@@ -1,4 +1,4 @@
-import request from '../utils/axios/request'
+import request from '@/utils/axios/request'
 
 export const uploadImageApi = (data) => request.post('/favorites/uploadImage', data)
 

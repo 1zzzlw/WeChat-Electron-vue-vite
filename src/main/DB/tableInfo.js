@@ -26,7 +26,8 @@ const init_table = [
     remote_url        TEXT DEFAULT NULL,                   -- 服务端 MinIO 地址
     preview_base64    TEXT DEFAULT NULL,                   -- 图片和视频的预览图
     download_status   INTEGER DEFAULT 0,                   -- 下载状态：0=未下载，1=已下载
-    receive_time      TEXT DEFAULT NULL                    -- 接收时间
+    receive_time      TEXT DEFAULT NULL,                  -- 接收时间
+    red_packet_id     TEXT DEFAULT NULL                   -- 关联红包ID（msg_type=6时使用，使用TEXT避免精度丢失）
   );
   `,
   // 设备登录记录表

@@ -26,10 +26,10 @@
 <script lang="ts" setup>
 import { ref, computed, watch } from 'vue';
 import { ElMessage, ElCheckbox, ElButton, ElDialog } from 'element-plus';
-import { friendInfo } from '../stores/modules/ContactListStore';
-import { groupMemberInfo } from '../stores/modules/GroupMemberStore';
-import { batchInviteMembersApi, getGroupMemberListApi } from '../api/Conversation';
-import { getFriendList } from '../db/dualDB';
+import { friendInfo } from '@/stores/modules/ContactListStore';
+import { groupMemberInfo } from '@/stores/modules/GroupMemberStore';
+import { batchInviteMembersApi, getGroupMemberListApi } from '@/api/Conversation';
+import { getFriendList } from '@/db/dualDB';
 
 const friendStore = friendInfo()
 const groupMemberStore = groupMemberInfo()

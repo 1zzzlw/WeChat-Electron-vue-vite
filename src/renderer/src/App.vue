@@ -6,12 +6,12 @@
 
 <script setup lang="ts">
 import { onMounted, onUnmounted } from 'vue'
-import { registerWsHandlers } from './handlers/wsHandlers'
-import { registerFileTransferHandlers } from './handlers/fileTransferHandlers'
-import { initWallpaper, registerWallpaperHandlers } from './handlers/wallpaperHandlers'
+import { registerWsHandlers } from '@/handlers/wsHandlers'
+import { registerFileTransferHandlers } from '@/handlers/fileTransferHandlers'
+import { initWallpaper, registerWallpaperHandlers } from '@/handlers/wallpaperHandlers'
 
-let audio = null
-let removeSoundListener = null
+let audio: any = null
+let removeSoundListener: any = null
 
 onMounted(async () => {
   // 壁纸初始化

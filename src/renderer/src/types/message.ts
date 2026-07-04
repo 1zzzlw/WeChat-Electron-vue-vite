@@ -23,6 +23,8 @@ export interface Message {
     previewBase64?: string | null
     downloadStatus?: number
     receiveTime?: string
+    /** 关联红包ID，msg_type=6 时使用（使用字符串避免精度丢失） */
+    redPacketId?: string
 }
 
 export interface MessageContentManageProps extends Message {

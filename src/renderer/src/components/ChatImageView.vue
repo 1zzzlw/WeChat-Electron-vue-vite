@@ -11,7 +11,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { getImageUrlList } from '../db/dualDB'
+import { getImageUrlList } from '@/db/dualDB'
 
 const loading = ref()
 

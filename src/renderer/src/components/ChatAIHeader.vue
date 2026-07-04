@@ -85,11 +85,11 @@
 <script lang="ts" setup>
 import { ref, watch, computed } from 'vue';
 import { MoreFilled, Plus } from '@element-plus/icons-vue';
-import { deletePersonality, switchPersonality, updatePersonality, createPersonality, listPersonality } from '../api/AIMessage'
-import { Personality } from '../types/personality'
-import { aiPersonalityInfo } from '../stores/modules/PersonalityStore'
-import { conversationInfo } from '../stores/modules/ConversationStore';
-import { updateConversation } from '../db/dualDB'
+import { deletePersonality, switchPersonality, updatePersonality, createPersonality, listPersonality } from '@/api/AIMessage'
+import { Personality } from '@/types/personality'
+import { aiPersonalityInfo } from '@/stores/modules/PersonalityStore'
+import { conversationInfo } from '@/stores/modules/ConversationStore';
+import { updateConversation } from '@/db/dualDB'
 import { ElMessage } from 'element-plus';
 
 // 抽屉状态

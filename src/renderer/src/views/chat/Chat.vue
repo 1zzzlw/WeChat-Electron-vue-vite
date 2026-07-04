@@ -10,10 +10,10 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import PrivateChat from './PrivateChat.vue'
-import GroupChat from './GroupChat.vue'
-import { initConversation, type Conversation } from '../../types/conversation'
-import { conversationInfo } from '../../stores/modules/ConversationStore'
+import PrivateChat from '@/views/chat/PrivateChat.vue'
+import GroupChat from '@/views/chat/GroupChat.vue'
+import { initConversation, type Conversation } from '@/types/conversation'
+import { conversationInfo } from '@/stores/modules/ConversationStore'
 
 const route = useRoute()
 const conversationStore = conversationInfo()

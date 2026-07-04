@@ -1,16 +1,16 @@
-export type { AIMessage } from './aiMessage'
+export type { AIMessage } from '@/types/aiMessage'
 
-export type { userApplyInfo, groupApplyInfo } from './applyInfo'
+export type { userApplyInfo, groupApplyInfo } from '@/types/applyInfo'
 
-export type { Conversation } from './conversation'
-export { initConversation } from './conversation'
+export type { Conversation } from '@/types/conversation'
+export { initConversation } from '@/types/conversation'
 
-export type { UploadStatus, FileBaseInfo, FileUploadStatusInfo, FileDownloadStatusInfo } from './fileBaseInfo'
+export type { UploadStatus, FileBaseInfo, FileUploadStatusInfo, FileDownloadStatusInfo } from '@/types/fileBaseInfo'
 
-export type { Friend } from './friend'
+export type { Friend } from '@/types/friend'
 
-export type { Message, MessageContentManageProps } from './message'
+export type { Message, MessageContentManageProps } from '@/types/message'
 
-export type { MomentsItem, Comment, Reply, Like } from './moments'
+export type { MomentsItem, Comment, Reply, Like } from '@/types/moments'
 
-export type { Personality } from './personality'
+export type { Personality } from '@/types/personality'
