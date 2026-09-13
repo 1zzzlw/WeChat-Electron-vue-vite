@@ -147,13 +147,17 @@ const router = createRouter({
               path: '/chat',
               name: 'chat',
               component: () => import('../views/chat/Chat.vue')
-            },
-            {
-              path: '/aiChat',
-              name: 'aiChat',
-              component: () => import('../views/chat/Ai-chat.vue')
             }
           ]
+        },
+        {
+          path: '/aiWorkspace',
+          name: 'aiWorkspace',
+          component: () => import('../views/chat/Ai-chat.vue')
+        },
+        {
+          path: '/aiChat',
+          redirect: '/aiWorkspace'
         },
         {
           path: '/collectList',

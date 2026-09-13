@@ -2,7 +2,7 @@ export interface AIMessage {
     id?: string
     userId: string
     role: string
-    msgType: number
+    messageType: number
     content: string
     imageUrl?: string
     personalityId?: number

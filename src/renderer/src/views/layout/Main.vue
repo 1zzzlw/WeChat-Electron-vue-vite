@@ -21,6 +21,11 @@
             <UserFilled />
           </el-icon>
         </router-link>
+        <router-link tag="div" to="/aiWorkspace" class="left-icon" title="AI 工作台">
+          <el-icon size="30">
+            <MagicStick />
+          </el-icon>
+        </router-link>
         <router-link tag="div" to="/collectList" class="left-icon">
           <el-icon size="30">
             <Star />
@@ -51,7 +56,7 @@
 
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue'
-import { ChatRound, UserFilled, Star, MoreFilled, Wallet } from '@element-plus/icons-vue'
+import { ChatRound, UserFilled, Star, MoreFilled, Wallet, MagicStick } from '@element-plus/icons-vue'
 import WindowControls from '@/components/WindowControls.vue'
 import UserOnlineStatus from '@/components/UserOnlineStatus.vue'
 import UserInfoCart from '@/components/UserInfoCart.vue'
@@ -153,8 +158,25 @@ onMounted(async () => {
   text-shadow: 0 0 8px rgba(66, 153, 225, 0.4);
 }
 
+.left-icon.router-link-active {
+  color: #43f3ff;
+  text-shadow: 0 0 10px rgba(67, 243, 255, 0.45);
+}
+
 .main-count-right {
   flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+:global(.window-controls) {
+  color: rgba(240, 244, 250, 0.76);
+}
+
+:global(.window-controls .iconfont:hover) {
+  color: #43f3ff;
+  text-shadow: 0 0 8px rgba(67, 243, 255, 0.35);
 }
 
 /* 核心动画优化 - 更优雅的缓动+分层过渡 */

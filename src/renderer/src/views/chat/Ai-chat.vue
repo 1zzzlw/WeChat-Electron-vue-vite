@@ -1,445 +1,2675 @@
 <template>
-    <div class="chat-count">
-        <ChatAIHeader :conversation="conversation" />
-        <div class="chat-content">
-            <el-scrollbar ref="scrollbarRef" @scroll="handleScroll" noresize style="height: 100%; width: 100%">
-                <div class="chat-message" v-for="message in aiMessageArr" :key="message.id">
-                    <div v-if="message.role === 'user'">
-                        <div class="chat-list-right">
-                            <img :src="avatarUrl" class="list-image" />
-                            <div v-if="message.msgType === 1" class="chat-bubble right-bubble">
-                                <div> {{ message.content }} </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div v-else>
-                        <div class="chat-list-left">
-                            <div v-if="conversation.avatar !== null">
-                                <img :src="conversation.avatar" class="list-image" />
-                            </div>
-                            <div v-else class="iconfont icon-ai-chat list-image" />
-                            <div class="msg">
-                                <div class="left-name">{{ conversation.remark || conversation.name }}</div>
-                                <ContextMenu :menu="[
-                                    { label: '复制' },
-                                    { divider: true },
-                                    { label: '收藏' },
-                                    { label: '引用' },
-                                    { divider: true },
-                                    { label: '删除' },
-                                ]" @select="(item: any) => handleChoice(item, message.id)">
-                                    <div v-if="message.msgType === 1" class="chat-bubble left-bubble">
-                                        <div> {{ message.content }} </div>
-                                    </div>
-                                </ContextMenu>
-                            </div>
-                        </div>
-                    </div>
+  <div class="agent-workbench">
+    <aside :class="['agent-sidebar', { 'is-collapsed': isSidebarCollapsed }]">
+      <div class="sidebar-brand">
+        <div class="brand-mark">
+          <el-icon>
+            <MagicStick />
+          </el-icon>
+        </div>
+        <div class="brand-copy">
+          <strong>IM Agent</strong>
+          <span>智能工作台</span>
+        </div>
+        <button class="sidebar-collapse" type="button" :aria-label="isSidebarCollapsed ? '展开会话列表' : '收起会话列表'"
+          :title="isSidebarCollapsed ? '展开会话列表' : '收起会话列表'" @click="handleToggleSidebar">
+          <el-icon>
+            <ArrowLeft />
+          </el-icon>
+        </button>
+      </div>
+
+      <button class="new-task-button" type="button" @click="handleCreateTask">
+        <span class="button-leading">
+          <el-icon>
+            <EditPen />
+          </el-icon>
+          <span>新建任务</span>
+        </span>
+        <kbd>Ctrl K</kbd>
+      </button>
+
+      <nav class="sidebar-nav" aria-label="AI 工作台导航">
+        <div :class="['sidebar-search', { 'is-open': isSearchOpen }]">
+          <button class="sidebar-nav-item" type="button" @click="handleSearch">
+            <el-icon>
+              <Search />
+            </el-icon>
+            <span v-if="!isSearchOpen">搜索会话</span>
+          </button>
+          <input v-if="isSearchOpen" ref="searchInputRef" v-model="searchQuery" type="text" placeholder="搜索会话"
+            aria-label="搜索会话" />
+          <button v-if="isSearchOpen" class="search-close" type="button" aria-label="关闭搜索" @click="closeSearch">
+            <el-icon>
+              <Close />
+            </el-icon>
+          </button>
+        </div>
+        <button class="sidebar-nav-item" type="button" @click="handleOpenWorkspace">
+          <el-icon>
+            <FolderOpened />
+          </el-icon>
+          <span>工作区</span>
+        </button>
+      </nav>
+
+      <div class="history-panel">
+        <section v-for="(group, groupIndex) in conversationGroups" :key="group.key"
+          :class="['history-group', { 'history-heading-spaced': groupIndex > 0 }]">
+          <div class="history-heading">
+            <span>{{ group.label }}</span>
+            <AgentDropdown v-if="group.showMenu" placement="bottom-end" :items="historyMenuItems" :min-width="176"
+              aria-label="会话历史设置" @select="handleHistoryCommand">
+              <template #trigger>
+                <el-icon>
+                  <MoreFilled />
+                </el-icon>
+              </template>
+            </AgentDropdown>
+          </div>
+
+          <div v-for="conversation in group.items" :key="conversation.id" class="history-item-row">
+            <button :class="['history-item', { 'is-active': activeConversationId === conversation.id }]" type="button"
+              @click="handleSelectConversation(conversation)">
+              <span class="history-item-title">{{ conversation.title }}</span>
+              <span class="history-item-meta">{{ formatRelativeTime(conversation.updatedAt) }}</span>
+            </button>
+            <AgentDropdown class="conversation-more" placement="bottom-end" :items="conversationMenuItems"
+              :min-width="150" aria-label="会话操作"
+              @select="(command: string) => handleConversationCommand(command, conversation)">
+              <template #trigger>
+                <el-icon>
+                  <MoreFilled />
+                </el-icon>
+              </template>
+            </AgentDropdown>
+          </div>
+        </section>
+        <p v-if="visibleConversationCount === 0" class="history-empty">没有匹配的会话</p>
+      </div>
+
+      <div class="sidebar-footer">
+        <button class="account-entry" type="button" @click="handleAccount">
+          <span class="account-avatar">IM</span>
+          <span class="account-copy">
+            <strong>本地工作区</strong>
+            <small>Agent 服务已就绪</small>
+          </span>
+          <span class="status-dot" aria-hidden="true"></span>
+        </button>
+      </div>
+    </aside>
+
+    <section class="workspace-panel">
+      <header class="workspace-header">
+        <div class="workspace-title">
+          <span class="workspace-eyebrow">AGENT WORKSPACE</span>
+          <div class="workspace-name-row">
+            <h1>{{ activeConversation?.title || '新任务' }}</h1>
+            <span class="draft-badge">{{ activeConversation ? '对话' : '草稿' }}</span>
+          </div>
+        </div>
+
+        <div class="header-status">
+          <span class="status-dot"></span>
+          <span>{{ isGenerating ? 'Agent 正在响应' : 'Agent 就绪' }}</span>
+        </div>
+      </header>
+
+      <main class="workspace-content">
+        <div v-if="messages.length > 0" ref="messageThreadRef" class="message-thread">
+          <article v-for="message in messages" :key="message.id" :class="['agent-message', `is-${message.role}`]">
+            <div class="message-avatar">
+              <span v-if="message.role === 'user'">你</span>
+              <el-icon v-else>
+                <MagicStick />
+              </el-icon>
+            </div>
+
+            <div class="message-body">
+              <div class="message-heading">
+                <strong>{{ message.role === 'user' ? '你' : 'IM Agent' }}</strong>
+                <span>{{ formatMessageTime(message.createdAt) }}</span>
+              </div>
+              <details v-if="message.reasoningContent" class="message-reasoning"
+                :open="message.status === 'streaming'">
+                <summary>{{ message.status === 'streaming' ? '正在思考' : '思考过程' }}</summary>
+                <p>{{ message.reasoningContent }}</p>
+              </details>
+              <p class="message-content">{{ message.content }}</p>
+
+              <div v-if="message.toolSteps?.length" class="tool-step-list">
+                <div v-for="step in message.toolSteps" :key="step.id" class="tool-step">
+                  <span :class="['tool-step-status', `is-${step.status}`]"></span>
+                  <span>{{ step.title }}</span>
+                  <small>{{ step.statusLabel }}</small>
                 </div>
-            </el-scrollbar>
+              </div>
+
+              <span v-if="message.status === 'streaming'" class="streaming-cursor"></span>
+            </div>
+          </article>
         </div>
-        <div class="chat-tool">
-            <el-button class="iconfont icon-tupian" square @click="selectImage"></el-button>
+
+        <div v-else class="welcome-panel">
+          <div class="agent-orb" aria-hidden="true">
+            <div class="orb-glow"></div>
+            <el-icon>
+              <MagicStick />
+            </el-icon>
+          </div>
+
+          <p class="welcome-kicker">IM AGENT</p>
+          <h2>今天想构建什么？</h2>
+          <p class="welcome-description">
+            描述目标，Agent 将结合会话上下文与工作区内容，为你分析、规划并完成任务。
+          </p>
+
+          <div class="suggestion-grid">
+            <button v-for="suggestion in suggestions" :key="suggestion.id" class="suggestion-card" type="button"
+              @click="handleSelectSuggestion(suggestion)">
+              <span class="suggestion-icon">
+                <el-icon>
+                  <component :is="suggestion.icon" />
+                </el-icon>
+              </span>
+              <span class="suggestion-copy">
+                <strong>{{ suggestion.title }}</strong>
+                <small>{{ suggestion.description }}</small>
+              </span>
+              <el-icon class="suggestion-arrow">
+                <ArrowRight />
+              </el-icon>
+            </button>
+          </div>
         </div>
-        <form class="chat-input">
-            <el-input v-model="message" type="textarea" :rows="4" resize="none" placeholder="请输入消息" spellcheck="false"
-                clearable @keydown.enter="handleEnterMessage" />
-        </form>
-        <div class="sendButton">
-            <el-button type="primary" @click="sendMessage">发送</el-button>
+
+        <div class="composer-area">
+          <div class="composer-shell" @dragover.prevent @drop.prevent="handleFileDrop">
+            <div v-if="attachments.length > 0" class="attachment-list">
+              <div v-for="attachment in attachments" :key="attachment.id" class="attachment-chip">
+                <el-icon>
+                  <Document />
+                </el-icon>
+                <span>{{ attachment.name }}</span>
+                <small>{{ formatFileSize(attachment.size) }}</small>
+                <button type="button" :aria-label="`移除${attachment.name}`" @click="removeAttachment(attachment.id)">
+                  <el-icon>
+                    <Close />
+                  </el-icon>
+                </button>
+              </div>
+            </div>
+
+            <textarea ref="composerInputRef" v-model="draft" rows="3" aria-label="任务描述"
+              placeholder="向 IM Agent 描述一个任务，或输入 / 查看可用能力" @keydown.enter.exact.prevent="handleSubmit"></textarea>
+
+            <div class="composer-footer">
+              <div class="composer-tools">
+                <AgentDropdown class="composer-tool" placement="top-start" :items="attachmentMenuItems" :min-width="210"
+                  aria-label="添加附件" @select="handleAttachmentCommand">
+                  <template #trigger>
+                    <el-icon>
+                      <Paperclip />
+                    </el-icon>
+                  </template>
+                </AgentDropdown>
+                <button class="composer-selector workspace-selector" type="button" @click="handleSelectWorkspace">
+                  <el-icon>
+                    <FolderOpened />
+                  </el-icon>
+                  <span>{{ selectedWorkspace }}</span>
+                </button>
+                <AgentDropdown class="composer-selector" placement="top-start" compact :items="branchMenuItems"
+                  :min-width="190" :selected-value="selectedBranch" aria-label="选择分支" @select="handleSelectBranch">
+                  <template #trigger>
+                    <span class="branch-dot"></span>
+                    <span>{{ selectedBranch }}</span>
+                    <el-icon>
+                      <ArrowDown />
+                    </el-icon>
+                  </template>
+                </AgentDropdown>
+              </div>
+
+              <div class="composer-actions">
+                <AgentDropdown class="composer-selector" placement="top-end" compact :items="modeMenuItems"
+                  :min-width="230" :selected-value="selectedMode" aria-label="选择工作模式" @select="handleSelectMode">
+                  <template #trigger>
+                    <span class="mode-indicator"></span>
+                    <span>{{ selectedMode }}</span>
+                    <el-icon>
+                      <ArrowDown />
+                    </el-icon>
+                  </template>
+                </AgentDropdown>
+                <label class="think-mode-switch" title="控制本次对话是否启用思考模式">
+                  <span>思考</span>
+                  <el-switch v-model="enableThink" size="small" aria-label="启用思考模式" />
+                </label>
+                <button class="model-add-button" type="button" aria-label="添加大模型" title="添加大模型"
+                  @click="handleOpenModelConfig">
+                  <el-icon>
+                    <Plus />
+                  </el-icon>
+                </button>
+                <button class="model-edit-button" type="button" aria-label="编辑当前模型" title="编辑当前模型"
+                  :disabled="selectedModelOption.isDefault" @click="handleEditSelectedModel">
+                  <el-icon>
+                    <EditPen />
+                  </el-icon>
+                </button>
+                <button class="model-delete-button" type="button" aria-label="删除当前模型" title="删除当前模型"
+                  :disabled="selectedModelOption.isDefault" @click="handleDeleteSelectedModel">
+                  <el-icon>
+                    <Delete />
+                  </el-icon>
+                </button>
+                <AgentDropdown class="composer-selector" placement="top-end" compact :items="modelMenuItems"
+                  :min-width="250" :selected-value="selectedModel" aria-label="选择模型" @select="handleSelectModel">
+                  <template #trigger>
+                    <span>{{ selectedModelName }}</span>
+                    <el-icon>
+                      <ArrowDown />
+                    </el-icon>
+                  </template>
+                </AgentDropdown>
+                <button :class="['send-button', { 'is-stop': isGenerating }]" type="button"
+                  :disabled="!canSubmit && !isGenerating" :aria-label="isGenerating ? '停止生成' : '发送任务'"
+                  @click="isGenerating ? handleStopGenerating() : handleSubmit()">
+                  <el-icon>
+                    <VideoPause v-if="isGenerating" />
+                    <ArrowUp v-else />
+                  </el-icon>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="composer-meta">
+            <span><kbd>Enter</kbd> 发送</span>
+            <span><kbd>Shift Enter</kbd> 换行</span>
+            <span class="local-label">
+              <span class="status-dot"></span>
+              本地模式
+            </span>
+          </div>
         </div>
-    </div>
+      </main>
+    </section>
+
+    <AgentModelConfigDialog v-model="modelConfigDialogVisible" :config="editingModelConfig"
+      @submit="handleModelConfigSubmit" />
+
+    <AgentActionDialog v-model="actionDialog.visible" :mode="actionDialog.action === 'rename' ? 'prompt' : 'confirm'"
+      :title="actionDialog.title" :description="actionDialog.description" :confirm-text="actionDialog.confirmText"
+      :initial-value="actionDialog.initialValue" :placeholder="actionDialog.placeholder"
+      :danger="actionDialog.action !== 'rename'" @confirm="handleActionDialogConfirm" />
+
+    <el-dialog v-model="workspaceDialogVisible" title="选择工作区" width="clamp(540px, 54vw, 820px)" append-to-body
+      class="agent-workspace-dialog">
+      <p class="dialog-description">选择 Agent 本次任务可以读取的项目范围。</p>
+      <div class="workspace-grid">
+        <button v-for="workspace in workspaceOptions" :key="workspace.id"
+          :class="['workspace-card', { 'is-selected': selectedWorkspace === workspace.name }]" type="button"
+          @click="handleChooseWorkspace(workspace)">
+          <span class="workspace-card-icon"><el-icon>
+              <FolderOpened />
+            </el-icon></span>
+          <span class="workspace-card-copy">
+            <strong>{{ workspace.name }}</strong>
+            <small>{{ workspace.path }}</small>
+          </span>
+          <span v-if="selectedWorkspace === workspace.name" class="workspace-selected">当前</span>
+        </button>
+      </div>
+      <template #footer>
+        <button class="dialog-secondary-button" type="button" @click="handleAddWorkspace">
+          <el-icon>
+            <Plus />
+          </el-icon>
+          添加本地工作区
+        </button>
+        <button class="dialog-primary-button" type="button" @click="workspaceDialogVisible = false">完成</button>
+      </template>
+    </el-dialog>
+
+    <el-dialog v-model="settingsDialogVisible" title="Agent 工作台设置" width="clamp(520px, 46vw, 700px)" append-to-body
+      class="agent-workspace-dialog">
+      <div class="settings-list">
+        <label class="settings-row">
+          <span>
+            <strong>自动创建会话</strong>
+            <small>发送第一条消息时自动加入历史列表</small>
+          </span>
+          <el-switch v-model="mockSettings.autoCreateConversation" />
+        </label>
+        <label class="settings-row">
+          <span>
+            <strong>保存输入草稿</strong>
+            <small>刷新页面后继续编辑未发送内容</small>
+          </span>
+          <el-switch v-model="mockSettings.persistDraft" />
+        </label>
+        <label class="settings-row">
+          <span>
+            <strong>展示工具执行步骤</strong>
+            <small>在回答中显示 Agent 的模拟处理过程</small>
+          </span>
+          <el-switch v-model="mockSettings.showToolSteps" />
+        </label>
+      </div>
+      <template #footer>
+        <button class="dialog-primary-button" type="button" @click="settingsDialogVisible = false">完成</button>
+      </template>
+    </el-dialog>
+  </div>
 </template>
+
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
-import { useRoute } from 'vue-router'
-import { Conversation, initConversation } from '@/types/conversation'
-import ChatAIHeader from '@/components/ChatAIHeader.vue'
-import ContextMenu from '@/components/ContextMenu.vue'
-import { loadMessage, sendAIMessageApi } from '@/api/AIMessage'
-import { AIMessage } from '@/types/aiMessage'
-import { aiMessageInfo } from '@/stores/modules/AIMessageStore'
-import { conversationInfo } from '@/stores/modules/ConversationStore';
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { storeToRefs } from 'pinia'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import AgentActionDialog from '@/components/AgentActionDialog.vue'
+import AgentDropdown from '@/components/AgentDropdown.vue'
+import AgentModelConfigDialog from '@/components/AgentModelConfigDialog.vue'
+import {
+  DEFAULT_MODEL,
+  type AgentModelConfig,
+  type AgentConversation,
+  type AgentConversationGroup,
+  type AgentDropdownItem,
+  type AgentMode,
+  type AgentModeOption,
+  type AgentSimulationState,
+  type AgentSuggestion,
+  type AgentWorkspaceOption,
+  type ConversationActionDialogState,
+  type ModelOption,
+  type SavedAIConversation,
+  type SavedAIMessage,
+  type SavedModelConfig,
+  type SendAIMessageRequest
+} from '@/types'
+import {
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+  ArrowUp,
+  Close,
+  Delete,
+  Document,
+  EditPen,
+  FolderOpened,
+  MagicStick,
+  Monitor,
+  MoreFilled,
+  Operation,
+  Paperclip,
+  Plus,
+  Search,
+  VideoPause
+} from '@element-plus/icons-vue'
+import { useAgentWorkspaceStore } from '@/stores/modules/AgentWorkspaceStore'
+import {
+  addModelConfig,
+  deleteAIConversation,
+  deleteModelConfig,
+  getAIConversations,
+  getModelConfigs,
+  loadMessage,
+  renameAIConversation,
+  sendAIMessageApi,
+  switchModelConfig,
+  updateModelConfig
+} from '@/api/AIMessage'
 
-const avatarUrl = ref('')
-const message = ref('')
-const userId = ref()
-const convId = ref()
-const aiMessageInfoStore = aiMessageInfo()
-const conversationStore = conversationInfo()
-const route = useRoute()
-const scrollbarRef = ref()
+const agentWorkspaceStore = useAgentWorkspaceStore()
+const {
+  activeConversationId,
+  activeConversation,
+  activeMessages: messages,
+  attachments,
+  draft,
+  isGenerating,
+  selectedBranch,
+  selectedMode,
+  selectedModel,
+  selectedWorkspace
+} = storeToRefs(agentWorkspaceStore)
 
-let conversation = ref<Conversation>(initConversation())
+const searchInputRef = ref<HTMLInputElement | null>(null)
+const composerInputRef = ref<HTMLTextAreaElement | null>(null)
+const messageThreadRef = ref<HTMLElement | null>(null)
+const searchQuery = ref('')
+const isSearchOpen = ref(false)
+const isSidebarCollapsed = ref(false)
+const workspaceDialogVisible = ref(false)
+const settingsDialogVisible = ref(false)
+const modelConfigDialogVisible = ref(false)
+const enableThink = ref(false)
+const editingModelId = ref<string | null>(null)
+const editingModelConfig = ref<AgentModelConfig | null>(null)
+const activeRequestController = ref<AbortController | null>(null)
+const activeSimulation = ref<AgentSimulationState | null>(null)
+const actionDialog = reactive<ConversationActionDialogState>({
+  visible: false,
+  action: 'rename',
+  conversationId: '',
+  title: '',
+  description: '',
+  confirmText: '',
+  initialValue: '',
+  placeholder: ''
+})
 
-const selectImage = async () => {
-    // 获取文件的信息
-    const file = await (window as any).uploadFileApi.selectFile('uploadFile')
-    if (!file) {
-        return
-    }
+const mockSettings = reactive({
+  autoCreateConversation: true,
+  persistDraft: true,
+  showToolSteps: true
+})
+
+const workspaceOptions = ref<AgentWorkspaceOption[]>([
+  { id: 'workspace-agent', name: 'imAgent', path: 'E:\\AgentProject\\imAgent' },
+  { id: 'workspace-web', name: 'WeChat Electron', path: 'E:\\ElectronProject\\WeChat-Electron-vue-vite' },
+  { id: 'workspace-server', name: 'IM SpringCloud', path: 'E:\\JavaProject\\IM-SpringCloud' }
+])
+
+const branchOptions = ['main', 'develop', 'feature/agent-ui']
+
+const modelOptions = ref<ModelOption[]>([{ ...DEFAULT_MODEL }])
+
+const modeOptions: AgentModeOption[] = [
+  { value: 'Agent', label: 'Agent', description: '规划并执行多步骤任务' },
+  { value: '提问', label: '提问', description: '只分析和回答，不执行操作' },
+  { value: '规划', label: '规划', description: '仅生成可审查的实施计划' }
+]
+
+const historyMenuItems: AgentDropdownItem[] = [
+  { value: 'refresh', label: '刷新消息', icon: Operation }
+]
+
+const conversationMenuItems: AgentDropdownItem[] = [
+  { value: 'rename', label: '重命名', icon: EditPen },
+  { value: 'delete', label: '删除会话', icon: Close, danger: true, divided: true }
+]
+
+const attachmentMenuItems: AgentDropdownItem[] = [
+  { value: 'file', label: '选择文件', description: '添加单个文件到本次任务', icon: Document },
+  { value: 'folder', label: '添加文件夹', description: '选择 Agent 可以读取的目录', icon: FolderOpened },
+  { value: 'snippet', label: '粘贴代码片段', description: '在输入框中插入代码块', icon: EditPen, divided: true }
+]
+
+const branchMenuItems: AgentDropdownItem[] = branchOptions.map((branch) => ({
+  value: branch,
+  label: branch,
+  description: branch === 'main' ? '默认分支' : '切换本次任务上下文'
+}))
+
+const modeMenuItems: AgentDropdownItem[] = modeOptions.map((mode) => ({
+  value: mode.value,
+  label: mode.label,
+  description: mode.description
+}))
+
+const modelMenuItems = computed<AgentDropdownItem[]>(() =>
+  modelOptions.value.map((model) => ({
+    value: model.id,
+    label: model.modelName,
+    description: `${model.providerName} · ${model.description}`
+  }))
+)
+
+const selectedModelOption = computed(() => {
+  return modelOptions.value.find((model) => model.id === selectedModel.value) ?? DEFAULT_MODEL
+})
+
+const selectedModelName = computed(() => selectedModelOption.value.modelName)
+
+const normalizeSelectedModel = () => {
+  const selectedExists = modelOptions.value.some((model) => model.id === selectedModel.value)
+  if (!selectedExists) agentWorkspaceStore.setModel(DEFAULT_MODEL.id)
 }
 
-const sendMessage = () => {
-    if (message.value === '') {
-        return
-    }
-    const AIMessagePack = createAIMessagePack(message.value, 'user', 1)
-    sendApi(AIMessagePack)
+const getCurrentUserId = async () => {
+  const userId = await (window as any).userInfoApi.storeGetUserInfo('userId')
+  if (!userId) throw new Error('未获取到当前用户信息')
+  return String(userId)
 }
 
-const sendApi = async (AIMessagePack: AIMessage) => {
-    // 添加消息到缓存中
-    aiMessageInfoStore.addMessageMap(convId.value, AIMessagePack)
+const getStoredModelApiKey = async (userId: string, configId: number) => {
+  const apiKey = await (window as any).userInfoApi.storeGetUserInfo('modelApiKey', {
+    userId,
+    configId
+  })
+  return typeof apiKey === 'string' ? apiKey : ''
+}
 
-    message.value = ''
+const setStoredModelApiKey = (userId: string, configId: number, apiKey: string) => {
+  return (window as any).userInfoApi.storeSetUserInfo('modelApiKey', {
+    userId,
+    configId,
+    apiKey
+  })
+}
 
-    // 滚动到最底部
-    await nextTick()
-    scrollToBottom()
+const toModelOption = (config: SavedModelConfig): ModelOption => ({
+  id: String(config.id),
+  configName: config.configName,
+  providerName: config.providerName,
+  modelName: config.modelName,
+  description: config.configName,
+  baseUrl: config.baseUrl || undefined,
+  modelTemperature: config.modelTemperature,
+  isActive: config.isActive
+})
 
-    const response = await sendAIMessageApi(AIMessagePack)
+const loadModelConfigs = async () => {
+  try {
+    const userId = await getCurrentUserId()
+    const configs = await getModelConfigs(userId) as SavedModelConfig[]
+    const savedModels = configs.map(toModelOption)
 
-    const responsePack: AIMessage = {
-        userId: userId.value,
-        role: 'assistant',
-        msgType: 1,
-        content: '',
+    const activeModel = savedModels.find((model) => model.isActive)
+    if (activeModel) {
+      activeModel.apiKey = await getStoredModelApiKey(userId, Number(activeModel.id)) || undefined
     }
 
-    aiMessageInfoStore.addMessageMap(convId.value, responsePack)
+    modelOptions.value = [{ ...DEFAULT_MODEL }, ...savedModels]
+    agentWorkspaceStore.setModel(activeModel?.id ?? DEFAULT_MODEL.id)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : '模型配置加载失败'
+    ElMessage.error(message)
+  }
+}
 
-    // 滚动到最底部
-    await nextTick()
-    scrollToBottom()
+const parseMessageTime = (value: string) => {
+  const timestamp = new Date(value).getTime()
+  return Number.isNaN(timestamp) ? Date.now() : timestamp
+}
 
-    // 获得这个ai消息的最新索引
-    const messageIndex = aiMessageInfoStore.aiMessageMap[convId.value].length - 1
+const buildConversations = (
+  savedConversations: SavedAIConversation[],
+  savedMessages: SavedAIMessage[]
+): AgentConversation[] => {
+  const savedConversationIds = new Set(savedConversations.map((conversation) => conversation.id))
+  const conversationMap = new Map<string, AgentConversation>(
+    savedConversations.map((conversation) => [
+      conversation.id,
+      {
+        id: conversation.id,
+        title: conversation.title,
+        createdAt: parseMessageTime(conversation.createdAt),
+        updatedAt: parseMessageTime(conversation.updatedAt),
+        messages: []
+      }
+    ])
+  )
 
-    if (response.body !== null) {
-        const reader = response.body.getReader()
-        // 解码器
-        const textDecoder = new TextDecoder()
-        while (1) {
-            const { done, value } = await reader.read()
-            if (done) {
-                break
-            }
-            const text = textDecoder.decode(value, { stream: true })
-            // 处理SSE格式：可能有多行 "data:xxx\n\ndata:yyy\n\n"
-            const lines = text.split('\n')
-            for (const line of lines) {
-                if (line.startsWith('data:')) {
-                    // 去掉 "data:" 前缀并去除首位空白
-                    const chunk = line.substring(5).trim()
-                    aiMessageInfoStore.updateAIMessageContent(convId.value, messageIndex, chunk)
-                }
-            }
+  savedMessages
+    .slice()
+    .sort((left, right) => parseMessageTime(left.createdAt) - parseMessageTime(right.createdAt))
+    .forEach((message) => {
+      const createdAt = parseMessageTime(message.createdAt)
+      let conversation = conversationMap.get(message.conversationId)
+
+      if (!conversation) {
+        conversation = {
+          id: message.conversationId,
+          title: '新的对话',
+          createdAt,
+          updatedAt: createdAt,
+          messages: []
         }
+        conversationMap.set(message.conversationId, conversation)
+      }
+
+      conversation.messages.push({
+        id: message.id,
+        role: message.role,
+        content: message.content,
+        status: 'completed',
+        createdAt
+      })
+      conversation.updatedAt = Math.max(conversation.updatedAt, createdAt)
+
+      if (
+        !savedConversationIds.has(conversation.id)
+        && message.role === 'user'
+        && conversation.title === '新的对话'
+      ) {
+        conversation.title = message.content.trim().replace(/\s+/g, ' ').slice(0, 24) || '新的对话'
+      }
+    })
+
+  return Array.from(conversationMap.values())
+    .sort((left, right) => right.updatedAt - left.updatedAt)
+}
+
+const loadMessageHistory = async () => {
+  try {
+    const userId = await getCurrentUserId()
+    const [savedConversations, savedMessages] = await Promise.all([
+      getAIConversations(userId) as Promise<SavedAIConversation[]>,
+      loadMessage(userId) as Promise<SavedAIMessage[]>
+    ])
+    agentWorkspaceStore.setConversations(buildConversations(savedConversations, savedMessages))
+    void scrollToBottom()
+  } catch (error) {
+    const message = error instanceof Error ? error.message : '聊天消息加载失败'
+    ElMessage.error(message)
+  }
+}
+
+const suggestions: AgentSuggestion[] = [
+  {
+    id: 'plan-feature',
+    title: '规划一个新功能',
+    description: '先梳理需求、边界与实现步骤',
+    prompt: '帮我规划一个新功能，先梳理需求、边界和实现步骤。',
+    icon: Operation
+  },
+  {
+    id: 'understand-project',
+    title: '理解现有项目',
+    description: '扫描目录并解释关键调用链',
+    prompt: '请分析当前工作区的目录结构，并解释关键调用链。',
+    icon: Search
+  },
+  {
+    id: 'fix-problem',
+    title: '修复一个问题',
+    description: '定位原因、生成补丁并验证结果',
+    prompt: '帮我定位并修复一个问题，修改前先说明原因和计划。',
+    icon: Monitor
+  }
+]
+
+const startOfToday = () => {
+  const now = new Date()
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
+}
+
+const conversationGroups = computed<AgentConversationGroup[]>(() => {
+  const keyword = searchQuery.value.trim().toLowerCase()
+  const conversations = agentWorkspaceStore.conversations
+    .filter((conversation) => !keyword || conversation.title.toLowerCase().includes(keyword))
+    .sort((left, right) => right.updatedAt - left.updatedAt)
+  const todayStart = startOfToday()
+  const lastSevenDays = todayStart - 7 * 24 * 60 * 60 * 1000
+  const groups: AgentConversationGroup[] = [
+    {
+      key: 'today',
+      label: '今天',
+      showMenu: true,
+      items: conversations.filter((conversation) => conversation.updatedAt >= todayStart)
+    },
+    {
+      key: 'last-seven-days',
+      label: '过去 7 天',
+      items: conversations.filter(
+        (conversation) => conversation.updatedAt < todayStart && conversation.updatedAt >= lastSevenDays
+      )
+    },
+    {
+      key: 'earlier',
+      label: '更早',
+      items: conversations.filter((conversation) => conversation.updatedAt < lastSevenDays)
     }
-}
+  ]
 
-// 滚动监听
-async function handleScroll({ scrollTop }: any) {
-    if (scrollTop === 0) {
-        const lastMessageId = aiMessageArr.value.at(0)?.id
-
-        // await loadAIMessage()
-
-        // 等待 DOM 更新
-        await nextTick()
-
-        // 滚动到之前的第一条消息
-        document.querySelector('#message' + lastMessageId)?.scrollIntoView()
-    }
-}
-
-function scrollToBottom() {
-    if (scrollbarRef.value) {
-        scrollbarRef.value.setScrollTop(1000000)
-    }
-}
-
-const createAIMessagePack = (content: string, role: string, msgType: number) => {
-    const AIMessagePack: AIMessage = {
-        userId: userId.value,
-        role: role,
-        msgType: msgType,
-        content: content,
-    }
-    return AIMessagePack
-}
-
-const handleEnterMessage = (e: KeyboardEvent) => {
-    if (e.shiftKey) {
-        return
-    }
-
-    e.preventDefault()
-
-    sendMessage()
-}
-
-const handleChoice = (item: any, messageId: string | undefined) => {
-
-}
-
-const aiMessageArr = computed(() => {
-    const convId = route.query.conversationId as string
-    // 如果会话ID不存在，或消息列表未初始化，用空数组兜底
-    return aiMessageInfoStore.aiMessageMap[convId] || []
+  return groups.filter((group) => group.items.length > 0 || group.key === 'today')
 })
 
-const loadAIMessage = async () => {
-    const res = await loadMessage()
-    res.data.forEach((messagePack: AIMessage) => aiMessageInfoStore.loadMessageMap(convId.value, messagePack))
-}
-
-onMounted(async () => {
-    convId.value = route.query.conversationId as string
-    avatarUrl.value = await (window as any).userInfoApi.storeGetUserInfo('avatar')
-    userId.value = await (window as any).userInfoApi.storeGetUserInfo('userId')
-    // 加载历史消息
-    await loadAIMessage()
-
-    // 滚动到最底部
-    await nextTick()
-    scrollToBottom()
-
-    // 初始化会话信息
-    conversation.value = conversationStore.conversationMap[convId.value as string]
+const visibleConversationCount = computed(() => {
+  return conversationGroups.value.reduce((total, group) => total + group.items.length, 0)
 })
 
-onUnmounted(() => {
-    aiMessageInfoStore.clearMessageMap(convId.value)
+const canSubmit = computed(() => {
+  return draft.value.trim().length > 0 || attachments.value.length > 0
+})
+
+const formatRelativeTime = (timestamp: number) => {
+  const difference = Date.now() - timestamp
+  const minute = 60 * 1000
+  const hour = 60 * minute
+  const day = 24 * hour
+
+  if (difference < minute) return '刚刚'
+  if (difference < hour) return `${Math.floor(difference / minute)} 分钟前`
+  if (difference < day) return `${Math.floor(difference / hour)} 小时前`
+  return new Date(timestamp).toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' })
+}
+
+const formatMessageTime = (timestamp: number) => {
+  return new Date(timestamp).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+}
+
+const formatFileSize = (size: number) => {
+  if (size < 1024) return `${size} B`
+  if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`
+  return `${(size / 1024 / 1024).toFixed(1)} MB`
+}
+
+const focusComposer = async () => {
+  await nextTick()
+  composerInputRef.value?.focus()
+}
+
+const scrollToBottom = async () => {
+  await nextTick()
+  if (messageThreadRef.value) messageThreadRef.value.scrollTop = messageThreadRef.value.scrollHeight
+}
+
+const stopActiveSimulation = () => {
+  activeRequestController.value?.abort()
+  activeRequestController.value = null
+
+  if (activeSimulation.value) {
+    agentWorkspaceStore.stopGenerating(
+      activeSimulation.value.conversationId,
+      activeSimulation.value.messageId
+    )
+  }
+  activeSimulation.value = null
+}
+
+const handleCreateTask = () => {
+  stopActiveSimulation()
+  agentWorkspaceStore.createNewTask()
+  void focusComposer()
+}
+
+const handleToggleSidebar = () => {
+  isSidebarCollapsed.value = !isSidebarCollapsed.value
+  if (isSidebarCollapsed.value) closeSearch()
+}
+
+const handleSearch = async () => {
+  isSidebarCollapsed.value = false
+  isSearchOpen.value = true
+  await nextTick()
+  searchInputRef.value?.focus()
+}
+
+const closeSearch = () => {
+  searchQuery.value = ''
+  isSearchOpen.value = false
+}
+
+const handleOpenWorkspace = () => {
+  workspaceDialogVisible.value = true
+}
+
+const handleHistoryCommand = (command: string) => {
+  if (command === 'refresh') void loadMessageHistory()
+}
+
+const handleSelectConversation = (conversation: AgentConversation) => {
+  agentWorkspaceStore.selectConversation(conversation.id)
+  void scrollToBottom()
+}
+
+const handleConversationCommand = (command: string, conversation: AgentConversation) => {
+  if (command === 'rename') {
+    Object.assign(actionDialog, {
+      visible: true,
+      action: 'rename',
+      conversationId: conversation.id,
+      title: '重命名会话',
+      description: '使用一个简短、清晰的名称，方便之后快速找到这段对话。',
+      confirmText: '保存名称',
+      initialValue: conversation.title,
+      placeholder: '输入新的会话名称'
+    })
+    return
+  }
+
+  if (command === 'delete') {
+    Object.assign(actionDialog, {
+      visible: true,
+      action: 'delete',
+      conversationId: conversation.id,
+      title: '删除会话',
+      description: `“${conversation.title}”及其中的模拟消息都会被删除，此操作无法撤销。`,
+      confirmText: '删除会话',
+      initialValue: '',
+      placeholder: ''
+    })
+  }
+}
+
+const handleActionDialogConfirm = async (value: string) => {
+  try {
+    const userId = await getCurrentUserId()
+
+    if (actionDialog.action === 'rename') {
+      await renameAIConversation({
+        userId,
+        conversationId: actionDialog.conversationId,
+        title: value
+      })
+      agentWorkspaceStore.renameConversation(actionDialog.conversationId, value)
+      ElMessage.success('会话名称已更新')
+      return
+    }
+
+    if (actionDialog.action === 'delete') {
+      if (activeSimulation.value?.conversationId === actionDialog.conversationId) stopActiveSimulation()
+      await deleteAIConversation(actionDialog.conversationId, userId)
+      agentWorkspaceStore.deleteConversation(actionDialog.conversationId)
+      ElMessage.success('会话已删除')
+      return
+    }
+
+    stopActiveSimulation()
+    agentWorkspaceStore.clearConversations()
+    ElMessage.success('会话已清空')
+  } catch (error) {
+    const message = error instanceof Error ? error.message : '会话操作失败'
+    ElMessage.error(message)
+  }
+}
+
+const handleAccount = () => {
+  settingsDialogVisible.value = true
+}
+
+const handleSelectWorkspace = () => {
+  workspaceDialogVisible.value = true
+}
+
+const handleChooseWorkspace = (workspace: AgentWorkspaceOption) => {
+  agentWorkspaceStore.setWorkspace(workspace.name)
+  workspaceDialogVisible.value = false
+  ElMessage.success(`已切换到 ${workspace.name}`)
+}
+
+const handleAddWorkspace = async () => {
+  try {
+    const fileInfo = await (window as any).uploadFileApi?.selectFile('storeLocation')
+    if (!fileInfo?.localPath) return
+
+    const workspace: AgentWorkspaceOption = {
+      id: fileInfo.fileId || `workspace-${Date.now()}`,
+      name: fileInfo.fileName || '本地工作区',
+      path: fileInfo.localPath
+    }
+    if (!workspaceOptions.value.some((item) => item.path === workspace.path)) {
+      workspaceOptions.value.push(workspace)
+    }
+    handleChooseWorkspace(workspace)
+  } catch {
+    // 关闭系统选择框时保持当前工作区
+  }
+}
+
+const handleSelectBranch = (branch: string) => {
+  agentWorkspaceStore.setBranch(branch)
+}
+
+const handleSelectSuggestion = (suggestion: AgentSuggestion) => {
+  draft.value = suggestion.prompt
+  void focusComposer()
+}
+
+const addSelectedFile = async (selectionType: 'uploadFile' | 'storeLocation') => {
+  try {
+    const fileInfo = await (window as any).uploadFileApi?.selectFile(selectionType)
+    if (!fileInfo) return
+
+    agentWorkspaceStore.addAttachment({
+      id: fileInfo.fileId || `attachment-${Date.now()}`,
+      name: fileInfo.fileName || '未命名文件',
+      size: fileInfo.fileSize || 0,
+      type: fileInfo.fileType || 5,
+      localPath: fileInfo.localPath
+    })
+  } catch {
+    // 关闭系统选择框时不添加附件
+  }
+}
+
+const handleAttachmentCommand = (command: string) => {
+  if (command === 'file') void addSelectedFile('uploadFile')
+  if (command === 'folder') void addSelectedFile('storeLocation')
+  if (command === 'snippet') {
+    draft.value = `${draft.value}${draft.value ? '\n\n' : ''}\`\`\`\n在这里粘贴代码\n\`\`\``
+    void focusComposer()
+  }
+}
+
+const handleFileDrop = (event: DragEvent) => {
+  Array.from(event.dataTransfer?.files ?? []).forEach((file) => {
+    agentWorkspaceStore.addAttachment({
+      id: `drop-${file.name}-${file.size}`,
+      name: file.name,
+      size: file.size,
+      type: 5
+    })
+  })
+}
+
+const removeAttachment = (attachmentId: string) => {
+  agentWorkspaceStore.removeAttachment(attachmentId)
+}
+
+const handleSelectMode = (mode: string) => {
+  agentWorkspaceStore.setMode(mode as AgentMode)
+}
+
+const handleSelectModel = async (modelId: string) => {
+  const model = modelOptions.value.find((item) => item.id === modelId)
+  if (!model || model.id === selectedModel.value) return
+
+  try {
+    const userId = await getCurrentUserId()
+    const apiKey = model.isDefault
+      ? undefined
+      : await getStoredModelApiKey(userId, Number(model.id)) || undefined
+    await switchModelConfig({
+      userId,
+      configId: model.isDefault ? null : Number(model.id)
+    })
+    modelOptions.value.forEach((item) => {
+      if (!item.isDefault) item.apiKey = undefined
+    })
+    model.apiKey = apiKey
+    agentWorkspaceStore.setModel(model.id)
+    ElMessage.success(`已切换到 ${model.modelName}`)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : '模型切换失败'
+    ElMessage.error(message)
+  }
+}
+
+const handleOpenModelConfig = () => {
+  editingModelId.value = null
+  editingModelConfig.value = null
+  modelConfigDialogVisible.value = true
+}
+
+const handleEditSelectedModel = () => {
+  const model = selectedModelOption.value
+  if (model.isDefault) return
+
+  editingModelId.value = model.id
+  editingModelConfig.value = {
+    configName: model.configName,
+    providerName: model.providerName,
+    modelName: model.modelName,
+    baseUrl: model.baseUrl ?? '',
+    apiKey: model.apiKey ?? '',
+    modelTemperature: model.modelTemperature ?? 1
+  }
+  modelConfigDialogVisible.value = true
+}
+
+const handleModelConfigSubmit = async (config: AgentModelConfig) => {
+  const configId = editingModelId.value
+
+  try {
+    const userId = await getCurrentUserId()
+
+    if (configId !== null) {
+      await updateModelConfig({
+        userId,
+        configId: Number(configId),
+        configName: config.configName,
+        providerName: config.providerName,
+        modelName: config.modelName,
+        baseUrl: config.baseUrl || null,
+        modelTemperature: config.modelTemperature
+      })
+      await setStoredModelApiKey(userId, Number(configId), config.apiKey)
+
+      const modelIndex = modelOptions.value.findIndex((model) => model.id === configId)
+      if (modelIndex >= 0) {
+        modelOptions.value[modelIndex] = {
+          ...modelOptions.value[modelIndex],
+          configName: config.configName,
+          providerName: config.providerName,
+          modelName: config.modelName,
+          description: config.configName,
+          baseUrl: config.baseUrl || undefined,
+          apiKey: config.apiKey || undefined,
+          modelTemperature: config.modelTemperature
+        }
+      }
+
+      editingModelId.value = null
+      editingModelConfig.value = null
+      ElMessage.success('模型配置已更新')
+      return
+    }
+
+    const response = await addModelConfig({
+      userId,
+      configName: config.configName,
+      providerName: config.providerName,
+      modelName: config.modelName,
+      baseUrl: config.baseUrl || null,
+      modelTemperature: config.modelTemperature
+    }) as { configId: number }
+    await setStoredModelApiKey(userId, response.configId, config.apiKey)
+
+    const model: ModelOption = {
+      id: String(response.configId),
+      configName: config.configName,
+      providerName: config.providerName,
+      modelName: config.modelName,
+      description: config.configName,
+      baseUrl: config.baseUrl || undefined,
+      apiKey: config.apiKey || undefined,
+      modelTemperature: config.modelTemperature,
+      isActive: true
+    }
+
+    await switchModelConfig({ userId, configId: response.configId })
+    modelOptions.value.forEach((item) => {
+      if (!item.isDefault) item.apiKey = undefined
+    })
+    modelOptions.value.push(model)
+    agentWorkspaceStore.setModel(model.id)
+    ElMessage.success(`已添加并切换到 ${model.modelName}`)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : '模型添加失败'
+    ElMessage.error(message)
+  }
+}
+
+const handleDeleteSelectedModel = async () => {
+  const model = selectedModelOption.value
+  if (model.isDefault) return
+
+  try {
+    await ElMessageBox.confirm(
+      `确定删除模型配置“${model.configName}”吗？`,
+      '删除模型',
+      {
+        confirmButtonText: '删除',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+
+    const userId = await getCurrentUserId()
+    await deleteModelConfig(Number(model.id), userId)
+    await setStoredModelApiKey(userId, Number(model.id), '')
+    modelOptions.value = modelOptions.value.filter((item) => item.id !== model.id)
+    agentWorkspaceStore.setModel(DEFAULT_MODEL.id)
+    ElMessage.success('模型配置已删除')
+  } catch (error) {
+    if (error === 'cancel' || error === 'close') return
+    const message = error instanceof Error ? error.message : '模型删除失败'
+    ElMessage.error(message)
+  }
+}
+
+const handleStopGenerating = () => {
+  stopActiveSimulation()
+  ElMessage.info('已停止生成')
+}
+
+const handleSubmit = async () => {
+  if (!canSubmit.value || isGenerating.value) return
+
+  const attachmentNames = attachments.value.map((attachment) => attachment.name).join('、')
+  const content = [draft.value.trim(), attachmentNames ? `附件：${attachmentNames}` : '']
+    .filter(Boolean)
+    .join('\n')
+  const conversationId = agentWorkspaceStore.ensureConversation(content)
+  agentWorkspaceStore.addUserMessage(conversationId, content)
+  const messageId = agentWorkspaceStore.addAssistantPlaceholder(
+    conversationId,
+    mockSettings.showToolSteps
+  )
+
+  if (!messageId) return
+
+  draft.value = ''
+  agentWorkspaceStore.clearAttachments()
+  activeSimulation.value = { conversationId, messageId }
+  void scrollToBottom()
+
+  const controller = new AbortController()
+  activeRequestController.value = controller
+
+  try {
+    const userId = await getCurrentUserId()
+
+    const requestData: SendAIMessageRequest = {
+      id: messageId,
+      conversationId,
+      userId,
+      role: 'user',
+      messageType: 1,
+      content,
+      config: {
+        providerName: selectedModelOption.value.providerName,
+        modelName: selectedModelOption.value.modelName,
+        apiKey: selectedModelOption.value.apiKey,
+        baseUrl: selectedModelOption.value.baseUrl,
+        modelTemperature: selectedModelOption.value.modelTemperature ?? 1,
+        enableThink: enableThink.value,
+        configId: selectedModelOption.value.isDefault
+          ? undefined
+          : Number(selectedModelOption.value.id)
+      }
+    }
+    const responseContent = await sendAIMessageApi(
+      requestData,
+      {
+        onReasoningDelta: (delta) => {
+          if (
+            activeSimulation.value?.conversationId !== conversationId ||
+            activeSimulation.value?.messageId !== messageId
+          ) {
+            return
+          }
+
+          agentWorkspaceStore.appendAssistantReasoning(conversationId, messageId, delta)
+          void scrollToBottom()
+        },
+        onDelta: (delta) => {
+          if (
+            activeSimulation.value?.conversationId !== conversationId ||
+            activeSimulation.value?.messageId !== messageId
+          ) {
+            return
+          }
+
+          agentWorkspaceStore.appendAssistantContent(conversationId, messageId, delta)
+          void scrollToBottom()
+        },
+        onCompleted: ({ content: completedContent, reasoningContent }) => {
+          if (
+            activeSimulation.value?.conversationId !== conversationId ||
+            activeSimulation.value?.messageId !== messageId
+          ) {
+            return
+          }
+
+          agentWorkspaceStore.setAssistantContent(
+            conversationId,
+            messageId,
+            completedContent
+          )
+          agentWorkspaceStore.setAssistantReasoning(
+            conversationId,
+            messageId,
+            reasoningContent
+          )
+        },
+        onDone: () => {
+          void scrollToBottom()
+        }
+      },
+      controller.signal
+    )
+
+    if (
+      activeSimulation.value?.conversationId !== conversationId ||
+      activeSimulation.value?.messageId !== messageId
+    ) {
+      return
+    }
+
+    agentWorkspaceStore.setAssistantContent(conversationId, messageId, responseContent)
+    agentWorkspaceStore.completeAssistantMessage(conversationId, messageId)
+    void scrollToBottom()
+    activeSimulation.value = null
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') return
+
+    if (
+      activeSimulation.value?.conversationId !== conversationId ||
+      activeSimulation.value?.messageId !== messageId
+    ) {
+      return
+    }
+
+    const errorMessage = error instanceof Error ? error.message : 'AI 服务请求失败'
+    agentWorkspaceStore.failAssistantMessage(
+      conversationId,
+      messageId,
+      `请求失败：${errorMessage}`
+    )
+    ElMessage.error(errorMessage)
+    activeSimulation.value = null
+  } finally {
+    if (activeRequestController.value === controller) {
+      activeRequestController.value = null
+    }
+  }
+}
+
+const handleGlobalShortcut = (event: KeyboardEvent) => {
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+    event.preventDefault()
+    handleCreateTask()
+  }
+}
+
+onMounted(() => {
+  localStorage.removeItem('agent-workspace')
+  normalizeSelectedModel()
+  void loadModelConfigs()
+  void loadMessageHistory()
+  window.addEventListener('keydown', handleGlobalShortcut)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleGlobalShortcut)
+  stopActiveSimulation()
 })
 </script>
 
 <style scoped>
-.chat-count {
-    /* 设置宽度和高度，确保有足够空间展示居中效果 */
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    background-color: rgba(28, 38, 50, 0.4);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    -webkit-app-region: no-drag;
+.agent-workbench {
+  --agent-bg: rgba(36, 47, 61, 0.76);
+  --agent-panel: rgba(47, 59, 74, 0.74);
+  --agent-panel-soft: rgba(57, 70, 86, 0.64);
+  --agent-border: rgba(255, 255, 255, 0.11);
+  --agent-border-strong: rgba(67, 243, 255, 0.26);
+  --agent-text: rgba(247, 249, 252, 0.96);
+  --agent-muted: rgba(214, 222, 233, 0.66);
+  --agent-accent: #43f3ff;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--agent-text);
+  background:
+    radial-gradient(circle at 76% 18%, rgba(67, 243, 255, 0.12), transparent 36%),
+    linear-gradient(145deg, rgba(47, 61, 77, 0.8), var(--agent-bg));
+  -webkit-app-region: no-drag;
 }
 
-.chat-content {
-    flex: 1;
-    overflow: hidden;
+button,
+textarea {
+  font: inherit;
 }
 
-img {
-    width: 50px;
-    height: 50px;
-    border-radius: 10px;
+button {
+  color: inherit;
+  cursor: pointer;
 }
 
-.chat-list-left {
-    padding: 20px;
-    display: flex;
-    flex-direction: row;
-    gap: 10px;
+.agent-sidebar {
+  position: relative;
+  display: flex;
+  flex: 0 0 248px;
+  flex-direction: column;
+  min-width: 0;
+  padding: 18px 14px 14px;
+  background: rgba(34, 44, 56, 0.68);
+  border-right: 1px solid var(--agent-border);
+  backdrop-filter: blur(20px);
+  transition: flex-basis 0.22s ease, padding 0.22s ease;
 }
 
-.msg {
-    display: flex;
-    flex-direction: column;
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  height: 46px;
+  padding: 0 8px;
 }
 
-.left-name {
-    font-size: 14px;
-    color: #ffffff;
+.brand-mark {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  color: #071014;
+  font-size: 18px;
+  background: linear-gradient(145deg, #43f3ff, rgba(66, 153, 225, 0.92));
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(67, 243, 255, 0.16);
 }
 
-.icon-ai-chat {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 24px;
-    width: 50px;
-    height: 50px;
-    border-radius: 10px;
-    background-color: rgba(35, 45, 60, 0.7);
-    color: #409eff;
+.brand-copy,
+.account-copy,
+.suggestion-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
 }
 
-.chat-list-right {
-    padding: 20px;
-    display: flex;
-    flex-direction: row-reverse;
-    gap: 10px;
+.brand-copy strong {
+  font-size: 14px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
 }
 
-.chat-tool {
-    height: 30px;
-    display: flex;
-    align-items: center;
-    border-top: 1px solid rgba(3, 32, 120, 0.5);
-    overflow: hidden;
+.brand-copy span {
+  margin-top: 2px;
+  color: var(--agent-muted);
+  font-size: 11px;
 }
 
-.chat-tool button {
-    width: 30px;
-    height: 30px;
-    margin: 0;
-    font-size: 20px;
-    background-color: transparent;
-    border: none;
-    color: rgba(240, 240, 240, 0.8);
-    cursor: pointer;
-    transition: all 0.2s ease;
+.sidebar-collapse {
+  position: absolute;
+  top: 28px;
+  right: -11px;
+  z-index: 4;
+  display: grid;
+  width: 23px;
+  height: 23px;
+  place-items: center;
+  color: rgba(229, 235, 244, 0.68);
+  font-size: 11px;
+  background: rgba(42, 53, 67, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: color 0.18s ease, border-color 0.18s ease;
 }
 
-.chat-tool button:hover {
-    color: rgba(66, 153, 225, 0.9);
-    text-shadow: 0 0 6px rgba(66, 153, 225, 0.3);
+.sidebar-collapse:hover {
+  color: var(--agent-accent);
+  border-color: rgba(67, 243, 255, 0.32);
 }
 
-.chat-input {
-    margin: 0 auto;
-    height: 120px;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-    padding: 0 10px;
+.sidebar-collapse .el-icon {
+  transition: transform 0.22s ease;
 }
 
-.chat-input :deep(.el-textarea__inner) {
-    background-color: rgba(28, 38, 50, 1);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    color: #f0f0f0;
-    box-shadow: none;
-    border: 1px solid rgba(66, 153, 225, 0.2);
-    resize: none;
-
-    &::placeholder {
-        color: rgba(240, 240, 240, 0.5);
-    }
-
-    &::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    &::-webkit-scrollbar-thumb {
-        background: rgba(66, 153, 225, 0.3);
-        border-radius: 3px;
-    }
-
-    &::-webkit-scrollbar-thumb:hover {
-        background: rgba(66, 153, 225, 0.5);
-    }
-
-    &::-webkit-scrollbar-track {
-        background: transparent;
-    }
+.agent-sidebar.is-collapsed {
+  flex-basis: 68px;
+  padding-right: 10px;
+  padding-left: 10px;
 }
 
-.sendButton {
-    width: 100%;
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
+.agent-sidebar.is-collapsed .brand-copy,
+.agent-sidebar.is-collapsed .button-leading span,
+.agent-sidebar.is-collapsed .new-task-button kbd,
+.agent-sidebar.is-collapsed .sidebar-nav-item span,
+.agent-sidebar.is-collapsed .history-panel,
+.agent-sidebar.is-collapsed .account-copy,
+.agent-sidebar.is-collapsed .account-entry .status-dot {
+  display: none;
 }
 
-:deep(.el-button--primary) {
-    background: rgba(66, 153, 225, 0.2);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: none;
-    border-radius: 6px;
-    box-shadow:
-        0 2px 6px rgba(0, 0, 0, 0.2),
-        inset 0 1px 2px rgba(255, 255, 255, 0.08);
-    color: #f0f0f0;
-    font-size: 14px;
-    padding: 8px 24px;
-    cursor: pointer;
-    transition: all 0.2s ease;
+.agent-sidebar.is-collapsed .sidebar-brand,
+.agent-sidebar.is-collapsed .new-task-button,
+.agent-sidebar.is-collapsed .sidebar-nav-item,
+.agent-sidebar.is-collapsed .account-entry {
+  justify-content: center;
+  padding-right: 0;
+  padding-left: 0;
 }
 
-:deep(.el-button--primary:hover),
-:deep(.el-button--primary:focus) {
-    background: rgba(66, 153, 225, 0.3);
-    box-shadow:
-        0 3px 8px rgba(0, 0, 0, 0.25),
-        inset 0 1px 3px rgba(255, 255, 255, 0.1);
-    transform: translateY(-1px);
+.agent-sidebar.is-collapsed .button-leading {
+  gap: 0;
 }
 
-:deep(.el-button--primary:active) {
-    transform: translateY(0);
-    background: rgba(66, 153, 225, 0.15);
-    box-shadow:
-        0 1px 4px rgba(0, 0, 0, 0.15),
-        inset 0 1px 2px rgba(0, 0, 0, 0.1);
+.agent-sidebar.is-collapsed .sidebar-collapse .el-icon {
+  transform: rotate(180deg);
 }
 
-.el-button {
-    width: 100px;
-    margin: 0 10px 5px 0;
+.new-task-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 40px;
+  margin-top: 17px;
+  padding: 0 11px;
+  color: var(--agent-text);
+  background: rgba(66, 153, 225, 0.15);
+  border: 1px solid rgba(67, 243, 255, 0.22);
+  border-radius: 9px;
+  transition: background 0.18s ease, border-color 0.18s ease;
 }
 
-/* 聊天气泡样式 */
-.chat-bubble {
-    padding: 8px 12px;
-    border-radius: 8px;
-    max-width: 400px;
-    word-break: break-all;
-    /* 定位三角箭头 */
-    position: relative;
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
+.new-task-button:hover {
+  background: rgba(66, 153, 225, 0.23);
+  border-color: rgba(67, 243, 255, 0.36);
 }
 
-/* 左侧好友气泡 */
-.left-bubble {
-    background: rgba(45, 55, 70, 0.85);
-    color: #f0f0f0;
-    /* 左侧气泡左下角无圆角，贴合箭头 */
-    border-bottom-left-radius: 0;
-    border: 1px solid rgba(66, 153, 225, 0.1);
+.button-leading {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13px;
+  font-weight: 600;
 }
 
-/* 左侧箭头 */
-.left-bubble::before {
-    content: '';
-    position: absolute;
-    left: -8px;
-    top: 10px;
-    width: 0;
-    height: 0;
-    border-top: 8px solid transparent;
-    border-right: 8px solid rgba(45, 55, 70, 0.85);
-    border-bottom: 8px solid transparent;
+kbd {
+  padding: 2px 5px;
+  color: rgba(220, 228, 239, 0.52);
+  font-family: inherit;
+  font-size: 9px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
 }
 
-/* 右侧自己的气泡 */
-.right-bubble {
-    background: rgba(66, 153, 225, 0.35);
-    color: #ffffff;
-    border-bottom-right-radius: 0;
-    border: 1px solid rgba(66, 153, 225, 0.2);
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 12px;
+  padding-bottom: 13px;
+  border-bottom: 1px solid var(--agent-border);
 }
 
-/* 右侧箭头 */
-.right-bubble::after {
-    content: '';
-    position: absolute;
-    right: -8px;
-    top: 10px;
-    width: 0;
-    height: 0;
-    border-top: 8px solid transparent;
-    border-left: 8px solid rgba(66, 153, 225, 0.35);
-    border-bottom: 8px solid transparent;
+.sidebar-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 34px;
+  padding: 0 10px;
+  color: rgba(226, 232, 241, 0.72);
+  font-size: 12px;
+  text-align: left;
+  border-radius: 7px;
+  transition: color 0.18s ease, background 0.18s ease;
+}
+
+.sidebar-nav-item:hover {
+  color: var(--agent-text);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.sidebar-search {
+  display: flex;
+  width: 100%;
+  height: 36px;
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.sidebar-search.is-open {
+  background: rgba(255, 255, 255, 0.055);
+  border-color: rgba(111, 228, 239, 0.2);
+  box-shadow: 0 0 0 3px rgba(67, 243, 255, 0.035);
+}
+
+.sidebar-search.is-open .sidebar-nav-item {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  justify-content: center;
+  padding: 0;
+  color: rgba(111, 228, 239, 0.78);
+  background: transparent;
+}
+
+.sidebar-search input {
+  width: 0;
+  min-width: 0;
+  flex: 1;
+  padding: 0 4px;
+  color: rgba(245, 248, 252, 0.9);
+  font: inherit;
+  font-size: 11px;
+  line-height: 32px;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  user-select: text;
+}
+
+.sidebar-search input::placeholder {
+  color: rgba(202, 211, 224, 0.36);
+}
+
+.search-close {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  place-items: center;
+  margin-right: 2px;
+  color: rgba(222, 230, 240, 0.48);
+  font-size: 12px;
+  border-radius: 6px;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.search-close:hover {
+  color: rgba(247, 250, 253, 0.94);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.history-panel {
+  flex: 1;
+  min-height: 0;
+  margin-top: 13px;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.history-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 28px;
+  padding: 0 8px;
+  color: rgba(202, 211, 224, 0.42);
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.history-heading :deep(.agent-dropdown-trigger) {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  color: var(--agent-muted);
+  border-radius: 5px;
+}
+
+.history-heading :deep(.agent-dropdown-trigger:hover),
+.history-heading :deep(.agent-dropdown-trigger[aria-expanded='true']) {
+  color: var(--agent-text);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.history-heading-spaced {
+  margin-top: 12px;
+}
+
+.history-item-row {
+  position: relative;
+}
+
+.history-item {
+  position: relative;
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 3px;
+  padding: 9px 34px 9px 12px;
+  text-align: left;
+  border-radius: 8px;
+  transition: background 0.18s ease;
+}
+
+.history-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.history-item.is-active {
+  background: rgba(66, 153, 225, 0.18);
+}
+
+.history-item.is-active::before {
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  left: 0;
+  width: 2px;
+  background: var(--agent-accent);
+  border-radius: 2px;
+  content: '';
+}
+
+.history-item-title {
+  overflow: hidden;
+  color: rgba(239, 243, 249, 0.82);
+  font-size: 12px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.history-item-meta {
+  color: rgba(202, 211, 224, 0.38);
+  font-size: 9px;
+}
+
+.history-item-row :deep(.conversation-more) {
+  position: absolute;
+  top: 8px;
+  right: 5px;
+  display: grid;
+  width: 27px;
+  height: 27px;
+  place-items: center;
+  color: rgba(218, 226, 237, 0.48);
+  font-size: 12px;
+  border-radius: 6px;
+  opacity: 0;
+  transition: color 0.15s ease, background 0.15s ease, opacity 0.15s ease;
+}
+
+.history-item-row:hover :deep(.conversation-more),
+.history-item-row :deep(.conversation-more[aria-expanded='true']) {
+  opacity: 1;
+}
+
+.history-item-row :deep(.conversation-more:hover),
+.history-item-row :deep(.conversation-more[aria-expanded='true']) {
+  color: rgba(247, 250, 253, 0.94);
+  background: rgba(255, 255, 255, 0.075);
+}
+
+.history-empty {
+  padding: 22px 10px;
+  color: rgba(202, 211, 224, 0.38);
+  font-size: 10px;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.sidebar-footer {
+  padding-top: 12px;
+  border-top: 1px solid var(--agent-border);
+}
+
+.account-entry {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 7px 8px;
+  text-align: left;
+  border-radius: 8px;
+}
+
+.account-entry:hover {
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.account-avatar {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  place-items: center;
+  color: var(--agent-accent);
+  font-size: 9px;
+  font-weight: 700;
+  background: rgba(67, 243, 255, 0.08);
+  border: 1px solid rgba(67, 243, 255, 0.2);
+  border-radius: 8px;
+}
+
+.account-copy {
+  flex: 1;
+  margin-left: 9px;
+}
+
+.account-copy strong {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.account-copy small {
+  margin-top: 2px;
+  color: var(--agent-muted);
+  font-size: 9px;
+}
+
+.status-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  flex: 0 0 auto;
+  background: var(--agent-accent);
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(67, 243, 255, 0.65);
+}
+
+.workspace-panel {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.workspace-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 68px;
+  flex: 0 0 auto;
+  padding: 0 136px 0 24px;
+  background: rgba(38, 48, 61, 0.24);
+  border-bottom: 1px solid var(--agent-border);
+  -webkit-app-region: drag;
+}
+
+.workspace-title {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.workspace-eyebrow {
+  color: rgba(67, 243, 255, 0.58);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+.workspace-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.workspace-name-row h1 {
+  font-size: 16px;
+  font-weight: 620;
+}
+
+.draft-badge {
+  padding: 2px 6px;
+  color: var(--agent-muted);
+  font-size: 8px;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid var(--agent-border);
+  border-radius: 10px;
+}
+
+.header-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: rgba(221, 229, 239, 0.58);
+  font-size: 10px;
+  -webkit-app-region: no-drag;
+}
+
+.branch-dot {
+  width: 6px;
+  height: 6px;
+  background: rgba(174, 182, 193, 0.5);
+  border-radius: 50%;
+}
+
+.workspace-content {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 22px 28px 18px;
+}
+
+.message-thread {
+  width: min(700px, 100%);
+  flex: 1;
+  min-height: 0;
+  padding: 8px 8px 28px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(67, 243, 255, 0.18) transparent;
+}
+
+.agent-message {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  gap: 12px;
+  padding: 17px 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.agent-message:last-child {
+  border-bottom: none;
+}
+
+.message-avatar {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  color: var(--agent-accent);
+  font-size: 11px;
+  font-weight: 650;
+  background: rgba(67, 243, 255, 0.08);
+  border: 1px solid rgba(67, 243, 255, 0.18);
+  border-radius: 9px;
+}
+
+.agent-message.is-user .message-avatar {
+  color: rgba(245, 248, 252, 0.84);
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.message-body {
+  min-width: 0;
+  padding-top: 1px;
+}
+
+.message-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.message-heading strong {
+  font-size: 11px;
+  font-weight: 620;
+}
+
+.message-heading span {
+  color: rgba(214, 222, 233, 0.38);
+  font-size: 8px;
+}
+
+.message-reasoning {
+  margin-top: 8px;
+  overflow: hidden;
+  color: rgba(211, 220, 231, 0.6);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+}
+
+.message-reasoning summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 9px;
+  font-size: 9px;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.message-reasoning summary::before {
+  content: '›';
+  color: rgba(67, 243, 255, 0.7);
+  font-size: 13px;
+  transition: transform 0.16s ease;
+}
+
+.message-reasoning[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.message-reasoning summary::-webkit-details-marker {
+  display: none;
+}
+
+.message-reasoning p {
+  max-height: 220px;
+  margin: 0;
+  overflow: auto;
+  padding: 0 9px 9px;
+  font-size: 9px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-word;
+  user-select: text;
+}
+
+.message-content {
+  margin-top: 7px;
+  color: rgba(241, 245, 250, 0.84);
+  font-size: 11px;
+  line-height: 1.75;
+  white-space: pre-wrap;
+  word-break: break-word;
+  user-select: text;
+}
+
+.tool-step-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 11px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+}
+
+.tool-step {
+  display: grid;
+  grid-template-columns: 7px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px;
+  min-height: 22px;
+  padding: 0 4px;
+  color: rgba(226, 233, 242, 0.68);
+  font-size: 9px;
+}
+
+.tool-step small {
+  color: rgba(214, 222, 233, 0.38);
+  font-size: 8px;
+}
+
+.tool-step-status {
+  width: 6px;
+  height: 6px;
+  background: rgba(214, 222, 233, 0.28);
+  border-radius: 50%;
+}
+
+.tool-step-status.is-running {
+  background: rgba(67, 243, 255, 0.72);
+  box-shadow: 0 0 7px rgba(67, 243, 255, 0.48);
+}
+
+.tool-step-status.is-completed {
+  background: rgba(66, 153, 225, 0.86);
+}
+
+.tool-step-status.is-failed {
+  background: rgba(238, 104, 104, 0.82);
+}
+
+.streaming-cursor {
+  display: inline-block;
+  width: 5px;
+  height: 12px;
+  margin-top: 8px;
+  background: var(--agent-accent);
+  border-radius: 1px;
+  animation: cursor-blink 1s steps(2, start) infinite;
+}
+
+@keyframes cursor-blink {
+  50% {
+    opacity: 0.18;
+  }
+}
+
+.welcome-panel {
+  display: flex;
+  width: min(620px, 100%);
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-top: 8px;
+}
+
+.agent-orb {
+  position: relative;
+  display: grid;
+  width: 54px;
+  height: 54px;
+  place-items: center;
+  color: var(--agent-accent);
+  font-size: 22px;
+  background: rgba(24, 31, 41, 0.9);
+  border: 1px solid rgba(67, 243, 255, 0.22);
+  border-radius: 16px;
+  box-shadow: inset 0 0 22px rgba(66, 153, 225, 0.08), 0 10px 34px rgba(0, 0, 0, 0.26);
+}
+
+.orb-glow {
+  position: absolute;
+  inset: -16px;
+  z-index: -1;
+  background: radial-gradient(circle, rgba(67, 243, 255, 0.15), transparent 67%);
+}
+
+.welcome-kicker {
+  margin-top: 16px;
+  color: rgba(67, 243, 255, 0.52);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+}
+
+.welcome-panel h2 {
+  margin-top: 7px;
+  font-size: 25px;
+  font-weight: 560;
+  letter-spacing: -0.03em;
+}
+
+.welcome-description {
+  max-width: 500px;
+  margin-top: 9px;
+  color: var(--agent-muted);
+  font-size: 11px;
+  line-height: 1.7;
+  text-align: center;
+}
+
+.suggestion-grid {
+  display: grid;
+  width: 100%;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+  margin-top: 24px;
+}
+
+.suggestion-card {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 9px;
+  min-height: 66px;
+  padding: 10px;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid var(--agent-border);
+  border-radius: 10px;
+  transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+}
+
+.suggestion-card:hover {
+  background: rgba(66, 153, 225, 0.11);
+  border-color: rgba(67, 243, 255, 0.19);
+  transform: translateY(-1px);
+}
+
+.suggestion-icon {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  place-items: center;
+  color: rgba(67, 243, 255, 0.78);
+  background: rgba(67, 243, 255, 0.07);
+  border-radius: 8px;
+}
+
+.suggestion-copy {
+  flex: 1;
+}
+
+.suggestion-copy strong {
+  overflow: hidden;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.suggestion-copy small {
+  display: -webkit-box;
+  margin-top: 4px;
+  overflow: hidden;
+  color: rgba(202, 211, 224, 0.43);
+  font-size: 8px;
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.suggestion-arrow {
+  flex: 0 0 auto;
+  color: rgba(202, 211, 224, 0.24);
+  font-size: 11px;
+}
+
+.composer-area {
+  width: min(680px, 100%);
+  flex: 0 0 auto;
+}
+
+.composer-shell {
+  padding: 11px 12px 9px;
+  background: rgba(43, 54, 68, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.26), 0 0 0 1px rgba(66, 153, 225, 0.025);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.composer-shell:focus-within {
+  border-color: rgba(67, 243, 255, 0.25);
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.3), 0 0 0 3px rgba(66, 153, 225, 0.055);
+}
+
+.attachment-list {
+  display: flex;
+  max-height: 76px;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 7px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.attachment-chip {
+  display: flex;
+  max-width: 250px;
+  height: 30px;
+  align-items: center;
+  gap: 6px;
+  padding: 0 5px 0 8px;
+  color: rgba(232, 238, 247, 0.76);
+  font-size: 10px;
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 7px;
+}
+
+.attachment-chip>.el-icon {
+  flex: 0 0 auto;
+  color: rgba(111, 228, 239, 0.74);
+}
+
+.attachment-chip>span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.attachment-chip small {
+  flex: 0 0 auto;
+  color: rgba(202, 211, 224, 0.36);
+  font-size: 8px;
+}
+
+.attachment-chip button {
+  display: grid;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  place-items: center;
+  color: rgba(221, 228, 238, 0.4);
+  border-radius: 5px;
+}
+
+.attachment-chip button:hover {
+  color: rgba(248, 250, 253, 0.9);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.composer-shell textarea {
+  width: 100%;
+  min-height: 58px;
+  padding: 2px 3px;
+  overflow-y: auto;
+  color: var(--agent-text);
+  font-size: 12px;
+  line-height: 1.65;
+  resize: none;
+  user-select: text;
+  scrollbar-width: none;
+}
+
+.composer-shell textarea::placeholder {
+  color: rgba(202, 211, 224, 0.4);
+}
+
+.composer-footer,
+.composer-tools,
+.composer-actions,
+.composer-meta {
+  display: flex;
+  align-items: center;
+}
+
+.composer-footer {
+  justify-content: space-between;
+  margin-top: 5px;
+}
+
+.composer-tools,
+.composer-actions {
+  gap: 5px;
+}
+
+.workspace-selector {
+  max-width: 120px;
+}
+
+:deep(.composer-tool),
+:deep(.composer-selector) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 27px;
+  color: rgba(223, 230, 240, 0.62);
+  border: 1px solid transparent;
+  border-radius: 6px;
+}
+
+:deep(.composer-tool) {
+  width: 27px;
+  font-size: 14px;
+}
+
+:deep(.composer-selector) {
+  max-width: 128px;
+  gap: 4px;
+  padding: 0 6px;
+  color: rgba(218, 226, 236, 0.48);
+  font-size: 8px;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+:deep(.composer-selector > span:not(.branch-dot):not(.mode-indicator)) {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+:deep(.composer-selector > .el-icon) {
+  width: 9px;
+  flex: 0 0 auto;
+  font-size: 9px;
+}
+
+.model-add-button,
+.model-edit-button,
+.model-delete-button {
+  display: grid;
+  width: 25px;
+  height: 25px;
+  flex: 0 0 auto;
+  place-items: center;
+  color: rgba(174, 182, 193, 0.62);
+  font-size: 10px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.model-add-button:hover,
+.model-edit-button:hover:not(:disabled),
+.model-delete-button:hover:not(:disabled) {
+  color: rgba(220, 226, 234, 0.86);
+  background: rgba(255, 255, 255, 0.045);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.model-edit-button:disabled,
+.model-delete-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+
+.think-mode-switch {
+  display: inline-flex;
+  height: 25px;
+  align-items: center;
+  gap: 5px;
+  padding: 0 6px;
+  color: rgba(218, 226, 236, 0.58);
+  font-size: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.think-mode-switch :deep(.el-switch) {
+  --el-switch-on-color: rgba(73, 194, 207, 0.88);
+  --el-switch-off-color: rgba(255, 255, 255, 0.12);
+  height: 18px;
+  transform: scale(0.75);
+}
+
+:deep(.composer-tool:hover),
+:deep(.composer-selector:hover),
+:deep(.composer-tool[aria-expanded='true']),
+:deep(.composer-selector[aria-expanded='true']) {
+  color: var(--agent-text);
+  background: rgba(255, 255, 255, 0.045);
+  border-color: var(--agent-border);
+}
+
+.mode-indicator {
+  width: 5px;
+  height: 5px;
+  background: rgba(174, 182, 193, 0.5);
+  border-radius: 50%;
+  box-shadow: none;
+}
+
+.send-button {
+  display: grid;
+  width: 29px;
+  height: 29px;
+  place-items: center;
+  color: #071014;
+  background: rgba(67, 243, 255, 0.88);
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(67, 243, 255, 0.12);
+  transition: background 0.18s ease, transform 0.18s ease;
+}
+
+.send-button:hover {
+  background: var(--agent-accent);
+  transform: translateY(-1px);
+}
+
+.send-button:disabled {
+  color: rgba(226, 235, 241, 0.35);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: none;
+  cursor: default;
+  transform: none;
+}
+
+.send-button.is-stop {
+  color: rgba(247, 250, 253, 0.9);
+  background: rgba(238, 104, 104, 0.78);
+  box-shadow: 0 4px 14px rgba(238, 104, 104, 0.13);
+}
+
+.send-button.is-stop:hover {
+  background: rgba(246, 117, 117, 0.9);
+}
+
+.composer-meta {
+  gap: 12px;
+  padding: 7px 5px 0;
+  color: rgba(202, 211, 224, 0.32);
+  font-size: 8px;
+}
+
+.composer-meta .local-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: auto;
+}
+
+.composer-meta .status-dot {
+  width: 5px;
+  height: 5px;
+}
+
+.dialog-description {
+  margin: -2px 0 15px;
+  color: rgba(210, 219, 231, 0.56);
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+.workspace-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.workspace-card {
+  display: flex;
+  min-width: 0;
+  min-height: 64px;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 11px;
+  color: rgba(235, 241, 248, 0.78);
+  text-align: left;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 10px;
+  transition: color 0.16s ease, background 0.16s ease, border-color 0.16s ease;
+}
+
+.workspace-card:hover,
+.workspace-card.is-selected {
+  color: rgba(248, 251, 254, 0.96);
+  background: rgba(77, 169, 204, 0.1);
+  border-color: rgba(111, 228, 239, 0.22);
+}
+
+.workspace-card-icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  place-items: center;
+  color: rgba(111, 228, 239, 0.78);
+  font-size: 15px;
+  background: rgba(111, 228, 239, 0.07);
+  border-radius: 9px;
+}
+
+.workspace-card-copy {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.workspace-card-copy strong {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.workspace-card-copy small {
+  margin-top: 4px;
+  overflow: hidden;
+  color: rgba(204, 214, 226, 0.4);
+  font-size: 8px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.workspace-selected {
+  flex: 0 0 auto;
+  padding: 2px 6px;
+  color: rgba(111, 228, 239, 0.76);
+  font-size: 8px;
+  background: rgba(111, 228, 239, 0.07);
+  border-radius: 9px;
+}
+
+.settings-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-row {
+  display: flex;
+  min-height: 58px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.075);
+}
+
+.settings-row:last-child {
+  border-bottom: 0;
+}
+
+.settings-row>span {
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-row strong {
+  color: rgba(243, 247, 251, 0.86);
+  font-size: 11px;
+  font-weight: 580;
+}
+
+.settings-row small {
+  margin-top: 4px;
+  color: rgba(204, 214, 226, 0.42);
+  font-size: 9px;
+}
+
+.dialog-primary-button,
+.dialog-secondary-button {
+  display: inline-flex;
+  height: 31px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 13px;
+  font-size: 10px;
+  border-radius: 7px;
+}
+
+.dialog-primary-button {
+  color: #142128;
+  background: rgba(111, 228, 239, 0.88);
+}
+
+.dialog-primary-button:hover {
+  background: #7ceaf4;
+}
+
+.dialog-secondary-button {
+  margin-right: auto;
+  color: rgba(231, 237, 245, 0.7);
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dialog-secondary-button:hover {
+  color: rgba(248, 251, 254, 0.96);
+  background: rgba(255, 255, 255, 0.085);
+}
+
+:global(.agent-workspace-dialog) {
+  --el-bg-color: rgba(50, 61, 75, 0.98);
+  --el-bg-color-overlay: rgba(50, 61, 75, 0.98);
+  --el-text-color-primary: rgba(246, 249, 252, 0.92);
+  --el-text-color-regular: rgba(224, 231, 240, 0.7);
+  --el-border-color: rgba(255, 255, 255, 0.11);
+  overflow: hidden;
+  background: rgba(50, 61, 75, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 13px;
+  box-shadow: 0 28px 80px rgba(4, 9, 14, 0.46), inset 0 1px rgba(255, 255, 255, 0.035);
+  backdrop-filter: blur(24px);
+}
+
+:global(.agent-workspace-dialog .el-dialog__header) {
+  padding: 18px 20px 10px;
+}
+
+:global(.agent-workspace-dialog .el-dialog__title) {
+  color: rgba(247, 250, 253, 0.94);
+  font-size: 14px;
+  font-weight: 620;
+}
+
+:global(.agent-workspace-dialog .el-dialog__headerbtn) {
+  top: 10px;
+  right: 10px;
+}
+
+:global(.agent-workspace-dialog .el-dialog__headerbtn .el-dialog__close) {
+  color: rgba(218, 226, 237, 0.5);
+}
+
+:global(.agent-workspace-dialog .el-dialog__body) {
+  padding: 9px 20px 18px;
+}
+
+:global(.agent-workspace-dialog .el-dialog__footer) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 20px 17px;
+  border-top: 1px solid rgba(255, 255, 255, 0.075);
+}
+
+:global(.agent-workspace-dialog .el-switch) {
+  --el-switch-on-color: rgba(73, 194, 207, 0.88);
+  --el-switch-off-color: rgba(255, 255, 255, 0.12);
+}
+
+@media (min-width: 1440px) {
+  .agent-sidebar {
+    flex-basis: 276px;
+    padding-right: 17px;
+    padding-left: 17px;
+  }
+
+  .workspace-header {
+    height: 74px;
+    padding-left: 32px;
+  }
+
+  .workspace-content {
+    padding: 30px 46px 22px;
+  }
+
+  .message-thread {
+    width: min(900px, 100%);
+  }
+
+  .welcome-panel {
+    width: min(800px, 100%);
+  }
+
+  .composer-area {
+    width: min(860px, 100%);
+  }
+
+  .welcome-panel h2 {
+    font-size: 29px;
+  }
+
+  .welcome-description,
+  .message-content {
+    font-size: 12px;
+  }
+
+  .suggestion-card {
+    min-height: 72px;
+    padding: 12px;
+  }
+
+  .composer-shell textarea {
+    min-height: 70px;
+  }
+}
+
+@media (min-width: 1900px) {
+  .message-thread {
+    width: min(1020px, 100%);
+  }
+
+  .welcome-panel,
+  .composer-area {
+    width: min(960px, 100%);
+  }
+}
+
+@media (max-height: 720px) {
+  .workspace-content {
+    padding-top: 14px;
+  }
+
+  .agent-orb {
+    width: 46px;
+    height: 46px;
+  }
+
+  .suggestion-grid {
+    margin-top: 15px;
+  }
+
+  .suggestion-card {
+    min-height: 54px;
+  }
+}
+
+@media (max-width: 980px) {
+  .agent-sidebar {
+    flex-basis: 222px;
+  }
+
+  .workspace-header {
+    padding-left: 18px;
+  }
+
+  .suggestion-grid {
+    grid-template-columns: 1fr;
+    max-width: 440px;
+  }
+
+  .suggestion-card {
+    min-height: 52px;
+  }
+
+  .workspace-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
