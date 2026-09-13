@@ -206,7 +206,9 @@ const loadConversationList = async () => {
 
 // 可以检测会话的更新实时展示
 const conversationListArr = computed(() => {
+  // AI 工作台使用 Main 的独立导航，普通会话列表只保留单聊和群聊
   const list = Object.values(conversationStore.conversationMap)
+    .filter((conversation) => conversation.type !== 2)
 
   // 按置顶和时间排序
   return list.sort((a: any, b: any) => {

@@ -1,10 +1,58 @@
 import { store } from '../shared.js'
-import { ipcMain } from 'electron'
+import { ipcMain, safeStorage } from 'electron'
+
+const MODEL_API_KEYS_STORE_KEY = 'modelApiKeys'
+
+const getModelApiKeyIdentity = (modelConfig) => {
+  const userId = String(modelConfig?.userId ?? '').trim()
+  const configId = String(modelConfig?.configId ?? '').trim()
+
+  if (!userId || !configId) {
+    throw new Error('模型 API Key 操作缺少 userId 或 configId')
+  }
+
+  return { userId, configId }
+}
+
+const setModelApiKey = (modelConfig) => {
+  const { userId, configId } = getModelApiKeyIdentity(modelConfig)
+  const apiKey = String(modelConfig?.apiKey ?? '').trim()
+  const modelApiKeys = store.get(MODEL_API_KEYS_STORE_KEY, {})
+  const userApiKeys = { ...(modelApiKeys[userId] ?? {}) }
+
+  if (!apiKey) {
+    delete userApiKeys[configId]
+  } else {
+    if (!safeStorage.isEncryptionAvailable()) {
+      throw new Error('当前系统不支持安全保存模型 API Key')
+    }
+    userApiKeys[configId] = safeStorage.encryptString(apiKey).toString('base64')
+  }
+
+  if (Object.keys(userApiKeys).length === 0) {
+    delete modelApiKeys[userId]
+  } else {
+    modelApiKeys[userId] = userApiKeys
+  }
+  store.set(MODEL_API_KEYS_STORE_KEY, modelApiKeys)
+}
+
+const getModelApiKey = (modelConfig) => {
+  const { userId, configId } = getModelApiKeyIdentity(modelConfig)
+  const encryptedApiKey = store.get(MODEL_API_KEYS_STORE_KEY, {})?.[userId]?.[configId]
+
+  if (!encryptedApiKey) return ''
+  if (!safeStorage.isEncryptionAvailable()) {
+    throw new Error('当前系统不支持读取模型 API Key')
+  }
+
+  return safeStorage.decryptString(Buffer.from(encryptedApiKey, 'base64'))
+}
 
 // 存储用户信息
 ipcMain.handle('window:setUserInfo', (e, userInfoType, userInfo) => {
   console.log(userInfoType)
-  console.info('设置用户信息', userInfoType, userInfo)
+  console.info('设置用户信息', userInfoType, userInfoType === 'modelApiKey' ? '[REDACTED]' : userInfo)
   switch (userInfoType) {
     case 'token':
       store.set('token', userInfo)
@@ -39,12 +87,15 @@ ipcMain.handle('window:setUserInfo', (e, userInfoType, userInfo) => {
     case 'gender':
       store.set('gender', userInfo)
       break
+    case 'modelApiKey':
+      setModelApiKey(userInfo)
+      break
   }
   return true
 })
 
 // 获取用户信息
-ipcMain.handle('window:getUserInfo', (e, userInfoType) => {
+ipcMain.handle('window:getUserInfo', (e, userInfoType, userInfo) => {
   console.log('获取用户信息:', userInfoType)
   const result = (() => {
     switch (userInfoType) {
@@ -70,10 +121,12 @@ ipcMain.handle('window:getUserInfo', (e, userInfoType) => {
         return store.get('account')
       case 'gender':
         return store.get('gender')
+      case 'modelApiKey':
+        return getModelApiKey(userInfo)
       default:
         return null
     }
   })()
-  console.log('获取到的值:', result)
+  console.log('获取到的值:', userInfoType === 'modelApiKey' ? '[REDACTED]' : result)
   return result
 })

@@ -1,5 +1,44 @@
 export type { AIMessage } from '@/types/aiMessage'
 
+export type {
+  AgentModelRequestConfig,
+  AIStreamCompletedData,
+  AIStreamDeltaData,
+  AIStreamDoneData,
+  AIStreamHandlers,
+  AIStreamReasoningDeltaData,
+  AIStreamStartedData,
+  SavedAIConversation,
+  SavedAIMessage,
+  SendAIMessageRequest
+} from '@/types/agentApi'
+
+export type { AgentModelConfig, ModelOption, SavedModelConfig } from '@/types/agentModel'
+export { DEFAULT_MODEL } from '@/types/agentModel'
+
+export type {
+  AgentAttachment,
+  AgentConversation,
+  AgentMessage,
+  AgentMessageRole,
+  AgentMessageStatus,
+  AgentMode,
+  AgentToolStep,
+  AgentToolStepStatus
+} from '@/types/agentWorkspace'
+
+export type {
+  AgentConversationGroup,
+  AgentDropdownItem,
+  AgentDropdownPlacement,
+  AgentModeOption,
+  AgentSimulationState,
+  AgentSuggestion,
+  AgentWorkspaceOption,
+  ConversationAction,
+  ConversationActionDialogState
+} from '@/types/agentUi'
+
 export type { userApplyInfo, groupApplyInfo } from '@/types/applyInfo'
 
 export type { Conversation } from '@/types/conversation'

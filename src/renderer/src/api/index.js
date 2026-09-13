@@ -1,5 +1,8 @@
 export {
   loadMessage,
+  getAIConversations,
+  renameAIConversation,
+  deleteAIConversation,
   createPersonality,
   updatePersonality,
   switchPersonality,

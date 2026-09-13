@@ -5,8 +5,8 @@ const userInfoApi = {
   storeSetUserInfo: (userInfoType, userInfo) => {
     return ipcRenderer.invoke('window:setUserInfo', userInfoType, userInfo)
   },
-  storeGetUserInfo: (userInfoType) => {
-    return ipcRenderer.invoke('window:getUserInfo', userInfoType)
+  storeGetUserInfo: (userInfoType, userInfo) => {
+    return ipcRenderer.invoke('window:getUserInfo', userInfoType, userInfo)
   }
 }
 
