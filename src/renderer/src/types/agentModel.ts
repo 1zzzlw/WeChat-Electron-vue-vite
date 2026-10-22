@@ -34,10 +34,10 @@ export interface SavedModelConfig {
 }
 
 export const DEFAULT_MODEL: ModelOption = {
-  id: 'default-deepseek-flush',
+  id: 'default-qwen-vl-ocr-2025-11-20',
   configName: '系统默认模型',
   providerName: 'default',
-  modelName: 'deepseek-flush',
+  modelName: 'qwen-vl-ocr-2025-11-20',
   description: '适合复杂分析与编码任务',
   modelTemperature: 1,
   isActive: true,

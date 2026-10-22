@@ -1,6 +1,7 @@
 import { ipcMain, dialog } from "electron";
 import { getFileInfo, uploadFile, stopUpload } from '../File/fileUpload'
 import { downloadFile, pauseDownload, saveAsMedia } from '../File/downloadFile'
+import { executeWorkspaceTool, listLocalWorkspaces, registerWorkspace } from '../File/fileInfo'
 // 从本地选择文件或目录
 ipcMain.handle('select-file', async (e, file) => {
     let fileInfo = {}
@@ -22,10 +23,11 @@ ipcMain.handle('select-file', async (e, file) => {
 
     const { canceled, filePaths } = await dialog.showOpenDialog(dialogConfig)
 
-    fileInfo = getFileInfo(filePaths[0])
+    if (canceled || !filePaths[0]) return null
+    fileInfo = await getFileInfo(filePaths[0])
 
     // 返回文件信息给渲染进程
-    return canceled ? null : fileInfo
+    return fileInfo
 })
 
 // 监听发送文件的事件
@@ -71,4 +73,29 @@ ipcMain.on('saveAs-media', async (e, fileInfo) => {
     const remoteUrl = fileInfo.remoteUrl
     console.log(filePath)
     saveAsMedia(remoteUrl, filePath)
+})
+
+ipcMain.handle('workspace:register-local', async (e, workspaceName, dirPath) => {
+    if (!workspaceName || !dirPath || typeof dirPath !== 'string') {
+        return { error: '工作区参数不完整' }
+    }
+    try {
+        return await registerWorkspace(workspaceName, dirPath)
+    } catch (err) {
+        console.error('注册本地工作区失败', err)
+        return { error: err.message }
+    }
+})
+
+ipcMain.handle('workspace:list-local', async () => {
+    try {
+        return listLocalWorkspaces()
+    } catch (err) {
+        console.error('读取本地工作区列表失败', err)
+        return []
+    }
+})
+
+ipcMain.handle('workspace:execute-tool', async (e, request) => {
+    return await executeWorkspaceTool(request)
 })

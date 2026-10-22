@@ -132,6 +132,26 @@ const getNodeCount = (userId) => {
     return Number(result?.[0]?.total) || 0
 }
 
+/**
+ * 查询全部本地工作区
+ * @returns -- [{ name, rootPath, createdAt }]
+ */
+const queryWorkspaceList = () => {
+    const sql = `select name, root_path, created_at from workspace order by created_at asc`
+    return queryAll(sql, [])
+}
+
+/**
+ * 按别名查询本地工作区
+ * @param name -- 工作区别名
+ * @returns -- { name, rootPath } 或 null
+ */
+const getWorkspaceByName = (name) => {
+    const sql = `select name, root_path from workspace where name = ?`
+    const result = queryAll(sql, [name])
+    return result?.[0] || null
+}
+
 export {
     isExistUserRecord,
     queryConversation,
@@ -143,5 +163,7 @@ export {
     getVideoUrlList,
     getFavorites,
     getFavoritesAll,
-    getNodeCount
+    getNodeCount,
+    queryWorkspaceList,
+    getWorkspaceByName
 }

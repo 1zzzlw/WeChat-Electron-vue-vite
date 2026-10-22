@@ -131,8 +131,7 @@
                 <strong>{{ message.role === 'user' ? '你' : 'IM Agent' }}</strong>
                 <span>{{ formatMessageTime(message.createdAt) }}</span>
               </div>
-              <details v-if="message.reasoningContent" class="message-reasoning"
-                :open="message.status === 'streaming'">
+              <details v-if="message.reasoningContent" class="message-reasoning" :open="message.status === 'streaming'">
                 <summary>{{ message.status === 'streaming' ? '正在思考' : '思考过程' }}</summary>
                 <p>{{ message.reasoningContent }}</p>
               </details>
@@ -218,7 +217,7 @@
                   <el-icon>
                     <FolderOpened />
                   </el-icon>
-                  <span>{{ selectedWorkspace }}</span>
+                  <span>{{ selectedWorkspace ?? '未选择工作区' }}</span>
                 </button>
                 <AgentDropdown class="composer-selector" placement="top-start" compact :items="branchMenuItems"
                   :min-width="190" :selected-value="selectedBranch" aria-label="选择分支" @select="handleSelectBranch">
@@ -310,7 +309,10 @@
       class="agent-workspace-dialog">
       <p class="dialog-description">选择 Agent 本次任务可以读取的项目范围。</p>
       <div class="workspace-grid">
-        <button v-for="workspace in workspaceOptions" :key="workspace.id"
+        <div v-if="workspaceOptions.length === 0" class="workspace-empty">
+          暂无已注册工作区，请先添加一个本地目录。
+        </div>
+        <button v-for="workspace in workspaceOptions" :key="workspace.name"
           :class="['workspace-card', { 'is-selected': selectedWorkspace === workspace.name }]" type="button"
           @click="handleChooseWorkspace(workspace)">
           <span class="workspace-card-icon"><el-icon>
@@ -324,11 +326,12 @@
         </button>
       </div>
       <template #footer>
-        <button class="dialog-secondary-button" type="button" @click="handleAddWorkspace">
+        <button class="dialog-secondary-button" type="button" :disabled="isWorkspaceRegistering"
+          @click="handleAddWorkspace">
           <el-icon>
             <Plus />
           </el-icon>
-          添加本地工作区
+          {{ isWorkspaceRegistering ? '正在读取目录…' : '添加本地工作区' }}
         </button>
         <button class="dialog-primary-button" type="button" @click="workspaceDialogVisible = false">完成</button>
       </template>
@@ -375,6 +378,10 @@ import AgentDropdown from '@/components/AgentDropdown.vue'
 import AgentModelConfigDialog from '@/components/AgentModelConfigDialog.vue'
 import {
   DEFAULT_MODEL,
+  type AIWorkspaceToolCompletedData,
+  type AIWorkspaceToolExecutionResult,
+  type AIWorkspaceToolOperation,
+  type AIWorkspaceToolRequest,
   type AgentModelConfig,
   type AgentConversation,
   type AgentConversationGroup,
@@ -419,10 +426,11 @@ import {
   getModelConfigs,
   loadMessage,
   renameAIConversation,
-  sendAIMessageApi,
+  submitAIWorkspaceToolResult,
   switchModelConfig,
   updateModelConfig
 } from '@/api/AIMessage'
+import { streamAIMessage } from '@/api/AIMessageStream'
 
 const agentWorkspaceStore = useAgentWorkspaceStore()
 const {
@@ -445,6 +453,7 @@ const searchQuery = ref('')
 const isSearchOpen = ref(false)
 const isSidebarCollapsed = ref(false)
 const workspaceDialogVisible = ref(false)
+const isWorkspaceRegistering = ref(false)
 const settingsDialogVisible = ref(false)
 const modelConfigDialogVisible = ref(false)
 const enableThink = ref(false)
@@ -469,11 +478,7 @@ const mockSettings = reactive({
   showToolSteps: true
 })
 
-const workspaceOptions = ref<AgentWorkspaceOption[]>([
-  { id: 'workspace-agent', name: 'imAgent', path: 'E:\\AgentProject\\imAgent' },
-  { id: 'workspace-web', name: 'WeChat Electron', path: 'E:\\ElectronProject\\WeChat-Electron-vue-vite' },
-  { id: 'workspace-server', name: 'IM SpringCloud', path: 'E:\\JavaProject\\IM-SpringCloud' }
-])
+const workspaceOptions = ref<AgentWorkspaceOption[]>([])
 
 const branchOptions = ['main', 'develop', 'feature/agent-ui']
 
@@ -885,22 +890,59 @@ const handleChooseWorkspace = (workspace: AgentWorkspaceOption) => {
   ElMessage.success(`已切换到 ${workspace.name}`)
 }
 
-const handleAddWorkspace = async () => {
+const loadLocalWorkspaces = async () => {
   try {
-    const fileInfo = await (window as any).uploadFileApi?.selectFile('storeLocation')
-    if (!fileInfo?.localPath) return
+    const saved = await (window as any).uploadFileApi.listWorkspaces()
+    if (!Array.isArray(saved)) return
+    workspaceOptions.value = saved.map((item: { name: string; path: string }) => ({
+      name: item.name,
+      path: item.path
+    })) as AgentWorkspaceOption[]
+    if (!agentWorkspaceStore.selectedWorkspace && workspaceOptions.value.length > 0) {
+      agentWorkspaceStore.setWorkspace(workspaceOptions.value[0].name)
+    }
+  } catch (error) {
+    console.error('读取本地工作区列表失败', error)
+  }
+}
+
+const handleAddWorkspace = async () => {
+  if (isWorkspaceRegistering.value) return
+
+  try {
+    const dirInfo = await (window as any).uploadFileApi.selectFile('storeLocation')
+    if (!dirInfo?.localPath) return
+
+    const workspaceName = dirInfo.fileName || '本地工作区'
+    isWorkspaceRegistering.value = true
+    // 注册只是本地行为：把 "别名 → 绝对路径" 写进本机 sqlite，服务端不参与
+    const result = await (window as any).uploadFileApi.registerWorkspace(
+      workspaceName,
+      dirInfo.localPath
+    ) as { name?: string; rootPath?: string; error?: string }
+    if (result?.error) throw new Error(result.error)
+    if (!result?.name) throw new Error('注册工作区没有返回结果')
 
     const workspace: AgentWorkspaceOption = {
-      id: fileInfo.fileId || `workspace-${Date.now()}`,
-      name: fileInfo.fileName || '本地工作区',
-      path: fileInfo.localPath
+      name: result.name,
+      path: result.rootPath || dirInfo.localPath
     }
-    if (!workspaceOptions.value.some((item) => item.path === workspace.path)) {
+    const existingIndex = workspaceOptions.value.findIndex(
+      (item) => item.name === workspace.name
+    )
+    if (existingIndex >= 0) {
+      workspaceOptions.value[existingIndex] = workspace
+    } else {
       workspaceOptions.value.push(workspace)
     }
-    handleChooseWorkspace(workspace)
-  } catch {
-    // 关闭系统选择框时保持当前工作区
+    agentWorkspaceStore.setWorkspace(workspace.name)
+    workspaceDialogVisible.value = false
+    ElMessage.success(`已添加工作区 ${workspace.name}`)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : '添加工作区失败'
+    ElMessage.error(message)
+  } finally {
+    isWorkspaceRegistering.value = false
   }
 }
 
@@ -1111,6 +1153,85 @@ const handleStopGenerating = () => {
   ElMessage.info('已停止生成')
 }
 
+const workspaceToolLabels: Record<AIWorkspaceToolOperation, string> = {
+  list: '列出目录 · list_workspace_files',
+  read: '读取文件 · read_workspace_file',
+  write: '写入文件 · write_workspace_file',
+  edit: '修改文件 · edit_workspace_file',
+  delete: '删除文件 · delete_workspace_file',
+  search: '搜索代码 · search_workspace_text',
+  command: '执行命令 · run_workspace_command',
+}
+
+const handleWorkspaceToolCompleted = (
+  data: AIWorkspaceToolCompletedData,
+  conversationId: string,
+  messageId: string
+) => {
+  // 只更新已有步骤状态，不再新建步骤；toolCallId 与 tool.request 一致
+  agentWorkspaceStore.finishToolStep(
+    conversationId,
+    messageId,
+    data.toolCallId,
+    data.success !== false
+  )
+}
+
+const handleWorkspaceToolRequest = async (
+  request: AIWorkspaceToolRequest,
+  userId: string,
+  conversationId: string,
+  messageId: string
+) => {
+  agentWorkspaceStore.startToolStep(conversationId, messageId, {
+    id: request.toolCallId,
+    title: `${workspaceToolLabels[request.operation]} · ${request.path || '/'}`,
+    status: 'running',
+    statusLabel: '执行中'
+  })
+  void scrollToBottom()
+
+  try {
+    console.info('[工具] 开始调用 Electron', request)
+
+    const result = await (window as any).uploadFileApi.executeWorkspaceTool(
+      request
+    ) as AIWorkspaceToolExecutionResult
+
+    await submitAIWorkspaceToolResult({
+      toolCallId: request.toolCallId,
+      workspaceName: request.workspaceName,
+      userId,
+      success: result.success,
+      content: result.content
+    })
+    agentWorkspaceStore.finishToolStep(
+      conversationId,
+      messageId,
+      request.toolCallId,
+      result.success
+    )
+  } catch (error) {
+    try {
+      await submitAIWorkspaceToolResult({
+        toolCallId: request.toolCallId,
+        workspaceName: request.workspaceName,
+        userId,
+        success: false,
+        error: error instanceof Error ? error.message : '本地文件工具执行失败'
+      })
+    } finally {
+      agentWorkspaceStore.finishToolStep(
+        conversationId,
+        messageId,
+        request.toolCallId,
+        false
+      )
+    }
+  }
+  void scrollToBottom()
+}
+
 const handleSubmit = async () => {
   if (!canSubmit.value || isGenerating.value) return
 
@@ -1145,6 +1266,7 @@ const handleSubmit = async () => {
       role: 'user',
       messageType: 1,
       content,
+      workspaceName: selectedWorkspace.value ?? undefined,
       config: {
         providerName: selectedModelOption.value.providerName,
         modelName: selectedModelOption.value.modelName,
@@ -1157,9 +1279,13 @@ const handleSubmit = async () => {
           : Number(selectedModelOption.value.id)
       }
     }
-    const responseContent = await sendAIMessageApi(
+
+    // 等待 AI 响应流式返回
+    const responseContent = await streamAIMessage(
       requestData,
       {
+        onStarted: (delta) => {
+        },
         onReasoningDelta: (delta) => {
           if (
             activeSimulation.value?.conversationId !== conversationId ||
@@ -1201,6 +1327,17 @@ const handleSubmit = async () => {
             reasoningContent
           )
         },
+        onToolRequest: (toolRequest) => handleWorkspaceToolRequest(
+          toolRequest,
+          userId,
+          conversationId,
+          messageId
+        ),
+        onToolCompleted: (toolData) => handleWorkspaceToolCompleted(
+          toolData,
+          conversationId,
+          messageId
+        ),
         onDone: () => {
           void scrollToBottom()
         }
@@ -1254,6 +1391,7 @@ const handleGlobalShortcut = (event: KeyboardEvent) => {
 onMounted(() => {
   localStorage.removeItem('agent-workspace')
   normalizeSelectedModel()
+  void loadLocalWorkspaces()
   void loadModelConfigs()
   void loadMessageHistory()
   window.addEventListener('keydown', handleGlobalShortcut)
@@ -1267,23 +1405,15 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .agent-workbench {
-  --agent-bg: rgba(36, 47, 61, 0.76);
-  --agent-panel: rgba(47, 59, 74, 0.74);
-  --agent-panel-soft: rgba(57, 70, 86, 0.64);
-  --agent-border: rgba(255, 255, 255, 0.11);
-  --agent-border-strong: rgba(67, 243, 255, 0.26);
-  --agent-text: rgba(247, 249, 252, 0.96);
-  --agent-muted: rgba(214, 222, 233, 0.66);
-  --agent-accent: #43f3ff;
   display: flex;
   width: 100%;
   height: 100%;
   min-width: 0;
   overflow: hidden;
-  color: var(--agent-text);
+  color: var(--color-text-strong);
   background:
     radial-gradient(circle at 76% 18%, rgba(67, 243, 255, 0.12), transparent 36%),
-    linear-gradient(145deg, rgba(47, 61, 77, 0.8), var(--agent-bg));
+    linear-gradient(145deg, rgba(47, 61, 77, 0.8), var(--color-surface-1));
   -webkit-app-region: no-drag;
 }
 
@@ -1305,7 +1435,7 @@ button {
   min-width: 0;
   padding: 18px 14px 14px;
   background: rgba(34, 44, 56, 0.68);
-  border-right: 1px solid var(--agent-border);
+  border-right: 1px solid var(--color-border-subtle);
   backdrop-filter: blur(20px);
   transition: flex-basis 0.22s ease, padding 0.22s ease;
 }
@@ -1346,7 +1476,7 @@ button {
 
 .brand-copy span {
   margin-top: 2px;
-  color: var(--agent-muted);
+  color: var(--color-text-muted);
   font-size: 11px;
 }
 
@@ -1370,7 +1500,7 @@ button {
 }
 
 .sidebar-collapse:hover {
-  color: var(--agent-accent);
+  color: var(--color-accent);
   border-color: rgba(67, 243, 255, 0.32);
 }
 
@@ -1419,7 +1549,7 @@ button {
   height: 40px;
   margin-top: 17px;
   padding: 0 11px;
-  color: var(--agent-text);
+  color: var(--color-text-strong);
   background: rgba(66, 153, 225, 0.15);
   border: 1px solid rgba(67, 243, 255, 0.22);
   border-radius: 9px;
@@ -1455,7 +1585,7 @@ kbd {
   gap: 3px;
   margin-top: 12px;
   padding-bottom: 13px;
-  border-bottom: 1px solid var(--agent-border);
+  border-bottom: 1px solid var(--color-border-subtle);
 }
 
 .sidebar-nav-item {
@@ -1473,7 +1603,7 @@ kbd {
 }
 
 .sidebar-nav-item:hover {
-  color: var(--agent-text);
+  color: var(--color-text-strong);
   background: rgba(255, 255, 255, 0.07);
 }
 
@@ -1566,13 +1696,13 @@ kbd {
   width: 24px;
   height: 24px;
   place-items: center;
-  color: var(--agent-muted);
+  color: var(--color-text-muted);
   border-radius: 5px;
 }
 
 .history-heading :deep(.agent-dropdown-trigger:hover),
 .history-heading :deep(.agent-dropdown-trigger[aria-expanded='true']) {
-  color: var(--agent-text);
+  color: var(--color-text-strong);
   background: rgba(255, 255, 255, 0.06);
 }
 
@@ -1610,7 +1740,7 @@ kbd {
   bottom: 10px;
   left: 0;
   width: 2px;
-  background: var(--agent-accent);
+  background: var(--color-accent);
   border-radius: 2px;
   content: '';
 }
@@ -1664,7 +1794,7 @@ kbd {
 
 .sidebar-footer {
   padding-top: 12px;
-  border-top: 1px solid var(--agent-border);
+  border-top: 1px solid var(--color-border-subtle);
 }
 
 .account-entry {
@@ -1686,7 +1816,7 @@ kbd {
   height: 30px;
   flex: 0 0 auto;
   place-items: center;
-  color: var(--agent-accent);
+  color: var(--color-accent);
   font-size: 9px;
   font-weight: 700;
   background: rgba(67, 243, 255, 0.08);
@@ -1706,7 +1836,7 @@ kbd {
 
 .account-copy small {
   margin-top: 2px;
-  color: var(--agent-muted);
+  color: var(--color-text-muted);
   font-size: 9px;
 }
 
@@ -1715,7 +1845,7 @@ kbd {
   width: 6px;
   height: 6px;
   flex: 0 0 auto;
-  background: var(--agent-accent);
+  background: var(--color-accent);
   border-radius: 50%;
   box-shadow: 0 0 8px rgba(67, 243, 255, 0.65);
 }
@@ -1735,7 +1865,7 @@ kbd {
   flex: 0 0 auto;
   padding: 0 136px 0 24px;
   background: rgba(38, 48, 61, 0.24);
-  border-bottom: 1px solid var(--agent-border);
+  border-bottom: 1px solid var(--color-border-subtle);
   -webkit-app-region: drag;
 }
 
@@ -1765,10 +1895,10 @@ kbd {
 
 .draft-badge {
   padding: 2px 6px;
-  color: var(--agent-muted);
+  color: var(--color-text-muted);
   font-size: 8px;
   background: rgba(255, 255, 255, 0.045);
-  border: 1px solid var(--agent-border);
+  border: 1px solid var(--color-border-subtle);
   border-radius: 10px;
 }
 
@@ -1825,7 +1955,7 @@ kbd {
   width: 30px;
   height: 30px;
   place-items: center;
-  color: var(--agent-accent);
+  color: var(--color-accent);
   font-size: 11px;
   font-weight: 650;
   background: rgba(67, 243, 255, 0.08);
@@ -1969,7 +2099,7 @@ kbd {
   width: 5px;
   height: 12px;
   margin-top: 8px;
-  background: var(--agent-accent);
+  background: var(--color-accent);
   border-radius: 1px;
   animation: cursor-blink 1s steps(2, start) infinite;
 }
@@ -1997,7 +2127,7 @@ kbd {
   width: 54px;
   height: 54px;
   place-items: center;
-  color: var(--agent-accent);
+  color: var(--color-accent);
   font-size: 22px;
   background: rgba(24, 31, 41, 0.9);
   border: 1px solid rgba(67, 243, 255, 0.22);
@@ -2030,7 +2160,7 @@ kbd {
 .welcome-description {
   max-width: 500px;
   margin-top: 9px;
-  color: var(--agent-muted);
+  color: var(--color-text-muted);
   font-size: 11px;
   line-height: 1.7;
   text-align: center;
@@ -2053,7 +2183,7 @@ kbd {
   padding: 10px;
   text-align: left;
   background: rgba(255, 255, 255, 0.045);
-  border: 1px solid var(--agent-border);
+  border: 1px solid var(--color-border-subtle);
   border-radius: 10px;
   transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
 }
@@ -2184,7 +2314,7 @@ kbd {
   min-height: 58px;
   padding: 2px 3px;
   overflow-y: auto;
-  color: var(--agent-text);
+  color: var(--color-text-strong);
   font-size: 12px;
   line-height: 1.65;
   resize: none;
@@ -2311,9 +2441,9 @@ kbd {
 :deep(.composer-selector:hover),
 :deep(.composer-tool[aria-expanded='true']),
 :deep(.composer-selector[aria-expanded='true']) {
-  color: var(--agent-text);
+  color: var(--color-text-strong);
   background: rgba(255, 255, 255, 0.045);
-  border-color: var(--agent-border);
+  border-color: var(--color-border-subtle);
 }
 
 .mode-indicator {
@@ -2337,7 +2467,7 @@ kbd {
 }
 
 .send-button:hover {
-  background: var(--agent-accent);
+  background: var(--color-accent);
   transform: translateY(-1px);
 }
 
@@ -2389,6 +2519,17 @@ kbd {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 9px;
+}
+
+.workspace-empty {
+  grid-column: 1 / -1;
+  padding: 24px 16px;
+  color: rgba(204, 214, 226, 0.48);
+  font-size: 10px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px dashed rgba(255, 255, 255, 0.09);
+  border-radius: 10px;
 }
 
 .workspace-card {

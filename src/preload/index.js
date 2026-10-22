@@ -152,6 +152,15 @@ const uploadFileApi = {
   },
   saveAsMedia: (fileInfo) => {
     ipcRenderer.send('saveAs-media', fileInfo)
+  },
+  registerWorkspace: (workspaceName, dirPath) => {
+    return ipcRenderer.invoke('workspace:register-local', workspaceName, dirPath)
+  },
+  listWorkspaces: () => {
+    return ipcRenderer.invoke('workspace:list-local')
+  },
+  executeWorkspaceTool: (request) => {
+    return ipcRenderer.invoke('workspace:execute-tool', request)
   }
 }
 

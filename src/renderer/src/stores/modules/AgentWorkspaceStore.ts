@@ -4,7 +4,8 @@ import type {
   AgentAttachment,
   AgentConversation,
   AgentMessage,
-  AgentMode
+  AgentMode,
+  AgentToolStep
 } from '@/types/agentWorkspace'
 
 const createId = (prefix: string) => {
@@ -19,7 +20,7 @@ export const useAgentWorkspaceStore = defineStore('agentWorkspace', {
     attachments: [] as AgentAttachment[],
     selectedModel: DEFAULT_MODEL.id,
     selectedMode: 'Agent' as AgentMode,
-    selectedWorkspace: 'imAgent',
+    selectedWorkspace: null as string | null,
     selectedBranch: 'main',
     isGenerating: false
   }),
@@ -138,6 +139,42 @@ export const useAgentWorkspaceStore = defineStore('agentWorkspace', {
 
       if (message) message.reasoningContent = content
     },
+    startToolStep(conversationId: string, messageId: string, toolStep: AgentToolStep) {
+      const conversation = this.conversations.find((item) => item.id === conversationId)
+      const message = conversation?.messages.find((item) => item.id === messageId)
+      if (!conversation || !message) return
+
+      message.toolSteps ??= []
+      message.toolSteps.forEach((step) => {
+        if (step.status === 'running') {
+          step.status = 'completed'
+          step.statusLabel = '已完成'
+        }
+      })
+
+      const existingStep = message.toolSteps.find((step) => step.id === toolStep.id)
+      if (existingStep) {
+        Object.assign(existingStep, toolStep)
+      } else {
+        message.toolSteps.push(toolStep)
+      }
+      conversation.updatedAt = Date.now()
+    },
+    finishToolStep(
+      conversationId: string,
+      messageId: string,
+      toolCallId: string,
+      success: boolean
+    ) {
+      const conversation = this.conversations.find((item) => item.id === conversationId)
+      const message = conversation?.messages.find((item) => item.id === messageId)
+      const toolStep = message?.toolSteps?.find((step) => step.id === toolCallId)
+      if (!conversation || !toolStep) return
+
+      toolStep.status = success ? 'completed' : 'failed'
+      toolStep.statusLabel = success ? '已完成' : '执行失败'
+      conversation.updatedAt = Date.now()
+    },
     completeAssistantMessage(conversationId: string, messageId: string) {
       const conversation = this.conversations.find((item) => item.id === conversationId)
       const message = conversation?.messages.find((item) => item.id === messageId)
@@ -145,8 +182,10 @@ export const useAgentWorkspaceStore = defineStore('agentWorkspace', {
 
       message.status = 'completed'
       message.toolSteps?.forEach((step) => {
-        step.status = 'completed'
-        step.statusLabel = '已完成'
+        if (step.status === 'running' || step.status === 'pending') {
+          step.status = 'completed'
+          step.statusLabel = '已完成'
+        }
       })
       conversation.updatedAt = Date.now()
       this.isGenerating = false
@@ -159,8 +198,10 @@ export const useAgentWorkspaceStore = defineStore('agentWorkspace', {
       message.content = errorMessage
       message.status = 'failed'
       message.toolSteps?.forEach((step) => {
-        step.status = 'failed'
-        step.statusLabel = '请求失败'
+        if (step.status === 'running' || step.status === 'pending') {
+          step.status = 'failed'
+          step.statusLabel = '请求失败'
+        }
       })
       conversation.updatedAt = Date.now()
       this.isGenerating = false
@@ -213,8 +254,8 @@ export const useAgentWorkspaceStore = defineStore('agentWorkspace', {
     setMode(mode: AgentMode) {
       this.selectedMode = mode
     },
-    setWorkspace(workspace: string) {
-      this.selectedWorkspace = workspace
+    setWorkspace(workspaceName: string) {
+      this.selectedWorkspace = workspaceName
     },
     setBranch(branch: string) {
       this.selectedBranch = branch

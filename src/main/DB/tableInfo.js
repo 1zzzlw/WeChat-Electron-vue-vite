@@ -90,6 +90,15 @@ const init_table = [
     created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000),
     updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000)
   );
+  `,
+  // 本地工作区表：只保存别名到绝对路径的映射，服务端不参与
+  `
+    CREATE TABLE IF NOT EXISTS workspace (
+    name       TEXT    NOT NULL PRIMARY KEY,  -- 工作区别名（本地唯一标识）
+    root_path  TEXT    NOT NULL,              -- 用户选择的目录绝对路径
+    created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000),
+    updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000)
+  );
   `
 ]
 

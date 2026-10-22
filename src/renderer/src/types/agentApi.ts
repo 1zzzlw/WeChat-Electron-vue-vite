@@ -17,7 +17,52 @@ export interface SendAIMessageRequest {
   content: string
   imageUrl?: string
   personalityId?: string
+  workspaceName?: string
   config: AgentModelRequestConfig
+}
+
+export type AIWorkspaceToolOperation = 'list' | 'read' | 'write' | 'edit' | 'delete' | 'search' | 'command'
+
+export interface AIWorkspaceToolRequest {
+  toolCallId: string
+  workspaceName: string
+  operation: AIWorkspaceToolOperation
+  path?: string
+  depth?: number
+  pattern?: string
+  glob?: string
+  useRegex?: boolean
+  maxResults?: number
+  command?: string
+  args?: string[]
+  timeoutSeconds?: number
+  startLine?: number
+  endLine?: number
+  content?: string
+  oldText?: string
+  newText?: string
+  replaceAll?: boolean
+}
+
+export interface AIWorkspaceToolExecutionResult {
+  success: boolean
+  content?: string
+}
+
+export interface AIWorkspaceToolCompletedData {
+  toolCallId: string
+  workspaceName: string
+  toolName: string
+  success: boolean
+}
+
+export interface SubmitAIWorkspaceToolResultRequest {
+  toolCallId: string
+  workspaceName: string
+  userId: string
+  success: boolean
+  content?: string
+  error?: string
 }
 
 export interface SavedAIMessage {
@@ -69,5 +114,7 @@ export interface AIStreamHandlers {
   onReasoningDelta?: (delta: string, data: AIStreamReasoningDeltaData) => void
   onDelta?: (delta: string, data: AIStreamDeltaData) => void
   onCompleted?: (data: AIStreamCompletedData) => void
+  onToolRequest?: (data: AIWorkspaceToolRequest) => void | Promise<void>
+  onToolCompleted?: (data: AIWorkspaceToolCompletedData) => void
   onDone?: (data: AIStreamDoneData) => void
 }

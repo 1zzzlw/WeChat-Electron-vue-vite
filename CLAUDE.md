@@ -78,7 +78,7 @@ src/
 │   ├── stores/
 │   │   ├── index.ts         # Pinia 实例创建 + 持久化插件 + shareStorePlugin
 │   │   └── modules/         # 按领域划分的 store：Conversation / Contact / Message / Group / AI / File 等
-│   ├── types/               # TypeScript 类型定义（conversation.ts / friend.ts / aiMessage.ts / moments.ts 等）
+│   ├── types/               # TypeScript 类型定义（conversation.ts / friend.ts / agentWorkspace.ts / moments.ts 等）
 │   ├── handlers/            # WS 消息处理 / 文件传输事件处理 / 壁纸处理
 │   ├── views/               # 路由页面
 │   │   ├── login/           # 登录
@@ -148,21 +148,32 @@ WebSocketManager 在 `src/main/websocket.js`，支持自动重连（最多 3 次
 
 ### 色彩体系
 
-设计 Token 定义在 [src/renderer/src/assets/styles/variables.css](src/renderer/src/assets/styles/variables.css)。
+设计 Token 定义在 [src/renderer/src/assets/styles/variables.css](src/renderer/src/assets/styles/variables.css)，由 `src/renderer/src/main.js` **全局引入**（`:root`）。
 
-| 角色 | 色值 | 用途 |
+> **这是项目唯一的设计变量来源。** 新增组件必须消费 `var(--color-*)`，不要在组件内再定义一套局部 token。
+
+| Token | 色值 | 用途 |
 |---|---|---|
-| **主强调色（青蓝）** | `#43f3ff` | 标题、高亮文字、活跃状态、FAB 按钮、渐变发光 |
-| **次强调色（蓝）** | `rgba(66, 153, 225, 0.2~0.6)` | 边框、按钮背景、hover 态、滚动条滑块、阴影 |
-| **最深背景** | `rgba(28, 38, 50, 0.95)` | 主内容区底色、对话框背景 |
-| **中背景** | `rgba(35, 45, 60, 0.7)` | 侧边栏、列表项、输入框 |
-| **浅背景** | `rgba(40, 50, 65, 0.75)` | 列表顶部栏、卡片 hover 渐变 |
-| **主文字** | `#f0f0f0` / `#ffffff` | 正文、标题 |
-| **次文字** | `rgba(255, 255, 255, 0.7)` | 辅助信息、placeholder |
-| **危险色** | `#ff4757` | 点赞活跃态、删除操作 |
-| **警告色** | `#ff884d` | 警告状态 |
-| **成功色** | `#4cd964` | 在线状态指示 |
-| **红包色** | `#ff5a5f` | 红包按钮 hover |
+| `--color-accent` | `#43f3ff` | 主强调色：标题、高亮文字、活跃状态、FAB 按钮 |
+| `--color-accent-blue` | `rgba(66, 153, 225, 0.6)` | 次强调色（蓝），边框/hover 的基色 |
+| `--color-bg-deep` | `rgba(28, 38, 50, 0.95)` | 与壁纸隔离的底层（对话框） |
+| `--color-surface-1` | `rgba(36, 47, 61, 0.76)` | 主内容区底色 |
+| `--color-surface-2` | `rgba(47, 59, 74, 0.74)` | 面板 / 侧边栏 |
+| `--color-surface-3` | `rgba(57, 70, 86, 0.64)` | 次级面板 / 悬浮项 |
+| `--color-text-strong` | `rgba(247, 249, 252, 0.96)` | 强调正文 |
+| `--color-text-primary` | `#f0f0f0` | 正文、标题 |
+| `--color-text-secondary` | `rgba(255, 255, 255, 0.7)` | 辅助信息、placeholder |
+| `--color-text-muted` | `rgba(214, 222, 233, 0.66)` | 弱化说明文字 |
+| `--color-border-subtle` | `rgba(255, 255, 255, 0.11)` | 分隔线、弱边框 |
+| `--color-border-primary` | `rgba(67, 243, 255, 0.26)` | 常规强调边框 |
+| `--color-border-hover` | `rgba(67, 243, 255, 0.4)` | hover / 聚焦边框 |
+| `--color-danger` | `#ff4757` | 点赞活跃态、删除操作 |
+| `--color-warning` | `#ff884d` | 警告状态 |
+| `--color-success` | `#4cd964` | 在线状态指示 |
+
+另有 `--shadow-sm/md/lg`、`--spacing-xs~xl`、`--radius-sm~xl`、`--transition-fast/normal` 可直接使用。
+
+> 历史遗留：组件里大量硬编码的 `rgba(66, 153, 225, 0.x)` 蓝色梯度尚未迁移到 token，属于渐进式改造，新增代码优先用 token。
 
 **实际使用中的色值模式**（非精确 token，按透明度梯度使用）：
 
@@ -990,7 +1001,7 @@ function changeWallpaper(url: string) {
 
 基于后端数据库表结构（`wallet` / `wallet_record` / `red_packet` / `red_packet_record` / `moments` / `moment_comments`）。
 
-**实施顺序**：朋友圈搜索 → 钱包 → 朋友圈打赏 → 红包收尾 →（远期）AI 对话
+**实施顺序**：朋友圈搜索 → 钱包 → 朋友圈打赏 → 红包收尾（AI 工作台已单独启动，见上文「AI 工作台」）
 
 ### 朋友圈搜索 🔲 零依赖
 
@@ -1047,9 +1058,13 @@ mock 策略：Pinia store + 本地随机数据，后端接口就绪后切换。�
 
 涉及：[ChatBase.vue](src/renderer/src/views/chat/ChatBase.vue)、`SendRedPacket.vue`、`OpenRedPacket.vue`、`ChatRedPacketView.vue`
 
-### AI 对话重设计（远期）
+### AI 工作台（进行中）
 
-方向为 Agent 式对话（流式 SSE、工具调用展示、上下文管理），涉及 `Ai-chat.vue`、`AIMessageStore.ts`、`PersonalityStore.ts`。**当前暂不展开，仅占位。**
+已落地 Agent 工作台：入口 `Main.vue` 左侧导航 → `/aiWorkspace` → `Ai-chat.vue`，状态在 `stores/modules/AgentWorkspaceStore.ts`，接口在 `api/AIMessage.js`（流式 `sendAIMessageApi` + `utils/sse.js` 解析 SSE），模型配置见 `AgentModelConfigDialog.vue`。
+
+**尚未真实化的部分**：`toolSteps` 工具步骤由前端伪造（`AgentWorkspaceStore.addAssistantPlaceholder`），`workspaceOptions` / `branchOptions` / `modeOptions` 均为硬编码常量，对话无持久化（刷新即丢）。
+
+旧版「AI 角色 / 人设」方案（`ChatAIHeader.vue`、`PersonalityStore.ts`、`AIMessageStore.ts`、`types/personality.ts`、`types/aiMessage.ts` 及 `ai-message/*Personality` 接口）已确认无引用并删除，**不要再恢复**。
 
 ### 关键约束
 

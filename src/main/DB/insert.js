@@ -49,11 +49,20 @@ const addFavorites = (favoritesPack) => {
     return multipleInsert(`insert`, 'favorites', favoritesPack)
 }
 
+/**
+ * 保存或更新本地工作区（别名 → 绝对路径）
+ * @param workspace -- { name, rootPath }
+ */
+const saveWorkspace = (workspace) => {
+    return insert('workspace', { ...workspace, updatedAt: Date.now() }, { replace: true })
+}
+
 export {
     saveSentMessage,
     saveLoadMessage,
     addConversation,
     addFriendRelation,
     uploadNoteContent,
-    addFavorites
+    addFavorites,
+    saveWorkspace
 }

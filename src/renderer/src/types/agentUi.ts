@@ -17,7 +17,6 @@ export interface AgentSuggestion {
 }
 
 export interface AgentWorkspaceOption {
-  id: string
   name: string
   path: string
 }
