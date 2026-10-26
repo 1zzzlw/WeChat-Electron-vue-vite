@@ -49,7 +49,23 @@ server.interceptors.response.use(
     if (status === 401 && !isRefreshToken(error.config)) {
       console.info('token过期,刷新token')
       const userId = await window.userInfoApi.storeGetUserInfo('userId')
-      const isSuccess = await refreshToken(userId)
+
+      let isSuccess
+
+      try {
+        isSuccess = await refreshToken(userId)
+      } catch (refreshError) {
+        const refreshStatus = refreshError.response?.status
+
+        if (refreshStatus === 400 || refreshStatus === 401) {
+          // 网关用这两个状态表示刷新凭据失效
+          isSuccess = false
+        } else {
+          // 网络、服务异常：结束本次请求，交给调用方处理
+          return Promise.reject(refreshError)
+        }
+      }
+
       if (isSuccess) {
         server.defaults.headers.Authorization = `${getAccessToken()}`
         error.config.headers.Authorization = `${getAccessToken()}`
