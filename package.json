@@ -21,6 +21,8 @@
     "test": "node --test --test-timeout=30000 tests/*.test.cjs",
     "test:desktop": "electron tests/desktopPages.electron.cjs",
     "test:sounds": "electron tests/uiSounds.electron.cjs",
+    "test:cursors": "electron tests/cursors.electron.cjs",
+    "test:handoff": "electron tests/loadingHandoff.electron.cjs",
     "check": "npm run lint && npm run typecheck && npm test"
   },
   "dependencies": {

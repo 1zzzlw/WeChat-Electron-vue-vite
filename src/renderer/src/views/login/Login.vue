@@ -46,7 +46,7 @@
 <script lang="ts" setup>
 import { ElMessage, FormInstance, FormRules } from 'element-plus'
 import { User, Lock } from '@element-plus/icons-vue'
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { loginApi, verifyCodeApi } from '@/api/User'
 import WindowControls from '@/components/WindowControls.vue'
@@ -114,6 +114,7 @@ const Login = async (formEl: FormInstance | undefined) => {
         // 等待更新成功的通知
         await (window as any).dbApi.updateDBData()
         await router.push('/main')
+        await nextTick()
         await (window as any).windowToolApi.resizeWindow('main')
       } else {
         // 等待通知在路由跳转
@@ -121,6 +122,7 @@ const Login = async (formEl: FormInstance | undefined) => {
           (window as any).loadApi.onDataInitComplete(resolve)
         })
         await router.push('/main')
+        await nextTick()
         await (window as any).windowToolApi.resizeWindow('main')
       }
     } else {

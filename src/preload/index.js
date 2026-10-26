@@ -8,7 +8,23 @@ window.addEventListener('DOMContentLoaded', installUiSounds, { once: true })
 let currentTheme = ipcRenderer.sendSync('theme:initial')
 const applyTheme = theme => {
   currentTheme = theme
-  if (document.documentElement) document.documentElement.dataset.theme = theme
+  const root = document.documentElement
+  if (!root) return
+  root.dataset.theme = theme
+  const stylesheet = document.querySelector('link[rel="stylesheet"][href$="theme.css"]')
+  if (!stylesheet) return
+  // 相对 url 变量在组件 assets/ 样式中使用时会指向错误目录，统一相对于主题文件解析。
+  const cursorNames = [
+    'default', 'pointer', 'text', 'not-allowed', 'crosshair', 'help', 'move',
+    'ew-resize', 'ns-resize', 'nwse-resize', 'nesw-resize', 'wait', 'progress'
+  ].map(role => `--cursor-${role}`)
+  for (const name of cursorNames) root.style.removeProperty(name)
+  const style = getComputedStyle(root)
+  for (const name of cursorNames) {
+    const value = style.getPropertyValue(name)
+    if (value.includes('url(')) root.style.setProperty(name, value.replace(/url\(\s*(['"]?)(.*?)\1\s*\)/g,
+      (_match, _quote, url) => `url(${JSON.stringify(new URL(url, stylesheet.href).href)})`))
+  }
 }
 window.addEventListener('DOMContentLoaded', () => applyTheme(currentTheme), { once: true })
 ipcRenderer.on('theme:changed', (_event, theme) => applyTheme(theme))
@@ -196,7 +212,7 @@ const windowToolApi = {
   },
   createNewWindow: (windowType, data) => {
     // 设置等待光标，给用户反馈窗口正在创建
-    document.body.style.cursor = 'wait'
+    document.body.style.cursor = 'var(--cursor-wait, wait)'
     ipcRenderer.send('create-new-window', windowType, data)
     // 1.5秒后恢复光标
     setTimeout(() => {

@@ -43,7 +43,7 @@ function insertControls() {
         '<button id="plain" style="width:100px;height:50px">点击<span>内部文字</span></button>',
         '<button id="disabled" disabled>禁用按钮</button>',
         '<div aria-disabled="true"><button id="aria-disabled">禁用容器</button></div>',
-        '<div id="custom" style="cursor:pointer;padding:12px"><span>自定义操作</span></div>',
+        '<div id="custom" style="cursor:var(--cursor-pointer,pointer);padding:12px"><span>自定义操作</span></div>',
         '<div class="theme-options"><button id="select">选择</button></div>',
         '<button id="delete" class="el-button--danger">删除</button>',
         '<button id="capture" data-ui-sound="capture">截图</button>',

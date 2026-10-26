@@ -24,7 +24,7 @@
 <script lang="ts" setup>
 import { Plus } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { registerApi } from '@/api/User'
 import { useRegisterInfoStore } from '@/stores/modules/RegisterInfoStore'
@@ -103,6 +103,7 @@ const submitForm = async () => {
       })
       console.info('初始化完成, 进入main界面');
       await router.push('/main')
+      await nextTick()
       await (window as any).windowToolApi.resizeWindow('main')
     } else {
       ElMessage.error(res.msg)

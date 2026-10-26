@@ -1,6 +1,8 @@
 /* 共享的天空蓝玻璃主题：Vue、截图工具和加载页使用同一组基础变量。
  * 登录和注册保留各自的青蓝 / 粉紫动画与壁纸。
  */
+@import './cursors.css';
+
 :root {
   color-scheme: light;
   --color-app-bg: #9bbdd5;

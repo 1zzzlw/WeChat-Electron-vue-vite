@@ -30,7 +30,9 @@ ipcMain.handle('loading-isNeedInit', (e) => {
         // 等待加载窗口准备就绪后，通知开始数据初始化
         const window = loadingWindow
         window.once('closed', () => {
-            if (loadingWindow === window) loadingWindow = null
+            // 只有意外关闭时恢复来源窗口；正常交接由 enterMain 显示已绘制的主界面。
+            if (loadingWindow !== window) return
+            loadingWindow = null
             if (refs.mainWindow && !refs.mainWindow.isDestroyed()) refs.mainWindow.show()
         })
         window.webContents.once('did-finish-load', () => {
@@ -47,14 +49,16 @@ ipcMain.handle('loading-isNeedInit', (e) => {
 
 // 数据库加载完成，可以进入main界面
 ipcMain.on('close-loading-window', (e) => {
-    if (loadingWindow) {
-        // 销毁加载窗口
-        loadingWindow.destroy();
-        loadingWindow = null;
-    }
-    // 通知渲染进程可以进入main界面
+    if (!loadingWindow || loadingWindow.isDestroyed() || loadingWindow.webContents !== e.sender) return
+    // 保留加载窗口，隐藏的主窗口完成路由和首次绘制后再关闭。
     refs.mainWindow.webContents.send('data-init-complete')
 })
+
+export function finishLoadingWindow() {
+    const window = loadingWindow
+    loadingWindow = null
+    if (window && !window.isDestroyed()) window.destroy()
+}
 
 // 初始化数据到数据库
 const initializationData = async (window) => {

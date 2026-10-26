@@ -3,6 +3,7 @@ import { ipcMain, app, globalShortcut } from 'electron'
 import { windowPool } from '../Util/createNewWindow'
 import websocket from '../websocket'
 import { createCaptureWindow } from './chatToolIPC';
+import { finishLoadingWindow } from './initDataIPC';
 import os from 'os'
 
 let shortcutsRegistered = false
@@ -62,7 +63,7 @@ ipcMain.on('window:type', async (e, windowType) => {
     // 关闭窗口尺寸改变
     refs.mainWindow.setResizable(false)
   } else if (windowType === 'main') {
-    enterMain()
+    await enterMain()
   } else if (windowType === 'register') {
     refs.mainWindow.setSize(login_width, register_height)
     refs.mainWindow.center()
@@ -70,16 +71,25 @@ ipcMain.on('window:type', async (e, windowType) => {
 })
 
 // 进入main窗口
-const enterMain = () => {
+const enterMain = async () => {
   // 进入Main窗口
   refs.mainWindow.setSize(main_width, main_height)
   refs.mainWindow.center()
   // 开启窗口尺寸改变
   refs.mainWindow.setResizable(true)
   refs.mainWindow.setMinimumSize(main_width, main_height)
+  // 让隐藏页面以主界面尺寸完成一次合成，避免 show 时露出旧登录帧。
+  const window = refs.mainWindow
+  try {
+    await window.webContents.capturePage(undefined, { stayHidden: true })
+  } catch (error) {
+    console.warn('主界面首次绘制确认失败:', error)
+  }
+  if (window.isDestroyed()) return
   // 建立ws连接
   websocket.connect()
-  refs.mainWindow.show()
+  window.show()
+  finishLoadingWindow()
 }
 
 // 更新窗口壁纸

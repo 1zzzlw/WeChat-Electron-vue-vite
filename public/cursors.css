@@ -1,0 +1,66 @@
+/* Minimalistic V5 by Skye084，源包为 64px CUR/ANI；应用使用 32px PNG 与对应热区。 */
+:root {
+  --cursor-default: url('./cursors/minimalistic-v5/black/default.png') 5 5, default;
+  --cursor-pointer: url('./cursors/minimalistic-v5/black/pointer.png') 16 5, pointer;
+  --cursor-text: url('./cursors/minimalistic-v5/black/text.png') 16 16, text;
+  --cursor-not-allowed: url('./cursors/minimalistic-v5/black/not-allowed.png') 5 5, not-allowed;
+  --cursor-crosshair: url('./cursors/minimalistic-v5/black/crosshair.png') 16 16, crosshair;
+  --cursor-help: url('./cursors/minimalistic-v5/black/help.png') 5 5, help;
+  --cursor-move: url('./cursors/minimalistic-v5/black/move.png') 16 16, move;
+  --cursor-ew-resize: url('./cursors/minimalistic-v5/black/ew-resize.png') 16 16, ew-resize;
+  --cursor-ns-resize: url('./cursors/minimalistic-v5/black/ns-resize.png') 16 16, ns-resize;
+  --cursor-nwse-resize: url('./cursors/minimalistic-v5/black/nwse-resize.png') 16 16, nwse-resize;
+  --cursor-nesw-resize: url('./cursors/minimalistic-v5/black/nesw-resize.png') 16 16, nesw-resize;
+  --cursor-wait: url('./cursors/minimalistic-v5/black/wait.png') 16 16, wait;
+  --cursor-progress: url('./cursors/minimalistic-v5/black/progress.png') 5 5, progress;
+}
+
+:root[data-theme='dark'] {
+  --cursor-default: url('./cursors/minimalistic-v5/white/default.png') 5 5, default;
+  --cursor-pointer: url('./cursors/minimalistic-v5/white/pointer.png') 16 5, pointer;
+  --cursor-text: url('./cursors/minimalistic-v5/white/text.png') 16 16, text;
+  --cursor-not-allowed: url('./cursors/minimalistic-v5/white/not-allowed.png') 5 5, not-allowed;
+  --cursor-crosshair: url('./cursors/minimalistic-v5/white/crosshair.png') 16 16, crosshair;
+  --cursor-help: url('./cursors/minimalistic-v5/white/help.png') 5 5, help;
+  --cursor-move: url('./cursors/minimalistic-v5/white/move.png') 16 16, move;
+  --cursor-ew-resize: url('./cursors/minimalistic-v5/white/ew-resize.png') 16 16, ew-resize;
+  --cursor-ns-resize: url('./cursors/minimalistic-v5/white/ns-resize.png') 16 16, ns-resize;
+  --cursor-nwse-resize: url('./cursors/minimalistic-v5/white/nwse-resize.png') 16 16, nwse-resize;
+  --cursor-nesw-resize: url('./cursors/minimalistic-v5/white/nesw-resize.png') 16 16, nesw-resize;
+  --cursor-wait: url('./cursors/minimalistic-v5/white/wait.png') 16 16, wait;
+  --cursor-progress: url('./cursors/minimalistic-v5/white/progress.png') 5 5, progress;
+}
+
+:root {
+  --cursor-auto: var(--cursor-default);
+  --cursor-no-drop: var(--cursor-not-allowed);
+  --cursor-all-scroll: var(--cursor-move);
+  --cursor-grab: var(--cursor-move);
+  --cursor-grabbing: var(--cursor-move);
+  --cursor-e-resize: var(--cursor-ew-resize);
+  --cursor-w-resize: var(--cursor-ew-resize);
+  --cursor-col-resize: var(--cursor-ew-resize);
+  --cursor-n-resize: var(--cursor-ns-resize);
+  --cursor-s-resize: var(--cursor-ns-resize);
+  --cursor-row-resize: var(--cursor-ns-resize);
+  --cursor-nw-resize: var(--cursor-nwse-resize);
+  --cursor-se-resize: var(--cursor-nwse-resize);
+  --cursor-ne-resize: var(--cursor-nesw-resize);
+  --cursor-sw-resize: var(--cursor-nesw-resize);
+}
+
+html { cursor: var(--cursor-default, default); }
+button, a[href], summary, select, [role='button'], [role='menuitem'],
+[role='tab'], [role='option'], [role='switch'], [role='checkbox'], [role='radio'],
+input[type='button'], input[type='submit'], input[type='checkbox'], input[type='radio'] {
+  cursor: var(--cursor-pointer, pointer);
+}
+input:not([type]), input[type='text'], input[type='password'], input[type='number'],
+input[type='search'], input[type='email'], input[type='tel'], input[type='url'],
+textarea, [contenteditable='true'] { cursor: var(--cursor-text, text); }
+:disabled, [aria-disabled='true'], [aria-disabled='true'] *, .is-disabled, .is-disabled * {
+  cursor: var(--cursor-not-allowed, not-allowed) !important;
+}
+.is-loading, .is-loading *, [aria-busy='true'], [aria-busy='true'] * {
+  cursor: var(--cursor-wait, wait) !important;
+}

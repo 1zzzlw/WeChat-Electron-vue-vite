@@ -20,7 +20,7 @@ function findControl(target) {
 
   // 历史页面中用 div/span 实现的操作入口也复用同一套反馈。
   for (let element = target; element && element !== document.body; element = element.parentElement) {
-    if (getComputedStyle(element).cursor === 'pointer') control = element
+    if (/(?:^|,)\s*pointer\s*$/.test(getComputedStyle(element).cursor)) control = element
     else if (control) break
   }
   return control

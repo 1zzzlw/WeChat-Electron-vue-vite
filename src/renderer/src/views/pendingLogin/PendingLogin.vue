@@ -16,7 +16,7 @@
 
 <script setup>
 import { ElMessage } from 'element-plus'
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { PendingLoginApi } from '@/api/User'
 
@@ -38,6 +38,7 @@ const confirmLogin = async () => {
     console.info('响应成功')
     await window.dbApi.updateDBData()
     await router.push('/main')
+    await nextTick()
     await window.windowToolApi.resizeWindow('main')
   } else {
     ElMessage.error('登录过期，重新登录', res.msg)

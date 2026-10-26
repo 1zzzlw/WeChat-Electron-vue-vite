@@ -1,6 +1,7 @@
 import vue from '@vitejs/plugin-vue'; // 让 Vite 支持 Vue 单文件组件
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite';
 import { join } from 'path';
+import { cursorStyles } from './build/cursorStyles.mjs';
 
 export default defineConfig({
   main: {
@@ -39,6 +40,9 @@ export default defineConfig({
     },
     // 启用 Vue 插件，支持 .vue 文件
     plugins: [vue()],
+    css: {
+      postcss: { plugins: [cursorStyles()] }
+    },
     build: {
       sourcemap: false
     },
