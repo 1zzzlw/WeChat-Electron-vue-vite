@@ -333,7 +333,7 @@ const sendMessage = async () => {
   const isPrivate = props.conversation.type === 0
   const receiverId = isPrivate ? props.conversation.targetId : convId
 
-  // ---------- 私聊拉黑检查 ----------
+  // 私聊拉黑检查
   if (isPrivate && receiverId) {
     const friendData = friendInfoStore.friendInfoMap[receiverId as string | number]
     if (friendData?.relationStatus === 2) {
@@ -353,7 +353,7 @@ const sendMessage = async () => {
       .map((item) => item.userId) || []
   )
 
-  // ---------- 处理文件消息 ----------
+  //  处理文件消息
   if (fileInfoList.value.length > 0) {
     for (const file of fileInfoList.value) {
       const { minioFilePath, chunkCount } = await (window as any).uploadFileApi.uploadFile(toRaw(file))
@@ -438,7 +438,9 @@ const updateConversationInfo = (messagePack: Message) => {
     latestMsg: messagePack.content,
     latestMsgTime: messagePack.sendTime
   }
+  // 更新本地数据库的会话最新消息展示
   updateConversation(condition, data)
+  // 更新缓存中的会话最新消息展示
   conversationStore.setConversationMap(messagePack.conversationId, {
     latestMsg: messagePack.content,
     latestMsgTime: dayjs(messagePack.sendTime).format('HH:mm:ss')
