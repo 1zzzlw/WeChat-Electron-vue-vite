@@ -3,274 +3,195 @@ import { generatePath } from '../Util/mediaHandle'
 import fs from 'fs'
 import http from 'http'
 import https from 'https'
+import { Transform } from 'stream'
+import { pipeline } from 'stream/promises'
 
 /** 根据 URL 协议自动选择 http 或 https 的 get 方法 */
 const smartGet = (url, options, callback) => {
-  const lib = url.startsWith('https:') ? https : http
-  return lib.get(url, options, callback)
+    const lib = url.startsWith('https:') ? https : http
+    return lib.get(url, options, callback)
 }
 
-// 管理活跃的下载任务
-// key: fileId, value: { req, redirectReq, stream, desc, downloadedSize, totalSize, startTime, fileName, remoteUrl, paused }
 const activeDownloads = new Map()
 
-/**
- * 开始/恢复下载文件
- */
-const downloadFile = (fileId, fileName, remoteUrl) => {
-    // 检查是否是恢复下载
-    const existing = activeDownloads.get(fileId)
-    const existingSize = existing ? existing.downloadedSize : 0
-
-    return generatePath(fileName).then((desc) => {
-        return new Promise((resolve, reject) => {
-            let downloadedSize = existingSize
-            let startTime = existing ? existing.startTime : Date.now()
-            let cleaned = false
-
-            const cleanup = () => {
-                if (cleaned) return
-                cleaned = true
-                if (activeDownloads.get(fileId)?.paused) return // 暂停时不删除文件
-                try {
-                    if (fs.existsSync(desc)) {
-                        fs.unlinkSync(desc)
-                    }
-                } catch (e) { /* ignore */ }
-            }
-
-            // 构建请求选项：断点续传
-            const requestOptions = {}
-            if (existingSize > 0 && fs.existsSync(desc)) {
-                requestOptions.headers = { 'Range': `bytes=${existingSize}-` }
-            }
-
-            const req = smartGet(remoteUrl, requestOptions, (res) => {
-                // 处理重定向
-                if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-                    const redirectUrl = res.headers.location
-                    // 重定向请求也需带上 Range 头
-                    const redirectOptions = {}
-                    if (existingSize > 0 && fs.existsSync(desc)) {
-                        redirectOptions.headers = { 'Range': `bytes=${existingSize}-` }
-                    }
-
-                    const redirectReq = smartGet(redirectUrl, redirectOptions, (redirectRes) => {
-                        const contentRange = redirectRes.headers['content-range']
-                        let totalSize = parseInt(redirectRes.headers['content-length'], 10)
-                        // 206 Partial Content: Content-Range 格式 "bytes start-end/total"
-                        if (redirectRes.statusCode === 206 && contentRange) {
-                            const match = contentRange.match(/\/(\d+)/)
-                            if (match) totalSize = parseInt(match[1], 10)
-                        }
-
-                        const stream = fs.createWriteStream(desc, { flags: existingSize > 0 ? 'a' : 'w' })
-
-                        // 保存到活跃下载 map
-                        activeDownloads.set(fileId, {
-                            req, redirectReq, stream,
-                            desc, downloadedSize, totalSize, startTime,
-                            fileName, remoteUrl, paused: false
-                        })
-
-                        redirectRes.on('data', (chunk) => {
-                            downloadedSize += chunk.length
-                            activeDownloads.get(fileId).downloadedSize = downloadedSize
-                            const progress = totalSize > 0 ? Math.floor((downloadedSize / totalSize) * 100) : 0
-                            const currentTime = Date.now()
-                            const timeElapsed = Math.max((currentTime - startTime) / 1000, 0.1)
-                            const speed = downloadedSize / timeElapsed
-                            const speedMB = (speed / 1024 / 1024).toFixed(2)
-                            if (refs.mainWindow && !refs.mainWindow.isDestroyed()) {
-                                refs.mainWindow.webContents.send('download-progress', {
-                                    fileId, downloadProgress: Math.min(progress, 100), downloadSpeed: speedMB,
-                                })
-                            }
-                        })
-
-                        redirectRes.pipe(stream)
-
-                        stream.on('finish', () => {
-                            stream.close()
-                            activeDownloads.delete(fileId)
-                            if (refs.mainWindow && !refs.mainWindow.isDestroyed()) {
-                                refs.mainWindow.webContents.send('download-loadStatus', { fileId, status: 1 })
-                            }
-                            resolve(desc)
-                        })
-
-                        stream.on('error', (err) => {
-                            if (activeDownloads.get(fileId)?.paused) return
-                            cleanup()
-                            activeDownloads.delete(fileId)
-                            if (refs.mainWindow && !refs.mainWindow.isDestroyed()) {
-                                refs.mainWindow.webContents.send('download-loadStatus', { fileId, status: 2 })
-                            }
-                            reject(err)
-                        })
-                    })
-
-                    redirectReq.setTimeout(30000, () => {
-                        if (activeDownloads.get(fileId)?.paused) return
-                        redirectReq.destroy()
-                        cleanup()
-                        activeDownloads.delete(fileId)
-                        reject(new Error('下载连接超时'))
-                    })
-
-                    redirectReq.on('error', (err) => {
-                        if (activeDownloads.get(fileId)?.paused) {
-                            // 暂停触发的 destroy：不清理，保留进度
-                            return
-                        }
-                        cleanup()
-                        activeDownloads.delete(fileId)
-                        reject(err)
-                    })
-                    return
-                }
-
-                // 非重定向响应
-                const contentRange = res.headers['content-range']
-                let totalSize = parseInt(res.headers['content-length'], 10)
-                if (res.statusCode === 206 && contentRange) {
-                    const match = contentRange.match(/\/(\d+)/)
-                    if (match) totalSize = parseInt(match[1], 10)
-                }
-
-                const stream = fs.createWriteStream(desc, { flags: existingSize > 0 ? 'a' : 'w' })
-
-                // 保存到活跃下载 map
-                activeDownloads.set(fileId, {
-                    req, redirectReq: null, stream,
-                    desc, downloadedSize, totalSize, startTime,
-                    fileName, remoteUrl, paused: false
-                })
-
-                res.on('data', (chunk) => {
-                    downloadedSize += chunk.length
-                    activeDownloads.get(fileId).downloadedSize = downloadedSize
-                    const progress = totalSize > 0 ? Math.floor((downloadedSize / totalSize) * 100) : 0
-                    const currentTime = Date.now()
-                    const timeElapsed = Math.max((currentTime - startTime) / 1000, 0.1)
-                    const speed = downloadedSize / timeElapsed
-                    const speedMB = (speed / 1024 / 1024).toFixed(2)
-                    if (refs.mainWindow && !refs.mainWindow.isDestroyed()) {
-                        refs.mainWindow.webContents.send('download-progress', {
-                            fileId, downloadProgress: Math.min(progress, 100), downloadSpeed: speedMB,
-                        })
-                    }
-                })
-
-                res.pipe(stream)
-
-                stream.on('finish', () => {
-                    stream.close()
-                    activeDownloads.delete(fileId)
-                    if (refs.mainWindow && !refs.mainWindow.isDestroyed()) {
-                        refs.mainWindow.webContents.send('download-loadStatus', { fileId, status: 1 })
-                    }
-                    resolve(desc)
-                })
-
-                stream.on('error', (err) => {
-                    if (activeDownloads.get(fileId)?.paused) return
-                    cleanup()
-                    activeDownloads.delete(fileId)
-                    if (refs.mainWindow && !refs.mainWindow.isDestroyed()) {
-                        refs.mainWindow.webContents.send('download-loadStatus', { fileId, status: 2 })
-                    }
-                    reject(err)
-                })
-            })
-
-            // 30秒连接超时
-            req.setTimeout(30000, () => {
-                if (activeDownloads.get(fileId)?.paused) return
-                req.destroy()
-                cleanup()
-                activeDownloads.delete(fileId)
-                reject(new Error('下载连接超时'))
-            })
-
-            req.on('error', (err) => {
-                if (activeDownloads.get(fileId)?.paused) {
-                    // 暂停触发的 destroy：不清理，不 reject
-                    return
-                }
-                cleanup()
-                activeDownloads.delete(fileId)
-                reject(err)
-            })
-        })
-    })
+const notifyDownload = (channel, data) => {
+    if (refs.mainWindow && !refs.mainWindow.isDestroyed()) {
+        refs.mainWindow.webContents.send(channel, data)
+    }
 }
 
-/**
- * 暂停下载：销毁 HTTP 请求，保留已下载的部分文件
- */
+// 普通响应和重定向响应共用后续校验，支持相对 Location，限制重定向次数。
+const getResponse = async (url, headers, signal) => {
+    for (let redirects = 0; redirects <= 5; redirects++) {
+        signal.throwIfAborted()
+        const response = await new Promise((resolve, reject) => {
+            const req = smartGet(url, { headers, signal }, resolve)
+            req.setTimeout(30000, () => req.destroy(new Error('下载请求超时')))
+            req.once('error', reject)
+        })
+        if ([301, 302, 303, 307, 308].includes(response.statusCode)) {
+            response.destroy()
+            if (!response.headers.location || redirects === 5) {
+                throw new Error('下载重定向无效或次数过多')
+            }
+            url = new URL(response.headers.location, url).href
+            continue
+        }
+        return response
+    }
+}
+
+// 校验响应后才打开文件；pipeline 会在失败或暂停时关闭所有流。
+const transferFile = async (state, onProgress) => {
+    const signal = state.controller.signal
+    const headers = {}
+    if (state.downloadedSize > 0) {
+        headers.Range = `bytes=${state.downloadedSize}-`
+        if (state.validator) headers['If-Range'] = state.validator
+    }
+    const response = await getResponse(state.remoteUrl, headers, signal)
+    try {
+        signal.throwIfAborted()
+        if (response.statusCode !== 200 && response.statusCode !== 206) {
+            throw new Error(`下载失败：HTTP ${response.statusCode}`)
+        }
+
+        let offset = state.downloadedSize
+        let expectedBytes = response.headers['content-length'] === undefined
+            ? null : Number(response.headers['content-length'])
+        if (expectedBytes !== null && (!Number.isSafeInteger(expectedBytes) || expectedBytes < 0)) {
+            throw new Error('下载响应的文件长度无效')
+        }
+        state.totalSize = expectedBytes
+
+        if (response.statusCode === 206) {
+            const range = /^bytes (\d+)-(\d+)\/(\d+)$/.exec(response.headers['content-range'] || '')
+            if (!range) throw new Error('下载响应缺少有效的 Content-Range')
+            const start = Number(range[1])
+            const end = Number(range[2])
+            const total = Number(range[3])
+            if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) ||
+                start !== offset || end < start ||
+                !Number.isSafeInteger(total) || end >= total) {
+                throw new Error('下载响应的续传范围与本地文件不一致')
+            }
+            const rangeBytes = end - start + 1
+            if (expectedBytes !== null && expectedBytes !== rangeBytes) {
+                throw new Error('下载响应的长度与续传范围不一致')
+            }
+            expectedBytes = rangeBytes
+            state.totalSize = total
+        } else {
+            // 服务端忽略 Range 返回完整文件时，从头覆盖，不能追加。
+            offset = 0
+        }
+
+        const etag = response.headers.etag
+        state.validator = etag && !etag.startsWith('W/') ? etag : response.headers['last-modified']
+        state.downloadedSize = offset
+        const startTime = Date.now()
+        let receivedBytes = 0
+        let lastProgressAt = 0
+        const reportProgress = () => {
+            const now = Date.now()
+            if (onProgress && now - lastProgressAt >= 100 && !signal.aborted) {
+                lastProgressAt = now
+                onProgress({
+                    downloadProgress: state.totalSize > 0
+                        ? Math.min(99, Math.floor(state.downloadedSize / state.totalSize * 100)) : 0,
+                    downloadSpeed: (receivedBytes / Math.max((now - startTime) / 1000, 0.1) / 1024 / 1024).toFixed(2)
+                })
+            }
+        }
+        reportProgress()
+        signal.throwIfAborted()
+        const counter = new Transform({
+            transform(chunk, encoding, callback) {
+                receivedBytes += chunk.length
+                state.downloadedSize = offset + receivedBytes
+                reportProgress()
+                callback(null, chunk)
+            }
+        })
+        state.writing = true
+        await pipeline(response, counter, fs.createWriteStream(state.desc, {
+            flags: offset > 0 ? 'a' : 'w'
+        }), { signal })
+
+        const actualSize = fs.statSync(state.desc).size
+        if ((expectedBytes !== null && receivedBytes !== expectedBytes) ||
+            (state.totalSize !== null && actualSize !== state.totalSize)) {
+            throw new Error('下载文件长度不完整')
+        }
+        state.downloadedSize = actualSize
+    } finally {
+        response.destroy()
+    }
+}
+
+/** 开始或恢复下载，同一文件的旧任务关闭后才允许恢复写入。 */
+const downloadFile = (fileId, fileName, remoteUrl) => {
+    const previous = activeDownloads.get(fileId)
+    if (previous && !previous.paused) return previous.promise
+
+    const state = { controller: new AbortController(), paused: false, writing: false }
+    activeDownloads.set(fileId, state)
+    state.promise = (async () => {
+        try {
+            await previous?.promise
+            state.desc = previous?.desc
+            state.controller.signal.throwIfAborted()
+            state.desc = state.desc || await generatePath(fileName)
+            state.controller.signal.throwIfAborted()
+            // 以已关闭文件的实际长度为准，不能使用尚未落盘的接收字节数。
+            state.downloadedSize = previous && fs.existsSync(state.desc) ? fs.statSync(state.desc).size : 0
+            state.validator = previous?.validator
+            state.remoteUrl = remoteUrl
+            await transferFile(state, (progress) => {
+                if (!state.paused && activeDownloads.get(fileId) === state) {
+                    notifyDownload('download-progress', { fileId, ...progress })
+                }
+            })
+            state.controller.signal.throwIfAborted()
+            notifyDownload('download-loadStatus', { fileId, status: 1 })
+            return state.desc
+        } catch (err) {
+            if (state.paused) return null
+            if (state.writing && state.desc && fs.existsSync(state.desc)) {
+                try { fs.unlinkSync(state.desc) } catch { /* ignore */ }
+            }
+            notifyDownload('download-loadStatus', { fileId, status: 2 })
+            throw err
+        } finally {
+            if (!state.paused && activeDownloads.get(fileId) === state) {
+                activeDownloads.delete(fileId)
+            }
+        }
+    })()
+    return state.promise
+}
+
+/** 暂停立即阻止进度上报并中止网络/文件流，保留部分文件。 */
 const pauseDownload = (fileId) => {
     const state = activeDownloads.get(fileId)
-    if (!state) return
-
-    // 标记为暂停（防止 error handler 清理文件）
+    if (!state || state.paused) return
     state.paused = true
+    state.controller.abort()
+    notifyDownload('download-paused', { fileId })
+}
 
-    // 销毁写入流（使用 destroy 而非 end，避免触发 finish 事件导致状态被清理）
-    if (state.stream && !state.stream.destroyed) {
-        state.stream.destroy()
-    }
-
-    // 销毁重定向请求
-    if (state.redirectReq) {
-        state.redirectReq.destroy()
-    }
-
-    // 销毁主请求
-    if (state.req) {
-        state.req.destroy()
-    }
-
-    // 通知渲染进程
-    if (refs.mainWindow && !refs.mainWindow.isDestroyed()) {
-        refs.mainWindow.webContents.send('download-paused', {
-            fileId,
-            downloadedSize: state.downloadedSize
-        })
+/** 另存为也使用相同的状态码、重定向和完整性校验。 */
+const saveAsMedia = async (remoteUrl, filePath) => {
+    const state = { remoteUrl, desc: filePath, downloadedSize: 0, controller: new AbortController() }
+    try {
+        await transferFile(state)
+        return filePath
+    } catch (err) {
+        if (state.writing && fs.existsSync(filePath)) {
+            try { fs.unlinkSync(filePath) } catch { /* ignore */ }
+        }
+        throw err
     }
 }
 
-/**
- * 保存图片/视频另存为
- */
-const saveAsMedia = (remoteUrl, filePath) => {
-    return new Promise((resolve, reject) => {
-        const req = smartGet(remoteUrl, (res) => {
-            const stream = fs.createWriteStream(filePath)
-            res.pipe(stream)
-            stream.on('finish', () => {
-                stream.close()
-                resolve(filePath)
-            })
-            stream.on('error', (err) => {
-                try { fs.unlinkSync(filePath) } catch (e) { /* ignore */ }
-                reject(err)
-            })
-        })
-        req.setTimeout(15000, () => {
-            req.destroy()
-            try { fs.unlinkSync(filePath) } catch (e) { /* ignore */ }
-            reject(new Error('另存为连接超时'))
-        })
-        req.on('error', (err) => {
-            try { fs.unlinkSync(filePath) } catch (e) { /* ignore */ }
-            reject(err)
-        })
-    })
-}
-
-export {
-    downloadFile,
-    pauseDownload,
-    saveAsMedia
-}
+export { downloadFile, pauseDownload, saveAsMedia }

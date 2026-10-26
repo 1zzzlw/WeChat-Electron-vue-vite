@@ -49,7 +49,7 @@ ipcMain.on('update-pauseStatus', (e, file, isPause) => {
 })
 
 ipcMain.on('start-download', (e, fileId, fileName, remoteUrl) => {
-    downloadFile(fileId, fileName, remoteUrl)
+    downloadFile(fileId, fileName, remoteUrl).catch(err => console.error('下载失败', err.message))
 })
 
 ipcMain.on('pause-download', (e, fileId) => {
@@ -57,7 +57,7 @@ ipcMain.on('pause-download', (e, fileId) => {
 })
 
 ipcMain.on('resume-download', (e, fileId, fileName, remoteUrl) => {
-    downloadFile(fileId, fileName, remoteUrl)
+    downloadFile(fileId, fileName, remoteUrl).catch(err => console.error('恢复下载失败', err.message))
 })
 
 ipcMain.on('saveAs-media', async (e, fileInfo) => {
@@ -72,7 +72,7 @@ ipcMain.on('saveAs-media', async (e, fileInfo) => {
     const filePath = result.filePath
     const remoteUrl = fileInfo.remoteUrl
     console.log(filePath)
-    saveAsMedia(remoteUrl, filePath)
+    saveAsMedia(remoteUrl, filePath).catch(err => console.error('另存为失败', err.message))
 })
 
 ipcMain.handle('workspace:register-local', async (e, workspaceName, dirPath) => {

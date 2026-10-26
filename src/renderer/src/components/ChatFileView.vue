@@ -10,7 +10,7 @@
       <div v-if="!isUpload">
         <div v-if="downloadStatus === 0 && nowDownloadStatus === statusMap.downloading.value">
           <div class="file-process">
-            <el-progress :percentage="downloadProgress > 100 ? 100 : downloadProgress" />
+            <el-progress class="download-progress" :percentage="downloadProgress > 100 ? 100 : downloadProgress" />
           </div>
           <div class="upload-speed">
             <span>下载进度 {{ downloadSpeed }} MB/s</span>
@@ -355,6 +355,10 @@ watch(
 }
 
 /* 下载/暂停/开始操作按钮（右下角） */
+.download-progress :deep(.el-progress-bar__inner) {
+  transition: none;
+}
+
 .action-btn-float {
   position: absolute;
   right: 12px;

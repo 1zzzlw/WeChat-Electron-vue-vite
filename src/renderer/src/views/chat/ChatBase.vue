@@ -614,7 +614,7 @@ const handleChoice = async (item: any, messageId: string, messageContent: string
   }
 }
 
-// ==================== 滚动 ====================
+// 滚动 
 const { scrollToBottom, handleScroll, loading, noMore, isNearBottom } = useChatScroll(
   scrollbarRef,
   {
@@ -624,7 +624,7 @@ const { scrollToBottom, handleScroll, loading, noMore, isNearBottom } = useChatS
   }
 )
 
-// ==================== 加载数据 ====================
+// 加载数据 
 async function loadMessage(newConversationId: any) {
   const result = await getMessageList(newConversationId, messagePageInfo)
   const messageList = result.messageList
