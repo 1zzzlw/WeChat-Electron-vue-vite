@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia'
 import { Message } from '@/types/message'
-import { messageEmits } from 'element-plus'
 
 // 聊天记录存储模块
 interface PendingMessageInfo {
@@ -248,18 +247,22 @@ export const messageInfo = defineStore('messageInfo', {
      * 收到服务端ACK
     */
     onReceiveAck(messageId: string) {
-      console.log(messageId)
-
       const pendingInfo = this.pendingMessages.get(messageId)
 
-      if (!pendingInfo) {
-        // 可能已经超时或已经处理
-        return
-      }
+      let message: Message | undefined
 
-      // 通过临时消息id遍历数组来获取该消息，而不是通过索引获取消息避免数组位置变化的影响
-      const message = this.messageMap[pendingInfo.conversationId]
-        ?.find(item => item.id === messageId)
+      if (pendingInfo) {
+        // 正常 ACK：通过待确认记录找到会话
+        message = this.messageMap[pendingInfo.conversationId]
+          ?.find(item => item.id === messageId)
+      } else {
+        // 迟到 ACK：通过临时 ID 查找缓存中的消息
+        for (const messages of Object.values(this.messageMap)) {
+          // 通过临时消息id遍历数组来获取该消息，而不是通过索引获取消息避免数组位置变化的影响
+          message = messages.find(item => item.id === messageId)
+          if (message) break
+        }
+      }
 
       // 从pendingMessages中移除
       this.pendingMessages.delete(messageId)
