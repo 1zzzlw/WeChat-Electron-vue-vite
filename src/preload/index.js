@@ -1,5 +1,8 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
+import { installUiSounds } from './uiSounds'
+
+window.addEventListener('DOMContentLoaded', installUiSounds, { once: true })
 
 // 首屏绘制前恢复主题；后续广播直接同步所有 Vue 和独立 HTML 窗口。
 let currentTheme = ipcRenderer.sendSync('theme:initial')
