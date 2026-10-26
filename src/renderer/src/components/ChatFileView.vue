@@ -218,16 +218,16 @@ watch(
   gap: 20px;
   border-radius: 12px;
   padding: 16px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(var(--color-surface-rgb), 0.4);
   backdrop-filter: blur(10px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--color-border-subtle);
   transition: all 0.2s ease;
   position: relative;
 }
 
 .chat-file:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(var(--color-surface-rgb), 0.4);
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
 }
@@ -236,7 +236,7 @@ watch(
 .file-icon {
   width: 80px;
   height: 80px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(var(--color-surface-rgb), 0.4);
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -252,7 +252,7 @@ watch(
 }
 
 .file-icon:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(var(--color-surface-rgb), 0.4);
 }
 
 .file-icon:hover img {
@@ -265,7 +265,7 @@ watch(
   flex-direction: column;
   flex: 1;
   gap: 8px;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--color-text-primary);
   font-size: 13px;
   line-height: 1.5;
 }
@@ -279,7 +279,7 @@ watch(
 
 .file-name {
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.95);
+  color: var(--color-text-primary);
   max-width: 200px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -287,7 +287,7 @@ watch(
 }
 
 .file-size {
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--color-text-secondary);
   font-size: 12px;
 }
 
@@ -299,12 +299,12 @@ watch(
 .el-progress {
   height: 8px;
   border-radius: 4px;
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(var(--color-surface-rgb), 0.4);
   position: relative;
 }
 
 :deep(.el-progress__text) {
-  color: #ffffff;
+  color: var(--color-text-primary);
   font-size: 8px;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
   position: absolute;
@@ -315,7 +315,7 @@ watch(
 }
 
 :deep(.el-progress-bar__outer) {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(var(--color-surface-rgb), 0.4);
   border-radius: 4px;
   height: 8px;
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
@@ -338,7 +338,7 @@ watch(
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, rgba(var(--color-surface-rgb), 0.4) 50%, transparent 100%);
   animation: progress-shine 1.5s infinite;
 }
 
@@ -349,7 +349,7 @@ watch(
 }
 
 .upload-speed {
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--color-text-secondary);
   font-size: 12px;
   margin-top: 4px;
 }
@@ -367,9 +367,9 @@ watch(
   padding: 2px 14px;
   font-size: 12px;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  color: rgba(255, 255, 255, 0.85);
+  background: rgba(var(--color-surface-rgb), 0.4);
+  border: 1px solid var(--color-border-subtle);
+  color: var(--color-text-secondary);
   cursor: pointer;
   transition: all 0.25s ease;
   z-index: 2;
@@ -407,9 +407,9 @@ watch(
   padding: 4px 12px;
   font-size: 12px;
   border-radius: 6px;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  color: rgba(255, 255, 255, 0.9);
+  background: rgba(var(--color-surface-rgb), 0.4);
+  border: 1px solid var(--color-border-subtle);
+  color: var(--color-text-primary);
   transition: all 0.2s ease;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }

@@ -48,7 +48,7 @@ import WindowControls from '@/components/WindowControls.vue'
   display: flex;
   width: 100%;
   height: 100%;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(var(--color-surface-rgb), 0.4);
 }
 
 .setting-left {
@@ -57,11 +57,11 @@ import WindowControls from '@/components/WindowControls.vue'
   display: flex;
   flex-direction: column;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(var(--color-surface-rgb), 0.4);
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
   -webkit-app-region: drag;
-  border-right: 1px solid rgba(255, 255, 255, 0.2);
+  border-right: 1px solid var(--color-border-subtle);
   padding: 20px 0;
   overflow: hidden;
 }
@@ -90,7 +90,7 @@ import WindowControls from '@/components/WindowControls.vue'
   align-items: center;
   padding: 12px 16px;
   border-radius: 8px;
-  color: #f5f5f5;
+  color: var(--color-text-primary);
   font-size: 14px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -103,22 +103,22 @@ import WindowControls from '@/components/WindowControls.vue'
 }
 
 .setting-button-item:hover {
-  background: rgba(255, 255, 255, 0.25);
-  color: #ffffff;
-  border-left: 2px solid rgba(255, 255, 255, 0.8);
+  background: rgba(var(--color-surface-rgb), 0.4);
+  color: var(--color-text-primary);
+  border-left: 2px solid var(--color-border-subtle);
 }
 
 /* Vue Router active tab state */
 .router-link-exact-active .setting-button-item {
-  background: rgba(255, 255, 255, 0.2);
-  color: #ffffff;
-  border-left: 2px solid #43f3ff;
+  background: rgba(var(--color-surface-rgb), 0.4);
+  color: var(--color-text-primary);
+  border-left: 2px solid var(--color-accent);
 }
 
 .setting-right {
   flex: 1;
   padding: 24px 32px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(var(--color-surface-rgb), 0.4);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   -webkit-app-region: drag;

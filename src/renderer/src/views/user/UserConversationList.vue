@@ -4,7 +4,7 @@
       <div class="message-list-top">
         <AutocompleteSearch />
         <el-dropdown trigger="click">
-          <el-button style="background-color: rgba(35, 45, 60, 0.7); border-color: rgba(66, 153, 225, 0.2);"
+          <el-button style="background-color: var(--color-surface-1); border-color: var(--color-border-subtle);"
             :icon="Plus" square></el-button>
           <template #dropdown>
             <el-dropdown-menu>
@@ -57,7 +57,11 @@
     </div>
 
     <div class="user-chat-list-right">
-      <router-view></router-view>
+      <router-view v-slot="{ Component }">
+        <component :is="Component" v-if="Component" />
+        <ChatWelcome v-else :userName="userName" :conversations="conversationListArr"
+          @open="starCall" @add-friend="addFriend" @create-group="createGroupChat" />
+      </router-view>
     </div>
   </div>
 </template>
@@ -71,6 +75,7 @@ import { Conversation } from '@/types/conversation'
 import AutocompleteSearch from '@/components/AutocompleteSearch.vue'
 import UnreadCounts from '@/components/UnreadCounts.vue'
 import ContextMenu from '@/components/ContextMenu.vue';
+import ChatWelcome from '@/components/ChatWelcome.vue'
 import { getConversationList, updateConversation } from '@/db/dualDB'
 import { formatMessageTime } from '@/utils/utils'
 import { updateConversationTopStatus, updateConversationMuteStatus } from '@/db/syncDB'
@@ -82,11 +87,12 @@ import { friendInfo } from '@/stores/modules/ContactListStore'
 const router = useRouter()
 const active = ref<string | undefined>('')
 const userId = ref()
+const userName = ref('')
 const conversationStore = conversationInfo()
 const friendInfoStore = friendInfo()
 
 const starCall = async (conversation: Conversation) => {
-  active.value = conversation.targetId
+  active.value = conversation.id
 
   if (!userId.value) {
     return
@@ -241,6 +247,7 @@ const loadFriendList = async () => {
 
 onMounted(async () => {
   userId.value = await (window as any).userInfoApi.storeGetUserInfo('userId')
+  userName.value = await (window as any).userInfoApi.storeGetUserInfo('username') || ''
 
   // 查询会话列表
   loadConversationList()
@@ -265,7 +272,7 @@ onMounted(async () => {
 
 .friend-name {
   font-size: 16px;
-  color: #ffffff;
+  color: var(--color-text-primary);
   margin: 0;
   /*单行文本溢出显示省略号*/
   /*强制不换行*/
@@ -279,7 +286,7 @@ onMounted(async () => {
 
 .friend-message {
   font-size: 13px;
-  color: #e0e0e0;
+  color: var(--color-text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -295,10 +302,10 @@ onMounted(async () => {
 
 .top-bg {
   background: linear-gradient(135deg,
-      rgba(66, 153, 225, 0.15) 0%,
-      rgba(66, 153, 225, 0.08) 100%);
-  border-left: 3px solid rgba(66, 153, 225, 0.6);
-  box-shadow: inset 0 0 20px rgba(66, 153, 225, 0.1);
+      rgba(var(--color-accent-rgb), 0.15) 0%,
+      rgba(var(--color-accent-rgb), 0.08) 100%);
+  border-left: 3px solid rgba(var(--color-accent-rgb), 0.6);
+  box-shadow: inset 0 0 20px rgba(var(--color-accent-rgb), 0.1);
   position: relative;
 }
 
@@ -335,7 +342,14 @@ onMounted(async () => {
 
 .user-chat-list-right {
   flex: 1;
+  min-width: 0;
+  min-height: 0;
   -webkit-app-region: drag;
+}
+
+.left-list-bg {
+  background: var(--color-accent-soft);
+  box-shadow: inset 3px 0 var(--color-accent);
 }
 
 .icon-ai-chat {
@@ -346,7 +360,7 @@ onMounted(async () => {
   width: 50px;
   height: 50px;
   border-radius: 10px;
-  background-color: rgba(35, 45, 60, 0.7);
+  background-color: rgba(var(--color-surface-rgb), 0.7);
   color: #409eff;
 }
 </style>

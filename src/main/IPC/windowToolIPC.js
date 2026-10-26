@@ -95,7 +95,6 @@ function registerShortcuts() {
   }
 
   globalShortcut.register('Alt+Shift+A', () => {
-    refs.mainWindow.hide()
     createCaptureWindow()
   })
 

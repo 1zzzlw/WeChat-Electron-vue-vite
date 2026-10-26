@@ -501,10 +501,10 @@ onMounted(async () => {
     width: 100%;
     height: 100%;
     display: flex;
-    background: rgba(28, 38, 50, 0.4);
+    background: rgba(var(--color-surface-rgb), 0.55);
     backdrop-filter: blur(25px);
     -webkit-backdrop-filter: blur(25px);
-    color: #f0f2f5;
+    color: var(--color-text-primary);
     overflow: hidden;
 }
 
@@ -512,8 +512,8 @@ onMounted(async () => {
 .sidebar {
     width: 220px;
     height: 100%;
-    background: rgba(255, 255, 255, 0.03);
-    border-right: 1px solid rgba(67, 243, 255, 0.15);
+    background: rgba(var(--color-surface-rgb), 0.4);
+    border-right: 1px solid rgba(var(--color-accent-rgb), 0.15);
     display: flex;
     flex-direction: column;
     transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -533,8 +533,8 @@ onMounted(async () => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid rgba(67, 243, 255, 0.1);
-    color: #43f3ff;
+    border-bottom: 1px solid rgba(var(--color-accent-rgb), 0.1);
+    color: var(--color-accent);
     font-weight: 600;
     font-size: 14px;
 }
@@ -542,7 +542,7 @@ onMounted(async () => {
 .toggle-btn {
     background: transparent;
     border: none;
-    color: #43f3ff;
+    color: var(--color-accent);
     cursor: pointer;
     padding: 5px;
     display: flex;
@@ -556,7 +556,7 @@ onMounted(async () => {
 }
 
 .toggle-btn:hover {
-    background: rgba(67, 243, 255, 0.1);
+    background: rgba(var(--color-accent-rgb), 0.1);
 }
 
 .sidebar-content {
@@ -574,17 +574,17 @@ onMounted(async () => {
     transition: all 0.2s;
     position: relative;
     font-size: 13px;
-    color: rgba(240, 242, 245, 0.7);
+    color: var(--color-text-secondary);
 }
 
 .nav-item:hover {
-    background: rgba(67, 243, 255, 0.08);
-    color: #43f3ff;
+    background: rgba(var(--color-accent-rgb), 0.08);
+    color: var(--color-accent);
 }
 
 .nav-item.is-active {
-    background: rgba(67, 243, 255, 0.12);
-    color: #43f3ff;
+    background: rgba(var(--color-accent-rgb), 0.12);
+    color: var(--color-accent);
     font-weight: 600;
 }
 
@@ -595,15 +595,15 @@ onMounted(async () => {
     top: 0;
     bottom: 0;
     width: 3px;
-    background: #43f3ff;
-    box-shadow: 0 0 8px #43f3ff;
+    background: var(--color-accent);
+    box-shadow: 0 0 8px var(--color-accent);
 }
 
 .nav-dot {
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: rgba(67, 243, 255, 0.3);
+    background: rgba(var(--color-accent-rgb), 0.3);
     flex-shrink: 0;
 }
 
@@ -643,7 +643,7 @@ onMounted(async () => {
 
 .empty-nav {
     text-align: center;
-    color: rgba(67, 243, 255, 0.3);
+    color: rgba(var(--color-accent-rgb), 0.3);
     font-size: 12px;
     margin-top: 20px;
 }
@@ -663,8 +663,8 @@ onMounted(async () => {
     align-items: center;
     justify-content: space-between;
     padding: 0 20px;
-    background: rgba(255, 255, 255, 0.05);
-    border-bottom: 1px solid rgba(67, 243, 255, 0.2);
+    background: rgba(var(--color-surface-rgb), 0.4);
+    border-bottom: 1px solid rgba(var(--color-accent-rgb), 0.2);
     -webkit-app-region: drag;
     flex-shrink: 0;
 }
@@ -679,7 +679,7 @@ onMounted(async () => {
     width: 48px;
     height: 48px;
     border-radius: 50%;
-    border: 2px solid rgba(67, 243, 255, 0.3);
+    border: 2px solid rgba(var(--color-accent-rgb), 0.3);
     flex-shrink: 0;
 }
 
@@ -692,12 +692,12 @@ onMounted(async () => {
 .username {
     font-size: 15px;
     font-weight: 600;
-    color: #43f3ff;
+    color: var(--color-accent);
 }
 
 .publish-time {
     font-size: 12px;
-    color: rgba(255, 255, 255, 0.4);
+    color: var(--color-text-muted);
 }
 
 .header-actions {
@@ -707,9 +707,9 @@ onMounted(async () => {
 
 .follow-btn,
 .followed-btn {
-    background: rgba(67, 243, 255, 0.2) !important;
-    border: 1px solid rgba(67, 243, 255, 0.4) !important;
-    color: #43f3ff !important;
+    background: rgba(var(--color-accent-rgb), 0.2) !important;
+    border: 1px solid rgba(var(--color-accent-rgb), 0.4) !important;
+    color: var(--color-accent) !important;
     border-radius: 6px;
     padding: 6px 18px;
     height: 32px;
@@ -720,15 +720,15 @@ onMounted(async () => {
 }
 
 .follow-btn:hover {
-    background: rgba(67, 243, 255, 0.35) !important;
+    background: rgba(var(--color-accent-rgb), 0.35) !important;
     transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(67, 243, 255, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+    box-shadow: 0 6px 16px rgba(var(--color-accent-rgb), 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
 }
 
 .followed-btn {
-    background: rgba(255, 255, 255, 0.05) !important;
-    border-color: rgba(255, 255, 255, 0.1) !important;
-    color: rgba(255, 255, 255, 0.3) !important;
+    background: rgba(var(--color-surface-rgb), 0.4) !important;
+    border-color: var(--color-border-subtle) !important;
+    color: var(--color-text-muted) !important;
     cursor: default;
 }
 
@@ -736,7 +736,7 @@ onMounted(async () => {
 .content-main {
     flex: 1;
     overflow-y: auto;
-    background: rgba(255, 255, 255, 0.01);
+    background: rgba(var(--color-surface-rgb), 0.4);
 }
 
 .post-content-wrapper {
@@ -747,17 +747,17 @@ onMounted(async () => {
 .post-text-wrapper {
     font-size: 15px;
     line-height: 1.8;
-    color: #f0f2f5;
+    color: var(--color-text-primary);
     word-break: break-word;
 }
 
 .post-text-wrapper :deep(h1) {
     font-size: 28px;
     font-weight: 700;
-    color: #fff;
+    color: var(--color-text-primary);
     margin: 1.5em 0 0.8em;
     padding-bottom: 0.3em;
-    border-bottom: 2px solid rgba(67, 243, 255, 0.3);
+    border-bottom: 2px solid rgba(var(--color-accent-rgb), 0.3);
     letter-spacing: -0.02em;
     line-height: 1.2;
 }
@@ -765,7 +765,7 @@ onMounted(async () => {
 .post-text-wrapper :deep(h2) {
     font-size: 22px;
     font-weight: 600;
-    color: #e0faff;
+    color: var(--color-text-primary);
     margin: 1.4em 0 0.6em;
     display: flex;
     align-items: center;
@@ -776,16 +776,16 @@ onMounted(async () => {
     content: '';
     width: 4px;
     height: 18px;
-    background: #43f3ff;
+    background: var(--color-accent);
     margin-right: 12px;
     border-radius: 2px;
-    box-shadow: 0 0 8px rgba(67, 243, 255, 0.5);
+    box-shadow: 0 0 8px rgba(var(--color-accent-rgb), 0.5);
 }
 
 .post-text-wrapper :deep(h3) {
     font-size: 18px;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--color-text-primary);
     margin: 1.2em 0 0.5em;
     line-height: 1.4;
 }
@@ -793,17 +793,17 @@ onMounted(async () => {
 .post-text-wrapper :deep(p) {
     margin: 0.5em 0;
     font-size: 15px;
-    color: rgba(240, 242, 245, 0.9);
+    color: var(--color-text-primary);
     line-height: 1.8;
 }
 
 .post-text-wrapper :deep(blockquote) {
-    border-left: 4px solid rgba(67, 243, 255, 0.5);
-    background: rgba(67, 243, 255, 0.05);
+    border-left: 4px solid rgba(var(--color-accent-rgb), 0.5);
+    background: rgba(var(--color-accent-rgb), 0.05);
     padding: 12px 20px;
     margin: 20px 0;
     border-radius: 0 8px 8px 0;
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--color-text-secondary);
     font-style: italic;
 }
 
@@ -813,7 +813,7 @@ onMounted(async () => {
     border-radius: 12px;
     margin: 20px auto;
     display: block;
-    border: 1px solid rgba(67, 243, 255, 0.2);
+    border: 1px solid rgba(var(--color-accent-rgb), 0.2);
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
 }
 
@@ -830,8 +830,8 @@ onMounted(async () => {
 /* 互动操作区 */
 .interaction-area {
     padding: 20px 40px;
-    border-top: 1px solid rgba(67, 243, 255, 0.15);
-    background: rgba(67, 243, 255, 0.02);
+    border-top: 1px solid rgba(var(--color-accent-rgb), 0.15);
+    background: rgba(var(--color-accent-rgb), 0.02);
 }
 
 .likes-section {
@@ -844,7 +844,7 @@ onMounted(async () => {
 
 .likes-label {
     font-size: 13px;
-    color: rgba(67, 243, 255, 0.8);
+    color: rgba(var(--color-accent-rgb), 0.8);
     font-weight: 500;
 }
 
@@ -858,20 +858,20 @@ onMounted(async () => {
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    border: 2px solid rgba(67, 243, 255, 0.2);
+    border: 2px solid rgba(var(--color-accent-rgb), 0.2);
     transition: transform 0.2s;
 }
 
 .liker-avatar:hover {
     transform: scale(1.1);
-    border-color: rgba(67, 243, 255, 0.5);
+    border-color: rgba(var(--color-accent-rgb), 0.5);
 }
 
 .actions-bar {
     display: flex;
     gap: 20px;
     padding-top: 15px;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-top: 1px solid var(--color-border-subtle);
 }
 
 .action-item {
@@ -879,7 +879,7 @@ onMounted(async () => {
     align-items: center;
     gap: 6px;
     font-size: 13px;
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--color-text-muted);
     cursor: pointer;
     transition: all 0.3s ease;
     padding: 6px 12px;
@@ -887,8 +887,8 @@ onMounted(async () => {
 }
 
 .action-item:hover {
-    color: #43f3ff;
-    background: rgba(67, 243, 255, 0.05);
+    color: var(--color-accent);
+    background: rgba(var(--color-accent-rgb), 0.05);
 }
 
 .action-item.active {
@@ -903,7 +903,7 @@ onMounted(async () => {
 /* 评论区 */
 .comments-section {
     padding: 20px 40px;
-    border-top: 1px solid rgba(67, 243, 255, 0.15);
+    border-top: 1px solid rgba(var(--color-accent-rgb), 0.15);
 }
 
 .comments-header {
@@ -913,7 +913,7 @@ onMounted(async () => {
 .comments-title {
     font-size: 14px;
     font-weight: 600;
-    color: #43f3ff;
+    color: var(--color-accent);
 }
 
 .comments-list {
@@ -927,19 +927,19 @@ onMounted(async () => {
     gap: 10px;
     padding: 12px;
     border-radius: 8px;
-    background: rgba(67, 243, 255, 0.05);
+    background: rgba(var(--color-accent-rgb), 0.05);
     transition: all 0.3s ease;
 }
 
 .comment-item:hover {
-    background: rgba(67, 243, 255, 0.08);
+    background: rgba(var(--color-accent-rgb), 0.08);
 }
 
 .comment-avatar {
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    border: 1px solid rgba(67, 243, 255, 0.2);
+    border: 1px solid rgba(var(--color-accent-rgb), 0.2);
     flex-shrink: 0;
 }
 
@@ -950,13 +950,13 @@ onMounted(async () => {
 .comment-user {
     font-size: 13px;
     font-weight: 500;
-    color: #43f3ff;
+    color: var(--color-accent);
     margin-bottom: 4px;
 }
 
 .comment-text {
     font-size: 13px;
-    color: #f0f2f5;
+    color: var(--color-text-primary);
     line-height: 1.5;
     margin-bottom: 6px;
 }
@@ -970,7 +970,7 @@ onMounted(async () => {
 
 .comment-time {
     font-size: 11px;
-    color: rgba(67, 243, 255, 0.6);
+    color: rgba(var(--color-accent-rgb), 0.6);
 }
 
 .comment-actions {
@@ -985,15 +985,15 @@ onMounted(async () => {
     padding: 4px 8px;
     border-radius: 4px;
     font-size: 12px;
-    color: rgba(67, 243, 255, 0.7);
+    color: rgba(var(--color-accent-rgb), 0.7);
     cursor: pointer;
     transition: all 0.3s ease;
-    background: rgba(67, 243, 255, 0.08);
+    background: rgba(var(--color-accent-rgb), 0.08);
 }
 
 .comment-action:hover {
-    background: rgba(67, 243, 255, 0.15);
-    color: #43f3ff;
+    background: rgba(var(--color-accent-rgb), 0.15);
+    color: var(--color-accent);
 }
 
 .comment-action.active {
@@ -1012,36 +1012,36 @@ onMounted(async () => {
 .reply-list {
     margin-top: 10px;
     padding-left: 12px;
-    border-left: 2px solid rgba(67, 243, 255, 0.2);
+    border-left: 2px solid rgba(var(--color-accent-rgb), 0.2);
 }
 
 .reply-item {
     padding: 6px 0;
     font-size: 12px;
     line-height: 1.5;
-    color: #e0e0e0;
+    color: var(--color-text-primary);
 }
 
 .reply-user {
-    color: #43f3ff;
+    color: var(--color-accent);
     font-weight: 500;
 }
 
 .reply-to {
-    color: rgba(67, 243, 255, 0.7);
+    color: rgba(var(--color-accent-rgb), 0.7);
     margin: 0 4px;
 }
 
 .reply-text {
-    color: #f0f2f5;
+    color: var(--color-text-primary);
 }
 
 .load-more-replies {
     margin-top: 8px;
     padding: 6px 12px;
     font-size: 12px;
-    color: rgba(67, 243, 255, 0.7);
-    background: rgba(67, 243, 255, 0.08);
+    color: rgba(var(--color-accent-rgb), 0.7);
+    background: rgba(var(--color-accent-rgb), 0.08);
     border-radius: 4px;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -1050,16 +1050,16 @@ onMounted(async () => {
 }
 
 .load-more-replies:hover {
-    background: rgba(67, 243, 255, 0.15);
-    color: #43f3ff;
+    background: rgba(var(--color-accent-rgb), 0.15);
+    color: var(--color-accent);
 }
 
 /* 回复输入框 */
 .reply-input-area {
     margin-top: 10px;
     padding: 10px 12px;
-    background: rgba(67, 243, 255, 0.05);
-    border: 1px solid rgba(67, 243, 255, 0.2);
+    background: rgba(var(--color-accent-rgb), 0.05);
+    border: 1px solid rgba(var(--color-accent-rgb), 0.2);
     border-radius: 6px;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
@@ -1069,10 +1069,10 @@ onMounted(async () => {
     width: 100%;
     min-height: 50px;
     padding: 8px 10px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(67, 243, 255, 0.15);
+    background: rgba(var(--color-surface-rgb), 0.4);
+    border: 1px solid rgba(var(--color-accent-rgb), 0.15);
     border-radius: 4px;
-    color: #f0f2f5;
+    color: var(--color-text-primary);
     font-size: 12px;
     line-height: 1.5;
     resize: none;
@@ -1082,13 +1082,13 @@ onMounted(async () => {
 }
 
 .reply-textarea::placeholder {
-    color: rgba(255, 255, 255, 0.3);
+    color: var(--color-text-muted);
 }
 
 .reply-textarea:focus {
-    border-color: rgba(67, 243, 255, 0.4);
-    background: rgba(255, 255, 255, 0.08);
-    box-shadow: 0 0 0 2px rgba(67, 243, 255, 0.1);
+    border-color: rgba(var(--color-accent-rgb), 0.4);
+    background: rgba(var(--color-surface-rgb), 0.4);
+    box-shadow: 0 0 0 2px rgba(var(--color-accent-rgb), 0.1);
 }
 
 .reply-textarea::-webkit-scrollbar {
@@ -1096,12 +1096,12 @@ onMounted(async () => {
 }
 
 .reply-textarea::-webkit-scrollbar-thumb {
-    background: rgba(67, 243, 255, 0.2);
+    background: rgba(var(--color-accent-rgb), 0.2);
     border-radius: 3px;
 }
 
 .reply-textarea::-webkit-scrollbar-thumb:hover {
-    background: rgba(67, 243, 255, 0.4);
+    background: rgba(var(--color-accent-rgb), 0.4);
 }
 
 .reply-textarea::-webkit-scrollbar-track {
@@ -1116,9 +1116,9 @@ onMounted(async () => {
 }
 
 .reply-send-btn {
-    background: rgba(67, 243, 255, 0.2) !important;
-    border: 1px solid rgba(67, 243, 255, 0.4) !important;
-    color: #43f3ff !important;
+    background: rgba(var(--color-accent-rgb), 0.2) !important;
+    border: 1px solid rgba(var(--color-accent-rgb), 0.4) !important;
+    color: var(--color-accent) !important;
     border-radius: 4px;
     padding: 4px 16px;
     font-weight: 600;
@@ -1127,7 +1127,7 @@ onMounted(async () => {
 }
 
 .reply-send-btn:hover:not(:disabled) {
-    background: rgba(67, 243, 255, 0.35) !important;
+    background: rgba(var(--color-accent-rgb), 0.35) !important;
 }
 
 .reply-send-btn:disabled {
@@ -1137,7 +1137,7 @@ onMounted(async () => {
 
 .reply-cancel-btn {
     font-size: 12px;
-    color: rgba(255, 255, 255, 0.4);
+    color: var(--color-text-muted);
     cursor: pointer;
     padding: 4px 10px;
     border-radius: 4px;
@@ -1145,8 +1145,8 @@ onMounted(async () => {
 }
 
 .reply-cancel-btn:hover {
-    color: rgba(255, 255, 255, 0.7);
-    background: rgba(255, 255, 255, 0.05);
+    color: var(--color-text-secondary);
+    background: rgba(var(--color-surface-rgb), 0.4);
 }
 
 /* 评论输入区 */
@@ -1157,22 +1157,22 @@ onMounted(async () => {
     padding: 10px 0;
     text-align: center;
     font-size: 13px;
-    color: rgba(67, 243, 255, 0.7);
-    background: rgba(67, 243, 255, 0.08);
+    color: rgba(var(--color-accent-rgb), 0.7);
+    background: rgba(var(--color-accent-rgb), 0.08);
     border-radius: 6px;
     cursor: pointer;
     transition: all 0.3s ease;
 }
 
 .load-more-comments:hover {
-    background: rgba(67, 243, 255, 0.15);
-    color: #43f3ff;
+    background: rgba(var(--color-accent-rgb), 0.15);
+    color: var(--color-accent);
 }
 
 .comment-input-area {
     padding: 20px 40px;
-    border-top: 1px solid rgba(67, 243, 255, 0.15);
-    background: rgba(67, 243, 255, 0.02);
+    border-top: 1px solid rgba(var(--color-accent-rgb), 0.15);
+    background: rgba(var(--color-accent-rgb), 0.02);
     display: flex;
     gap: 12px;
 }
@@ -1181,7 +1181,7 @@ onMounted(async () => {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    border: 2px solid rgba(67, 243, 255, 0.3);
+    border: 2px solid rgba(var(--color-accent-rgb), 0.3);
     flex-shrink: 0;
 }
 
@@ -1196,10 +1196,10 @@ onMounted(async () => {
     width: 100%;
     min-height: 80px;
     padding: 12px 15px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(67, 243, 255, 0.2);
+    background: rgba(var(--color-surface-rgb), 0.4);
+    border: 1px solid rgba(var(--color-accent-rgb), 0.2);
     border-radius: 8px;
-    color: #f0f2f5;
+    color: var(--color-text-primary);
     font-size: 14px;
     line-height: 1.6;
     resize: vertical;
@@ -1210,13 +1210,13 @@ onMounted(async () => {
 }
 
 .comment-textarea::placeholder {
-    color: rgba(255, 255, 255, 0.3);
+    color: var(--color-text-muted);
 }
 
 .comment-textarea:focus {
-    border-color: rgba(67, 243, 255, 0.5);
-    background: rgba(255, 255, 255, 0.08);
-    box-shadow: 0 0 0 3px rgba(67, 243, 255, 0.1);
+    border-color: rgba(var(--color-accent-rgb), 0.5);
+    background: rgba(var(--color-surface-rgb), 0.4);
+    box-shadow: 0 0 0 3px rgba(var(--color-accent-rgb), 0.1);
 }
 
 .comment-textarea::-webkit-scrollbar {
@@ -1224,12 +1224,12 @@ onMounted(async () => {
 }
 
 .comment-textarea::-webkit-scrollbar-thumb {
-    background: rgba(67, 243, 255, 0.2);
+    background: rgba(var(--color-accent-rgb), 0.2);
     border-radius: 3px;
 }
 
 .comment-textarea::-webkit-scrollbar-thumb:hover {
-    background: rgba(67, 243, 255, 0.4);
+    background: rgba(var(--color-accent-rgb), 0.4);
 }
 
 .comment-textarea::-webkit-scrollbar-track {
@@ -1244,13 +1244,13 @@ onMounted(async () => {
 
 .tip-text {
     font-size: 12px;
-    color: rgba(67, 243, 255, 0.5);
+    color: rgba(var(--color-accent-rgb), 0.5);
 }
 
 .send-btn {
-    background: rgba(67, 243, 255, 0.2) !important;
-    border: 1px solid rgba(67, 243, 255, 0.4) !important;
-    color: #43f3ff !important;
+    background: rgba(var(--color-accent-rgb), 0.2) !important;
+    border: 1px solid rgba(var(--color-accent-rgb), 0.4) !important;
+    color: var(--color-accent) !important;
     border-radius: 6px;
     padding: 8px 24px;
     font-weight: 600;
@@ -1260,9 +1260,9 @@ onMounted(async () => {
 }
 
 .send-btn:hover:not(:disabled) {
-    background: rgba(67, 243, 255, 0.35) !important;
+    background: rgba(var(--color-accent-rgb), 0.35) !important;
     transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(67, 243, 255, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+    box-shadow: 0 6px 16px rgba(var(--color-accent-rgb), 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
 }
 
 .send-btn:disabled {
@@ -1278,13 +1278,13 @@ onMounted(async () => {
 
 .sidebar-content::-webkit-scrollbar-thumb,
 .content-main::-webkit-scrollbar-thumb {
-    background: rgba(67, 243, 255, 0.15);
+    background: rgba(var(--color-accent-rgb), 0.15);
     border-radius: 2px;
 }
 
 .sidebar-content::-webkit-scrollbar-thumb:hover,
 .content-main::-webkit-scrollbar-thumb:hover {
-    background: rgba(67, 243, 255, 0.3);
+    background: rgba(var(--color-accent-rgb), 0.3);
 }
 
 /* 响应式适配 */
@@ -1294,7 +1294,7 @@ onMounted(async () => {
         left: 0;
         top: 0;
         bottom: 0;
-        background: rgba(28, 38, 50, 0.95);
+        background: var(--color-bg-deep);
         box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
     }
 

@@ -33,7 +33,7 @@
   /* 提示文字在徽章上方 */
   top: 8px;
   left: -10px;
-  color: #fff;
+  color: var(--color-text-primary);
   padding: 4px 8px;
   /* 让文字横着显示的2个关键样式 */
   white-space: nowrap;

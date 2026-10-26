@@ -130,9 +130,9 @@ watch(searchInput, (newValue) => {
   flex-direction: column;
   justify-content: flex-start;
   padding: 20px;
-  background: rgba(43, 62, 73, 0.85);
+  background: rgba(var(--color-surface-rgb), 0.85);
   backdrop-filter: blur(20px);
-  color: #e0e6ed;
+  color: var(--color-text-primary);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
@@ -144,36 +144,36 @@ watch(searchInput, (newValue) => {
 }
 
 .friendAdd-top :deep(.el-input__wrapper) {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(var(--color-surface-rgb), 0.4);
+  border: 1px solid var(--color-border-subtle);
   border-radius: 8px;
   box-shadow: none;
   transition: all 0.2s ease;
 }
 
 .friendAdd-top :deep(.el-input__wrapper):hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(var(--color-surface-rgb), 0.4);
+  border-color: var(--color-border-subtle);
 }
 
 .friendAdd-top :deep(.el-input__wrapper.is-focus) {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(var(--color-surface-rgb), 0.4);
   border-color: rgba(100, 181, 246, 0.6);
   box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.15);
 }
 
 .friendAdd-top :deep(.el-input__inner) {
-  color: #e0e6ed;
+  color: var(--color-text-primary);
 }
 
 .friendAdd-top :deep(.el-input__prefix) {
-  color: rgba(224, 230, 237, 0.6);
+  color: var(--color-text-muted);
 }
 
 .friendAdd-top .el-button {
   background: rgba(100, 181, 246, 0.8);
   border: 1px solid rgba(100, 181, 246, 0.4);
-  color: #fff;
+  color: var(--color-text-primary);
   border-radius: 8px;
   transition: all 0.2s ease;
   font-weight: 500;
@@ -193,7 +193,7 @@ watch(searchInput, (newValue) => {
 .friendAdd-bottom {
   height: 100%;
   display: flex;
-  border-top: 1px solid #ffffff;
+  border-top: 1px solid var(--color-border-subtle);
   -webkit-app-region: no-drag;
 }
 
@@ -204,7 +204,7 @@ watch(searchInput, (newValue) => {
   padding: 20px;
   background: rgba(135, 206, 235, 0.15);
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--color-border-subtle);
   backdrop-filter: blur(10px);
 }
 
@@ -213,7 +213,7 @@ watch(searchInput, (newValue) => {
   height: 70px;
   display: flex;
   gap: 20px;
-  border-bottom: 1px solid #ffffff;
+  border-bottom: 1px solid var(--color-border-subtle);
 }
 
 .friend-info {
@@ -242,7 +242,7 @@ watch(searchInput, (newValue) => {
 .friend-button .el-button {
   background: rgba(100, 181, 246, 0.2);
   border: 1px solid rgba(100, 181, 246, 0.3);
-  color: #e0e6ed;
+  color: var(--color-text-primary);
   border-radius: 8px;
   transition: all 0.2s ease;
 }
@@ -250,7 +250,7 @@ watch(searchInput, (newValue) => {
 .friend-button .el-button:hover {
   background: rgba(100, 181, 246, 0.3);
   border-color: rgba(100, 181, 246, 0.5);
-  color: #fff;
+  color: var(--color-text-primary);
 }
 
 .newFriend {
@@ -272,26 +272,26 @@ img {
   width: 60px;
   height: 60px;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--color-border-subtle);
 }
 
 .apply-message :deep(.el-textarea__inner) {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(var(--color-surface-rgb), 0.4);
+  border: 1px solid var(--color-border-subtle);
   border-radius: 8px;
-  color: #e0e6ed;
+  color: var(--color-text-primary);
   resize: none;
   transition: all 0.2s ease;
 }
 
 .apply-message :deep(.el-textarea__inner):focus {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(var(--color-surface-rgb), 0.4);
   border-color: rgba(100, 181, 246, 0.6);
   box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.15);
 }
 
 .apply-message :deep(.el-input__count) {
-  color: rgba(224, 230, 237, 0.6);
+  color: var(--color-text-muted);
   background: none;
 }
 
@@ -300,7 +300,7 @@ img {
   margin-top: 40px;
   background: rgba(100, 181, 246, 0.2);
   border: 1px solid rgba(100, 181, 246, 0.3);
-  color: #fff;
+  color: var(--color-text-primary);
   border-radius: 8px;
   transition: all 0.2s ease;
   font-weight: 500;

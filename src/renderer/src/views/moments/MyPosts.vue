@@ -219,10 +219,10 @@ onUnmounted(() => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: rgba(28, 38, 50, 0.35);
+  background: rgba(var(--color-surface-rgb), 0.55);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  color: #f0f2f5;
+  color: var(--color-text-primary);
   overflow: hidden;
 }
 
@@ -233,8 +233,8 @@ onUnmounted(() => {
   align-items: center;
   justify-content: space-between;
   padding: 0 16px;
-  border-bottom: 1px solid rgba(67, 243, 255, 0.2);
-  background: linear-gradient(135deg, rgba(67, 243, 255, 0.1) 0%, rgba(0, 217, 255, 0.06) 100%);
+  border-bottom: 1px solid rgba(var(--color-accent-rgb), 0.2);
+  background: linear-gradient(135deg, rgba(var(--color-accent-rgb), 0.1) 0%, rgba(0, 217, 255, 0.06) 100%);
   flex-shrink: 0;
   -webkit-app-region: drag;
 }
@@ -250,9 +250,9 @@ onUnmounted(() => {
   width: 28px;
   height: 28px;
   border: none;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(var(--color-surface-rgb), 0.4);
   border-radius: 50%;
-  color: rgba(240, 242, 245, 0.7);
+  color: var(--color-text-secondary);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -261,20 +261,20 @@ onUnmounted(() => {
 }
 
 .back-btn:hover {
-  background: rgba(255, 255, 255, 0.14);
-  color: #f0f2f5;
+  background: rgba(var(--color-surface-rgb), 0.4);
+  color: var(--color-text-primary);
 }
 
 .header-title {
   font-size: 15px;
   font-weight: 600;
-  color: #43f3ff;
-  text-shadow: 0 0 8px rgba(67, 243, 255, 0.2);
+  color: var(--color-accent);
+  text-shadow: 0 0 8px rgba(var(--color-accent-rgb), 0.2);
 }
 
 .post-count {
   font-size: 12px;
-  color: rgba(240, 242, 245, 0.4);
+  color: var(--color-text-muted);
 }
 
 /* ── 加载 / 空状态 ── */
@@ -286,7 +286,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  color: rgba(240, 242, 245, 0.4);
+  color: var(--color-text-muted);
   font-size: 14px;
 }
 
@@ -324,8 +324,8 @@ onUnmounted(() => {
   position: relative;
   border-radius: 12px;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(67, 243, 255, 0.12);
+  background: rgba(var(--color-surface-rgb), 0.4);
+  border: 1px solid rgba(var(--color-accent-rgb), 0.12);
   cursor: pointer;
   transition: all 0.25s ease;
   display: flex;
@@ -339,10 +339,10 @@ onUnmounted(() => {
 }
 
 .post-card:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(67, 243, 255, 0.3);
+  background: rgba(var(--color-surface-rgb), 0.4);
+  border-color: rgba(var(--color-accent-rgb), 0.3);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(67, 243, 255, 0.08);
+  box-shadow: 0 8px 24px rgba(var(--color-accent-rgb), 0.08);
 }
 
 /* ── 卡片头部：头像 + 用户名 ── */
@@ -357,7 +357,7 @@ onUnmounted(() => {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  border: 1.5px solid rgba(67, 243, 255, 0.25);
+  border: 1.5px solid rgba(var(--color-accent-rgb), 0.25);
   flex-shrink: 0;
   object-fit: cover;
 }
@@ -365,7 +365,7 @@ onUnmounted(() => {
 .post-username {
   font-size: 13px;
   font-weight: 600;
-  color: #43f3ff;
+  color: var(--color-accent);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -393,13 +393,13 @@ onUnmounted(() => {
   height: 100%;
   object-fit: cover;
   border-radius: 8px;
-  border: 1px solid rgba(67, 243, 255, 0.15);
+  border: 1px solid rgba(var(--color-accent-rgb), 0.15);
 }
 
 .post-text-preview {
   font-size: 12px;
   line-height: 1.6;
-  color: rgba(240, 242, 245, 0.55);
+  color: var(--color-text-muted);
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
@@ -418,7 +418,7 @@ onUnmounted(() => {
 .post-text-preview :deep(h3) {
   font-size: 12px;
   font-weight: 600;
-  color: rgba(240, 242, 245, 0.7);
+  color: var(--color-text-secondary);
   margin: 2px 0;
 }
 
@@ -432,13 +432,13 @@ onUnmounted(() => {
   align-items: center;
   justify-content: space-between;
   padding-top: 8px;
-  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  border-top: 1px solid var(--color-border-subtle);
   font-size: 11px;
   flex-shrink: 0;
 }
 
 .post-time {
-  color: rgba(240, 242, 245, 0.3);
+  color: var(--color-text-muted);
 }
 
 /* ── 删除按钮 ── */
@@ -477,7 +477,7 @@ onUnmounted(() => {
   justify-content: center;
   align-items: center;
   padding: 30px 0;
-  color: rgba(67, 243, 255, 0.6);
+  color: rgba(var(--color-accent-rgb), 0.6);
   font-size: 14px;
   min-height: 20px;
   width: 100%;
@@ -496,14 +496,14 @@ onUnmounted(() => {
 }
 
 .delete-confirm-text {
-  color: #f0f2f5;
+  color: var(--color-text-primary);
   font-size: 14px;
   line-height: 1.6;
 }
 
 /* ── el-scrollbar 滚动条样式 ── */
 :deep(.el-scrollbar__thumb) {
-  background: rgba(67, 243, 255, 0.4);
+  background: rgba(var(--color-accent-rgb), 0.4);
   border-radius: 4px;
 }
 </style>
@@ -513,29 +513,29 @@ onUnmounted(() => {
 /* 覆盖 class 在 .el-dialog 上 或 .el-overlay 上两种情况 */
 .el-dialog.my-posts-delete-dialog,
 .el-overlay.my-posts-delete-dialog .el-dialog {
-  background: rgba(28, 38, 50, 0.95) !important;
+  background: var(--color-bg-deep) !important;
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
-  border: 1px solid rgba(67, 243, 255, 0.25);
+  border: 1px solid rgba(var(--color-accent-rgb), 0.25);
   border-radius: 12px;
 }
 
 .my-posts-delete-dialog .el-dialog__header {
-  border-bottom: 1px solid rgba(67, 243, 255, 0.1);
+  border-bottom: 1px solid rgba(var(--color-accent-rgb), 0.1);
 }
 
 .my-posts-delete-dialog .el-dialog__title {
-  color: #43f3ff;
+  color: var(--color-accent);
   font-weight: 600;
 }
 
 .my-posts-delete-dialog .el-dialog__body {
-  color: #f0f2f5;
+  color: var(--color-text-primary);
   padding: 20px 24px;
 }
 
 .my-posts-delete-dialog .el-dialog__footer {
-  border-top: 1px solid rgba(67, 243, 255, 0.1);
+  border-top: 1px solid rgba(var(--color-accent-rgb), 0.1);
 }
 
 .my-posts-delete-dialog .el-button {
@@ -543,14 +543,14 @@ onUnmounted(() => {
 }
 
 .my-posts-delete-dialog .el-button--default {
-  background: rgba(255, 255, 255, 0.06) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  color: rgba(255, 255, 255, 0.6) !important;
+  background: rgba(var(--color-surface-rgb), 0.4) !important;
+  border: 1px solid var(--color-border-subtle) !important;
+  color: var(--color-text-muted) !important;
 }
 
 .my-posts-delete-dialog .el-button--default:hover {
-  background: rgba(255, 255, 255, 0.1) !important;
-  color: #fff !important;
+  background: rgba(var(--color-surface-rgb), 0.4) !important;
+  color: var(--color-text-primary) !important;
 }
 
 .my-posts-delete-dialog .el-button--danger {

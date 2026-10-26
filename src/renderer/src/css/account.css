@@ -132,6 +132,8 @@
 .el-input {
   height: 40px;
   --el-input-placeholder-color: #ffffff;
+  --el-input-focus-border-color: transparent;
+  --el-input-hover-border-color: transparent;
 }
 
 :deep(.el-input-group__prepend) {
@@ -150,9 +152,14 @@
 }
 
 /* 输入框聚焦时：加轻量外发光，突出交互状态 */
-:deep(.el-input__wrapper:focus-within) {
-  /* 白色半透明外发光，不刺眼且适配深色背景 */
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.15);
+:deep(.el-input__wrapper:hover),
+:deep(.el-input__wrapper.is-focus),
+:deep(.el-input__wrapper:focus-within),
+:deep(.el-input__inner:focus),
+:deep(.el-input__inner:focus-visible) {
+  box-shadow: none;
+  border: none;
+  outline: none;
 }
 
 .login-form-button,

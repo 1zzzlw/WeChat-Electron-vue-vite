@@ -150,14 +150,14 @@ onMounted(async () => {
   height: 250px;
   padding: 30px 0;
   margin-bottom: 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 1px solid var(--color-border-subtle);
 }
 
 .avatar {
   width: 120px;
   height: 120px;
   border-radius: 50%;
-  border: 3px solid rgba(255, 255, 255, 0.3);
+  border: 3px solid var(--color-border-subtle);
   object-fit: cover;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
@@ -170,7 +170,7 @@ onMounted(async () => {
   margin-left: 30px;
   gap: 14px;
   font-size: 17px;
-  color: #ffffff;
+  color: var(--color-text-primary);
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
   line-height: 1.4;
 }
@@ -190,7 +190,7 @@ onMounted(async () => {
 }
 
 .account-info-item a:hover {
-  color: #c6e0ff;
+  color: var(--color-text-primary);
   text-decoration: underline;
   transform: translateY(-1px);
 }
@@ -235,12 +235,12 @@ onMounted(async () => {
   object-fit: contain;
   border-radius: 12px;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--color-border-subtle);
 }
 
 :deep(.el-button) {
   background-color: rgba(107, 124, 140, 0.9);
-  color: #ffffff;
+  color: var(--color-text-primary);
   border: none;
   border-radius: 12px;
   padding: 12px 36px;
@@ -253,14 +253,14 @@ onMounted(async () => {
 
 :deep(.el-button:hover) {
   background-color: rgba(90, 106, 122, 0.95);
-  color: #ffffff;
+  color: var(--color-text-primary);
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.25);
   transform: translateY(-2px);
 }
 
 :deep(.el-button:active) {
-  background-color: rgba(78, 92, 106, 0.95);
-  color: #ffffff;
+  background-color: var(--color-bg-deep);
+  color: var(--color-text-primary);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
   transform: translateY(0);
 }
@@ -276,34 +276,34 @@ onMounted(async () => {
 }
 
 :deep(.el-dialog) {
-  background: rgba(28, 38, 50, 0.95);
+  background: var(--color-bg-deep);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(66, 153, 225, 0.3);
+  border: 1px solid rgba(var(--color-accent-rgb), 0.3);
   border-radius: 12px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   overflow: hidden;
 }
 
 :deep(.el-dialog__header) {
-  border-bottom: 1px solid rgba(66, 153, 225, 0.2);
+  border-bottom: 1px solid rgba(var(--color-accent-rgb), 0.2);
   padding: 16px 20px;
   margin: 0;
 }
 
 :deep(.el-dialog__title) {
-  color: #f0f0f0;
+  color: var(--color-text-primary);
   font-size: 18px;
   font-weight: 500;
 }
 
 :deep(.el-dialog__headerbtn .el-dialog__close) {
-  color: #f0f0f0;
+  color: var(--color-text-primary);
   font-size: 18px;
   transition: color 0.2s ease;
 }
 
 :deep(.el-dialog__headerbtn .el-dialog__close:hover) {
-  color: #ffffff;
+  color: var(--color-text-primary);
 }
 
 :deep(.el-dialog__body) {
@@ -311,15 +311,15 @@ onMounted(async () => {
 }
 
 :deep(.el-form-item__label) {
-  color: #f0f0f0;
+  color: var(--color-text-primary);
   font-size: 14px;
   font-weight: 400;
   line-height: 48px;
 }
 
 :deep(.el-dialog .el-input__wrapper) {
-  background: rgba(20, 25, 35, 0.8);
-  border: 1px solid rgba(66, 153, 225, 0.4);
+  background: rgba(var(--color-surface-rgb), 0.8);
+  border: 1px solid rgba(var(--color-accent-rgb), 0.4);
   border-radius: 8px;
   box-shadow: none;
   padding: 0 16px;
@@ -327,19 +327,19 @@ onMounted(async () => {
 }
 
 :deep(.el-dialog .el-input__inner) {
-  color: #f0f0f0;
+  color: var(--color-text-primary);
   font-size: 16px;
   background: transparent;
   border: none;
 }
 
 :deep(.el-dialog .el-input__placeholder) {
-  color: rgba(240, 240, 240, 0.5);
+  color: var(--color-text-muted);
 }
 
 :deep(.el-dialog .el-input__wrapper:focus-within) {
-  border-color: rgba(66, 153, 225, 0.8);
-  box-shadow: 0 0 10px rgba(66, 153, 225, 0.2);
+  border-color: rgba(var(--color-accent-rgb), 0.8);
+  box-shadow: 0 0 10px rgba(var(--color-accent-rgb), 0.2);
 }
 
 :deep(.el-dialog .el-date-picker) {
@@ -347,28 +347,28 @@ onMounted(async () => {
 }
 
 :deep(.el-dialog .el-date-picker__wrapper) {
-  background: rgba(20, 25, 35, 0.8);
-  border: 1px solid rgba(66, 153, 225, 0.4);
+  background: rgba(var(--color-surface-rgb), 0.8);
+  border: 1px solid rgba(var(--color-accent-rgb), 0.4);
   border-radius: 8px;
   height: 48px;
 }
 
 :deep(.el-dialog .el-date-picker__input) {
-  color: #f0f0f0;
+  color: var(--color-text-primary);
   font-size: 16px;
 }
 
 :deep(.el-dialog .el-date-picker__placeholder) {
-  color: rgba(240, 240, 240, 0.5);
+  color: var(--color-text-muted);
 }
 
 :deep(.el-dialog .el-date-picker__wrapper:focus-within) {
-  border-color: rgba(66, 153, 225, 0.8);
-  box-shadow: 0 0 10px rgba(66, 153, 225, 0.2);
+  border-color: rgba(var(--color-accent-rgb), 0.8);
+  box-shadow: 0 0 10px rgba(var(--color-accent-rgb), 0.2);
 }
 
 :deep(.el-dialog__footer) {
-  border-top: 1px solid rgba(66, 153, 225, 0.2);
+  border-top: 1px solid rgba(var(--color-accent-rgb), 0.2);
   padding: 12px 20px;
   display: flex;
   justify-content: flex-end;
@@ -377,9 +377,9 @@ onMounted(async () => {
 
 :deep(.el-dialog__footer .el-button) {
   padding: 8px 20px;
-  border: 1px solid rgba(66, 153, 225, 0.3);
-  background: rgba(35, 45, 60, 0.7);
-  color: #f0f0f0;
+  border: 1px solid rgba(var(--color-accent-rgb), 0.3);
+  background: rgba(var(--color-surface-rgb), 0.7);
+  color: var(--color-text-primary);
   border-radius: 6px;
   cursor: pointer;
   font-size: 14px;
@@ -387,21 +387,21 @@ onMounted(async () => {
 }
 
 :deep(.el-dialog__footer .el-button:hover) {
-  background: rgba(66, 153, 225, 0.2);
-  border-color: rgba(66, 153, 225, 0.5);
+  background: rgba(var(--color-accent-rgb), 0.2);
+  border-color: rgba(var(--color-accent-rgb), 0.5);
   transform: translateY(-1px);
-  color: #f0f0f0;
+  color: var(--color-text-primary);
 }
 
 :deep(.el-dialog__footer .el-button--primary) {
-  background: rgba(66, 153, 225, 0.4);
-  border-color: rgba(66, 153, 225, 0.6);
-  color: #fff;
+  background: rgba(var(--color-accent-rgb), 0.4);
+  border-color: rgba(var(--color-accent-rgb), 0.6);
+  color: var(--color-text-primary);
 }
 
 :deep(.el-dialog__footer .el-button--primary:hover) {
-  background: rgba(66, 153, 225, 0.6);
-  border-color: rgba(66, 153, 225, 0.8);
-  color: #fff;
+  background: rgba(var(--color-accent-rgb), 0.6);
+  border-color: rgba(var(--color-accent-rgb), 0.8);
+  color: var(--color-text-primary);
 }
 </style>

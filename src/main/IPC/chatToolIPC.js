@@ -1,177 +1,143 @@
-import { ipcMain, globalShortcut, app, clipboard, nativeImage, BrowserWindow } from "electron"
+import { ipcMain, app, clipboard, nativeImage, BrowserWindow, screen, desktopCapturer } from 'electron'
 import { refs } from '../shared.js'
-import { createExtraWindow, windowPool } from "../Util/createNewWindow"
+import { createExtraWindow } from '../Util/createNewWindow'
+import { setTimeout as delay } from 'node:timers/promises'
 const crypto = require('crypto')
 const path = require('path')
-const fs = require('fs');
+const fs = require('fs')
 
-let captureWindow = null
-// 记录触发截屏的窗口，用于截屏结束后恢复显示和回传图片
-let captureSourceWindow = null
+// 在异步抓屏开始前占用会话，避免连点/快捷键创建多个截图窗口。
+let captureSession = null
 
-/**
- * 安全关闭截屏窗口（防止重复关闭导致崩溃）
- */
-const closeCaptureWindow = () => {
-    if (captureWindow && !captureWindow.isDestroyed()) {
-        windowPool.delete('capture')
-        captureWindow.close()
+function finishCapture(session, result = { canceled: true }) {
+    if (captureSession !== session) return
+    captureSession = null
+    clearTimeout(session.loadTimer)
+    session.image = null
+    if (session.window && !session.window.isDestroyed()) session.window.destroy()
+    const source = session.source
+    if (source && !source.isDestroyed()) {
+        if (session.wasVisible) {
+            source.show()
+            source.focus()
+        }
+        source.webContents.send('capture:result', result)
     }
-    captureWindow = null
-    // 恢复触发截屏的窗口显示
-    if (captureSourceWindow && !captureSourceWindow.isDestroyed()) {
-        captureSourceWindow.show()
-    }
-    captureSourceWindow = null
 }
 
-ipcMain.on('window:capture-open', async (e) => {
-    // 找到触发截屏的窗口并隐藏
-    const senderWindow = BrowserWindow.fromWebContents(e.sender)
-    if (senderWindow) {
-        captureSourceWindow = senderWindow
-        senderWindow.hide()
-    } else {
-        // fallback：隐藏主窗口
-        refs.mainWindow.hide()
-        captureSourceWindow = refs.mainWindow
+ipcMain.handle('window:capture-open', (event) => {
+    return createCaptureWindow(BrowserWindow.fromWebContents(event.sender))
+})
+
+ipcMain.on('window:close-capture', (event) => {
+    const session = captureSession
+    if (session?.window?.webContents === event.sender) finishCapture(session)
+})
+
+// 只接收选区坐标，避免大图在渲染进程反复编码、复制和经 IPC 回传。
+ipcMain.handle('window:save-capture', async (event, rect) => {
+    const session = captureSession
+    if (!session || session.window?.webContents !== event.sender || session.saving) {
+        return { ok: false, error: '截图会话已结束或正在保存' }
     }
-
-    await createCaptureWindow()
-})
-
-ipcMain.on('window:close-capture', () => {
-    closeCaptureWindow()
-})
-
-ipcMain.on('window:save-capture', (e, uint8Array) => {
-    console.info(uint8Array)
-    const buffer = Buffer.from(uint8Array);
-    const image = nativeImage.createFromBuffer(buffer)
-    // 复制图片到剪贴板
-    clipboard.writeImage(image)
-    // 保存图片到指定路径
-    const fileName = `screenshot_${Date.now()}.png`
-    const savePath = path.join(app.getPath('pictures'), fileName)
-    fs.writeFileSync(savePath, buffer);
-
-    // 获取文件信息
-    const stats = fs.statSync(savePath);
-    const fileId = crypto.randomUUID(); // 生成唯一文件ID
-
-    // 生成base64预览（可以适当缩小尺寸以减少数据量）
-    let base64Preview = '';
+    session.saving = true
     try {
-        // 创建缩略图用于预览（原图可能太大）
-        const previewImage = nativeImage.createFromBuffer(buffer);
-        // 缩放到合适大小，例如最大宽度300px
-        const { width, height } = previewImage.getSize();
-        const maxWidth = 300;
-        let resizeWidth = width;
-        let resizeHeight = height;
-
-        if (width > maxWidth) {
-            resizeWidth = maxWidth;
-            resizeHeight = Math.round((height * maxWidth) / width);
-            const resizedImage = previewImage.resize({ width: resizeWidth, height: resizeHeight });
-            base64Preview = resizedImage.toDataURL();
-        } else {
-            base64Preview = previewImage.toDataURL();
+        const { width, height } = session.image.getSize()
+        if (!rect || !['x', 'y', 'width', 'height', 'viewportWidth', 'viewportHeight'].every(key => Number.isFinite(rect[key])) ||
+            rect.width <= 0 || rect.height <= 0 || rect.viewportWidth <= 0 || rect.viewportHeight <= 0) throw new Error('请选择有效的截图区域')
+        // 按实际图像尺寸换算，不能假设系统缩放值等于缩略图比例。
+        const x = Math.max(0, Math.min(width - 1, Math.floor(rect.x * width / rect.viewportWidth)))
+        const y = Math.max(0, Math.min(height - 1, Math.floor(rect.y * height / rect.viewportHeight)))
+        const right = Math.max(x + 1, Math.min(width, Math.ceil((rect.x + rect.width) * width / rect.viewportWidth)))
+        const bottom = Math.max(y + 1, Math.min(height, Math.ceil((rect.y + rect.height) * height / rect.viewportHeight)))
+        const image = session.image.crop({ x, y, width: right - x, height: bottom - y })
+        if (image.isEmpty()) throw new Error('截图图像为空，请重试')
+        const buffer = image.toPNG()
+        if (!buffer.length) throw new Error('截图编码失败，请重试')
+        const fileId = crypto.randomUUID()
+        const fileName = `screenshot_${Date.now()}_${fileId.slice(0, 8)}.png`
+        const savePath = path.join(app.getPath('pictures'), fileName)
+        await fs.promises.writeFile(savePath, buffer)
+        // 写盘时仍允许取消；旧任务不能关闭新会话或污染剪贴板。
+        if (captureSession !== session) {
+            await fs.promises.unlink(savePath).catch(() => {})
+            return { canceled: true }
         }
+        clipboard.writeImage(image)
+        const size = image.getSize()
+        const ratio = Math.min(1, 300 / size.width, 300 / size.height)
+        const preview = ratio < 1 ? image.resize({ width: Math.max(1, Math.round(size.width * ratio)),
+            height: Math.max(1, Math.round(size.height * ratio)) }) : image
+        finishCapture(session, { ok: true, fileInfo: {
+            fileId, fileName, fileSize: buffer.length, fileType: 'image/png',
+            content: '', base64: preview.toDataURL(), localPath: savePath, remotePath: ''
+        } })
+        return { ok: true }
     } catch (error) {
-        console.error('生成base64预览失败:', error);
-        // 如果生成失败，使用一个占位符
-        base64Preview = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
-    }
-
-    // 先保存目标窗口引用，再关闭截屏窗口（closeCaptureWindow 会清除 captureSourceWindow）
-    const targetWindow = captureSourceWindow || refs.mainWindow
-
-    // 关闭截屏窗口（统一入口，不再重复调用）
-    closeCaptureWindow()
-
-    // 将截屏图片发送回触发截屏的窗口
-    if (targetWindow && !targetWindow.isDestroyed()) {
-        // 发送完整的文件信息对象
-        targetWindow.webContents.send('capture:image', {
-            fileId,           // 唯一文件ID
-            fileName,         // 文件名，如 "screenshot_1700000000000.png"
-            fileSize: stats.size, // 文件大小（字节）
-            fileType: 'image/png', // 文件类型
-            content: '',      // 文本内容为空
-            base64: base64Preview, // base64预览图
-            localPath: savePath, // 本地保存路径
-            remotePath: '',   // 远程路径（上传后填充）
-        })
+        console.error('保存截图失败:', error.message)
+        finishCapture(session, { error: '保存截图失败，请检查图片目录权限和磁盘空间后重试' })
+        return { ok: false }
     }
 })
 
-export async function createCaptureWindow() {
-    const { screen, desktopCapturer } = require('electron')
-    // 获取主屏幕的宽度和高度和缩放因子
-    const {
-        bounds: { width, height },
-        scaleFactor
-    } = screen.getPrimaryDisplay()
-    console.info(width, height, scaleFactor)
-
-    const sources = await desktopCapturer.getSources({
-        types: ['screen'],
-        thumbnailSize: {
-            width: Math.round(width * scaleFactor),
-            height: Math.round(height * scaleFactor)
-        }
-    })
-
-    //选择第一个屏幕，转为base64的缩略图
-    const pngBuffer = sources[0].thumbnail.toPNG()
-
-    const options = {
-        // 全屏窗口
-        fullscreen: true,
-        // 窗口无标题栏
-        frame: false,
-        // 窗口透明
-        transparent: true,
-        // 窗口不在任务栏显示
-        skipTaskbar: true,
-        // 窗口无菜单栏
-        autoHideMenuBar: true,
-        // 窗口不可移动
-        movable: false,
-        // 窗口不可调整大小
-        resizable: false,
-        // 窗口可超出屏幕边界
-        enableLargerThanScreen: true,
-        // 窗口无阴影
-        hasShadow: false,
-        show: false
-    }
-
-    //截屏窗口
-    captureWindow = createExtraWindow('capture', options, 'standalone', null)
-
-    // 等待页面加载完成后再发送数据
-    captureWindow.webContents.on('did-finish-load', () => {
-        captureWindow.webContents.send('window:get-capture-pngBuffer', {
-            pngBuffer,
-            scaleFactor
-        });
-    });
-
-    captureWindow.on('show', () => {
-        // 注册全局快捷键
-        globalShortcut.register('Esc', () => {
-            captureWindow.close()
+export async function createCaptureWindow(source = BrowserWindow.getFocusedWindow() || refs.mainWindow) {
+    if (captureSession) return { ok: false, busy: true }
+    const session = { source, wasVisible: !!source && !source.isDestroyed() && source.isVisible() }
+    captureSession = session
+    // 只保护准备阶段，选区期间不强制超时。
+    session.loadTimer = setTimeout(() => finishCapture(session, { error: '截图准备超时，请重试' }), 15000)
+    try {
+        session.display = source && !source.isDestroyed()
+            ? screen.getDisplayMatching(source.getBounds()) : screen.getPrimaryDisplay()
+        if (session.wasVisible) source.hide()
+        // 给桌面合成器一次完成隐藏窗口的机会。
+        await delay(120)
+        if (captureSession !== session) return { canceled: true }
+        const { bounds, scaleFactor } = session.display
+        const sources = await desktopCapturer.getSources({
+            types: ['screen'],
+            thumbnailSize: { width: Math.round(bounds.width * scaleFactor), height: Math.round(bounds.height * scaleFactor) }
         })
-    })
-
-    captureWindow.on('close', () => {
-        // 注销全局快捷键
-        globalShortcut.unregister('Esc')
-        captureWindow = null
-    })
+        if (captureSession !== session) return { canceled: true }
+        const desktop = sources.find(item => item.display_id === String(session.display.id)) ||
+            (sources.length === 1 ? sources[0] : null)
+        if (!desktop || desktop.thumbnail.isEmpty()) throw new Error('无法获取当前屏幕')
+        // 保留原始图像，避免对整屏 PNG 再编码、解码一次。
+        session.image = desktop.thumbnail
+        session.window = createExtraWindow('capture', {
+            ...bounds, frame: false, skipTaskbar: true, autoHideMenuBar: true,
+            movable: false, resizable: false, enableLargerThanScreen: true,
+            hasShadow: false, alwaysOnTop: true, backgroundColor: '#101820'
+        }, 'standalone', null)
+        const win = session.window
+        if (!win) throw new Error('截图窗口未能创建')
+        win.once('closed', () => finishCapture(session))
+        win.webContents.once('render-process-gone', () => finishCapture(session, { error: '截图窗口异常退出，请重试' }))
+        win.webContents.once('did-fail-load', () => finishCapture(session, { error: '截图页面加载失败，请重试' }))
+        win.webContents.once('did-finish-load', () => {
+            if (captureSession !== session) return
+            // 预览最长边限制在 1920，原图只在主进程保留，保存不降质。
+            const { width, height } = session.image.getSize()
+            const ratio = Math.min(1, 1920 / Math.max(width, height))
+            const preview = ratio < 1 ? session.image.resize({ width: Math.round(width * ratio), height: Math.round(height * ratio) }) : session.image
+            win.webContents.send('window:get-capture-pngBuffer', { pngBuffer: preview.toPNG(), imageSize: { width, height } })
+        })
+        return { ok: true }
+    } catch (error) {
+        console.error('创建截图失败:', error.message)
+        finishCapture(session, { error: '无法打开截图，请检查屏幕录制权限后重试' })
+        return { ok: false }
+    }
 }
+
+ipcMain.on('window:capture-ready', (event) => {
+    if (captureSession?.window?.webContents === event.sender) clearTimeout(captureSession.loadTimer)
+})
+
+ipcMain.on('window:capture-error', (event) => {
+    const session = captureSession
+    if (session?.window?.webContents === event.sender) finishCapture(session, { error: '截图预览加载失败，请重试' })
+})
 
 ipcMain.on('copy:file', async (e, content, remoteUrl, msgType, fileName) => {
     switch (msgType) {

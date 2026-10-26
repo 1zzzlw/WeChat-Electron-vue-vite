@@ -76,17 +76,17 @@ const emit = defineEmits(['close'])
 
 /* ===== Variant: info (cyan/blue theme) ===== */
 .notification.variant-info {
-  border: 1px solid var(--notification-border, rgba(255, 255, 255, 0.15));
+  border: 1px solid var(--notification-border, var(--color-border-subtle));
   box-shadow: var(--notification-shadow, 0 8px 32px rgba(0, 0, 0, 0.15));
 }
 
 .notification.variant-info:hover {
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
-  border-color: rgba(255, 255, 255, 0.25);
+  border-color: var(--color-border-subtle);
 }
 
 .notification.variant-info .notification-avatar {
-  border: 2px solid var(--avatar-border, rgba(255, 255, 255, 0.2));
+  border: 2px solid var(--avatar-border, var(--color-border-subtle));
 }
 
 .notification.variant-info .display-name {
@@ -179,7 +179,7 @@ const emit = defineEmits(['close'])
 }
 
 .close-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(var(--color-surface-rgb), 0.4);
 }
 
 /* ===== Content layout ===== */

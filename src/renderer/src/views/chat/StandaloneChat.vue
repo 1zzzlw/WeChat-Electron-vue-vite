@@ -83,7 +83,7 @@ onUnmounted(() => {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: rgba(28, 38, 50, 0.95);
+  background-color: var(--color-bg-deep);
   overflow: hidden;
 }
 
@@ -93,8 +93,8 @@ onUnmounted(() => {
   align-items: center;
   justify-content: flex-end;
   padding: 0 16px;
-  background-color: rgba(20, 30, 42, 0.95);
-  border-bottom: 1px solid rgba(66, 153, 225, 0.15);
+  background-color: var(--color-surface-1);
+  border-bottom: 1px solid var(--color-border-subtle);
   -webkit-app-region: drag;
   position: relative;
   flex-shrink: 0;
@@ -110,7 +110,7 @@ onUnmounted(() => {
   display: flex;
   justify-content: center;
   align-items: center;
-  color: rgba(240, 240, 240, 0.5);
+  color: var(--color-text-muted);
   font-size: 14px;
 }
 </style>

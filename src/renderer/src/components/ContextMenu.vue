@@ -44,7 +44,7 @@ const props = defineProps({
 <style scoped>
 .context-menu {
     position: fixed;
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(var(--color-surface-rgb), 0.86);
     backdrop-filter: blur(10px);
     box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2), 1px 1px 5px rgba(0, 0, 0, 0.2);
     min-width: 100px;
@@ -54,7 +54,7 @@ const props = defineProps({
     line-height: 1.8;
     white-space: nowrap;
     overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid var(--color-border-subtle);
     transition: all 0.2s ease;
 }
 

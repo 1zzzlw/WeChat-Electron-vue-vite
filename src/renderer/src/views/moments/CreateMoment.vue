@@ -396,10 +396,10 @@ const saveContent = async () => {
     width: 100%;
     height: 100%;
     display: flex;
-    background: rgba(28, 38, 50, 0.4);
+    background: rgba(var(--color-surface-rgb), 0.55);
     backdrop-filter: blur(25px);
     -webkit-backdrop-filter: blur(25px);
-    color: #f0f2f5;
+    color: var(--color-text-primary);
     overflow: hidden;
 }
 
@@ -407,8 +407,8 @@ const saveContent = async () => {
 .sidebar {
     width: 220px;
     height: 100%;
-    background: rgba(255, 255, 255, 0.03);
-    border-right: 1px solid rgba(67, 243, 255, 0.15);
+    background: rgba(var(--color-surface-rgb), 0.4);
+    border-right: 1px solid rgba(var(--color-accent-rgb), 0.15);
     display: flex;
     flex-direction: column;
     transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -428,8 +428,8 @@ const saveContent = async () => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid rgba(67, 243, 255, 0.1);
-    color: #43f3ff;
+    border-bottom: 1px solid rgba(var(--color-accent-rgb), 0.1);
+    color: var(--color-accent);
     font-weight: 600;
     font-size: 14px;
 }
@@ -437,7 +437,7 @@ const saveContent = async () => {
 .toggle-btn {
     background: transparent;
     border: none;
-    color: #43f3ff;
+    color: var(--color-accent);
     cursor: pointer;
     padding: 5px;
     display: flex;
@@ -451,7 +451,7 @@ const saveContent = async () => {
 }
 
 .toggle-btn:hover {
-    background: rgba(67, 243, 255, 0.1);
+    background: rgba(var(--color-accent-rgb), 0.1);
 }
 
 .sidebar-content {
@@ -469,17 +469,17 @@ const saveContent = async () => {
     transition: all 0.2s;
     position: relative;
     font-size: 13px;
-    color: rgba(240, 242, 245, 0.7);
+    color: var(--color-text-secondary);
 }
 
 .nav-item:hover {
-    background: rgba(67, 243, 255, 0.08);
-    color: #43f3ff;
+    background: rgba(var(--color-accent-rgb), 0.08);
+    color: var(--color-accent);
 }
 
 .nav-item.is-active {
-    background: rgba(67, 243, 255, 0.12);
-    color: #43f3ff;
+    background: rgba(var(--color-accent-rgb), 0.12);
+    color: var(--color-accent);
     font-weight: 600;
 }
 
@@ -490,15 +490,15 @@ const saveContent = async () => {
     top: 0;
     bottom: 0;
     width: 3px;
-    background: #43f3ff;
-    box-shadow: 0 0 8px #43f3ff;
+    background: var(--color-accent);
+    box-shadow: 0 0 8px var(--color-accent);
 }
 
 .nav-dot {
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: rgba(67, 243, 255, 0.3);
+    background: rgba(var(--color-accent-rgb), 0.3);
     flex-shrink: 0;
 }
 
@@ -538,7 +538,7 @@ const saveContent = async () => {
 
 .empty-nav {
     text-align: center;
-    color: rgba(67, 243, 255, 0.3);
+    color: rgba(var(--color-accent-rgb), 0.3);
     font-size: 12px;
     margin-top: 20px;
 }
@@ -563,7 +563,7 @@ const saveContent = async () => {
     width: 45px;
     padding: 30px 0;
     background: rgba(0, 0, 0, 0.1);
-    border-right: 1px solid rgba(67, 243, 255, 0.1);
+    border-right: 1px solid rgba(var(--color-accent-rgb), 0.1);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -580,7 +580,7 @@ const saveContent = async () => {
     /* 采用绝对定位 */
     width: 100%;
     font-size: 12px;
-    color: rgba(67, 243, 255, 0.45) !important;
+    color: rgba(var(--color-accent-rgb), 0.45) !important;
     font-family: 'Consolas', monospace;
     display: flex;
     align-items: center;
@@ -592,10 +592,10 @@ const saveContent = async () => {
 }
 
 .line-number.is-active {
-    color: #43f3ff !important;
-    text-shadow: 0 0 8px rgba(67, 243, 255, 0.6);
+    color: var(--color-accent) !important;
+    text-shadow: 0 0 8px rgba(var(--color-accent-rgb), 0.6);
     font-weight: bold;
-    background: rgba(67, 243, 255, 0.08);
+    background: rgba(var(--color-accent-rgb), 0.08);
 }
 
 .header {
@@ -604,16 +604,16 @@ const saveContent = async () => {
     align-items: center;
     justify-content: space-between;
     padding: 0 20px;
-    background: rgba(255, 255, 255, 0.05);
-    border-bottom: 1px solid rgba(67, 243, 255, 0.2);
+    background: rgba(var(--color-surface-rgb), 0.4);
+    border-bottom: 1px solid rgba(var(--color-accent-rgb), 0.2);
     -webkit-app-region: drag;
 }
 
 .header-title {
     font-size: 16px;
     font-weight: 600;
-    color: #43f3ff;
-    text-shadow: 0 0 8px rgba(67, 243, 255, 0.3);
+    color: var(--color-accent);
+    text-shadow: 0 0 8px rgba(var(--color-accent-rgb), 0.3);
 }
 
 .header-actions {
@@ -623,9 +623,9 @@ const saveContent = async () => {
 }
 
 .publish-btn {
-    background: rgba(67, 243, 255, 0.2) !important;
-    border: 1px solid rgba(67, 243, 255, 0.4) !important;
-    color: #43f3ff !important;
+    background: rgba(var(--color-accent-rgb), 0.2) !important;
+    border: 1px solid rgba(var(--color-accent-rgb), 0.4) !important;
+    color: var(--color-accent) !important;
     border-radius: 6px;
     padding: 6px 18px;
     height: 32px;
@@ -636,17 +636,17 @@ const saveContent = async () => {
 }
 
 .publish-btn:hover {
-    background: rgba(67, 243, 255, 0.35) !important;
+    background: rgba(var(--color-accent-rgb), 0.35) !important;
     transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(67, 243, 255, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+    box-shadow: 0 6px 16px rgba(var(--color-accent-rgb), 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
 }
 
 .editor-toolbar {
     display: flex;
     align-items: center;
     padding: 8px 20px;
-    background: rgba(255, 255, 255, 0.02);
-    border-bottom: 1px solid rgba(67, 243, 255, 0.1);
+    background: rgba(var(--color-surface-rgb), 0.4);
+    border-bottom: 1px solid rgba(var(--color-accent-rgb), 0.1);
     gap: 12px;
     flex-wrap: wrap;
 }
@@ -659,7 +659,7 @@ const saveContent = async () => {
 
 .toolbar-group.divider {
     padding-left: 12px;
-    border-left: 1px solid rgba(67, 243, 255, 0.15);
+    border-left: 1px solid rgba(var(--color-accent-rgb), 0.15);
 }
 
 .editor-toolbar button {
@@ -668,26 +668,26 @@ const saveContent = async () => {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(var(--color-surface-rgb), 0.4);
+    border: 1px solid var(--color-border-subtle);
     border-radius: 4px;
-    color: rgba(67, 243, 255, 0.7);
+    color: rgba(var(--color-accent-rgb), 0.7);
     cursor: pointer;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .editor-toolbar button:hover {
-    background: rgba(67, 243, 255, 0.15);
-    color: #43f3ff;
-    border-color: rgba(67, 243, 255, 0.3);
+    background: rgba(var(--color-accent-rgb), 0.15);
+    color: var(--color-accent);
+    border-color: rgba(var(--color-accent-rgb), 0.3);
     transform: translateY(-1px);
 }
 
 .editor-toolbar button.is-active {
-    background: rgba(67, 243, 255, 0.25);
-    color: #fff;
-    border-color: #43f3ff;
-    box-shadow: 0 0 8px rgba(67, 243, 255, 0.3);
+    background: rgba(var(--color-accent-rgb), 0.25);
+    color: var(--color-text-primary);
+    border-color: var(--color-accent);
+    box-shadow: 0 0 8px rgba(var(--color-accent-rgb), 0.3);
 }
 
 .editor-toolbar button .iconfont {
@@ -697,7 +697,7 @@ const saveContent = async () => {
 .editor-main {
     flex: 1;
     overflow-y: auto;
-    background: rgba(255, 255, 255, 0.01);
+    background: rgba(var(--color-surface-rgb), 0.4);
 }
 
 .editor-content-wrapper {
@@ -711,7 +711,7 @@ const saveContent = async () => {
     min-height: 100%;
     padding: 30px 40px;
     outline: none;
-    color: #f0f2f5;
+    color: var(--color-text-primary);
     line-height: 1.8;
     font-size: 15px;
     margin: 0;
@@ -724,7 +724,7 @@ const saveContent = async () => {
     /* 保留空格和换行，但允许自动换行 */
     white-space: pre-wrap;
 
-    caret-color: #43f3ff;
+    caret-color: var(--color-accent);
 
     filter:
         drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4)) drop-shadow(0 0 3px rgba(0, 0, 0, 0.2));
@@ -749,10 +749,10 @@ const saveContent = async () => {
 :deep(.ProseMirror h1) {
     font-size: 28px;
     font-weight: 700;
-    color: #fff;
+    color: var(--color-text-primary);
     margin: 1.5em 0 0.8em;
     padding-bottom: 0.3em;
-    border-bottom: 2px solid rgba(67, 243, 255, 0.3);
+    border-bottom: 2px solid rgba(var(--color-accent-rgb), 0.3);
     letter-spacing: -0.02em;
     line-height: 1.2;
 }
@@ -760,7 +760,7 @@ const saveContent = async () => {
 :deep(.ProseMirror h2) {
     font-size: 22px;
     font-weight: 600;
-    color: #e0faff;
+    color: var(--color-text-primary);
     margin: 1.4em 0 0.6em;
     display: flex;
     align-items: center;
@@ -771,16 +771,16 @@ const saveContent = async () => {
     content: '';
     width: 4px;
     height: 18px;
-    background: #43f3ff;
+    background: var(--color-accent);
     margin-right: 12px;
     border-radius: 2px;
-    box-shadow: 0 0 8px rgba(67, 243, 255, 0.5);
+    box-shadow: 0 0 8px rgba(var(--color-accent-rgb), 0.5);
 }
 
 :deep(.ProseMirror h3) {
     font-size: 18px;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--color-text-primary);
     margin: 1.2em 0 0.5em;
     line-height: 1.4;
 }
@@ -788,7 +788,7 @@ const saveContent = async () => {
 :deep(.ProseMirror h4),
 :deep(.ProseMirror h5),
 :deep(.ProseMirror h6) {
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--color-text-secondary);
     margin: 1em 0 0.4em;
     font-weight: 600;
 }
@@ -808,25 +808,25 @@ const saveContent = async () => {
 :deep(.ProseMirror p) {
     margin: 0.5em 0;
     font-size: 15px;
-    color: rgba(240, 242, 245, 0.9);
+    color: var(--color-text-primary);
     line-height: 1.8;
 }
 
 :deep(.ProseMirror p.is-editor-empty:first-child::before) {
     content: '分享这一刻的想法...';
     float: left;
-    color: rgba(67, 243, 255, 0.3);
+    color: rgba(var(--color-accent-rgb), 0.3);
     pointer-events: none;
     height: 0;
 }
 
 :deep(.ProseMirror blockquote) {
-    border-left: 4px solid rgba(67, 243, 255, 0.5);
-    background: rgba(67, 243, 255, 0.05);
+    border-left: 4px solid rgba(var(--color-accent-rgb), 0.5);
+    background: rgba(var(--color-accent-rgb), 0.05);
     padding: 12px 20px;
     margin: 20px 0;
     border-radius: 0 8px 8px 0;
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--color-text-secondary);
     font-style: italic;
 }
 
@@ -836,7 +836,7 @@ const saveContent = async () => {
     border-radius: 12px;
     margin: 20px auto;
     display: block;
-    border: 1px solid rgba(67, 243, 255, 0.2);
+    border: 1px solid rgba(var(--color-accent-rgb), 0.2);
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
 }
 
@@ -847,7 +847,7 @@ const saveContent = async () => {
         left: 0;
         top: 0;
         bottom: 0;
-        background: rgba(28, 38, 50, 0.95);
+        background: var(--color-bg-deep);
         box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
     }
 
@@ -870,33 +870,33 @@ const saveContent = async () => {
 
 .sidebar-content::-webkit-scrollbar-thumb,
 .editor-main::-webkit-scrollbar-thumb {
-    background: rgba(67, 243, 255, 0.15);
+    background: rgba(var(--color-accent-rgb), 0.15);
     border-radius: 2px;
 }
 
 .sidebar-content::-webkit-scrollbar-thumb:hover,
 .editor-main::-webkit-scrollbar-thumb:hover {
-    background: rgba(67, 243, 255, 0.3);
+    background: rgba(var(--color-accent-rgb), 0.3);
 }
 
 :deep(.el-dialog) {
-    background: rgba(28, 38, 50, 0.95) !important;
+    background: var(--color-bg-deep) !important;
     backdrop-filter: blur(15px);
-    border: 1px solid rgba(67, 243, 255, 0.3);
+    border: 1px solid rgba(var(--color-accent-rgb), 0.3);
     border-radius: 12px;
 }
 
 :deep(.el-dialog__title) {
-    color: #43f3ff;
+    color: var(--color-accent);
 }
 
 :deep(.el-dialog .el-input__wrapper) {
-    background: rgba(255, 255, 255, 0.05) !important;
-    border: 1px solid rgba(67, 243, 255, 0.2) !important;
+    background: rgba(var(--color-surface-rgb), 0.4) !important;
+    border: 1px solid rgba(var(--color-accent-rgb), 0.2) !important;
     box-shadow: none !important;
 }
 
 :deep(.el-dialog .el-input__inner) {
-    color: #f0f2f5;
+    color: var(--color-text-primary);
 }
 </style>

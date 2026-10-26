@@ -99,7 +99,7 @@
         </template>
       </el-popover>
       <el-button :icon="Folder" size="large" square @click="selectFile"></el-button>
-      <el-button :icon="Scissor" size="large" square @click="captureBtn"></el-button>
+      <el-button :icon="Scissor" size="large" square :disabled="capturing" title="截图" @click="captureBtn"></el-button>
       <el-button :icon="VideoCamera" size="large" square></el-button>
       <el-button :icon="Money" size="large" square class="red-packet-btn" title="发红包"
         @click="showRedPacketDialog = true"></el-button>
@@ -310,26 +310,42 @@ const handlerEmoji = (emoji: any) => {
   messageText.value += emoji
 }
 
-// 截图
-const captureBtn = () => {
-  ; (window as any).chatToolApi.openCapture()
-    ; (window as any).chatToolApi.sendImageToMain((fileInfo: any) => {
-      if (fileInfoList.value.length >= 3) {
-        ElMessage.error('最多3个文件')
-        return
-      }
-      fileInfoList.value.push({
-        base64: fileInfo.base64,
-        fileId: fileInfo.fileId,
-        fileName: fileInfo.fileName,
-        fileSize: fileInfo.fileSize,
-        fileType: 2,
-        content: fileInfo.content || '[照片]',
-        localPath: fileInfo.localPath,
-        remotePath: '',
-      })
-      ElMessage.success('截屏已添加到文件列表')
-    })
+// 每个聊天组件只注册一次，并在卸载时清理；取消截图不会遗留 once 监听。
+const capturing = ref(false)
+let captureConversationId: string | null = null
+const removeCaptureListener = (window as any).chatToolApi.onCaptureResult((result: any) => {
+  capturing.value = false
+  const conversationId = captureConversationId
+  captureConversationId = null
+  if (result.error) { ElMessage.error(result.error); return }
+  if (!result.ok || !result.fileInfo) return
+  if (conversationId && conversationId !== effectiveConvId.value) {
+    ElMessage.info('会话已切换，截图已保存到图片目录')
+    return
+  }
+  if (fileInfoList.value.length >= 3) { ElMessage.error('最多3个文件，截图已保存到图片目录'); return }
+  const fileInfo = result.fileInfo
+  fileInfoList.value.push({
+    base64: fileInfo.base64, fileId: fileInfo.fileId, fileName: fileInfo.fileName,
+    fileSize: fileInfo.fileSize, fileType: 2, content: fileInfo.content || '[照片]',
+    localPath: fileInfo.localPath, remotePath: ''
+  })
+  ElMessage.success('截屏已添加到文件列表')
+})
+
+const captureBtn = async () => {
+  if (capturing.value) return
+  if (fileInfoList.value.length >= 3) { ElMessage.error('最多3个文件'); return }
+  capturing.value = true
+  captureConversationId = effectiveConvId.value as string
+  try {
+    const result = await (window as any).chatToolApi.openCapture()
+    if (!result.ok) { capturing.value = false; captureConversationId = null }
+  } catch (error) {
+    capturing.value = false
+    captureConversationId = null
+    ElMessage.error('无法打开截图，请重试')
+  }
 }
 
 // 发送消息
@@ -732,6 +748,7 @@ watch(
 
 // 组件卸载
 onUnmounted(() => {
+  removeCaptureListener()
   messageLoadVersion++
   if (retainedConversationId) messageStore.releaseConversation(retainedConversationId)
   messagePageInfo.pageTotal = 0
@@ -755,9 +772,9 @@ defineExpose({
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  background-color: rgba(28, 38, 50, 0.4);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background-color: var(--color-chat-surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   -webkit-app-region: no-drag;
 }
 
@@ -786,7 +803,7 @@ img {
 
 .left-name {
   font-size: 14px;
-  color: #ffffff;
+  color: var(--color-text-primary);
 }
 
 .chat-list-right {
@@ -801,10 +818,13 @@ img {
 }
 
 .chat-tool {
-  height: 30px;
+  background: var(--color-composer-surface);
+  min-height: 44px;
+  padding: 6px 12px;
+  gap: 6px;
   display: flex;
   align-items: center;
-  border-top: 1px solid rgba(3, 32, 120, 0.5);
+  border-top: 1px solid var(--color-border-subtle);
   overflow: hidden;
 }
 
@@ -815,14 +835,14 @@ img {
   font-size: 20px;
   background-color: transparent;
   border: none;
-  color: rgba(240, 240, 240, 0.8);
+  color: var(--color-text-secondary);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .chat-tool button:hover {
-  color: rgba(66, 153, 225, 0.9);
-  text-shadow: 0 0 6px rgba(66, 153, 225, 0.3);
+  color: rgba(var(--color-accent-rgb), 0.9);
+  text-shadow: 0 0 6px rgba(var(--color-accent-rgb), 0.3);
 }
 
 .chat-tool .red-packet-btn:hover {
@@ -839,6 +859,7 @@ img {
 }
 
 .chat-input {
+  background: var(--color-composer-surface);
   margin: 0 auto;
   height: 120px;
   width: 100%;
@@ -850,16 +871,16 @@ img {
 }
 
 .chat-input :deep(.el-textarea__inner) {
-  background-color: rgba(28, 38, 50, 1);
+  background-color: var(--color-input-surface);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  color: #f0f0f0;
+  color: var(--color-text-primary);
   box-shadow: none;
-  border: 1px solid rgba(66, 153, 225, 0.2);
+  border: 1px solid rgba(var(--color-accent-rgb), 0.2);
   resize: none;
 
   &::placeholder {
-    color: rgba(240, 240, 240, 0.5);
+    color: var(--color-text-muted);
   }
 
   &::-webkit-scrollbar {
@@ -867,12 +888,12 @@ img {
   }
 
   &::-webkit-scrollbar-thumb {
-    background: rgba(66, 153, 225, 0.3);
+    background: rgba(var(--color-accent-rgb), 0.3);
     border-radius: 3px;
   }
 
   &::-webkit-scrollbar-thumb:hover {
-    background: rgba(66, 153, 225, 0.5);
+    background: rgba(var(--color-accent-rgb), 0.5);
   }
 
   &::-webkit-scrollbar-track {
@@ -897,49 +918,18 @@ img {
 }
 
 .emoji-btn:hover {
-  background-color: rgba(255, 255, 255, 0.18);
+  background-color: rgba(var(--color-surface-rgb), 0.4);
   transform: scale(1.15);
   cursor: pointer;
 }
 
 .sendButton {
+  background: var(--color-composer-surface);
+  padding: 0 10px 8px;
   width: 100%;
   display: flex;
   justify-content: flex-end;
   align-items: center;
-}
-
-:deep(.el-button--primary) {
-  background: rgba(66, 153, 225, 0.2);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: none;
-  border-radius: 6px;
-  box-shadow:
-    0 2px 6px rgba(0, 0, 0, 0.2),
-    inset 0 1px 2px rgba(255, 255, 255, 0.08);
-  color: #f0f0f0;
-  font-size: 14px;
-  padding: 8px 24px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-:deep(.el-button--primary:hover),
-:deep(.el-button--primary:focus) {
-  background: rgba(66, 153, 225, 0.3);
-  box-shadow:
-    0 3px 8px rgba(0, 0, 0, 0.25),
-    inset 0 1px 3px rgba(255, 255, 255, 0.1);
-  transform: translateY(-1px);
-}
-
-:deep(.el-button--primary:active) {
-  transform: translateY(0);
-  background: rgba(66, 153, 225, 0.15);
-  box-shadow:
-    0 1px 4px rgba(0, 0, 0, 0.15),
-    inset 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .el-button {
@@ -959,10 +949,10 @@ img {
 }
 
 .left-bubble {
-  background: rgba(45, 55, 70, 0.85);
-  color: #f0f0f0;
+  background: var(--color-bubble-incoming);
+  color: var(--color-text-primary);
   border-bottom-left-radius: 0;
-  border: 1px solid rgba(66, 153, 225, 0.1);
+  border: 1px solid rgba(var(--color-accent-rgb), 0.1);
 }
 
 .left-bubble::before {
@@ -973,15 +963,15 @@ img {
   width: 0;
   height: 0;
   border-top: 8px solid transparent;
-  border-right: 8px solid rgba(45, 55, 70, 0.85);
+  border-right: 8px solid var(--color-bubble-incoming);
   border-bottom: 8px solid transparent;
 }
 
 .right-bubble {
-  background: rgba(66, 153, 225, 0.35);
-  color: #ffffff;
+  background: var(--color-bubble-outgoing);
+  color: var(--color-text-primary);
   border-bottom-right-radius: 0;
-  border: 1px solid rgba(66, 153, 225, 0.2);
+  border: 1px solid rgba(var(--color-accent-rgb), 0.2);
 }
 
 .right-bubble::after {
@@ -992,7 +982,7 @@ img {
   width: 0;
   height: 0;
   border-top: 8px solid transparent;
-  border-left: 8px solid rgba(66, 153, 225, 0.35);
+  border-left: 8px solid var(--color-bubble-outgoing);
   border-bottom: 8px solid transparent;
 }
 
@@ -1009,7 +999,7 @@ img {
 }
 
 .send-load {
-  color: #ffffff;
+  color: var(--color-text-primary);
   animation: rotateLoading 1s linear infinite;
   transform-origin: center;
   margin-top: -10px;
@@ -1038,8 +1028,8 @@ img {
   justify-content: space-between;
   padding: 8px 16px;
   margin: 0 10px;
-  background: rgba(66, 153, 225, 0.12);
-  border-left: 3px solid rgba(66, 153, 225, 0.6);
+  background: rgba(var(--color-accent-rgb), 0.12);
+  border-left: 3px solid rgba(var(--color-accent-rgb), 0.6);
   border-radius: 0 6px 6px 0;
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
@@ -1055,14 +1045,14 @@ img {
 
 .quote-preview-label {
   font-size: 12px;
-  color: rgba(66, 153, 225, 0.9);
+  color: rgba(var(--color-accent-rgb), 0.9);
   font-weight: 500;
   white-space: nowrap;
 }
 
 .quote-preview-text {
   font-size: 13px;
-  color: rgba(240, 240, 240, 0.8);
+  color: var(--color-text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1070,7 +1060,7 @@ img {
 
 .quote-preview-close {
   font-size: 14px;
-  color: rgba(240, 240, 240, 0.5);
+  color: var(--color-text-muted);
   cursor: pointer;
   transition: color 0.2s ease;
   flex-shrink: 0;
@@ -1078,20 +1068,20 @@ img {
 }
 
 .quote-preview-close:hover {
-  color: rgba(240, 240, 240, 0.9);
+  color: var(--color-text-primary);
 }
 
 .quote-block {
   padding: 4px 8px;
   margin-bottom: 6px;
-  background: rgba(255, 255, 255, 0.08);
-  border-left: 2px solid rgba(66, 153, 225, 0.5);
+  background: rgba(var(--color-surface-rgb), 0.4);
+  border-left: 2px solid rgba(var(--color-accent-rgb), 0.5);
   border-radius: 0 4px 4px 0;
   font-size: 12px;
 }
 
 .quote-block-text {
-  color: rgba(240, 240, 240, 0.6);
+  color: var(--color-text-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

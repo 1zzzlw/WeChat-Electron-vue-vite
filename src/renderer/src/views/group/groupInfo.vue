@@ -305,7 +305,7 @@ onMounted(async () => {
     background: rgba(70, 100, 130, 0.2);
     backdrop-filter: blur(12px);
     border-radius: 15px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid var(--color-border-subtle);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
     gap: 8px;
     -webkit-app-region: no-drag;
@@ -322,13 +322,13 @@ onMounted(async () => {
     font-size: 20px;
     background-color: transparent;
     border: none;
-    color: rgba(240, 240, 240, 0.8);
+    color: var(--color-text-secondary);
     cursor: pointer;
     transition: all 0.2s ease;
 }
 
 .left-icon:hover {
-    color: rgba(255, 255, 255, 0.95);
+    color: var(--color-text-primary);
     text-shadow: 0 0 6px rgba(255, 255, 255, 0.25);
 }
 
@@ -339,7 +339,7 @@ onMounted(async () => {
     align-items: center;
     gap: 20px;
     padding: 10px 20px;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(var(--color-surface-rgb), 0.4);
     border-radius: 8px;
 }
 
@@ -347,7 +347,7 @@ onMounted(async () => {
     width: 100px;
     height: 100px;
     border-radius: 8px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    border: 2px solid var(--color-border-subtle);
 }
 
 .groupAccountInfo-info {
@@ -360,7 +360,7 @@ onMounted(async () => {
 .groupAccountInfo-info p,
 .groupAccountInfo-info span,
 .member-status {
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--color-text-primary);
     font-size: 14px;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
@@ -382,30 +382,30 @@ onMounted(async () => {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(var(--color-surface-rgb), 0.4);
     border-radius: 8px;
 }
 
 .groupBaseInfo div {
-    color: rgba(255, 255, 255, 0.85);
+    color: var(--color-text-secondary);
     font-size: 14px;
     line-height: 1.5;
 }
 
 .groupBaseInfo div::before {
     content: "• ";
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--color-text-muted);
 }
 
 .groupMoments {
     width: 100%;
     height: 140px;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(var(--color-surface-rgb), 0.4);
     border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--color-text-secondary);
     font-size: 14px;
 }
 
@@ -419,16 +419,16 @@ onMounted(async () => {
 }
 
 .el-button {
-    background: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: rgba(255, 255, 255, 0.9);
+    background: rgba(var(--color-surface-rgb), 0.4);
+    border: 1px solid var(--color-border-subtle);
+    color: var(--color-text-primary);
     border-radius: 6px;
     transition: all 0.2s ease;
 }
 
 .el-button:hover {
-    background: rgba(255, 255, 255, 0.25);
-    border-color: rgba(255, 255, 255, 0.3);
+    background: rgba(var(--color-surface-rgb), 0.4);
+    border-color: var(--color-border-subtle);
 }
 
 /* Popover 内部菜单样式 */
@@ -474,7 +474,7 @@ onMounted(async () => {
 .memberListContainer {
     width: 100%;
     height: 368px;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(var(--color-surface-rgb), 0.4);
     border-radius: 8px;
     overflow-y: auto;
     padding: 12px;
@@ -492,26 +492,26 @@ onMounted(async () => {
     gap: 8px;
     padding: 6px 10px;
     border-radius: 8px;
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(var(--color-surface-rgb), 0.4);
     width: calc(50% - 6px);
     box-sizing: border-box;
     transition: background 0.2s ease;
 }
 
 .member-item:hover {
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(var(--color-surface-rgb), 0.4);
 }
 
 .member-avatar {
     width: 36px;
     height: 36px;
     border-radius: 6px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid var(--color-border-subtle);
     flex-shrink: 0;
 }
 
 .member-name {
-    color: rgba(255, 255, 255, 0.85);
+    color: var(--color-text-secondary);
     font-size: 13px;
     flex: 1;
     overflow: hidden;
@@ -555,12 +555,12 @@ onMounted(async () => {
 }
 
 .memberListContainer::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(var(--color-surface-rgb), 0.4);
     border-radius: 4px;
 }
 
 .memberListContainer::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.25);
+    background: rgba(var(--color-surface-rgb), 0.4);
 }
 
 /* ===== 全局弹窗样式（通过 :global 穿透 scoped） ===== */
@@ -600,8 +600,8 @@ onMounted(async () => {
 
 /* 修改群名弹窗 */
 :global(.group-name-dialog) {
-    background: rgba(28, 38, 50, 0.97) !important;
-    border: 1px solid rgba(67, 243, 255, 0.25) !important;
+    background: var(--color-bg-deep) !important;
+    border: 1px solid rgba(var(--color-accent-rgb), 0.25) !important;
     border-radius: 14px !important;
     backdrop-filter: blur(20px) !important;
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35) !important;
@@ -611,42 +611,42 @@ onMounted(async () => {
 
 :global(.group-name-dialog .el-message-box__header) {
     padding: 20px 24px 12px !important;
-    border-bottom: 1px solid rgba(67, 243, 255, 0.1) !important;
+    border-bottom: 1px solid rgba(var(--color-accent-rgb), 0.1) !important;
 }
 
 :global(.group-name-dialog .el-message-box__title) {
-    color: rgba(255, 255, 255, 0.95) !important;
+    color: var(--color-text-primary) !important;
     font-size: 16px !important;
     font-weight: 600 !important;
 }
 
 :global(.group-name-dialog .el-message-box__headerbtn .el-message-box__close) {
-    color: rgba(255, 255, 255, 0.5) !important;
+    color: var(--color-text-muted) !important;
 }
 
 :global(.group-name-dialog .el-message-box__headerbtn:hover .el-message-box__close) {
-    color: #43f3ff !important;
+    color: var(--color-accent) !important;
 }
 
 :global(.group-name-dialog .el-message-box__content) {
     padding: 16px 24px 20px !important;
-    color: rgba(255, 255, 255, 0.7) !important;
+    color: var(--color-text-secondary) !important;
 }
 
 :global(.group-name-dialog .el-message-box__input .el-input__wrapper) {
-    background: rgba(35, 45, 60, 0.8) !important;
-    border: 1px solid rgba(67, 243, 255, 0.25) !important;
+    background: rgba(var(--color-surface-rgb), 0.8) !important;
+    border: 1px solid rgba(var(--color-accent-rgb), 0.25) !important;
     border-radius: 8px !important;
     box-shadow: none !important;
 }
 
 :global(.group-name-dialog .el-message-box__input .el-input__wrapper.is-focus) {
-    border-color: #43f3ff !important;
-    box-shadow: 0 0 8px rgba(67, 243, 255, 0.2) !important;
+    border-color: var(--color-accent) !important;
+    box-shadow: 0 0 8px rgba(var(--color-accent-rgb), 0.2) !important;
 }
 
 :global(.group-name-dialog .el-message-box__input .el-input__inner) {
-    color: rgba(255, 255, 255, 0.9) !important;
+    color: var(--color-text-primary) !important;
 }
 
 :global(.group-name-dialog .el-message-box__btns) {
@@ -664,33 +664,33 @@ onMounted(async () => {
 }
 
 :global(.group-name-dialog .el-message-box__btns .el-button--default) {
-    background: rgba(35, 45, 60, 0.8) !important;
-    border: 1px solid rgba(67, 243, 255, 0.25) !important;
-    color: rgba(255, 255, 255, 0.8) !important;
+    background: rgba(var(--color-surface-rgb), 0.8) !important;
+    border: 1px solid rgba(var(--color-accent-rgb), 0.25) !important;
+    color: var(--color-text-secondary) !important;
 }
 
 :global(.group-name-dialog .el-message-box__btns .el-button--default:hover) {
-    background: rgba(67, 243, 255, 0.1) !important;
-    border-color: rgba(67, 243, 255, 0.4) !important;
-    color: #43f3ff !important;
+    background: rgba(var(--color-accent-rgb), 0.1) !important;
+    border-color: rgba(var(--color-accent-rgb), 0.4) !important;
+    color: var(--color-accent) !important;
 }
 
 :global(.group-name-dialog .el-message-box__btns .el-button--primary) {
-    background: rgba(67, 243, 255, 0.2) !important;
-    border: 1px solid rgba(67, 243, 255, 0.5) !important;
-    color: #43f3ff !important;
+    background: rgba(var(--color-accent-rgb), 0.2) !important;
+    border: 1px solid rgba(var(--color-accent-rgb), 0.5) !important;
+    color: var(--color-accent) !important;
 }
 
 :global(.group-name-dialog .el-message-box__btns .el-button--primary:hover) {
-    background: rgba(67, 243, 255, 0.35) !important;
-    border-color: rgba(67, 243, 255, 0.7) !important;
-    box-shadow: 0 0 12px rgba(67, 243, 255, 0.25) !important;
+    background: rgba(var(--color-accent-rgb), 0.35) !important;
+    border-color: rgba(var(--color-accent-rgb), 0.7) !important;
+    box-shadow: 0 0 12px rgba(var(--color-accent-rgb), 0.25) !important;
 }
 
 /* 群操作确认弹窗 */
 :global(.group-action-dialog) {
-    background: rgba(28, 38, 50, 0.97) !important;
-    border: 1px solid rgba(67, 243, 255, 0.25) !important;
+    background: var(--color-bg-deep) !important;
+    border: 1px solid rgba(var(--color-accent-rgb), 0.25) !important;
     border-radius: 14px !important;
     backdrop-filter: blur(20px) !important;
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35) !important;
@@ -700,30 +700,30 @@ onMounted(async () => {
 
 :global(.group-action-dialog .el-message-box__header) {
     padding: 20px 24px 12px !important;
-    border-bottom: 1px solid rgba(67, 243, 255, 0.1) !important;
+    border-bottom: 1px solid rgba(var(--color-accent-rgb), 0.1) !important;
 }
 
 :global(.group-action-dialog .el-message-box__title) {
-    color: rgba(255, 255, 255, 0.95) !important;
+    color: var(--color-text-primary) !important;
     font-size: 16px !important;
     font-weight: 600 !important;
 }
 
 :global(.group-action-dialog .el-message-box__headerbtn .el-message-box__close) {
-    color: rgba(255, 255, 255, 0.5) !important;
+    color: var(--color-text-muted) !important;
 }
 
 :global(.group-action-dialog .el-message-box__headerbtn:hover .el-message-box__close) {
-    color: #43f3ff !important;
+    color: var(--color-accent) !important;
 }
 
 :global(.group-action-dialog .el-message-box__content) {
     padding: 16px 24px 20px !important;
-    color: rgba(255, 255, 255, 0.7) !important;
+    color: var(--color-text-secondary) !important;
 }
 
 :global(.group-action-dialog .el-message-box__message p) {
-    color: rgba(255, 255, 255, 0.7) !important;
+    color: var(--color-text-secondary) !important;
     font-size: 14px !important;
 }
 
@@ -746,26 +746,26 @@ onMounted(async () => {
 }
 
 :global(.group-action-dialog .el-message-box__btns .el-button--default) {
-    background: rgba(35, 45, 60, 0.8) !important;
-    border: 1px solid rgba(67, 243, 255, 0.25) !important;
-    color: rgba(255, 255, 255, 0.8) !important;
+    background: rgba(var(--color-surface-rgb), 0.8) !important;
+    border: 1px solid rgba(var(--color-accent-rgb), 0.25) !important;
+    color: var(--color-text-secondary) !important;
 }
 
 :global(.group-action-dialog .el-message-box__btns .el-button--default:hover) {
-    background: rgba(67, 243, 255, 0.1) !important;
-    border-color: rgba(67, 243, 255, 0.4) !important;
-    color: #43f3ff !important;
+    background: rgba(var(--color-accent-rgb), 0.1) !important;
+    border-color: rgba(var(--color-accent-rgb), 0.4) !important;
+    color: var(--color-accent) !important;
 }
 
 :global(.group-action-dialog .el-message-box__btns .el-button--primary) {
-    background: rgba(67, 243, 255, 0.2) !important;
-    border: 1px solid rgba(67, 243, 255, 0.5) !important;
-    color: #43f3ff !important;
+    background: rgba(var(--color-accent-rgb), 0.2) !important;
+    border: 1px solid rgba(var(--color-accent-rgb), 0.5) !important;
+    color: var(--color-accent) !important;
 }
 
 :global(.group-action-dialog .el-message-box__btns .el-button--primary:hover) {
-    background: rgba(67, 243, 255, 0.35) !important;
-    border-color: rgba(67, 243, 255, 0.7) !important;
-    box-shadow: 0 0 12px rgba(67, 243, 255, 0.25) !important;
+    background: rgba(var(--color-accent-rgb), 0.35) !important;
+    border-color: rgba(var(--color-accent-rgb), 0.7) !important;
+    box-shadow: 0 0 12px rgba(var(--color-accent-rgb), 0.25) !important;
 }
 </style>

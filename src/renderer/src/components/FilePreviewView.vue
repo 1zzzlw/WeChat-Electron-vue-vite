@@ -74,9 +74,9 @@ watch(
   top: 5px;
   right: 5px;
   font-size: 20px;
-  color: #fff;
+  color: var(--color-text-primary);
   border-radius: 50%;
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(var(--color-surface-rgb), 0.4);
   transition: all 0.2s ease;
   z-index: 10;
 }
@@ -84,7 +84,7 @@ watch(
 .close-icon:hover {
   cursor: pointer;
   transform: scale(1.1);
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(var(--color-surface-rgb), 0.4);
 }
 
 .file-preview-view {
@@ -94,9 +94,9 @@ watch(
   position: relative;
   opacity: 0.8;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(var(--color-surface-rgb), 0.4);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid var(--color-border-subtle);
 }
 
 .content {

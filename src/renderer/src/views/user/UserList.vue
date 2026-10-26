@@ -58,12 +58,16 @@
     </div>
 
     <div class="user-list-right">
-      <router-view></router-view>
+      <router-view v-slot="{ Component }">
+        <component :is="Component" v-if="Component" />
+        <ChatWelcome v-else />
+      </router-view>
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
+import ChatWelcome from '@/components/ChatWelcome.vue'
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { getApplyListApi, getGroupApplyListApi } from '@/api/Apply'
@@ -200,7 +204,7 @@ onMounted(async () => {
   left: 0;
   transform: translateY(-50%);
   box-shadow: 0 0 4px rgba(102, 217, 102, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid var(--color-border-subtle);
 }
 
 .offline-status {
@@ -221,7 +225,7 @@ onMounted(async () => {
   top: 50%;
   left: 0;
   transform: translateY(-50%);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid var(--color-border-subtle);
 }
 
 .btn1 {
@@ -246,7 +250,7 @@ onMounted(async () => {
 
 .friend-name {
   font-size: 16px;
-  color: #ffffff;
+  color: var(--color-text-primary);
   margin: 0;
   /*单行文本溢出显示省略号*/
   /*强制不换行*/
@@ -271,7 +275,7 @@ onMounted(async () => {
 }
 
 :deep(.el-collapse-item__header) {
-  color: #ffffff;
+  color: var(--color-text-primary);
 }
 
 .left-list-img {

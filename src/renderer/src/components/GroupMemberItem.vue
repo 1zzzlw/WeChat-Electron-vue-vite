@@ -41,7 +41,7 @@ const roleLabel = computed(() => {
 }
 
 .member-item:hover {
-    background: rgba(67, 243, 255, 0.1);
+    background: rgba(var(--color-accent-rgb), 0.1);
 }
 
 .member-avatar {
@@ -49,18 +49,18 @@ const roleLabel = computed(() => {
     height: 44px;
     border-radius: 10px;
     object-fit: cover;
-    border: 1px solid rgba(67, 243, 255, 0.3);
+    border: 1px solid rgba(var(--color-accent-rgb), 0.3);
     transition: all 0.3s;
 }
 
 .member-item:hover .member-avatar {
-    border-color: rgba(67, 243, 255, 0.6);
-    box-shadow: 0 0 10px rgba(67, 243, 255, 0.3);
+    border-color: rgba(var(--color-accent-rgb), 0.6);
+    box-shadow: 0 0 10px rgba(var(--color-accent-rgb), 0.3);
 }
 
 .member-name {
     font-size: 11px;
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--color-text-secondary);
     text-align: center;
     max-width: 100%;
     overflow: hidden;
@@ -82,9 +82,9 @@ const roleLabel = computed(() => {
 }
 
 .admin-tag {
-    background: rgba(67, 243, 255, 0.15);
-    color: #43f3ff;
-    border: 1px solid rgba(67, 243, 255, 0.3);
+    background: rgba(var(--color-accent-rgb), 0.15);
+    color: var(--color-accent);
+    border: 1px solid rgba(var(--color-accent-rgb), 0.3);
 }
 
 .mute-tag {
@@ -99,7 +99,7 @@ const roleLabel = computed(() => {
 }
 
 .member-item.admin .member-avatar {
-    border: 2px solid #43f3ff;
-    box-shadow: 0 0 10px rgba(67, 243, 255, 0.4);
+    border: 2px solid var(--color-accent);
+    box-shadow: 0 0 10px rgba(var(--color-accent-rgb), 0.4);
 }
 </style>

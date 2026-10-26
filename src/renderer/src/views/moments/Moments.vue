@@ -594,16 +594,16 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   padding: 0 20px;
-  background: linear-gradient(135deg, rgba(67, 243, 255, 0.15) 0%, rgba(0, 217, 255, 0.1) 100%);
-  border-bottom: 1px solid rgba(67, 243, 255, 0.3);
+  background: linear-gradient(135deg, rgba(var(--color-accent-rgb), 0.15) 0%, rgba(0, 217, 255, 0.1) 100%);
+  border-bottom: 1px solid rgba(var(--color-accent-rgb), 0.3);
   -webkit-app-region: drag;
 }
 
 .header-title {
   font-size: 16px;
   font-weight: 600;
-  color: #43f3ff;
-  text-shadow: 0 0 8px rgba(67, 243, 255, 0.3);
+  color: var(--color-accent);
+  text-shadow: 0 0 8px rgba(var(--color-accent-rgb), 0.3);
 }
 
 .moments-toolbar {
@@ -611,8 +611,8 @@ onUnmounted(() => {
   align-items: center;
   justify-content: space-between;
   padding: 12px 20px;
-  background: rgba(255, 255, 255, 0.08);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(var(--color-surface-rgb), 0.4);
+  border-bottom: 1px solid var(--color-border-subtle);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
@@ -628,9 +628,9 @@ onUnmounted(() => {
   align-items: center;
   padding: 6px 16px;
   border-radius: 8px;
-  border: 1px solid rgba(67, 243, 255, 0.3);
-  background: rgba(67, 243, 255, 0.1);
-  color: #43f3ff;
+  border: 1px solid rgba(var(--color-accent-rgb), 0.3);
+  background: rgba(var(--color-accent-rgb), 0.1);
+  color: var(--color-accent);
   font-size: 13px;
   cursor: pointer;
   transition: all 0.25s ease;
@@ -638,9 +638,9 @@ onUnmounted(() => {
 }
 
 .my-posts-btn:hover {
-  background: rgba(67, 243, 255, 0.2);
-  border-color: rgba(67, 243, 255, 0.5);
-  box-shadow: 0 0 12px rgba(67, 243, 255, 0.2);
+  background: rgba(var(--color-accent-rgb), 0.2);
+  border-color: rgba(var(--color-accent-rgb), 0.5);
+  box-shadow: 0 0 12px rgba(var(--color-accent-rgb), 0.2);
   transform: translateY(-1px);
 }
 
@@ -670,8 +670,8 @@ onUnmounted(() => {
 }
 
 :deep(.search-box .el-input__wrapper) {
-  background: rgba(255, 255, 255, 0.1) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  background: rgba(var(--color-surface-rgb), 0.4) !important;
+  border: 1px solid var(--color-border-subtle) !important;
   border-right: none !important;
   box-shadow:
     0 4px 12px rgba(0, 0, 0, 0.15),
@@ -681,32 +681,32 @@ onUnmounted(() => {
 }
 
 :deep(.search-box .el-input__wrapper:hover) {
-  border-color: rgba(67, 243, 255, 0.5) !important;
-  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(var(--color-accent-rgb), 0.5) !important;
+  background: rgba(var(--color-surface-rgb), 0.4) !important;
   box-shadow:
     0 6px 16px rgba(0, 0, 0, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
 }
 
 :deep(.search-box .el-input__wrapper.is-focus) {
-  border-color: #43f3ff !important;
-  background: rgba(255, 255, 255, 0.2) !important;
+  border-color: var(--color-accent) !important;
+  background: rgba(var(--color-surface-rgb), 0.4) !important;
   box-shadow:
-    0 0 15px rgba(67, 243, 255, 0.3),
+    0 0 15px rgba(var(--color-accent-rgb), 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
 }
 
 :deep(.search-box .el-input__inner) {
-  color: #f0f2f5;
+  color: var(--color-text-primary);
   font-size: 14px;
 }
 
 :deep(.search-box .el-input__inner::placeholder) {
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--color-text-muted);
 }
 
 :deep(.search-box .el-input__prefix) {
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--color-text-muted);
 }
 
 :deep(.search-box .el-input-group__append) {
@@ -717,11 +717,11 @@ onUnmounted(() => {
 }
 
 :deep(.search-box .el-button) {
-  background: rgba(255, 255, 255, 0.1) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  background: rgba(var(--color-surface-rgb), 0.4) !important;
+  border: 1px solid var(--color-border-subtle) !important;
   border-left: none;
   border-radius: 0 8px 8px 0;
-  color: #f0f2f5 !important;
+  color: var(--color-text-primary) !important;
   font-size: 14px;
   padding: 0 25px;
   height: 40px;
@@ -734,9 +734,9 @@ onUnmounted(() => {
 }
 
 :deep(.search-box .el-button:hover) {
-  background: rgba(255, 255, 255, 0.15) !important;
-  color: #fff;
-  border-color: rgba(67, 243, 255, 0.5) !important;
+  background: rgba(var(--color-surface-rgb), 0.4) !important;
+  color: var(--color-text-primary);
+  border-color: rgba(var(--color-accent-rgb), 0.5) !important;
   box-shadow:
     0 6px 16px rgba(0, 0, 0, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
@@ -748,13 +748,13 @@ onUnmounted(() => {
 
 /* 选择器样式优化 */
 :deep(.toolbar-right .el-select) {
-  --el-select-border-color-hover: rgba(67, 243, 255, 0.5);
-  --el-select-input-focus-border-color: #43f3ff;
+  --el-select-border-color-hover: rgba(var(--color-accent-rgb), 0.5);
+  --el-select-input-focus-border-color: var(--color-accent);
 }
 
 :deep(.toolbar-right .el-select .el-select__wrapper) {
-  background: rgba(255, 255, 255, 0.1) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  background: rgba(var(--color-surface-rgb), 0.4) !important;
+  border: 1px solid var(--color-border-subtle) !important;
   border-radius: 8px;
   box-shadow:
     0 4px 12px rgba(0, 0, 0, 0.15),
@@ -763,8 +763,8 @@ onUnmounted(() => {
 }
 
 :deep(.toolbar-right .el-select .el-select__wrapper:hover) {
-  background: rgba(255, 255, 255, 0.15) !important;
-  border-color: rgba(67, 243, 255, 0.5) !important;
+  background: rgba(var(--color-surface-rgb), 0.4) !important;
+  border-color: rgba(var(--color-accent-rgb), 0.5) !important;
   transform: translateY(-1px);
   box-shadow:
     0 6px 16px rgba(0, 0, 0, 0.2),
@@ -772,23 +772,23 @@ onUnmounted(() => {
 }
 
 :deep(.toolbar-right .el-select .el-select__wrapper.is-focus) {
-  background: rgba(255, 255, 255, 0.2) !important;
-  border-color: #43f3ff !important;
+  background: rgba(var(--color-surface-rgb), 0.4) !important;
+  border-color: var(--color-accent) !important;
   box-shadow:
-    0 0 15px rgba(67, 243, 255, 0.3),
+    0 0 15px rgba(var(--color-accent-rgb), 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
 }
 
 :deep(.toolbar-right .el-select .el-select__placeholder) {
-  color: rgba(255, 255, 255, 0.5) !important;
+  color: var(--color-text-muted) !important;
 }
 
 :deep(.toolbar-right .el-select .el-select__selected-item) {
-  color: #f0f2f5 !important;
+  color: var(--color-text-primary) !important;
 }
 
 :deep(.toolbar-right .el-select .el-select__caret) {
-  color: rgba(255, 255, 255, 0.6) !important;
+  color: var(--color-text-muted) !important;
 }
 
 .tag-bar {
@@ -833,7 +833,7 @@ onUnmounted(() => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: rgba(28, 38, 50, 0.4);
+  background: rgba(var(--color-surface-rgb), 0.55);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   -webkit-app-region: no-drag;
@@ -852,7 +852,7 @@ onUnmounted(() => {
   justify-content: center;
   align-items: center;
   padding: 30px 0;
-  color: rgba(67, 243, 255, 0.6);
+  color: rgba(var(--color-accent-rgb), 0.6);
   font-size: 14px;
   min-height: 20px;
   /* 确保始终有高度 */
@@ -884,9 +884,9 @@ onUnmounted(() => {
   width: 295px;
   margin-bottom: 15px;
   padding: 20px;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(var(--color-surface-rgb), 0.4);
   border-radius: 12px;
-  border: 1px solid rgba(67, 243, 255, 0.15);
+  border: 1px solid rgba(var(--color-accent-rgb), 0.15);
   backdrop-filter: blur(10px);
   transition: opacity 0.4s, background 0.4s, border-color 0.4s, box-shadow 0.4s, filter 0.4s;
   animation: cardEnter 0.4s ease-out forwards;
@@ -917,7 +917,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   padding: 80px 20px;
-  color: rgba(67, 243, 255, 0.5);
+  color: rgba(var(--color-accent-rgb), 0.5);
   gap: 16px;
 }
 
@@ -929,39 +929,39 @@ onUnmounted(() => {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: rgba(67, 243, 255, 0.85);
+  background: rgba(var(--color-accent-rgb), 0.85);
   backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   box-shadow:
-    0 4px 16px rgba(67, 243, 255, 0.4),
-    0 0 0 1px rgba(67, 243, 255, 0.3);
+    0 4px 16px rgba(var(--color-accent-rgb), 0.4),
+    0 0 0 1px rgba(var(--color-accent-rgb), 0.3);
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   color: #000;
   z-index: 1000;
 }
 
 .fab-button:hover {
-  background: rgba(67, 243, 255, 0.95);
+  background: rgba(var(--color-accent-rgb), 0.95);
   transform: scale(1.1) translateY(-2px);
   box-shadow:
-    0 8px 24px rgba(67, 243, 255, 0.6),
-    0 0 0 2px rgba(67, 243, 255, 0.5);
+    0 8px 24px rgba(var(--color-accent-rgb), 0.6),
+    0 0 0 2px rgba(var(--color-accent-rgb), 0.5);
 }
 
 .fab-button:active {
   transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(67, 243, 255, 0.5);
+  box-shadow: 0 4px 12px rgba(var(--color-accent-rgb), 0.5);
 }
 
 .post-item:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(67, 243, 255, 0.4);
+  background: rgba(var(--color-surface-rgb), 0.4);
+  border-color: rgba(var(--color-accent-rgb), 0.4);
   box-shadow:
-    0 8px 25px rgba(67, 243, 255, 0.15),
-    inset 0 0 10px rgba(67, 243, 255, 0.05);
+    0 8px 25px rgba(var(--color-accent-rgb), 0.15),
+    inset 0 0 10px rgba(var(--color-accent-rgb), 0.05);
   transform: translateY(-4px);
 }
 
@@ -982,13 +982,13 @@ onUnmounted(() => {
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  border: 1.5px solid rgba(67, 243, 255, 0.2);
+  border: 1.5px solid rgba(var(--color-accent-rgb), 0.2);
   flex-shrink: 0;
   transition: all 0.3s ease;
 }
 
 .user-avatar:hover {
-  border-color: rgba(67, 243, 255, 0.6);
+  border-color: rgba(var(--color-accent-rgb), 0.6);
   transform: rotate(15deg);
 }
 
@@ -1001,12 +1001,12 @@ onUnmounted(() => {
 .username {
   font-size: 14px;
   font-weight: 600;
-  color: #43f3ff;
+  color: var(--color-accent);
 }
 
 .post-time {
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--color-text-muted);
 }
 
 .follow-btn,
@@ -1022,21 +1022,21 @@ onUnmounted(() => {
 }
 
 .follow-btn {
-  background: rgba(67, 243, 255, 0.1);
-  color: #43f3ff;
-  border: 1px solid rgba(67, 243, 255, 0.3);
+  background: rgba(var(--color-accent-rgb), 0.1);
+  color: var(--color-accent);
+  border: 1px solid rgba(var(--color-accent-rgb), 0.3);
 }
 
 .follow-btn:hover {
-  background: rgba(67, 243, 255, 0.2);
-  border-color: rgba(67, 243, 255, 0.5);
+  background: rgba(var(--color-accent-rgb), 0.2);
+  border-color: rgba(var(--color-accent-rgb), 0.5);
   transform: scale(1.05);
 }
 
 .followed-btn {
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(var(--color-surface-rgb), 0.4);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border-subtle);
   cursor: default;
 }
 
@@ -1050,7 +1050,7 @@ onUnmounted(() => {
 .post-text-wrapper {
   font-size: 14px;
   line-height: 1.6;
-  color: #f0f2f5;
+  color: var(--color-text-primary);
   margin-bottom: 12px;
   word-break: break-word;
   max-height: 300px;
@@ -1062,34 +1062,34 @@ onUnmounted(() => {
   /* 修正宽度 */
   min-height: 100px;
   /* 预留最小高度，减少重排剧烈程度 */
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(var(--color-surface-rgb), 0.4);
   border-radius: 8px;
   margin: 8px auto;
-  border: 2px solid rgba(67, 243, 255, 0.2);
-  box-shadow: 0 2px 8px rgba(67, 243, 255, 0.15);
+  border: 2px solid rgba(var(--color-accent-rgb), 0.2);
+  box-shadow: 0 2px 8px rgba(var(--color-accent-rgb), 0.15);
   transition: all 0.3s ease;
   display: block;
 }
 
 :deep(.post-text-wrapper img:hover) {
-  border-color: rgba(67, 243, 255, 0.4);
-  box-shadow: 0 4px 12px rgba(67, 243, 255, 0.3);
+  border-color: rgba(var(--color-accent-rgb), 0.4);
+  box-shadow: 0 4px 12px rgba(var(--color-accent-rgb), 0.3);
   transform: scale(1.02);
 }
 
 :deep(.post-text-wrapper h1) {
   font-size: 18px;
   font-weight: 700;
-  color: #fff;
+  color: var(--color-text-primary);
   margin: 10px 0 6px;
-  border-bottom: 1px solid rgba(67, 243, 255, 0.2);
+  border-bottom: 1px solid rgba(var(--color-accent-rgb), 0.2);
   padding-bottom: 4px;
 }
 
 :deep(.post-text-wrapper h2) {
   font-size: 16px;
   font-weight: 600;
-  color: #e0faff;
+  color: var(--color-text-primary);
   margin: 8px 0 5px;
   display: flex;
   align-items: center;
@@ -1099,7 +1099,7 @@ onUnmounted(() => {
   content: '';
   width: 3px;
   height: 14px;
-  background: #43f3ff;
+  background: var(--color-accent);
   margin-right: 8px;
   border-radius: 2px;
 }
@@ -1107,22 +1107,22 @@ onUnmounted(() => {
 :deep(.post-text-wrapper h3) {
   font-size: 15px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--color-text-primary);
   margin: 6px 0 4px;
 }
 
 :deep(.post-text-wrapper strong) {
-  color: #43f3ff;
+  color: var(--color-accent);
   font-weight: 600;
 }
 
 :deep(.post-text-wrapper blockquote) {
-  border-left: 3px solid rgba(67, 243, 255, 0.4);
-  background: rgba(67, 243, 255, 0.03);
+  border-left: 3px solid rgba(var(--color-accent-rgb), 0.4);
+  background: rgba(var(--color-accent-rgb), 0.03);
   padding: 8px 12px;
   margin: 10px 0;
   border-radius: 0 4px 4px 0;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--color-text-secondary);
   font-style: italic;
   font-size: 13px;
 }
@@ -1138,7 +1138,7 @@ onUnmounted(() => {
   gap: 12px;
   padding-top: 15px;
   margin-top: 10px;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid var(--color-border-subtle);
 }
 
 .action-item {
@@ -1146,7 +1146,7 @@ onUnmounted(() => {
   align-items: center;
   gap: 6px;
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--color-text-muted);
   cursor: pointer;
   transition: all 0.3s ease;
   padding: 4px 8px;
@@ -1154,8 +1154,8 @@ onUnmounted(() => {
 }
 
 .action-item:hover {
-  color: #43f3ff;
-  background: rgba(67, 243, 255, 0.05);
+  color: var(--color-accent);
+  background: rgba(var(--color-accent-rgb), 0.05);
 }
 
 .action-item.active {
@@ -1172,7 +1172,7 @@ onUnmounted(() => {
 }
 
 :deep(.el-scrollbar__thumb) {
-  background: rgba(67, 243, 255, 0.4);
+  background: rgba(var(--color-accent-rgb), 0.4);
   border-radius: 4px;
 }
 
@@ -1197,8 +1197,8 @@ onUnmounted(() => {
 
 .reward-dialog {
   width: 320px;
-  background: rgba(28, 38, 52, 0.95);
-  border: 1px solid rgba(67, 243, 255, 0.35);
+  background: var(--color-bg-deep);
+  border: 1px solid rgba(var(--color-accent-rgb), 0.35);
   border-radius: 16px;
   padding: 24px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
@@ -1207,7 +1207,7 @@ onUnmounted(() => {
 .reward-title {
   font-size: 18px;
   font-weight: 600;
-  color: #43f3ff;
+  color: var(--color-accent);
   text-align: center;
   margin-bottom: 20px;
 }
@@ -1223,9 +1223,9 @@ onUnmounted(() => {
 .preset-btn {
   padding: 7px 16px;
   border-radius: 20px;
-  border: 1px solid rgba(67, 243, 255, 0.3);
-  background: rgba(67, 243, 255, 0.07);
-  color: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(var(--color-accent-rgb), 0.3);
+  background: rgba(var(--color-accent-rgb), 0.07);
+  color: var(--color-text-secondary);
   font-size: 14px;
   cursor: pointer;
   transition: all 0.2s;
@@ -1233,9 +1233,9 @@ onUnmounted(() => {
 
 .preset-btn:hover,
 .preset-btn.active {
-  background: rgba(67, 243, 255, 0.2);
-  border-color: #43f3ff;
-  color: #43f3ff;
+  background: rgba(var(--color-accent-rgb), 0.2);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .reward-custom {
@@ -1243,17 +1243,17 @@ onUnmounted(() => {
 }
 
 :deep(.reward-custom .el-input__wrapper) {
-  background: rgba(255, 255, 255, 0.07) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  background: rgba(var(--color-surface-rgb), 0.4) !important;
+  border: 1px solid var(--color-border-subtle) !important;
   box-shadow: none !important;
 }
 
 :deep(.reward-custom .el-input__inner) {
-  color: #f0f2f5;
+  color: var(--color-text-primary);
 }
 
 :deep(.reward-custom .el-input__prefix) {
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--color-text-muted);
 }
 
 .reward-actions {
@@ -1273,22 +1273,22 @@ onUnmounted(() => {
 }
 
 .reward-cancel-btn {
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.6);
+  background: rgba(var(--color-surface-rgb), 0.4);
+  color: var(--color-text-muted);
 }
 
 .reward-cancel-btn:hover {
-  background: rgba(255, 255, 255, 0.14);
+  background: rgba(var(--color-surface-rgb), 0.4);
 }
 
 .reward-confirm-btn {
-  background: rgba(67, 243, 255, 0.8);
+  background: rgba(var(--color-accent-rgb), 0.8);
   color: #000;
   font-weight: 600;
 }
 
 .reward-confirm-btn:hover:not(:disabled) {
-  background: rgba(67, 243, 255, 1);
+  background: rgba(var(--color-accent-rgb), 1);
 }
 
 .reward-confirm-btn:disabled {
@@ -1300,38 +1300,38 @@ onUnmounted(() => {
 <style>
 /* 全局样式覆盖 el-select 下拉框 popper，因为 popper 默认挂载在 body 上 */
 .moments-select-popper.el-popper {
-  background: rgba(28, 38, 50, 0.8) !important;
+  background: rgba(var(--color-surface-rgb), 0.8) !important;
   backdrop-filter: blur(12px) !important;
-  border: 1px solid rgba(67, 243, 255, 0.3) !important;
+  border: 1px solid rgba(var(--color-accent-rgb), 0.3) !important;
   border-radius: 8px !important;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3) !important;
 }
 
 .moments-select-popper .el-select-dropdown__item {
-  color: rgba(255, 255, 255, 0.8) !important;
+  color: var(--color-text-secondary) !important;
   background-color: transparent !important;
   transition: all 0.2s ease !important;
 }
 
 .moments-select-popper .el-select-dropdown__item.hover,
 .moments-select-popper .el-select-dropdown__item:hover {
-  background: rgba(67, 243, 255, 0.25) !important;
-  color: #43f3ff !important;
+  background: rgba(var(--color-accent-rgb), 0.25) !important;
+  color: var(--color-accent) !important;
 }
 
 .moments-select-popper .el-select-dropdown__item.selected {
-  color: #43f3ff !important;
+  color: var(--color-accent) !important;
   font-weight: 600 !important;
-  background: rgba(67, 243, 255, 0.15) !important;
+  background: rgba(var(--color-accent-rgb), 0.15) !important;
 }
 
 .moments-select-popper .el-select-dropdown__item.selected.hover,
 .moments-select-popper .el-select-dropdown__item.selected:hover {
-  background: rgba(67, 243, 255, 0.3) !important;
+  background: rgba(var(--color-accent-rgb), 0.3) !important;
 }
 
 .moments-select-popper .el-popper__arrow::before {
-  background: rgba(28, 38, 50, 0.8) !important;
-  border: 1px solid rgba(67, 243, 255, 0.3) !important;
+  background: rgba(var(--color-surface-rgb), 0.8) !important;
+  border: 1px solid rgba(var(--color-accent-rgb), 0.3) !important;
 }
 </style>

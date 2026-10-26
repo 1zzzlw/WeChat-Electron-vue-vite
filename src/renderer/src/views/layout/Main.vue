@@ -93,9 +93,9 @@ onMounted(async () => {
   flex-direction: column;
   justify-content: space-between;
   width: 80px;
-  background: rgba(22, 28, 36, 0.2);
+  background: var(--color-nav-surface);
   backdrop-filter: blur(12px);
-  border-right: 1px solid rgba(66, 153, 225, 0.2);
+  border-right: 1px solid var(--color-border-subtle);
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
 }
 
@@ -119,8 +119,7 @@ onMounted(async () => {
   height: 50px;
   border-radius: 10px;
   margin: 15px;
-  box-shadow: 0 0 8px rgba(179, 200, 255, 0.6),
-    0 0 20px rgba(120, 140, 255, 0.4);
+  box-shadow: var(--shadow-sm);
   transition: all 0.3s ease;
   cursor: pointer;
   border: 1px solid rgba(179, 200, 255, 0.3);
@@ -129,23 +128,27 @@ onMounted(async () => {
 
 .main-count-left-top-img:hover {
   opacity: 0.9;
-  box-shadow: 0 0 15px rgba(179, 200, 255, 0.8),
-    0 0 30px rgba(120, 140, 255, 0.6);
+  box-shadow: var(--shadow-md);
   transform: scale(1.05);
   border-color: rgba(179, 200, 255, 0.6);
 }
 
 .left-icon {
   margin-bottom: 10px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
   /*鼠标移动到这里时变成手*/
   cursor: pointer;
   transition: all 0.3s ease;
-  color: rgba(240, 240, 240, 0.8);
+  color: var(--color-text-secondary);
 }
 
 .iconfont {
   font-size: 30px;
-  margin-bottom: 10px;
   text-decoration: none;
   /* 继承父元素的过渡动画 */
   transition: inherit;
@@ -153,14 +156,14 @@ onMounted(async () => {
 
 .left-icon:hover {
   opacity: 1;
-  color: rgba(66, 153, 225, 0.9);
-  transform: scale(1.08);
-  text-shadow: 0 0 8px rgba(66, 153, 225, 0.4);
+  color: rgba(var(--color-accent-rgb), 0.9);
+  background: var(--color-accent-soft);
+  text-shadow: 0 0 8px rgba(var(--color-accent-rgb), 0.4);
 }
 
 .left-icon.router-link-active {
-  color: #43f3ff;
-  text-shadow: 0 0 10px rgba(67, 243, 255, 0.45);
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
 }
 
 .main-count-right {
@@ -171,12 +174,12 @@ onMounted(async () => {
 }
 
 :global(.window-controls) {
-  color: rgba(240, 244, 250, 0.76);
+  color: var(--color-text-secondary);
 }
 
 :global(.window-controls .iconfont:hover) {
-  color: #43f3ff;
-  text-shadow: 0 0 8px rgba(67, 243, 255, 0.35);
+  color: var(--color-accent);
+  text-shadow: 0 0 8px rgba(var(--color-accent-rgb), 0.35);
 }
 
 /* 核心动画优化 - 更优雅的缓动+分层过渡 */
@@ -222,21 +225,21 @@ onMounted(async () => {
 
 /* 优化popover容器样式，贴合整体界面风格 */
 :global(.user-card-popover) {
-  background: rgba(20, 24, 32, 0.65) !important;
+  background: rgba(var(--color-surface-rgb), 0.65) !important;
   backdrop-filter: blur(20px) !important;
   -webkit-backdrop-filter: blur(20px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border: 1px solid var(--color-border-subtle) !important;
   box-shadow: 0 8px 40px rgba(0, 0, 0, 0.3) !important;
   border-radius: 12px !important;
   overflow: hidden !important;
   /* 【优化8】增加轻微的边框发光，贴合头像的光效风格 */
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.3), 0 0 15px rgba(66, 153, 225, 0.1) !important;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.3), 0 0 15px rgba(var(--color-accent-rgb), 0.1) !important;
 }
 
 /* 优化掉小箭头 */
 :global(.user-card-popover .el-popper__arrow::before) {
-  background: rgba(20, 24, 32, 0.65) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  background: rgba(var(--color-surface-rgb), 0.65) !important;
+  border: 1px solid var(--color-border-subtle) !important;
   /* 【优化9】给箭头增加轻微模糊，和容器风格统一 */
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -244,8 +247,8 @@ onMounted(async () => {
 
 /* 增加popover的hover效果，强化交互 */
 :global(.user-card-popover:hover) {
-  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.35), 0 0 20px rgba(66, 153, 225, 0.15) !important;
-  border-color: rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.35), 0 0 20px rgba(var(--color-accent-rgb), 0.15) !important;
+  border-color: var(--color-border-subtle) !important;
   transition: all 0.3s ease;
 }
 </style>

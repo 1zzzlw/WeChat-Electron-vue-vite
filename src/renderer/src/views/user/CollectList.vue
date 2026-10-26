@@ -26,11 +26,15 @@
             </div>
         </div>
         <div class="collect-list-right">
-            <router-view></router-view>
+            <router-view v-slot="{ Component }">
+        <component :is="Component" v-if="Component" />
+        <ChatWelcome v-else />
+      </router-view>
         </div>
     </div>
 </template>
 <script setup lang="ts">
+import ChatWelcome from '@/components/ChatWelcome.vue'
 import AutocompleteSearch from '@/components/AutocompleteSearch.vue';
 
 const createNote = () => {
@@ -41,7 +45,7 @@ const createNote = () => {
 @import "@/css/layout.css";
 
 .collect-mid {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-bottom: 1px solid var(--color-border-subtle) !important;
     padding-bottom: 16px;
     margin-bottom: 16px;
     padding-top: 10px;
@@ -51,9 +55,9 @@ const createNote = () => {
     width: calc(100% - 24px);
     margin: 0 12px 16px 12px;
     /* 保持原有质感 */
-    background-color: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    color: #ffffff;
+    background-color: rgba(var(--color-surface-rgb), 0.4);
+    border: 1px solid var(--color-border-subtle);
+    color: var(--color-text-primary);
     border-radius: 8px;
     padding: 8px 16px;
     font-size: 14px;
@@ -61,20 +65,20 @@ const createNote = () => {
     text-align: left;
     transition: all 0.15s ease;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-    --el-button-hover-bg-color: rgba(255, 255, 255, 0.15);
-    --el-button-active-bg-color: rgba(255, 255, 255, 0.2);
+    --el-button-hover-bg-color: rgba(var(--color-surface-rgb), 0.4);
+    --el-button-active-bg-color: rgba(var(--color-surface-rgb), 0.4);
 }
 
 .collect-mid .el-button:hover {
-    background-color: rgba(255, 255, 255, 0.15);
-    border-color: rgba(255, 255, 255, 0.2);
+    background-color: rgba(var(--color-surface-rgb), 0.4);
+    border-color: var(--color-border-subtle);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
     transform: translateY(-1px);
 }
 
 .collect-mid .el-button:active {
-    background-color: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.25);
+    background-color: rgba(var(--color-surface-rgb), 0.4);
+    border-color: var(--color-border-subtle);
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
     transform: translateY(0);
 }
@@ -93,12 +97,12 @@ const createNote = () => {
 }
 
 .all-collect-item:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(var(--color-surface-rgb), 0.4);
 }
 
 .all-collect-item span {
     font-size: 14px;
-    color: #e0e0e0;
+    color: var(--color-text-primary);
 }
 
 :deep(.el-collapse) {
@@ -115,7 +119,7 @@ const createNote = () => {
 }
 
 :deep(.el-collapse-item__header) {
-    color: #ffffff;
+    color: var(--color-text-primary);
 }
 
 .collect-list-right {

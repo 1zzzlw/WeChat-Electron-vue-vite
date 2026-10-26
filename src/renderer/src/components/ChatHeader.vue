@@ -53,18 +53,18 @@ const openDrawer = () => {
     justify-content: space-between;
     align-items: center;
     padding: 20px;
-    background: linear-gradient(135deg, rgba(67, 243, 255, 0.08) 0%, rgba(0, 217, 255, 0.05) 100%);
-    border-bottom: 1px solid rgba(67, 243, 255, 0.3);
-    box-shadow: 0 2px 12px rgba(67, 243, 255, 0.1);
+    background: linear-gradient(135deg, rgba(var(--color-accent-rgb), 0.08) 0%, rgba(0, 217, 255, 0.05) 100%);
+    border-bottom: 1px solid rgba(var(--color-accent-rgb), 0.3);
+    box-shadow: 0 2px 12px rgba(var(--color-accent-rgb), 0.1);
     -webkit-app-region: drag;
-    color: rgba(255, 255, 255, 0.95);
+    color: var(--color-text-primary);
 }
 
 .title {
     font-size: 16px;
     font-weight: 600;
-    color: #43f3ff;
-    text-shadow: 0 0 8px rgba(67, 243, 255, 0.4);
+    color: var(--color-accent);
+    text-shadow: 0 0 8px rgba(var(--color-accent-rgb), 0.4);
 }
 
 .left-icon {
@@ -78,29 +78,29 @@ const openDrawer = () => {
     font-size: 20px;
     background-color: transparent;
     border: none;
-    color: rgba(67, 243, 255, 0.8);
+    color: rgba(var(--color-accent-rgb), 0.8);
     cursor: pointer;
     transition: all 0.3s ease;
 }
 
 .left-icon:hover {
-    color: #43f3ff;
-    text-shadow: 0 0 10px rgba(67, 243, 255, 0.6);
+    color: var(--color-accent);
+    text-shadow: 0 0 10px rgba(var(--color-accent-rgb), 0.6);
     transform: scale(1.1);
 }
 
 :deep(.el-drawer) {
     width: 50% !important;
-    --el-drawer-bg-color: rgba(35, 45, 60, 0.75);
+    --el-drawer-bg-color: rgba(var(--color-surface-rgb), 0.75);
     background-color: var(--el-drawer-bg-color);
     backdrop-filter: blur(20px);
-    border-left: 1px solid rgba(67, 243, 255, 0.3);
-    box-shadow: -4px 0 24px rgba(67, 243, 255, 0.1);
+    border-left: 1px solid rgba(var(--color-accent-rgb), 0.3);
+    box-shadow: -4px 0 24px rgba(var(--color-accent-rgb), 0.1);
 }
 
 :deep(.el-drawer__body) {
     padding: 20px 16px;
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--color-text-primary);
     overflow: hidden;
 }
 </style>

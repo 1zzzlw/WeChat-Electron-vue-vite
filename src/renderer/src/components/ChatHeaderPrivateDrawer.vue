@@ -141,22 +141,22 @@ watch(() => props.conversation.id, async () => {
     border-radius: 50%;
     object-fit: cover;
     margin-bottom: 0;
-    border: 3px solid rgba(67, 243, 255, 0.4);
-    box-shadow: 0 0 20px rgba(67, 243, 255, 0.3);
+    border: 3px solid rgba(var(--color-accent-rgb), 0.4);
+    box-shadow: 0 0 20px rgba(var(--color-accent-rgb), 0.3);
     transition: all 0.3s ease;
 }
 
 .avatar img:hover {
-    border-color: rgba(67, 243, 255, 0.7);
-    box-shadow: 0 0 30px rgba(67, 243, 255, 0.5);
+    border-color: rgba(var(--color-accent-rgb), 0.7);
+    box-shadow: 0 0 30px rgba(var(--color-accent-rgb), 0.5);
     transform: scale(1.05);
 }
 
 .avatar div {
     font-size: 18px;
     font-weight: 600;
-    color: #43f3ff;
-    text-shadow: 0 0 8px rgba(67, 243, 255, 0.3);
+    color: var(--color-accent);
+    text-shadow: 0 0 8px rgba(var(--color-accent-rgb), 0.3);
 }
 
 .conversation-set {
@@ -174,7 +174,7 @@ watch(() => props.conversation.id, async () => {
     align-items: center;
     width: 100%;
     height: 40px;
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--color-text-primary);
 }
 
 .conversation-set .set1 el-switch,
@@ -183,13 +183,13 @@ watch(() => props.conversation.id, async () => {
 }
 
 :deep(.el-switch) {
-    --el-switch-on-color: #43f3ff;
+    --el-switch-on-color: var(--color-accent);
     --el-switch-off-color: rgba(255, 255, 255, 0.2);
-    --el-switch-core-border-color: rgba(67, 243, 255, 0.3);
+    --el-switch-core-border-color: rgba(var(--color-accent-rgb), 0.3);
 }
 
 :deep(.el-switch.is-checked .el-switch__core) {
-    box-shadow: 0 0 12px rgba(67, 243, 255, 0.5);
+    box-shadow: 0 0 12px rgba(var(--color-accent-rgb), 0.5);
 }
 
 .button {
@@ -210,16 +210,16 @@ watch(() => props.conversation.id, async () => {
     cursor: pointer;
     font-size: 14px;
     box-sizing: border-box;
-    color: rgba(67, 243, 255, 0.9);
-    background: rgba(67, 243, 255, 0.1);
-    border: 1px solid rgba(67, 243, 255, 0.3);
+    color: rgba(var(--color-accent-rgb), 0.9);
+    background: rgba(var(--color-accent-rgb), 0.1);
+    border: 1px solid rgba(var(--color-accent-rgb), 0.3);
     transition: all 0.3s ease;
 }
 
 .button a:hover {
-    background: rgba(67, 243, 255, 0.2);
-    border-color: rgba(67, 243, 255, 0.5);
-    box-shadow: 0 0 15px rgba(67, 243, 255, 0.3);
+    background: rgba(var(--color-accent-rgb), 0.2);
+    border-color: rgba(var(--color-accent-rgb), 0.5);
+    box-shadow: 0 0 15px rgba(var(--color-accent-rgb), 0.3);
     transform: translateY(-2px);
 }
 

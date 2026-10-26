@@ -99,12 +99,12 @@ onMounted(() => {
   height: 100%;
   border-radius: 12px;
   overflow: hidden;
-  background: rgba(25, 30, 40, 0.55);
+  background: rgba(var(--color-surface-rgb), 0.55);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--color-border-subtle);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  color: #f5f5f5;
+  color: var(--color-text-primary);
 }
 
 .cart-top {
@@ -115,7 +115,7 @@ onMounted(() => {
   padding: 0 20px;
   box-sizing: border-box;
   /* 轻量化分割线 */
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--color-border-subtle);
 }
 
 .avatar-container {
@@ -127,7 +127,7 @@ onMounted(() => {
   height: 70px;
   border-radius: 12px;
   object-fit: cover;
-  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  border: 1.5px solid var(--color-border-subtle);
   box-shadow: 0 0 8px rgba(255, 255, 255, 0.1);
   transition: box-shadow 0.2s ease;
 }
@@ -161,19 +161,19 @@ onMounted(() => {
 .user-name {
   font-size: 17px;
   font-weight: 500;
-  color: #ffffff;
+  color: var(--color-text-primary);
   line-height: 1.2;
 }
 
 .user-account {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--color-text-secondary);
   line-height: 1.2;
 }
 
 .user-gender {
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.65);
+  color: var(--color-text-secondary);
   display: flex;
   align-items: center;
   gap: 4px;
@@ -181,7 +181,7 @@ onMounted(() => {
 
 .user-phone {
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.65);
+  color: var(--color-text-secondary);
   display: flex;
   align-items: center;
   gap: 4px;
@@ -209,13 +209,13 @@ onMounted(() => {
 .stat-item {
   text-align: center;
   padding: 12px 8px;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(var(--color-surface-rgb), 0.4);
   border-radius: 8px;
   transition: background 0.2s ease;
 }
 
 .stat-item:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(var(--color-surface-rgb), 0.4);
 }
 
 .stat-value {
@@ -227,6 +227,6 @@ onMounted(() => {
 
 .stat-label {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--color-text-secondary);
 }
 </style>

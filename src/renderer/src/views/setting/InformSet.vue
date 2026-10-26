@@ -229,7 +229,7 @@ watch(settings, async (newSettings) => {
 .settings-section {
   margin-bottom: 32px;
   padding-bottom: 24px;
-  border-bottom: 1px solid rgba(66, 153, 225, 0.2);
+  border-bottom: 1px solid rgba(var(--color-accent-rgb), 0.2);
 }
 
 .settings-section:last-child {
@@ -240,7 +240,7 @@ watch(settings, async (newSettings) => {
   font-size: 16px;
   font-weight: 600;
   margin: 0 0 20px;
-  color: #f0f0f0;
+  color: var(--color-text-primary);
 }
 
 .setting-item {
@@ -248,7 +248,7 @@ watch(settings, async (newSettings) => {
   justify-content: space-between;
   align-items: center;
   padding: 16px 0;
-  border-bottom: 1px solid rgba(66, 153, 225, 0.1);
+  border-bottom: 1px solid rgba(var(--color-accent-rgb), 0.1);
 }
 
 .setting-item:last-child {
@@ -263,13 +263,13 @@ watch(settings, async (newSettings) => {
 .setting-label {
   font-size: 14px;
   font-weight: 500;
-  color: #f0f0f0;
+  color: var(--color-text-primary);
   margin-bottom: 4px;
 }
 
 .setting-desc {
   font-size: 12px;
-  color: rgba(240, 240, 240, 0.5);
+  color: var(--color-text-muted);
 }
 
 /* 开关样式 */
@@ -294,10 +294,10 @@ watch(settings, async (newSettings) => {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(35, 45, 60, 0.7);
+  background-color: rgba(var(--color-surface-rgb), 0.7);
   transition: 0.3s;
   border-radius: 24px;
-  border: 1px solid rgba(66, 153, 225, 0.2);
+  border: 1px solid rgba(var(--color-accent-rgb), 0.2);
 }
 
 .slider:before {
@@ -307,14 +307,14 @@ watch(settings, async (newSettings) => {
   width: 18px;
   left: 2px;
   bottom: 2px;
-  background-color: rgba(240, 240, 240, 0.5);
+  background-color: rgba(var(--color-surface-rgb), 0.5);
   transition: 0.3s;
   border-radius: 50%;
 }
 
 input:checked+.slider {
-  background-color: rgba(66, 153, 225, 0.5);
-  border-color: rgba(66, 153, 225, 0.6);
+  background-color: rgba(var(--color-accent-rgb), 0.5);
+  border-color: rgba(var(--color-accent-rgb), 0.6);
 }
 
 input:checked+.slider:before {
@@ -325,18 +325,18 @@ input:checked+.slider:before {
 /* 下拉选择 */
 .select-input {
   padding: 6px 12px;
-  background: rgba(20, 25, 35, 0.8);
-  border: 1px solid rgba(66, 153, 225, 0.3);
+  background: rgba(var(--color-surface-rgb), 0.8);
+  border: 1px solid rgba(var(--color-accent-rgb), 0.3);
   border-radius: 6px;
   font-size: 13px;
-  color: #f0f0f0;
+  color: var(--color-text-primary);
   cursor: pointer;
   outline: none;
   color-scheme: dark;
 }
 
 .select-input:hover {
-  border-color: rgba(66, 153, 225, 0.6);
+  border-color: rgba(var(--color-accent-rgb), 0.6);
 }
 
 /* 时间范围选择 */
@@ -348,23 +348,23 @@ input:checked+.slider:before {
 
 .time-input {
   padding: 6px 10px;
-  background: rgba(20, 25, 35, 0.8);
-  border: 1px solid rgba(66, 153, 225, 0.3);
+  background: rgba(var(--color-surface-rgb), 0.8);
+  border: 1px solid rgba(var(--color-accent-rgb), 0.3);
   border-radius: 6px;
   font-size: 13px;
-  color: #f0f0f0;
+  color: var(--color-text-primary);
   cursor: pointer;
   outline: none;
   color-scheme: dark;
 }
 
 .time-input:hover {
-  border-color: rgba(66, 153, 225, 0.6);
+  border-color: rgba(var(--color-accent-rgb), 0.6);
 }
 
 .time-separator {
   font-size: 13px;
-  color: rgba(240, 240, 240, 0.5);
+  color: var(--color-text-muted);
 }
 
 /* 滚动条样式 */
@@ -377,11 +377,11 @@ input:checked+.slider:before {
 }
 
 .notification-container::-webkit-scrollbar-thumb {
-  background: rgba(66, 153, 225, 0.3);
+  background: rgba(var(--color-accent-rgb), 0.3);
   border-radius: 3px;
 }
 
 .notification-container::-webkit-scrollbar-thumb:hover {
-  background: rgba(66, 153, 225, 0.5);
+  background: rgba(var(--color-accent-rgb), 0.5);
 }
 </style>

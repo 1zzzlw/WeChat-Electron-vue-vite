@@ -25,7 +25,7 @@ const props = defineProps({
 .time {
     padding: 4px 10px;
     font-size: 12px;
-    color: #ffffff;
+    color: var(--color-text-primary);
     background-color: rgba(120, 120, 120, 0.35);
     border-radius: 12px;
     white-space: nowrap;

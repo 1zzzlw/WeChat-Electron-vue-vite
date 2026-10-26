@@ -395,9 +395,9 @@ const resetToDefaults = async () => {
   font-size: 16px;
   font-weight: 600;
   margin: 0 0 20px;
-  color: #f0f0f0;
+  color: var(--color-text-primary);
   padding-bottom: 12px;
-  border-bottom: 2px solid rgba(66, 153, 225, 0.5);
+  border-bottom: 2px solid rgba(var(--color-accent-rgb), 0.5);
 }
 
 .shortcuts-list {
@@ -411,22 +411,22 @@ const resetToDefaults = async () => {
   justify-content: space-between;
   align-items: center;
   padding: 16px;
-  background: rgba(35, 45, 60, 0.7);
+  background: rgba(var(--color-surface-rgb), 0.7);
   border-radius: 8px;
-  border: 1px solid rgba(66, 153, 225, 0.2);
+  border: 1px solid rgba(var(--color-accent-rgb), 0.2);
   transition: all 0.3s;
   cursor: pointer;
   outline: none;
 }
 
 .shortcut-item:hover {
-  border-color: rgba(66, 153, 225, 0.5);
+  border-color: rgba(var(--color-accent-rgb), 0.5);
   transform: translateX(4px);
 }
 
 .shortcut-item:focus {
-  border-color: rgba(66, 153, 225, 0.6);
-  box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.2);
+  border-color: rgba(var(--color-accent-rgb), 0.6);
+  box-shadow: 0 0 0 2px rgba(var(--color-accent-rgb), 0.2);
 }
 
 .shortcut-info {
@@ -436,13 +436,13 @@ const resetToDefaults = async () => {
 .shortcut-name {
   font-size: 14px;
   font-weight: 500;
-  color: #f0f0f0;
+  color: var(--color-text-primary);
   margin-bottom: 4px;
 }
 
 .shortcut-desc {
   font-size: 12px;
-  color: rgba(240, 240, 240, 0.5);
+  color: var(--color-text-muted);
 }
 
 .shortcut-keys {
@@ -456,20 +456,20 @@ const resetToDefaults = async () => {
   align-items: center;
   justify-content: center;
   padding: 6px 12px;
-  background: rgba(20, 25, 35, 0.8);
-  border: 1px solid rgba(66, 153, 225, 0.3);
+  background: rgba(var(--color-surface-rgb), 0.8);
+  border: 1px solid rgba(var(--color-accent-rgb), 0.3);
   border-radius: 6px;
   font-size: 12px;
   font-weight: 500;
-  color: #f0f0f0;
+  color: var(--color-text-primary);
   font-family: 'SF Mono', Monaco, monospace;
-  box-shadow: 0 2px 0 rgba(66, 153, 225, 0.2);
+  box-shadow: 0 2px 0 rgba(var(--color-accent-rgb), 0.2);
 }
 
 .key-tag.editing {
-  background: rgba(66, 153, 225, 0.3);
-  color: #fff;
-  border-color: rgba(66, 153, 225, 0.6);
+  background: rgba(var(--color-accent-rgb), 0.3);
+  color: var(--color-text-primary);
+  border-color: rgba(var(--color-accent-rgb), 0.6);
   animation: blink 1s ease-in-out infinite;
 }
 
@@ -481,39 +481,39 @@ const resetToDefaults = async () => {
 .reset-section {
   margin-top: 40px;
   padding-top: 24px;
-  border-top: 1px solid rgba(66, 153, 225, 0.2);
+  border-top: 1px solid rgba(var(--color-accent-rgb), 0.2);
   text-align: center;
 }
 
 /* Element Plus 暗色主题覆盖 */
 :deep(.el-input__wrapper) {
-  background: rgba(20, 25, 35, 0.8);
-  border: 1px solid rgba(66, 153, 225, 0.3);
+  background: rgba(var(--color-surface-rgb), 0.8);
+  border: 1px solid rgba(var(--color-accent-rgb), 0.3);
   border-radius: 6px;
   box-shadow: none;
 }
 
 :deep(.el-input__wrapper:focus-within) {
-  border-color: rgba(66, 153, 225, 0.6);
+  border-color: rgba(var(--color-accent-rgb), 0.6);
 }
 
 :deep(.el-input__inner) {
-  color: #f0f0f0;
+  color: var(--color-text-primary);
   background: transparent;
 }
 
 :deep(.el-input__inner::placeholder) {
-  color: rgba(240, 240, 240, 0.4);
+  color: var(--color-text-muted);
 }
 
 :deep(.el-button--primary) {
-  background: rgba(66, 153, 225, 0.4);
-  border-color: rgba(66, 153, 225, 0.6);
-  color: #fff;
+  background: rgba(var(--color-accent-rgb), 0.4);
+  border-color: rgba(var(--color-accent-rgb), 0.6);
+  color: var(--color-text-primary);
 }
 
 :deep(.el-button--primary:hover) {
-  background: rgba(66, 153, 225, 0.6);
-  border-color: rgba(66, 153, 225, 0.8);
+  background: rgba(var(--color-accent-rgb), 0.6);
+  border-color: rgba(var(--color-accent-rgb), 0.8);
 }
 </style>

@@ -1,6 +1,24 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 
+// 首屏绘制前恢复主题；后续广播直接同步所有 Vue 和独立 HTML 窗口。
+let currentTheme = ipcRenderer.sendSync('theme:initial')
+const applyTheme = theme => {
+  currentTheme = theme
+  if (document.documentElement) document.documentElement.dataset.theme = theme
+}
+window.addEventListener('DOMContentLoaded', () => applyTheme(currentTheme), { once: true })
+ipcRenderer.on('theme:changed', (_event, theme) => applyTheme(theme))
+const themeApi = {
+  getTheme: () => ipcRenderer.invoke('theme:get'),
+  setTheme: theme => ipcRenderer.invoke('theme:set', theme),
+  onThemeChanged: callback => {
+    const handler = (_event, theme) => callback(theme)
+    ipcRenderer.on('theme:changed', handler)
+    return () => ipcRenderer.removeListener('theme:changed', handler)
+  }
+}
+
 const userInfoApi = {
   storeSetUserInfo: (userInfoType, userInfo) => {
     return ipcRenderer.invoke('window:setUserInfo', userInfoType, userInfo)
@@ -24,7 +42,9 @@ const loadApi = {
     ipcRenderer.send('data-initialization-complete', data)
   },
   dataInitSuccessAndSkip: (callback) => {
-    ipcRenderer.on('skip', callback)
+    const handler = (_event, result) => callback(result)
+    ipcRenderer.on('skip', handler)
+    return () => ipcRenderer.removeListener('skip', handler)
   },
   // 向渲染进程发送消息，在跳转路由，防止第一次进入消息加载不出来
   onDataInitComplete: (callback) => {
@@ -208,7 +228,7 @@ const windowToolApi = {
 
 const chatToolApi = {
   openCapture: () => {
-    ipcRenderer.send('window:capture-open')
+    return ipcRenderer.invoke('window:capture-open')
   },
   getCapturePngBuffer: (channel, func) => {
     ipcRenderer.on('window:get-capture-pngBuffer', (event, ...args) => {
@@ -216,15 +236,17 @@ const chatToolApi = {
     })
   },
   saveCapture: (data) => {
-    ipcRenderer.send('window:save-capture', data)
+    return ipcRenderer.invoke('window:save-capture', data)
   },
+  captureReady: () => ipcRenderer.send('window:capture-ready'),
+  captureError: () => ipcRenderer.send('window:capture-error'),
   closeCapture: () => {
     ipcRenderer.send('window:close-capture')
   },
-  sendImageToMain: (func) => {
-    ipcRenderer.once('capture:image', (event, fileInfo) => {
-      func(fileInfo)
-    })
+  onCaptureResult: (callback) => {
+    const handler = (_event, result) => callback(result)
+    ipcRenderer.on('capture:result', handler)
+    return () => ipcRenderer.removeListener('capture:result', handler)
   },
   copyFile: (content, remoteUrl, msgType, fileName) => {
     ipcRenderer.send('copy:file', content, remoteUrl, msgType, fileName)
@@ -293,6 +315,7 @@ if (process.contextIsolated) {
     contextBridge.exposeInMainWorld('chatToolApi', chatToolApi)
     contextBridge.exposeInMainWorld('piniaShareApi', piniaShareApi)
     contextBridge.exposeInMainWorld('soundApi', soundApi)
+    contextBridge.exposeInMainWorld('themeApi', themeApi)
   } catch (error) {
     console.error(error)
   }
@@ -308,4 +331,5 @@ if (process.contextIsolated) {
   window.chatToolApi = chatToolApi
   window.piniaShareApi = piniaShareApi
   window.soundApi = soundApi
+  window.themeApi = themeApi
 }

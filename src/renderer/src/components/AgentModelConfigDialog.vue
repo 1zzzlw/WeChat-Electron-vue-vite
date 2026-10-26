@@ -189,7 +189,7 @@ const handleSubmit = () => {
   display: grid;
   place-items: center;
   padding: 20px;
-  background: rgba(8, 13, 20, 0.56);
+  background: rgba(var(--color-surface-rgb), 0.56);
   backdrop-filter: blur(8px);
 }
 
@@ -197,9 +197,9 @@ const handleSubmit = () => {
   box-sizing: border-box;
   width: min(560px, calc(100vw - 40px));
   overflow: hidden;
-  color: rgba(242, 247, 251, 0.92);
-  background: rgba(48, 59, 73, 0.985);
-  border: 1px solid rgba(255, 255, 255, 0.13);
+  color: var(--color-text-primary);
+  background: var(--color-bg-deep);
+  border: 1px solid var(--color-border-subtle);
   border-radius: 14px;
   box-shadow: 0 30px 90px rgba(4, 8, 13, 0.5), inset 0 1px rgba(255, 255, 255, 0.035);
 }
@@ -210,7 +210,7 @@ const handleSubmit = () => {
   align-items: center;
   justify-content: space-between;
   padding: 15px 18px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.075);
+  border-bottom: 1px solid var(--color-border-subtle);
 }
 
 .model-dialog-title {
@@ -225,8 +225,8 @@ const handleSubmit = () => {
   height: 34px;
   place-items: center;
   color: rgba(174, 182, 193, 0.86);
-  background: rgba(255, 255, 255, 0.055);
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(var(--color-surface-rgb), 0.4);
+  border: 1px solid var(--color-border-subtle);
   border-radius: 9px;
 }
 
@@ -253,7 +253,7 @@ const handleSubmit = () => {
   width: 29px;
   height: 29px;
   place-items: center;
-  color: rgba(218, 226, 236, 0.48);
+  color: var(--color-text-muted);
   font-size: 14px;
   background: transparent;
   border: 0;
@@ -262,8 +262,8 @@ const handleSubmit = () => {
 }
 
 .model-dialog-header > button:hover {
-  color: rgba(247, 250, 253, 0.94);
-  background: rgba(255, 255, 255, 0.07);
+  color: var(--color-text-primary);
+  background: rgba(var(--color-surface-rgb), 0.4);
 }
 
 .model-config-form {
@@ -272,7 +272,7 @@ const handleSubmit = () => {
 
 .model-form-description {
   margin-bottom: 17px;
-  color: rgba(211, 220, 231, 0.56);
+  color: var(--color-text-muted);
   font-size: 11px;
   line-height: 1.65;
 }
@@ -283,7 +283,7 @@ const handleSubmit = () => {
   align-items: center;
   gap: 16px;
   padding: 12px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  border-bottom: 1px solid var(--color-border-subtle);
 }
 
 .model-field-label {
@@ -299,7 +299,7 @@ const handleSubmit = () => {
 
 .model-field-label small {
   margin-top: 4px;
-  color: rgba(202, 211, 224, 0.38);
+  color: var(--color-text-muted);
   font-size: 8px;
   line-height: 1.45;
 }
@@ -310,11 +310,11 @@ const handleSubmit = () => {
   width: 100%;
   height: 38px;
   padding: 0 11px;
-  color: rgba(247, 250, 253, 0.9);
+  color: var(--color-text-primary);
   font: inherit;
   font-size: 11px;
-  background: rgba(24, 31, 41, 0.58);
-  border: 1px solid rgba(255, 255, 255, 0.11);
+  background: rgba(var(--color-surface-rgb), 0.58);
+  border: 1px solid var(--color-border-subtle);
   border-radius: 8px;
   outline: 0;
   user-select: text;
@@ -323,34 +323,34 @@ const handleSubmit = () => {
 
 .model-form-field input:focus,
 .model-form-field select:focus {
-  background: rgba(24, 31, 41, 0.72);
+  background: rgba(var(--color-surface-rgb), 0.72);
   border-color: rgba(174, 182, 193, 0.34);
   box-shadow: 0 0 0 3px rgba(174, 182, 193, 0.055);
 }
 
 .model-form-field input::placeholder {
-  color: rgba(202, 211, 224, 0.31);
+  color: var(--color-text-muted);
 }
 
 .model-form-field select option {
-  color: #e9eef5;
-  background: #293440;
+  color: var(--color-text-primary);
+  background: var(--color-bg-deep);
 }
 
 .model-temperature-stepper {
   display: grid;
   grid-template-columns: 34px minmax(0, 1fr) 34px;
   overflow: hidden;
-  background: rgba(24, 31, 41, 0.58);
-  border: 1px solid rgba(255, 255, 255, 0.11);
+  background: rgba(var(--color-surface-rgb), 0.58);
+  border: 1px solid var(--color-border-subtle);
   border-radius: 8px;
 }
 
 .model-temperature-stepper button {
-  color: rgba(235, 241, 248, 0.78);
+  color: var(--color-text-secondary);
   font: inherit;
   font-size: 16px;
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(var(--color-surface-rgb), 0.4);
   border: 0;
   cursor: pointer;
 }
@@ -366,8 +366,8 @@ const handleSubmit = () => {
   text-align: center;
   background: transparent;
   border: 0;
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
-  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  border-right: 1px solid var(--color-border-subtle);
+  border-left: 1px solid var(--color-border-subtle);
   border-radius: 0;
   box-shadow: none;
   appearance: textfield;
@@ -385,9 +385,9 @@ const handleSubmit = () => {
   gap: 7px;
   margin-top: 14px;
   padding: 9px 10px;
-  color: rgba(202, 211, 224, 0.44);
+  color: var(--color-text-muted);
   font-size: 9px;
-  background: rgba(255, 255, 255, 0.035);
+  background: rgba(var(--color-surface-rgb), 0.4);
   border-radius: 7px;
 }
 
@@ -398,7 +398,7 @@ const handleSubmit = () => {
   gap: 8px;
   margin: 18px -18px -18px;
   padding: 13px 18px 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.075);
+  border-top: 1px solid var(--color-border-subtle);
 }
 
 .model-dialog-footer button {
@@ -412,20 +412,20 @@ const handleSubmit = () => {
 }
 
 .model-cancel-button {
-  color: rgba(228, 235, 243, 0.64);
+  color: var(--color-text-muted);
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--color-border-subtle);
 }
 
 .model-cancel-button:hover {
-  color: rgba(248, 251, 254, 0.92);
-  background: rgba(255, 255, 255, 0.055);
+  color: var(--color-text-primary);
+  background: rgba(var(--color-surface-rgb), 0.4);
 }
 
 .model-submit-button {
-  color: rgba(245, 248, 251, 0.92);
+  color: var(--color-text-primary);
   background: rgba(112, 122, 136, 0.72);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--color-border-subtle);
 }
 
 .model-submit-button:hover {

@@ -8,28 +8,34 @@ import { initConversationList, initFriendList, initMessageList } from "../API/in
 
 let loadingWindow = null
 
-const loading_width = 800
-const loading_height = 700
+const loading_width = 640
+const loading_height = 520
 
 ipcMain.handle('loading-isNeedInit', (e) => {
     // 登录进入主界面，查询该用户是否有登录记录
     const userId = store.get('userId')
     // 根据id查询表中是否有该用户的登录记录
     if (!isExistUserRecord(userId)) {
+        if (loadingWindow && !loadingWindow.isDestroyed()) return true
         // 如果没有，隐藏主窗口
         refs.mainWindow.hide()
         // 展示加载动画界面
         const options = {
             width: loading_width,
             height: loading_height,
-            transparent: true,
+            backgroundColor: '#dcedf8',
         }
         loadingWindow = createExtraWindow('loading', options, 'standalone', null)
 
         // 等待加载窗口准备就绪后，通知开始数据初始化
-        loadingWindow.webContents.once('ready-to-show', () => {
+        const window = loadingWindow
+        window.once('closed', () => {
+            if (loadingWindow === window) loadingWindow = null
+            if (refs.mainWindow && !refs.mainWindow.isDestroyed()) refs.mainWindow.show()
+        })
+        window.webContents.once('did-finish-load', () => {
             console.log('加载窗口已准备就绪，开始数据初始化')
-            initializationData()
+            initializationData(window)
         })
 
         return true
@@ -51,7 +57,7 @@ ipcMain.on('close-loading-window', (e) => {
 })
 
 // 初始化数据到数据库
-const initializationData = async () => {
+const initializationData = async (window) => {
     try {
         const data = await fetchMySQLData()
 
@@ -67,13 +73,13 @@ const initializationData = async () => {
         initAndUpdateUserLoginRecord(userId);
 
         // 向加载窗口发送可以跳过动画的请求，直接进入聊天软件
-        if (loadingWindow && !loadingWindow.isDestroyed()) {
-            loadingWindow.webContents.send('skip')
+        if (!window.isDestroyed()) {
+            window.webContents.send('skip', { ok: true })
         }
     } catch (err) {
         console.error('数据初始化失败:', err.message)
-        if (loadingWindow && !loadingWindow.isDestroyed()) {
-            loadingWindow.webContents.send('skip')
+        if (!window.isDestroyed()) {
+            window.webContents.send('skip', { ok: false })
         }
     }
 }

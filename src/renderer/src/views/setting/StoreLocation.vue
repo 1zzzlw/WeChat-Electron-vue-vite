@@ -55,7 +55,7 @@ onMounted(async () => {
 
 .location-label {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--color-text-muted);
   margin-bottom: 8px;
   font-weight: 500;
 }
@@ -67,13 +67,13 @@ onMounted(async () => {
   padding: 10px 15px;
   background: rgba(0, 0, 0, 0.15);
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--color-border-subtle);
 }
 
 .path-text {
   flex: 1;
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--color-text-secondary);
   word-break: break-all;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -82,7 +82,7 @@ onMounted(async () => {
 
 .path-text:empty::before {
   content: '未设置';
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--color-text-muted);
   font-style: italic;
 }
 
@@ -128,7 +128,7 @@ onMounted(async () => {
 
 .location-tip span {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--color-text-secondary);
   line-height: 1.5;
 }
 </style>

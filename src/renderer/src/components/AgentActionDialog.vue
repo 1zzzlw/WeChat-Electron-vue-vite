@@ -141,7 +141,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleKeyDown))
   display: grid;
   place-items: center;
   padding: 20px;
-  background: rgba(8, 13, 20, 0.54);
+  background: rgba(var(--color-surface-rgb), 0.55);
   backdrop-filter: blur(7px);
 }
 
@@ -149,9 +149,9 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleKeyDown))
   box-sizing: border-box;
   width: min(430px, calc(100vw - 40px));
   overflow: hidden;
-  color: rgba(242, 247, 251, 0.92);
-  background: rgba(48, 59, 73, 0.985);
-  border: 1px solid rgba(255, 255, 255, 0.13);
+  color: var(--color-text-primary);
+  background: var(--color-bg-deep);
+  border: 1px solid var(--color-border-subtle);
   border-radius: 14px;
   box-shadow: 0 28px 80px rgba(4, 8, 13, 0.48), inset 0 1px rgba(255, 255, 255, 0.035);
 }
@@ -162,7 +162,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleKeyDown))
   align-items: center;
   justify-content: space-between;
   padding: 16px 18px 13px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.075);
+  border-bottom: 1px solid var(--color-border-subtle);
 }
 
 .agent-dialog-kicker {
@@ -184,7 +184,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleKeyDown))
   width: 29px;
   height: 29px;
   place-items: center;
-  color: rgba(218, 226, 236, 0.48);
+  color: var(--color-text-muted);
   font-size: 14px;
   background: transparent;
   border: 0;
@@ -193,8 +193,8 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleKeyDown))
 }
 
 .agent-dialog-header button:hover {
-  color: rgba(247, 250, 253, 0.94);
-  background: rgba(255, 255, 255, 0.07);
+  color: var(--color-text-primary);
+  background: rgba(var(--color-surface-rgb), 0.4);
 }
 
 .agent-dialog-body {
@@ -202,7 +202,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleKeyDown))
 }
 
 .agent-dialog-body > p:first-child {
-  color: rgba(219, 227, 237, 0.66);
+  color: var(--color-text-secondary);
   font-size: 12px;
   line-height: 1.65;
 }
@@ -213,11 +213,11 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleKeyDown))
   height: 39px;
   margin-top: 14px;
   padding: 0 11px;
-  color: rgba(248, 251, 254, 0.94);
+  color: var(--color-text-primary);
   font: inherit;
   font-size: 12px;
-  background: rgba(24, 31, 41, 0.58);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(var(--color-surface-rgb), 0.58);
+  border: 1px solid var(--color-border-subtle);
   border-radius: 8px;
   outline: 0;
   user-select: text;
@@ -225,18 +225,18 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleKeyDown))
 }
 
 .agent-dialog-body input:focus {
-  background: rgba(24, 31, 41, 0.72);
+  background: rgba(var(--color-surface-rgb), 0.72);
   border-color: rgba(111, 228, 239, 0.36);
-  box-shadow: 0 0 0 3px rgba(67, 243, 255, 0.055);
+  box-shadow: 0 0 0 3px rgba(var(--color-accent-rgb), 0.055);
 }
 
 .agent-dialog-body input::placeholder {
-  color: rgba(202, 211, 224, 0.34);
+  color: var(--color-text-muted);
 }
 
 .agent-dialog-tip {
   margin-top: 6px;
-  color: rgba(202, 211, 224, 0.33);
+  color: var(--color-text-muted);
   font-size: 8px;
 }
 
@@ -246,7 +246,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleKeyDown))
   justify-content: flex-end;
   gap: 8px;
   padding: 13px 18px 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.075);
+  border-top: 1px solid var(--color-border-subtle);
 }
 
 .agent-dialog-footer button {
@@ -260,14 +260,14 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleKeyDown))
 }
 
 .agent-dialog-cancel {
-  color: rgba(228, 235, 243, 0.68);
+  color: var(--color-text-secondary);
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.11);
+  border: 1px solid var(--color-border-subtle);
 }
 
 .agent-dialog-cancel:hover {
-  color: rgba(248, 251, 254, 0.94);
-  background: rgba(255, 255, 255, 0.06);
+  color: var(--color-text-primary);
+  background: rgba(var(--color-surface-rgb), 0.4);
 }
 
 .agent-dialog-confirm {
@@ -281,7 +281,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleKeyDown))
 }
 
 .agent-dialog-confirm.is-danger {
-  color: rgba(255, 245, 245, 0.96);
+  color: var(--color-text-primary);
   background: rgba(218, 82, 82, 0.82);
 }
 
@@ -290,8 +290,8 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleKeyDown))
 }
 
 .agent-dialog-confirm:disabled {
-  color: rgba(226, 235, 241, 0.34);
-  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-text-muted);
+  background: rgba(var(--color-surface-rgb), 0.4);
   cursor: default;
 }
 

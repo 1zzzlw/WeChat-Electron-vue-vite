@@ -339,7 +339,7 @@ onMounted(async () => {
     height: 100%;
     display: flex;
     flex-direction: column;
-    background: rgba(28, 38, 50, 0.4);
+    background: rgba(var(--color-surface-rgb), 0.55);
     backdrop-filter: blur(10px);
 }
 
@@ -349,26 +349,26 @@ onMounted(async () => {
     display: flex;
     justify-content: center;
     -webkit-app-region: drag;
-    color: #f0f0f0;
+    color: var(--color-text-primary);
     font-size: 18px;
     font-weight: 500;
-    border-bottom: 1px solid rgba(66, 153, 225, 0.3);
+    border-bottom: 1px solid rgba(var(--color-accent-rgb), 0.3);
 }
 
 .toolbar {
     padding: 12px;
-    border-bottom: 1px solid rgba(66, 153, 225, 0.3);
+    border-bottom: 1px solid rgba(var(--color-accent-rgb), 0.3);
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    background: rgba(35, 45, 60, 0.5);
+    background: rgba(var(--color-surface-rgb), 0.55);
 }
 
 .toolbar button {
     padding: 6px 12px;
-    border: 1px solid rgba(66, 153, 225, 0.3);
-    background: rgba(35, 45, 60, 0.7);
-    color: #f0f0f0;
+    border: 1px solid rgba(var(--color-accent-rgb), 0.3);
+    background: rgba(var(--color-surface-rgb), 0.7);
+    color: var(--color-text-primary);
     border-radius: 4px;
     cursor: pointer;
     font-size: 13px;
@@ -376,15 +376,15 @@ onMounted(async () => {
 }
 
 .toolbar button:hover {
-    background: rgba(66, 153, 225, 0.2);
-    border-color: rgba(66, 153, 225, 0.5);
+    background: rgba(var(--color-accent-rgb), 0.2);
+    border-color: rgba(var(--color-accent-rgb), 0.5);
     transform: translateY(-1px);
 }
 
 .toolbar button.is-active {
-    background: rgba(66, 153, 225, 0.4);
-    border-color: rgba(66, 153, 225, 0.6);
-    color: #fff;
+    background: rgba(var(--color-accent-rgb), 0.4);
+    border-color: rgba(var(--color-accent-rgb), 0.6);
+    color: var(--color-text-primary);
 }
 
 .toolbar button:disabled {
@@ -396,7 +396,7 @@ onMounted(async () => {
     overflow: auto;
     flex: 1;
     height: 100%;
-    background: rgba(28, 38, 50, 0.2);
+    background: rgba(var(--color-surface-rgb), 0.55);
 }
 
 .editor-wrapper {
@@ -408,7 +408,7 @@ onMounted(async () => {
     padding: 20px;
     height: 100%;
     outline: none;
-    color: #f0f0f0;
+    color: var(--color-text-primary);
     line-height: 1.6;
     font-family: "Ma Shan Zheng", "STKaiti", "KaiTi", "PingFang SC", sans-serif;
     font-size: 20px;
@@ -417,8 +417,8 @@ onMounted(async () => {
 :deep(.ProseMirror strong),
 :deep(.ProseMirror b) {
     font-weight: 900;
-    color: #fff;
-    background: rgba(66, 153, 225, 0.15);
+    color: var(--color-text-primary);
+    background: rgba(var(--color-accent-rgb), 0.15);
     padding: 0 3px;
     border-radius: 2px;
 }
@@ -426,15 +426,15 @@ onMounted(async () => {
 :deep(.ProseMirror em),
 :deep(.ProseMirror i) {
     font-style: italic;
-    color: #e0e0e0;
+    color: var(--color-text-primary);
 }
 
 :deep(.ProseMirror h1) {
     font-size: 2em;
     font-weight: bold;
     margin: 0.8em 0 0.4em;
-    color: #fff;
-    border-bottom: 2px solid rgba(66, 153, 225, 0.5);
+    color: var(--color-text-primary);
+    border-bottom: 2px solid rgba(var(--color-accent-rgb), 0.5);
     padding-bottom: 0.3em;
 }
 
@@ -442,14 +442,14 @@ onMounted(async () => {
     font-size: 1.5em;
     font-weight: bold;
     margin: 0.7em 0 0.3em;
-    color: #fff;
+    color: var(--color-text-primary);
 }
 
 :deep(.ProseMirror h3) {
     font-size: 1.2em;
     font-weight: bold;
     margin: 0.6em 0 0.3em;
-    color: #e0e0e0;
+    color: var(--color-text-primary);
 }
 
 :deep(.ProseMirror p) {
@@ -467,18 +467,18 @@ onMounted(async () => {
 }
 
 :deep(.ProseMirror blockquote) {
-    border-left: 4px solid rgba(66, 153, 225, 0.6);
+    border-left: 4px solid rgba(var(--color-accent-rgb), 0.6);
     padding-left: 1rem;
     margin: 1em 0;
-    color: #b0b0b0;
+    color: var(--color-text-primary);
     font-style: italic;
-    background: rgba(66, 153, 225, 0.05);
+    background: rgba(var(--color-accent-rgb), 0.05);
     padding: 0.5em 1rem;
     border-radius: 0 4px 4px 0;
 }
 
 :deep(.ProseMirror code) {
-    background: rgba(66, 153, 225, 0.15);
+    background: rgba(var(--color-accent-rgb), 0.15);
     color: #409eff;
     padding: 2px 6px;
     border-radius: 3px;
@@ -487,8 +487,8 @@ onMounted(async () => {
 }
 
 :deep(.ProseMirror pre) {
-    background: rgba(20, 25, 35, 0.8);
-    border: 1px solid rgba(66, 153, 225, 0.3);
+    background: rgba(var(--color-surface-rgb), 0.8);
+    border: 1px solid rgba(var(--color-accent-rgb), 0.3);
     border-radius: 6px;
     padding: 12px;
     margin: 1em 0;
@@ -505,7 +505,7 @@ onMounted(async () => {
 
 :deep(.ProseMirror hr) {
     border: none;
-    border-top: 2px solid rgba(66, 153, 225, 0.3);
+    border-top: 2px solid rgba(var(--color-accent-rgb), 0.3);
     margin: 2em 0;
 }
 
@@ -521,16 +521,16 @@ onMounted(async () => {
 }
 
 .editor-area::-webkit-scrollbar-track {
-    background: rgba(28, 38, 50, 0.3);
+    background: rgba(var(--color-surface-rgb), 0.55);
 }
 
 .editor-area::-webkit-scrollbar-thumb {
-    background: rgba(66, 153, 225, 0.4);
+    background: rgba(var(--color-accent-rgb), 0.4);
     border-radius: 4px;
 }
 
 .editor-area::-webkit-scrollbar-thumb:hover {
-    background: rgba(66, 153, 225, 0.6);
+    background: rgba(var(--color-accent-rgb), 0.6);
 }
 
 .title-input {
@@ -539,8 +539,8 @@ onMounted(async () => {
     justify-content: center;
     align-items: center;
     padding: 8px 20px;
-    border-bottom: 1px solid rgba(66, 153, 225, 0.3);
-    background: rgba(28, 38, 50, 0.3);
+    border-bottom: 1px solid rgba(var(--color-accent-rgb), 0.3);
+    background: rgba(var(--color-surface-rgb), 0.55);
     backdrop-filter: blur(8px);
 }
 
@@ -559,13 +559,13 @@ onMounted(async () => {
     display: block;
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border: 2px solid rgba(66, 153, 225, 0.15);
+    border: 2px solid rgba(var(--color-accent-rgb), 0.15);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 :deep(.ProseMirror img:hover) {
-    border-color: rgba(66, 153, 225, 0.6);
-    box-shadow: 0 8px 24px rgba(66, 153, 225, 0.4);
+    border-color: rgba(var(--color-accent-rgb), 0.6);
+    box-shadow: 0 8px 24px rgba(var(--color-accent-rgb), 0.4);
     transform: translateY(-2px);
 }
 
@@ -575,7 +575,7 @@ onMounted(async () => {
 }
 
 :deep(.el-input__inner) {
-    color: #f9fafb;
+    color: var(--color-text-primary);
     font-size: inherit;
     font-weight: inherit;
     background: transparent;
@@ -585,8 +585,8 @@ onMounted(async () => {
 }
 
 :deep(.el-input__wrapper) {
-    background: rgba(20, 25, 35, 0.8);
-    border: 1px solid rgba(66, 153, 225, 0.4);
+    background: rgba(var(--color-surface-rgb), 0.8);
+    border: 1px solid rgba(var(--color-accent-rgb), 0.4);
     border-radius: 8px;
     box-shadow: none;
     padding: 0 16px;
@@ -594,37 +594,37 @@ onMounted(async () => {
 }
 
 :deep(.el-input__wrapper:focus-within) {
-    border-color: rgba(66, 153, 225, 0.8);
-    box-shadow: 0 0 10px rgba(66, 153, 225, 0.2);
+    border-color: rgba(var(--color-accent-rgb), 0.8);
+    box-shadow: 0 0 10px rgba(var(--color-accent-rgb), 0.2);
 }
 
 :deep(.el-input .el-input__count .el-input__count-inner) {
     background: none;
-    color: rgba(240, 240, 240, 0.6);
+    color: var(--color-text-muted);
     font-size: 12px;
 }
 
 :deep(.el-dialog) {
-    background: rgba(28, 38, 50, 0.95);
+    background: var(--color-bg-deep);
     backdrop-filter: blur(12px);
-    border: 1px solid rgba(66, 153, 225, 0.3);
+    border: 1px solid rgba(var(--color-accent-rgb), 0.3);
     border-radius: 12px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
 :deep(.el-dialog__header) {
-    border-bottom: 1px solid rgba(66, 153, 225, 0.2);
+    border-bottom: 1px solid rgba(var(--color-accent-rgb), 0.2);
     padding: 16px 20px;
 }
 
 :deep(.el-dialog__title) {
-    color: #f0f0f0;
+    color: var(--color-text-primary);
     font-size: 18px;
     font-weight: 500;
 }
 
 :deep(.el-dialog__headerbtn .el-dialog__close) {
-    color: #f0f0f0;
+    color: var(--color-text-primary);
     font-size: 18px;
 }
 
@@ -633,7 +633,7 @@ onMounted(async () => {
 }
 
 :deep(.el-dialog__footer) {
-    border-top: 1px solid rgba(66, 153, 225, 0.2);
+    border-top: 1px solid rgba(var(--color-accent-rgb), 0.2);
     padding: 12px 20px;
     display: flex;
     justify-content: flex-end;
@@ -641,8 +641,8 @@ onMounted(async () => {
 }
 
 :deep(.el-dialog .el-input__wrapper) {
-    background: rgba(20, 25, 35, 0.8);
-    border: 1px solid rgba(66, 153, 225, 0.4);
+    background: rgba(var(--color-surface-rgb), 0.8);
+    border: 1px solid rgba(var(--color-accent-rgb), 0.4);
     border-radius: 8px;
     box-shadow: none;
     padding: 0 16px;
@@ -650,27 +650,27 @@ onMounted(async () => {
 }
 
 :deep(.el-dialog .el-input__inner) {
-    color: #f0f0f0;
+    color: var(--color-text-primary);
     font-size: 16px;
     background: transparent;
     border: none;
 }
 
 :deep(.el-dialog .el-input__placeholder) {
-    color: rgba(240, 240, 240, 0.5);
+    color: var(--color-text-muted);
 }
 
 :deep(.el-dialog .el-input__wrapper:focus-within) {
-    border-color: rgba(66, 153, 225, 0.8);
-    box-shadow: 0 0 10px rgba(66, 153, 225, 0.2);
+    border-color: rgba(var(--color-accent-rgb), 0.8);
+    box-shadow: 0 0 10px rgba(var(--color-accent-rgb), 0.2);
 }
 
 /* 弹窗按钮样式（和工具栏按钮统一风格） */
 :deep(.el-dialog__footer .el-button) {
     padding: 8px 20px;
-    border: 1px solid rgba(66, 153, 225, 0.3);
-    background: rgba(35, 45, 60, 0.7);
-    color: #f0f0f0;
+    border: 1px solid rgba(var(--color-accent-rgb), 0.3);
+    background: rgba(var(--color-surface-rgb), 0.7);
+    color: var(--color-text-primary);
     border-radius: 6px;
     cursor: pointer;
     font-size: 14px;
@@ -678,20 +678,20 @@ onMounted(async () => {
 }
 
 :deep(.el-dialog__footer .el-button:hover) {
-    background: rgba(66, 153, 225, 0.2);
-    border-color: rgba(66, 153, 225, 0.5);
+    background: rgba(var(--color-accent-rgb), 0.2);
+    border-color: rgba(var(--color-accent-rgb), 0.5);
     transform: translateY(-1px);
 }
 
 :deep(.el-dialog__footer .el-button--primary) {
-    background: rgba(66, 153, 225, 0.4);
-    border-color: rgba(66, 153, 225, 0.6);
-    color: #fff;
+    background: rgba(var(--color-accent-rgb), 0.4);
+    border-color: rgba(var(--color-accent-rgb), 0.6);
+    color: var(--color-text-primary);
 }
 
 :deep(.el-dialog__footer .el-button--primary:hover) {
-    background: rgba(66, 153, 225, 0.6);
-    border-color: rgba(66, 153, 225, 0.8);
+    background: rgba(var(--color-accent-rgb), 0.6);
+    border-color: rgba(var(--color-accent-rgb), 0.8);
 }
 
 :deep(.ProseMirror a) {

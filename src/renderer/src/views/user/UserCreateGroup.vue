@@ -134,7 +134,7 @@ onMounted(() => {
 <style scoped>
 .title {
   -webkit-app-region: drag;
-  color: #f0f4f8;
+  color: var(--color-text-primary);
   font-size: 16px;
   font-weight: 600;
   margin: 16px 0;
@@ -146,12 +146,12 @@ onMounted(() => {
   display: flex;
   flex-direction: row;
   justify-content: flex-start;
-  background: rgba(43, 62, 73, 0.85);
+  background: rgba(var(--color-surface-rgb), 0.85);
   backdrop-filter: blur(20px);
-  color: #e0e6ed;
+  color: var(--color-text-primary);
   border-radius: 12px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--color-border-subtle);
 }
 
 .count-left {
@@ -161,7 +161,7 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  border-right: 1px solid rgba(255, 255, 255, 0.15);
+  border-right: 1px solid var(--color-border-subtle);
   padding: 0 16px;
 }
 
@@ -173,7 +173,7 @@ onMounted(() => {
   border-radius: 12px;
   margin-bottom: 30px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--color-border-subtle);
 }
 
 .scrollbar-demo-item {
@@ -188,7 +188,7 @@ onMounted(() => {
 }
 
 .scrollbar-demo-item:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(var(--color-surface-rgb), 0.4);
 }
 
 .left-info {
@@ -202,13 +202,13 @@ onMounted(() => {
   height: 50px;
   border-radius: 5px;
   object-fit: cover;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--color-border-subtle);
 }
 
 .friend-name {
   font-size: 16px;
   margin-left: 12px;
-  color: #e0e6ed;
+  color: var(--color-text-primary);
   font-weight: 500;
 }
 
@@ -221,7 +221,7 @@ onMounted(() => {
 .invite-btn {
   background: rgba(100, 181, 246, 0.2);
   border: 1px solid rgba(100, 181, 246, 0.3);
-  color: #e0e6ed;
+  color: var(--color-text-primary);
   border-radius: 8px;
   transition: all 0.2s ease;
 }
@@ -229,13 +229,13 @@ onMounted(() => {
 .invite-btn:hover {
   background: rgba(100, 181, 246, 0.3);
   border-color: rgba(100, 181, 246, 0.5);
-  color: #fff;
+  color: var(--color-text-primary);
 }
 
 .remove-btn {
   background: rgba(245, 108, 108, 0.2);
   border: 1px solid rgba(245, 108, 108, 0.3);
-  color: #e0e6ed;
+  color: var(--color-text-primary);
   border-radius: 8px;
   transition: all 0.2s ease;
 }
@@ -243,7 +243,7 @@ onMounted(() => {
 .remove-btn:hover {
   background: rgba(245, 108, 108, 0.3);
   border-color: rgba(245, 108, 108, 0.5);
-  color: #fff;
+  color: var(--color-text-primary);
 }
 
 .count-right {
@@ -268,7 +268,7 @@ onMounted(() => {
   border-radius: 12px;
   margin-bottom: 30px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--color-border-subtle);
 }
 
 .scrollbar-right-item {
@@ -283,7 +283,7 @@ onMounted(() => {
 }
 
 .scrollbar-right-item:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(var(--color-surface-rgb), 0.4);
 }
 
 .create-group-btn {
@@ -299,33 +299,33 @@ onMounted(() => {
 
 /* 输入框：适配毛玻璃背景 */
 .create-group-btn :deep(.el-input__wrapper) {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(var(--color-surface-rgb), 0.4);
+  border: 1px solid var(--color-border-subtle);
   border-radius: 8px;
   box-shadow: none;
   transition: all 0.2s ease;
 }
 
 .create-group-btn :deep(.el-input__wrapper):hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(var(--color-surface-rgb), 0.4);
+  border-color: var(--color-border-subtle);
 }
 
 .create-group-btn :deep(.el-input__wrapper.is-focus) {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(var(--color-surface-rgb), 0.4);
   border-color: rgba(100, 181, 246, 0.6);
   box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.15);
 }
 
 .create-group-btn :deep(.el-input__inner) {
-  color: #e0e6ed;
+  color: var(--color-text-primary);
 }
 
 /* 创建群聊按钮：适配淡蓝色半透明风格，与添加好友界面一致 */
 .create-btn {
   background: rgba(100, 181, 246, 0.2);
   border: 1px solid rgba(100, 181, 246, 0.3);
-  color: #e0e6ed;
+  color: var(--color-text-primary);
   border-radius: 8px;
   transition: all 0.2s ease;
 }
@@ -333,6 +333,6 @@ onMounted(() => {
 .create-btn:hover {
   background: rgba(100, 181, 246, 0.3);
   border-color: rgba(100, 181, 246, 0.5);
-  color: #fff;
+  color: var(--color-text-primary);
 }
 </style>

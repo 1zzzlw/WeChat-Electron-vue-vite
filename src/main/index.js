@@ -12,6 +12,7 @@ import { loadDeferredIPC } from './IPC/index.js'
 import { initTable, initTableColumnsMap, close as closeDB } from './DB/mainDB.js'
 import websocket from './websocket.js'
 import { refs, getTrayIcon } from './shared.js'
+import { initializeTheme, applyWindowTheme } from './Util/theme.js'
 
 // 向后兼容：重导出供未迁移的模块使用
 export { store, refs, getIconPath, getTrayIcon, getEmptyTrayIcon } from './shared.js'
@@ -36,8 +37,7 @@ function createMainWindow() {
     resizable: false,
     frame: false,
     autoHideMenuBar: true,
-    backgroundColor: '#1a1a2e',
-    opacity: 0.98,
+    backgroundColor: '#d6eaf8',
     ...(process.platform === 'linux' ? { icon: iconPath } : {}),
     webPreferences: {
       webSecurity: false,
@@ -102,9 +102,11 @@ function createTray() {
 }
 
 app.whenReady().then(() => {
+  initializeTheme()
   electronApp.setAppUserModelId('com.easychat.im')
 
   app.on('browser-window-created', (_, window) => {
+    applyWindowTheme(window)
     optimizer.watchWindowShortcuts(window)
   })
 

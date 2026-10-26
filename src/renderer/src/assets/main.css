@@ -16,6 +16,12 @@ html,
 body {
   width: 100%;
   height: 100%;
+  font-family: var(--font-family);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-text-primary);
+  background-color: var(--color-app-bg);
+  background-image: var(--color-app-gradient);
   /* 禁止用户选中body内的文本内容（避免误操作选中文字影响体验） */
   user-select: none;
   background-size: cover;
@@ -65,4 +71,57 @@ a {
   .actions {
     display: none;
   }
+}
+/* 公共控件跟随同一套表面、边框和交互状态。 */
+button, input, textarea, select { font: inherit; }
+input, textarea, [contenteditable='true'] { user-select: text; }
+button:focus-visible, a:focus-visible, [tabindex='0']:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+::selection { background: rgba(74, 156, 211, .22); }
+.el-button { transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast); }
+.el-button--primary {
+  --el-button-text-color: var(--color-accent);
+  --el-button-bg-color: var(--color-accent-soft);
+  --el-button-border-color: var(--color-border-primary);
+  --el-button-hover-text-color: var(--color-text-strong);
+  --el-button-hover-bg-color: var(--color-surface-3);
+  --el-button-hover-border-color: var(--color-border-hover);
+  --el-button-active-bg-color: var(--color-surface-2);
+  --el-button-active-border-color: var(--color-border-hover);
+  --el-button-disabled-text-color: var(--color-text-muted);
+  --el-button-disabled-bg-color: var(--color-surface-1);
+  --el-button-disabled-border-color: var(--color-border-subtle);
+}
+.el-dialog, .el-message-box, .el-drawer {
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(20px);
+}
+.el-popper.is-light { border-color: var(--color-border-subtle); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* 所有输入控件统一取消蓝色边框与焦点光圈；按钮保留键盘焦点提示。 */
+.el-input, .el-textarea, .el-select {
+  --el-input-border-color: transparent;
+  --el-input-hover-border-color: transparent;
+  --el-input-focus-border-color: transparent;
+  --el-select-input-focus-border-color: transparent;
+}
+.el-input__wrapper, .el-input__wrapper:hover, .el-input__wrapper.is-focus,
+.el-textarea__inner, .el-textarea__inner:hover, .el-textarea__inner:focus,
+.el-select__wrapper, .el-select__wrapper:hover, .el-select__wrapper.is-focused,
+input:focus, input:focus-visible, textarea:focus, textarea:focus-visible {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
 }

@@ -99,6 +99,7 @@ async function run() {
             getMessageList: dbApi.getMessageList, saveLoadMessage() {},
             getGroupMemberList: async () => {}, nextTick: vue.nextTick,
             scrollToBottom: () => { scrollCount++ },
+            removeCaptureListener() {},
             watch: (...args) => { const stop = vue.watch(...args); stops.push(stop); return stop },
             onUnmounted: callback => unmounts.push(callback)
         })

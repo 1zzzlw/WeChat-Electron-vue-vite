@@ -242,7 +242,7 @@ const openWebsite = () => {
   display: flex;
   flex-direction: column;
   -webkit-app-region: no-drag;
-  color: #f0f0f0;
+  color: var(--color-text-primary);
   font-size: 11px;
 }
 
@@ -260,19 +260,19 @@ const openWebsite = () => {
   width: 48px;
   height: 48px;
   margin: 0 auto 5px;
-  color: rgba(66, 153, 225, 0.8);
+  color: rgba(var(--color-accent-rgb), 0.8);
 }
 
 .app-name {
   font-size: 18px;
   font-weight: 600;
   margin: 0 0 2px;
-  color: #f0f0f0;
+  color: var(--color-text-primary);
 }
 
 .app-tagline {
   font-size: 10px;
-  color: rgba(240, 240, 240, 0.5);
+  color: var(--color-text-muted);
   margin: 0;
 }
 
@@ -293,20 +293,20 @@ const openWebsite = () => {
 
 .version-item .label {
   font-size: 9px;
-  color: rgba(240, 240, 240, 0.5);
+  color: var(--color-text-muted);
 }
 
 .version-item .value {
   font-size: 11px;
   font-weight: 500;
-  color: #f0f0f0;
+  color: var(--color-text-primary);
 }
 
 .update-btn {
   padding: 4px 15px;
-  background: rgba(66, 153, 225, 0.2);
-  color: #f0f0f0;
-  border: 1px solid rgba(66, 153, 225, 0.3);
+  background: rgba(var(--color-accent-rgb), 0.2);
+  color: var(--color-text-primary);
+  border: 1px solid rgba(var(--color-accent-rgb), 0.3);
   border-radius: 4px;
   font-size: 10px;
   cursor: pointer;
@@ -314,9 +314,9 @@ const openWebsite = () => {
 }
 
 .update-btn:hover {
-  background: rgba(66, 153, 225, 0.35);
-  border-color: rgba(66, 153, 225, 0.5);
-  color: #fff;
+  background: rgba(var(--color-accent-rgb), 0.35);
+  border-color: rgba(var(--color-accent-rgb), 0.5);
+  color: var(--color-text-primary);
 }
 
 .tech-stack,
@@ -330,7 +330,7 @@ const openWebsite = () => {
   font-size: 12px;
   font-weight: 600;
   margin: 0 0 6px;
-  color: #f0f0f0;
+  color: var(--color-text-primary);
 }
 
 .tech-tags {
@@ -341,18 +341,18 @@ const openWebsite = () => {
 
 .tech-tag {
   padding: 2px 7px;
-  background: rgba(66, 153, 225, 0.15);
-  color: rgba(66, 153, 225, 0.9);
+  background: rgba(var(--color-accent-rgb), 0.15);
+  color: rgba(var(--color-accent-rgb), 0.9);
   border-radius: 3px;
   font-size: 9px;
-  border: 1px solid rgba(66, 153, 225, 0.2);
+  border: 1px solid rgba(var(--color-accent-rgb), 0.2);
   cursor: default;
 }
 
 .info-group {
   margin-bottom: 8px;
   padding-bottom: 8px;
-  border-bottom: 1px solid rgba(66, 153, 225, 0.15);
+  border-bottom: 1px solid rgba(var(--color-accent-rgb), 0.15);
 }
 
 .info-group:last-child {
@@ -363,14 +363,14 @@ const openWebsite = () => {
 
 .info-label {
   font-size: 11px;
-  color: rgba(240, 240, 240, 0.5);
+  color: var(--color-text-muted);
   margin-bottom: 4px;
   font-weight: 500;
 }
 
 .info-content {
   font-size: 10px;
-  color: #f0f0f0;
+  color: var(--color-text-primary);
   line-height: 1.4;
 }
 
@@ -400,12 +400,12 @@ const openWebsite = () => {
 }
 
 .detail-label {
-  color: rgba(240, 240, 240, 0.5);
+  color: var(--color-text-muted);
   font-size: 9px;
 }
 
 .detail-value {
-  color: #f0f0f0;
+  color: var(--color-text-primary);
   font-size: 10px;
 }
 
@@ -428,33 +428,33 @@ const openWebsite = () => {
 .memory-used {
   font-size: 10px;
   font-weight: 600;
-  color: rgba(66, 153, 225, 0.9);
+  color: rgba(var(--color-accent-rgb), 0.9);
 }
 
 .memory-total {
   font-size: 9px;
-  color: rgba(240, 240, 240, 0.5);
+  color: var(--color-text-muted);
 }
 
 .memory-progress-container {
   width: 100%;
   height: 6px;
-  background: rgba(28, 38, 50, 0.6);
+  background: rgba(var(--color-surface-rgb), 0.6);
   border-radius: 3px;
   overflow: hidden;
-  border: 1px solid rgba(66, 153, 225, 0.15);
+  border: 1px solid rgba(var(--color-accent-rgb), 0.15);
 }
 
 .memory-progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, rgba(66, 153, 225, 0.5), rgba(66, 153, 225, 0.8));
+  background: linear-gradient(90deg, rgba(var(--color-accent-rgb), 0.5), rgba(var(--color-accent-rgb), 0.8));
   border-radius: 2px;
   transition: width 0.5s ease;
 }
 
 .memory-details {
   font-size: 9px;
-  color: rgba(240, 240, 240, 0.5);
+  color: var(--color-text-muted);
 }
 
 .links-section {
@@ -471,9 +471,9 @@ const openWebsite = () => {
   justify-content: center;
   gap: 4px;
   padding: 4px 8px;
-  background: rgba(66, 153, 225, 0.15);
-  color: rgba(66, 153, 225, 0.9);
-  border: 1px solid rgba(66, 153, 225, 0.25);
+  background: rgba(var(--color-accent-rgb), 0.15);
+  color: rgba(var(--color-accent-rgb), 0.9);
+  border: 1px solid rgba(var(--color-accent-rgb), 0.25);
   border-radius: 4px;
   font-size: 10px;
   cursor: pointer;
@@ -481,21 +481,21 @@ const openWebsite = () => {
 }
 
 .link-btn:hover {
-  background: rgba(66, 153, 225, 0.3);
-  border-color: rgba(66, 153, 225, 0.5);
-  color: #fff;
+  background: rgba(var(--color-accent-rgb), 0.3);
+  border-color: rgba(var(--color-accent-rgb), 0.5);
+  color: var(--color-text-primary);
 }
 
 .copyright {
   text-align: center;
   padding-top: 8px;
-  border-top: 1px solid rgba(66, 153, 225, 0.15);
+  border-top: 1px solid rgba(var(--color-accent-rgb), 0.15);
   margin-top: auto;
 }
 
 .copyright p {
   margin: 0;
   font-size: 9px;
-  color: rgba(240, 240, 240, 0.4);
+  color: var(--color-text-muted);
 }
 </style>

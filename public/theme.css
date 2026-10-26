@@ -1,0 +1,96 @@
+/* 共享的天空蓝玻璃主题：Vue、截图工具和加载页使用同一组基础变量。
+ * 登录和注册保留各自的青蓝 / 粉紫动画与壁纸。
+ */
+:root {
+  color-scheme: light;
+  --color-app-bg: #9bbdd5;
+  --color-wallet-card: linear-gradient(135deg, rgba(44, 89, 124, .93), rgba(67, 127, 166, .88));
+  --color-app-gradient: linear-gradient(135deg, #8db5d3, #b7d7ed 55%, #90b7d4);
+  --color-welcome-surface: linear-gradient(135deg, rgba(111, 161, 196, .5), rgba(156, 197, 224, .36));
+  --color-loading-background: linear-gradient(135deg, #9cbed9, #c1dcee 55%, #95bddc);
+  --color-loading-glow: rgba(220, 240, 253, .4);
+  --color-input-surface: rgba(194, 222, 243, .56);
+  --font-family: "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+  --color-accent: #287eb5;
+  --color-accent-blue: rgba(74, 156, 211, .6);
+  --color-accent-soft: rgba(106, 185, 236, .18);
+  --color-accent-rgb: 74, 156, 211;
+  --color-surface-rgb: 157, 195, 220;
+  --color-text-rgb: 37, 68, 92;
+  --color-bg-deep: rgba(185, 216, 237, .94);
+  --color-surface-1: rgba(122, 169, 200, .42);
+  --color-surface-2: rgba(153, 195, 221, .62);
+  --color-surface-3: rgba(201, 226, 243, .76);
+  --color-nav-surface: rgba(71, 123, 159, .54);
+  --color-sidebar-surface: rgba(135, 179, 209, .65);
+  --color-chat-surface: rgba(151, 193, 221, .5);
+  --color-composer-surface: rgba(161, 201, 229, .72);
+  --color-bubble-incoming: rgba(222, 239, 251, .82);
+  --color-bubble-outgoing: rgba(112, 181, 224, .46);
+  --color-text-strong: #1e405a;
+  --color-text-primary: #2c4d65;
+  --color-text-secondary: #3f6178;
+  --color-text-muted: #4d6e83;
+  --color-text-accent: #287eb5;
+  --color-border-subtle: rgba(101, 154, 190, .23);
+  --color-border-primary: rgba(74, 156, 211, .35);
+  --color-border-hover: rgba(74, 156, 211, .58);
+  --color-danger: #df5365;
+  --color-warning: #bf7836;
+  --color-success: #309577;
+  --shadow-sm: 0 2px 10px rgba(59, 110, 147, .08);
+  --shadow-md: 0 8px 28px rgba(59, 110, 147, .12);
+  --shadow-lg: 0 16px 44px rgba(59, 110, 147, .17);
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --transition-fast: .15s ease;
+  --transition-normal: .3s ease;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --color-app-bg: #162d40;
+  --color-wallet-card: linear-gradient(135deg, rgba(25, 57, 82, .97), rgba(44, 93, 129, .92));
+  --color-app-gradient: linear-gradient(135deg, #102638, #254862 55%, #152d42);
+  --color-welcome-surface: linear-gradient(135deg, rgba(18, 43, 63, .83), rgba(34, 66, 89, .7));
+  --color-loading-background: linear-gradient(135deg, #142c40, #284d67 55%, #19334b);
+  --color-loading-glow: rgba(66, 117, 153, .2);
+  --color-accent: #83c7f4;
+  --color-accent-blue: rgba(104, 174, 226, .65);
+  --color-accent-soft: rgba(104, 174, 226, .18);
+  --color-accent-rgb: 104, 174, 226;
+  --color-surface-rgb: 38, 67, 90;
+  --color-text-rgb: 224, 239, 250;
+  --color-bg-deep: rgba(22, 45, 64, .96);
+  --color-surface-1: rgba(26, 54, 76, .72);
+  --color-surface-2: rgba(42, 74, 98, .82);
+  --color-surface-3: rgba(58, 93, 119, .9);
+  --color-nav-surface: rgba(11, 31, 48, .86);
+  --color-sidebar-surface: rgba(21, 47, 68, .82);
+  --color-chat-surface: rgba(24, 53, 74, .72);
+  --color-composer-surface: rgba(21, 45, 65, .9);
+  --color-input-surface: rgba(36, 68, 92, .7);
+  --color-bubble-incoming: rgba(50, 80, 105, .88);
+  --color-bubble-outgoing: rgba(51, 118, 164, .68);
+  --color-text-strong: #edf7ff;
+  --color-text-primary: #dcecf8;
+  --color-text-secondary: #becfdd;
+  --color-text-muted: #a2bacc;
+  --color-text-accent: #9bd7ff;
+  --color-border-subtle: rgba(160, 199, 225, .18);
+  --color-border-primary: rgba(104, 174, 226, .35);
+  --color-border-hover: rgba(104, 174, 226, .58);
+  --color-danger: #fa8190;
+  --color-warning: #edb27a;
+  --color-success: #72d1b0;
+  --shadow-sm: 0 2px 10px rgba(0, 13, 24, .18);
+  --shadow-md: 0 8px 28px rgba(0, 13, 24, .25);
+  --shadow-lg: 0 16px 44px rgba(0, 13, 24, .34);
+}

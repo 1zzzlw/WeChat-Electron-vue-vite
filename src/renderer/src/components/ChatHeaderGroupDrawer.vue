@@ -392,7 +392,7 @@ watch(() => props.conversation.id, async () => {
     align-items: center;
     margin-bottom: 35px;
     padding-bottom: 25px;
-    border-bottom: 1px solid rgba(67, 243, 255, 0.2);
+    border-bottom: 1px solid rgba(var(--color-accent-rgb), 0.2);
 }
 
 .group-avatar {
@@ -407,8 +407,8 @@ watch(() => props.conversation.id, async () => {
     height: 100%;
     border-radius: 16px;
     object-fit: cover;
-    border: 3px solid rgba(67, 243, 255, 0.4);
-    box-shadow: 0 0 20px rgba(67, 243, 255, 0.3);
+    border: 3px solid rgba(var(--color-accent-rgb), 0.4);
+    box-shadow: 0 0 20px rgba(var(--color-accent-rgb), 0.3);
 }
 
 .avatar-badge {
@@ -416,20 +416,20 @@ watch(() => props.conversation.id, async () => {
     bottom: -5px;
     right: -5px;
     padding: 4px 10px;
-    background: rgba(67, 243, 255, 0.9);
+    background: rgba(var(--color-accent-rgb), 0.9);
     border-radius: 12px;
     font-size: 11px;
     color: #000;
     font-weight: 600;
     border: 2px solid rgba(20, 25, 35, 0.8);
-    box-shadow: 0 0 10px rgba(67, 243, 255, 0.5);
+    box-shadow: 0 0 10px rgba(var(--color-accent-rgb), 0.5);
 }
 
 .group-name {
     font-size: 20px;
     font-weight: 600;
-    color: #43f3ff;
-    text-shadow: 0 0 8px rgba(67, 243, 255, 0.3);
+    color: var(--color-accent);
+    text-shadow: 0 0 8px rgba(var(--color-accent-rgb), 0.3);
     margin-bottom: 6px;
     display: flex;
     align-items: center;
@@ -438,19 +438,19 @@ watch(() => props.conversation.id, async () => {
 
 .edit-group-icon {
     font-size: 14px;
-    color: rgba(67, 243, 255, 0.5);
+    color: rgba(var(--color-accent-rgb), 0.5);
     cursor: pointer;
     transition: all 0.2s ease;
 }
 
 .edit-group-icon:hover {
-    color: #43f3ff;
+    color: var(--color-accent);
     transform: scale(1.2);
 }
 
 .group-id {
     font-size: 13px;
-    color: rgba(67, 243, 255, 0.6);
+    color: rgba(var(--color-accent-rgb), 0.6);
 }
 
 .group-settings {
@@ -460,7 +460,7 @@ watch(() => props.conversation.id, async () => {
     gap: 20px;
     margin-bottom: 30px;
     padding: 15px 0;
-    border-bottom: 1px solid rgba(67, 243, 255, 0.2);
+    border-bottom: 1px solid rgba(var(--color-accent-rgb), 0.2);
 }
 
 .setting-item {
@@ -473,7 +473,7 @@ watch(() => props.conversation.id, async () => {
 
 .setting-label {
     font-size: 14px;
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--color-text-primary);
 }
 
 .group-members {
@@ -492,19 +492,19 @@ watch(() => props.conversation.id, async () => {
 .members-title {
     font-size: 15px;
     font-weight: 500;
-    color: #43f3ff;
+    color: var(--color-accent);
 }
 
 .members-more {
-    color: rgba(67, 243, 255, 0.6);
+    color: rgba(var(--color-accent-rgb), 0.6);
     font-size: 16px;
     cursor: pointer;
     transition: all 0.3s;
 }
 
 .members-more:hover {
-    color: #43f3ff;
-    text-shadow: 0 0 8px rgba(67, 243, 255, 0.4);
+    color: var(--color-accent);
+    text-shadow: 0 0 8px rgba(var(--color-accent-rgb), 0.4);
 }
 
 .members-list {
@@ -524,11 +524,11 @@ watch(() => props.conversation.id, async () => {
     border-radius: 8px;
     transition: all 0.3s;
     justify-content: center;
-    color: rgba(67, 243, 255, 0.6);
+    color: rgba(var(--color-accent-rgb), 0.6);
 }
 
 .member-more-item:hover {
-    background: rgba(67, 243, 255, 0.1);
+    background: rgba(var(--color-accent-rgb), 0.1);
 }
 
 .member-more-item .el-icon {
@@ -543,9 +543,9 @@ watch(() => props.conversation.id, async () => {
 .group-notice {
     width: 100%;
     padding: 15px;
-    background: rgba(67, 243, 255, 0.05);
+    background: rgba(var(--color-accent-rgb), 0.05);
     border-radius: 10px;
-    border: 1px solid rgba(67, 243, 255, 0.2);
+    border: 1px solid rgba(var(--color-accent-rgb), 0.2);
     margin-bottom: auto;
 }
 
@@ -557,26 +557,26 @@ watch(() => props.conversation.id, async () => {
 }
 
 .notice-header .el-icon {
-    color: #43f3ff;
+    color: var(--color-accent);
     font-size: 16px;
 }
 
 .notice-header span {
     font-size: 14px;
     font-weight: 500;
-    color: #43f3ff;
+    color: var(--color-accent);
 }
 
 .notice-content {
     font-size: 13px;
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--color-text-secondary);
     line-height: 1.6;
     word-break: break-all;
 }
 
 .notice-content:empty::before {
     content: '暂无群公告';
-    color: rgba(255, 255, 255, 0.4);
+    color: var(--color-text-muted);
     font-style: italic;
 }
 
@@ -586,7 +586,7 @@ watch(() => props.conversation.id, async () => {
     gap: 15px;
     padding-top: 20px;
     margin-top: 10px;
-    border-top: 1px solid rgba(67, 243, 255, 0.2);
+    border-top: 1px solid rgba(var(--color-accent-rgb), 0.2);
 }
 
 .action-btn {
@@ -602,19 +602,19 @@ watch(() => props.conversation.id, async () => {
     cursor: pointer;
     transition: all 0.3s ease;
     text-decoration: none;
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--color-text-primary);
 }
 
 .action-btn.secondary {
-    background: rgba(67, 243, 255, 0.1);
-    border: 1px solid rgba(67, 243, 255, 0.3);
-    color: #43f3ff;
+    background: rgba(var(--color-accent-rgb), 0.1);
+    border: 1px solid rgba(var(--color-accent-rgb), 0.3);
+    color: var(--color-accent);
 }
 
 .action-btn.secondary:hover {
-    background: rgba(67, 243, 255, 0.2);
-    border-color: rgba(67, 243, 255, 0.5);
-    box-shadow: 0 0 15px rgba(67, 243, 255, 0.3);
+    background: rgba(var(--color-accent-rgb), 0.2);
+    border-color: rgba(var(--color-accent-rgb), 0.5);
+    box-shadow: 0 0 15px rgba(var(--color-accent-rgb), 0.3);
     transform: translateY(-2px);
 }
 
@@ -644,12 +644,12 @@ watch(() => props.conversation.id, async () => {
 }
 
 .group-drawer-content::-webkit-scrollbar-thumb {
-    background: rgba(67, 243, 255, 0.3);
+    background: rgba(var(--color-accent-rgb), 0.3);
     border-radius: 3px;
 }
 
 .group-drawer-content::-webkit-scrollbar-thumb:hover {
-    background: rgba(67, 243, 255, 0.5);
+    background: rgba(var(--color-accent-rgb), 0.5);
 }
 
 .members-header-actions {
@@ -659,90 +659,90 @@ watch(() => props.conversation.id, async () => {
 }
 
 .members-invite {
-    color: rgba(67, 243, 255, 0.6);
+    color: rgba(var(--color-accent-rgb), 0.6);
     font-size: 18px;
     cursor: pointer;
     transition: all 0.3s;
     padding: 4px;
     border-radius: 50%;
-    border: 1px solid rgba(67, 243, 255, 0.3);
+    border: 1px solid rgba(var(--color-accent-rgb), 0.3);
 }
 
 .members-invite:hover {
-    color: #43f3ff;
-    border-color: rgba(67, 243, 255, 0.7);
-    background: rgba(67, 243, 255, 0.15);
-    text-shadow: 0 0 8px rgba(67, 243, 255, 0.4);
+    color: var(--color-accent);
+    border-color: rgba(var(--color-accent-rgb), 0.7);
+    background: rgba(var(--color-accent-rgb), 0.15);
+    text-shadow: 0 0 8px rgba(var(--color-accent-rgb), 0.4);
     transform: scale(1.1);
 }
 
 :deep(.el-switch) {
-    --el-switch-on-color: #43f3ff;
+    --el-switch-on-color: var(--color-accent);
     --el-switch-off-color: rgba(255, 255, 255, 0.2);
-    --el-switch-core-border-color: rgba(67, 243, 255, 0.3);
+    --el-switch-core-border-color: rgba(var(--color-accent-rgb), 0.3);
 }
 
 :deep(.el-switch.is-checked .el-switch__core) {
-    box-shadow: 0 0 12px rgba(67, 243, 255, 0.5);
+    box-shadow: 0 0 12px rgba(var(--color-accent-rgb), 0.5);
 }
 </style>
 
 <style>
 /* 修改群名称弹窗（全局样式，因为 ElMessageBox 不受 scoped 影响） */
 .edit-group-name-dialog {
-    background: rgba(28, 38, 50, 0.97) !important;
-    border: 1px solid rgba(67, 243, 255, 0.25) !important;
+    background: var(--color-bg-deep) !important;
+    border: 1px solid rgba(var(--color-accent-rgb), 0.25) !important;
     border-radius: 14px !important;
     backdrop-filter: blur(20px) !important;
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35),
-        0 0 20px rgba(67, 243, 255, 0.08) !important;
+        0 0 20px rgba(var(--color-accent-rgb), 0.08) !important;
     padding: 0 !important;
     overflow: hidden;
 }
 
 .edit-group-name-dialog .el-message-box__header {
     padding: 20px 24px 12px !important;
-    border-bottom: 1px solid rgba(67, 243, 255, 0.1) !important;
+    border-bottom: 1px solid rgba(var(--color-accent-rgb), 0.1) !important;
 }
 
 .edit-group-name-dialog .el-message-box__title {
-    color: rgba(255, 255, 255, 0.95) !important;
+    color: var(--color-text-primary) !important;
     font-size: 16px !important;
     font-weight: 600 !important;
 }
 
 .edit-group-name-dialog .el-message-box__headerbtn .el-message-box__close {
-    color: rgba(255, 255, 255, 0.5) !important;
+    color: var(--color-text-muted) !important;
 }
 
 .edit-group-name-dialog .el-message-box__headerbtn:hover .el-message-box__close {
-    color: #43f3ff !important;
+    color: var(--color-accent) !important;
 }
 
 .edit-group-name-dialog .el-message-box__content {
     padding: 16px 24px 20px !important;
-    color: rgba(255, 255, 255, 0.7) !important;
+    color: var(--color-text-secondary) !important;
 }
 
 .edit-group-name-dialog .el-message-box__message p {
-    color: rgba(255, 255, 255, 0.7) !important;
+    color: var(--color-text-secondary) !important;
     font-size: 14px !important;
 }
 
 .edit-group-name-dialog .el-message-box__input .el-input__wrapper {
-    background: rgba(35, 45, 60, 0.8) !important;
-    border: 1px solid rgba(67, 243, 255, 0.25) !important;
+    background: rgba(var(--color-surface-rgb), 0.8) !important;
+    border: 1px solid rgba(var(--color-accent-rgb), 0.25) !important;
     border-radius: 8px !important;
     box-shadow: none !important;
 }
 
 .edit-group-name-dialog .el-message-box__input .el-input__wrapper.is-focus {
-    border-color: #43f3ff !important;
-    box-shadow: 0 0 8px rgba(67, 243, 255, 0.2) !important;
+    border-color: var(--color-accent) !important;
+    box-shadow: 0 0 8px rgba(var(--color-accent-rgb), 0.2) !important;
 }
 
 .edit-group-name-dialog .el-message-box__input .el-input__inner {
-    color: rgba(255, 255, 255, 0.9) !important;
+    color: var(--color-text-primary) !important;
 }
 
 .edit-group-name-dialog .el-message-box__btns {
@@ -760,67 +760,67 @@ watch(() => props.conversation.id, async () => {
 }
 
 .edit-group-name-dialog .el-message-box__btns .el-button--default {
-    background: rgba(35, 45, 60, 0.8) !important;
-    border: 1px solid rgba(67, 243, 255, 0.25) !important;
-    color: rgba(255, 255, 255, 0.8) !important;
+    background: rgba(var(--color-surface-rgb), 0.8) !important;
+    border: 1px solid rgba(var(--color-accent-rgb), 0.25) !important;
+    color: var(--color-text-secondary) !important;
 }
 
 .edit-group-name-dialog .el-message-box__btns .el-button--default:hover {
-    background: rgba(67, 243, 255, 0.1) !important;
-    border-color: rgba(67, 243, 255, 0.4) !important;
-    color: #43f3ff !important;
+    background: rgba(var(--color-accent-rgb), 0.1) !important;
+    border-color: rgba(var(--color-accent-rgb), 0.4) !important;
+    color: var(--color-accent) !important;
 }
 
 .edit-group-name-dialog .el-message-box__btns .el-button--primary {
-    background: rgba(67, 243, 255, 0.2) !important;
-    border: 1px solid rgba(67, 243, 255, 0.5) !important;
-    color: #43f3ff !important;
+    background: rgba(var(--color-accent-rgb), 0.2) !important;
+    border: 1px solid rgba(var(--color-accent-rgb), 0.5) !important;
+    color: var(--color-accent) !important;
 }
 
 .edit-group-name-dialog .el-message-box__btns .el-button--primary:hover {
-    background: rgba(67, 243, 255, 0.35) !important;
-    border-color: rgba(67, 243, 255, 0.7) !important;
-    box-shadow: 0 0 12px rgba(67, 243, 255, 0.25) !important;
+    background: rgba(var(--color-accent-rgb), 0.35) !important;
+    border-color: rgba(var(--color-accent-rgb), 0.7) !important;
+    box-shadow: 0 0 12px rgba(var(--color-accent-rgb), 0.25) !important;
 }
 
 /* 群操作确认弹窗 */
 .group-action-confirm-dialog {
-    background: rgba(28, 38, 50, 0.97) !important;
-    border: 1px solid rgba(67, 243, 255, 0.25) !important;
+    background: var(--color-bg-deep) !important;
+    border: 1px solid rgba(var(--color-accent-rgb), 0.25) !important;
     border-radius: 14px !important;
     backdrop-filter: blur(20px) !important;
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35),
-        0 0 20px rgba(67, 243, 255, 0.08) !important;
+        0 0 20px rgba(var(--color-accent-rgb), 0.08) !important;
     padding: 0 !important;
     overflow: hidden;
 }
 
 .group-action-confirm-dialog .el-message-box__header {
     padding: 20px 24px 12px !important;
-    border-bottom: 1px solid rgba(67, 243, 255, 0.1) !important;
+    border-bottom: 1px solid rgba(var(--color-accent-rgb), 0.1) !important;
 }
 
 .group-action-confirm-dialog .el-message-box__title {
-    color: rgba(255, 255, 255, 0.95) !important;
+    color: var(--color-text-primary) !important;
     font-size: 16px !important;
     font-weight: 600 !important;
 }
 
 .group-action-confirm-dialog .el-message-box__headerbtn .el-message-box__close {
-    color: rgba(255, 255, 255, 0.5) !important;
+    color: var(--color-text-muted) !important;
 }
 
 .group-action-confirm-dialog .el-message-box__headerbtn:hover .el-message-box__close {
-    color: #43f3ff !important;
+    color: var(--color-accent) !important;
 }
 
 .group-action-confirm-dialog .el-message-box__content {
     padding: 16px 24px 20px !important;
-    color: rgba(255, 255, 255, 0.7) !important;
+    color: var(--color-text-secondary) !important;
 }
 
 .group-action-confirm-dialog .el-message-box__message p {
-    color: rgba(255, 255, 255, 0.7) !important;
+    color: var(--color-text-secondary) !important;
     font-size: 14px !important;
 }
 
@@ -843,26 +843,26 @@ watch(() => props.conversation.id, async () => {
 }
 
 .group-action-confirm-dialog .el-message-box__btns .el-button--default {
-    background: rgba(35, 45, 60, 0.8) !important;
-    border: 1px solid rgba(67, 243, 255, 0.25) !important;
-    color: rgba(255, 255, 255, 0.8) !important;
+    background: rgba(var(--color-surface-rgb), 0.8) !important;
+    border: 1px solid rgba(var(--color-accent-rgb), 0.25) !important;
+    color: var(--color-text-secondary) !important;
 }
 
 .group-action-confirm-dialog .el-message-box__btns .el-button--default:hover {
-    background: rgba(67, 243, 255, 0.1) !important;
-    border-color: rgba(67, 243, 255, 0.4) !important;
-    color: #43f3ff !important;
+    background: rgba(var(--color-accent-rgb), 0.1) !important;
+    border-color: rgba(var(--color-accent-rgb), 0.4) !important;
+    color: var(--color-accent) !important;
 }
 
 .group-action-confirm-dialog .el-message-box__btns .el-button--primary {
-    background: rgba(67, 243, 255, 0.2) !important;
-    border: 1px solid rgba(67, 243, 255, 0.5) !important;
-    color: #43f3ff !important;
+    background: rgba(var(--color-accent-rgb), 0.2) !important;
+    border: 1px solid rgba(var(--color-accent-rgb), 0.5) !important;
+    color: var(--color-accent) !important;
 }
 
 .group-action-confirm-dialog .el-message-box__btns .el-button--primary:hover {
-    background: rgba(67, 243, 255, 0.35) !important;
-    border-color: rgba(67, 243, 255, 0.7) !important;
-    box-shadow: 0 0 12px rgba(67, 243, 255, 0.25) !important;
+    background: rgba(var(--color-accent-rgb), 0.35) !important;
+    border-color: rgba(var(--color-accent-rgb), 0.7) !important;
+    box-shadow: 0 0 12px rgba(var(--color-accent-rgb), 0.25) !important;
 }
 </style>

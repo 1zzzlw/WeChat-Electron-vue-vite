@@ -113,35 +113,35 @@ const confirmInvite = async () => {
 
 <style scoped>
 :deep(.invite-dialog) {
-    --el-dialog-bg-color: rgba(35, 45, 60, 0.85) !important;
+    --el-dialog-bg-color: rgba(var(--color-surface-rgb), 0.85) !important;
     background-color: var(--el-dialog-bg-color) !important;
     backdrop-filter: blur(20px) !important;
-    border: 1px solid rgba(67, 243, 255, 0.4) !important;
+    border: 1px solid rgba(var(--color-accent-rgb), 0.4) !important;
     border-radius: 12px !important;
-    box-shadow: 0 8px 32px rgba(67, 243, 255, 0.2) !important;
+    box-shadow: 0 8px 32px rgba(var(--color-accent-rgb), 0.2) !important;
     overflow: hidden !important;
 }
 
 :deep(.invite-dialog .el-dialog__header) {
-    border-bottom: 1px solid rgba(67, 243, 255, 0.2) !important;
+    border-bottom: 1px solid rgba(var(--color-accent-rgb), 0.2) !important;
     padding: 16px 20px !important;
     margin: 0 !important;
 }
 
 :deep(.invite-dialog .el-dialog__title) {
-    color: #43f3ff !important;
+    color: var(--color-accent) !important;
     font-weight: 600 !important;
     font-size: 16px !important;
-    text-shadow: 0 0 8px rgba(67, 243, 255, 0.3) !important;
+    text-shadow: 0 0 8px rgba(var(--color-accent-rgb), 0.3) !important;
 }
 
 :deep(.invite-dialog .el-dialog__headerbtn .el-dialog__close) {
-    color: rgba(255, 255, 255, 0.5) !important;
+    color: var(--color-text-muted) !important;
     transition: color 0.2s ease !important;
 }
 
 :deep(.invite-dialog .el-dialog__headerbtn .el-dialog__close:hover) {
-    color: #43f3ff !important;
+    color: var(--color-accent) !important;
 }
 
 :deep(.invite-dialog .el-dialog__body) {
@@ -149,7 +149,7 @@ const confirmInvite = async () => {
 }
 
 :deep(.invite-dialog .el-dialog__footer) {
-    border-top: 1px solid rgba(67, 243, 255, 0.2) !important;
+    border-top: 1px solid rgba(var(--color-accent-rgb), 0.2) !important;
     padding: 12px 20px !important;
     display: flex !important;
     justify-content: flex-end !important;
@@ -158,29 +158,29 @@ const confirmInvite = async () => {
 
 :deep(.invite-dialog .el-dialog__footer .el-button) {
     padding: 8px 20px !important;
-    border: 1px solid rgba(67, 243, 255, 0.3) !important;
-    background: rgba(35, 45, 60, 0.7) !important;
-    color: #f0f0f0 !important;
+    border: 1px solid rgba(var(--color-accent-rgb), 0.3) !important;
+    background: rgba(var(--color-surface-rgb), 0.7) !important;
+    color: var(--color-text-primary) !important;
     border-radius: 6px !important;
     transition: all 0.2s ease !important;
 }
 
 :deep(.invite-dialog .el-dialog__footer .el-button:hover) {
-    background: rgba(67, 243, 255, 0.15) !important;
-    border-color: rgba(67, 243, 255, 0.5) !important;
-    color: #43f3ff !important;
+    background: rgba(var(--color-accent-rgb), 0.15) !important;
+    border-color: rgba(var(--color-accent-rgb), 0.5) !important;
+    color: var(--color-accent) !important;
 }
 
 :deep(.invite-dialog .el-dialog__footer .el-button--primary) {
-    background: rgba(67, 243, 255, 0.2) !important;
-    border-color: rgba(67, 243, 255, 0.5) !important;
-    color: #43f3ff !important;
+    background: rgba(var(--color-accent-rgb), 0.2) !important;
+    border-color: rgba(var(--color-accent-rgb), 0.5) !important;
+    color: var(--color-accent) !important;
 }
 
 :deep(.invite-dialog .el-dialog__footer .el-button--primary:hover) {
-    background: rgba(67, 243, 255, 0.35) !important;
-    border-color: rgba(67, 243, 255, 0.7) !important;
-    box-shadow: 0 0 12px rgba(67, 243, 255, 0.3) !important;
+    background: rgba(var(--color-accent-rgb), 0.35) !important;
+    border-color: rgba(var(--color-accent-rgb), 0.7) !important;
+    box-shadow: 0 0 12px rgba(var(--color-accent-rgb), 0.3) !important;
 }
 
 :deep(.invite-dialog .el-dialog__footer .el-button.is-disabled) {
@@ -189,13 +189,13 @@ const confirmInvite = async () => {
 }
 
 :deep(.invite-dialog .el-checkbox__input .el-checkbox__inner) {
-    background: rgba(35, 45, 60, 0.8) !important;
-    border: 1px solid rgba(67, 243, 255, 0.4) !important;
+    background: rgba(var(--color-surface-rgb), 0.8) !important;
+    border: 1px solid rgba(var(--color-accent-rgb), 0.4) !important;
 }
 
 :deep(.invite-dialog .el-checkbox__input.is-checked .el-checkbox__inner) {
-    background: rgba(67, 243, 255, 0.8) !important;
-    border-color: #43f3ff !important;
+    background: rgba(var(--color-accent-rgb), 0.8) !important;
+    border-color: var(--color-accent) !important;
 }
 
 :deep(.invite-dialog .el-checkbox__input.is-checked .el-checkbox__inner::after) {
@@ -220,13 +220,13 @@ const confirmInvite = async () => {
 }
 
 .invite-friend-item:hover {
-    background: rgba(67, 243, 255, 0.08);
-    border-color: rgba(67, 243, 255, 0.15);
+    background: rgba(var(--color-accent-rgb), 0.08);
+    border-color: rgba(var(--color-accent-rgb), 0.15);
 }
 
 .invite-friend-item.selected {
-    background: rgba(67, 243, 255, 0.12);
-    border-color: rgba(67, 243, 255, 0.3);
+    background: rgba(var(--color-accent-rgb), 0.12);
+    border-color: rgba(var(--color-accent-rgb), 0.3);
 }
 
 .invite-friend-avatar {
@@ -234,20 +234,20 @@ const confirmInvite = async () => {
     height: 40px;
     border-radius: 10px;
     object-fit: cover;
-    border: 1px solid rgba(67, 243, 255, 0.3);
+    border: 1px solid rgba(var(--color-accent-rgb), 0.3);
     flex-shrink: 0;
     transition: all 0.2s ease;
 }
 
 .invite-friend-item:hover .invite-friend-avatar {
-    border-color: rgba(67, 243, 255, 0.6);
-    box-shadow: 0 0 8px rgba(67, 243, 255, 0.2);
+    border-color: rgba(var(--color-accent-rgb), 0.6);
+    box-shadow: 0 0 8px rgba(var(--color-accent-rgb), 0.2);
 }
 
 .invite-friend-name {
     flex: 1;
     font-size: 14px;
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--color-text-primary);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -258,7 +258,7 @@ const confirmInvite = async () => {
     justify-content: center;
     align-items: center;
     height: 120px;
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--color-text-muted);
     font-size: 14px;
 }
 
@@ -271,7 +271,7 @@ const confirmInvite = async () => {
 }
 
 .invite-friend-list::-webkit-scrollbar-thumb {
-    background: rgba(67, 243, 255, 0.3);
+    background: rgba(var(--color-accent-rgb), 0.3);
     border-radius: 2px;
 }
 </style>

@@ -170,7 +170,7 @@ const applyInfo = computed(() => userApplyStore.getUserApplyMap(route.query.appl
   background: rgba(70, 100, 130, 0.2);
   backdrop-filter: blur(12px);
   transition: all 0.2s ease;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--color-border-subtle);
   border-radius: 15px;
   -webkit-app-region: no-drag;
 }
@@ -188,15 +188,15 @@ const applyInfo = computed(() => userApplyStore.getUserApplyMap(route.query.appl
   align-items: center;
   padding-left: 40px;
   gap: 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--color-border-subtle);
+  background: rgba(var(--color-surface-rgb), 0.4);
 }
 
 .img {
   width: 100px;
   height: 100px;
   border-radius: 10px;
-  border: 3px solid rgba(255, 255, 255, 0.3);
+  border: 3px solid var(--color-border-subtle);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   transition: all 0.2s ease;
 }
@@ -207,7 +207,7 @@ const applyInfo = computed(() => userApplyStore.getUserApplyMap(route.query.appl
 }
 
 h1 {
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--color-text-primary);
   font-size: 28px;
   font-weight: 600;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
@@ -220,8 +220,8 @@ h1 {
   position: relative;
   justify-content: center;
   align-items: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--color-border-subtle);
+  background: rgba(var(--color-surface-rgb), 0.4);
 }
 
 .title {
@@ -230,13 +230,13 @@ h1 {
   left: 0;
   font-size: 20px;
   font-weight: bold;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--color-text-primary);
   padding: 10px;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .info-mid p {
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--color-text-secondary);
   font-size: 16px;
   padding: 0 40px;
   line-height: 1.6;
@@ -248,7 +248,7 @@ h1 {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(var(--color-surface-rgb), 0.4);
 }
 
 .btn-group {
@@ -272,18 +272,18 @@ h1 {
 .el-button--success {
   background-color: rgba(80, 150, 220, 0.8);
   border-color: rgba(80, 150, 220, 0.8);
-  color: #fff;
+  color: var(--color-text-primary);
   border-radius: 8px;
   transition: all 0.2s ease;
   --el-button-disabled-bg-color: rgba(80, 150, 220, 0.4);
   --el-button-disabled-border-color: rgba(80, 150, 220, 0.4);
-  --el-button-disabled-text-color: rgba(255, 255, 255, 0.7);
+  --el-button-disabled-text-color: var(--color-text-secondary);
 }
 
 .el-button--success.is-disabled {
   background-color: rgba(80, 150, 220, 0.4);
   border-color: rgba(80, 150, 220, 0.5);
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--color-text-secondary);
   cursor: not-allowed;
   transform: none;
 }
@@ -295,20 +295,20 @@ h1 {
 }
 
 .el-button--danger {
-  background-color: rgba(70, 90, 120, 0.8);
+  background-color: rgba(var(--color-surface-rgb), 0.8);
   border-color: rgba(70, 90, 120, 0.8);
-  color: #fff;
+  color: var(--color-text-primary);
   border-radius: 8px;
   transition: all 0.2s ease;
-  --el-button-disabled-bg-color: rgba(70, 90, 120, 0.4);
+  --el-button-disabled-bg-color: rgba(var(--color-surface-rgb), 0.55);
   --el-button-disabled-border-color: rgba(70, 90, 120, 0.4);
-  --el-button-disabled-text-color: rgba(255, 255, 255, 0.7);
+  --el-button-disabled-text-color: var(--color-text-secondary);
 }
 
 .el-button--danger.is-disabled {
-  background-color: rgba(70, 90, 120, 0.4);
+  background-color: rgba(var(--color-surface-rgb), 0.55);
   border-color: rgba(70, 90, 120, 0.5);
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--color-text-secondary);
   cursor: not-allowed;
   transform: none;
 }

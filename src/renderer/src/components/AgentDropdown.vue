@@ -240,9 +240,9 @@ onBeforeUnmount(() => {
 
 .agent-dropdown-trigger.is-compact:hover,
 .agent-dropdown-trigger.is-compact[aria-expanded='true'] {
-  color: rgba(205, 212, 221, 0.82);
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(255, 255, 255, 0.08);
+  color: var(--color-text-secondary);
+  background: rgba(var(--color-surface-rgb), 0.4);
+  border-color: var(--color-border-subtle);
 }
 
 .agent-dropdown-menu {
@@ -252,8 +252,8 @@ onBeforeUnmount(() => {
   max-width: min(320px, calc(100vw - 20px));
   padding: 6px;
   flex-direction: column;
-  background: rgba(47, 58, 72, 0.98);
-  border: 1px solid rgba(255, 255, 255, 0.13);
+  background: var(--color-bg-deep);
+  border: 1px solid var(--color-border-subtle);
   border-radius: 11px;
   box-shadow: 0 18px 46px rgba(7, 12, 18, 0.38), inset 0 1px rgba(255, 255, 255, 0.035);
   backdrop-filter: blur(22px);
@@ -267,7 +267,7 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 9px;
   padding: 7px 9px;
-  color: rgba(239, 244, 250, 0.82);
+  color: var(--color-text-secondary);
   font: inherit;
   text-align: left;
   background: transparent;
@@ -279,8 +279,8 @@ onBeforeUnmount(() => {
 
 .agent-dropdown-item:hover,
 .agent-dropdown-item.is-selected {
-  color: rgba(250, 252, 255, 0.98);
-  background: rgba(255, 255, 255, 0.075);
+  color: var(--color-text-primary);
+  background: rgba(var(--color-surface-rgb), 0.4);
 }
 
 .agent-dropdown-item.is-divided {
@@ -293,7 +293,7 @@ onBeforeUnmount(() => {
   bottom: calc(100% + 2px);
   left: 4px;
   height: 1px;
-  background: rgba(255, 255, 255, 0.09);
+  background: rgba(var(--color-surface-rgb), 0.4);
   content: '';
 }
 
@@ -339,7 +339,7 @@ onBeforeUnmount(() => {
 .agent-dropdown-item-copy small {
   margin-top: 1px;
   overflow: hidden;
-  color: rgba(204, 214, 226, 0.46);
+  color: var(--color-text-muted);
   font-size: 9px;
   line-height: 1.45;
   white-space: nowrap;
