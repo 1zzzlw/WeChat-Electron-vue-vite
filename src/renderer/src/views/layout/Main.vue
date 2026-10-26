@@ -11,32 +11,32 @@
           </template>
         </el-popover>
         <UserOnlineStatus />
-        <router-link tag="div" to="/messageList" class="left-icon">
+        <router-link to="/messageList" class="left-icon">
           <el-icon size="30">
             <ChatRound />
           </el-icon>
         </router-link>
-        <router-link tag="div" to="/list" class="left-icon">
+        <router-link to="/list" class="left-icon">
           <el-icon size="30">
             <UserFilled />
           </el-icon>
         </router-link>
-        <router-link tag="div" to="/aiWorkspace" class="left-icon" title="AI 工作台">
+        <router-link to="/aiWorkspace" class="left-icon" title="AI 工作台">
           <el-icon size="30">
             <MagicStick />
           </el-icon>
         </router-link>
-        <router-link tag="div" to="/collectList" class="left-icon">
+        <router-link to="/collectList" class="left-icon">
           <el-icon size="30">
             <Star />
           </el-icon>
         </router-link>
-        <router-link tag="div" to="/moments" class="left-icon">
+        <router-link to="/moments" class="left-icon">
           <div class="iconfont icon-pengyouquan"></div>
         </router-link>
       </div>
       <div class="main-count-left-bottom">
-        <router-link tag="div" to="/wallet" class="left-icon">
+        <router-link to="/wallet" class="left-icon">
           <el-icon size="28">
             <Wallet />
           </el-icon>

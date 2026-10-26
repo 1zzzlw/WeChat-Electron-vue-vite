@@ -151,7 +151,7 @@ import { useChatScroll } from '@/composables/useChatScroll'
 import SendRedPacket from '@/components/SendRedPacket.vue'
 import { sendRedPacketApi } from '@/api/RedPacket'
 
-// ==================== Props ====================
+// Props
 const props = withDefaults(defineProps<{
   conversation: Conversation
   userId: string | number
@@ -172,7 +172,7 @@ const emit = defineEmits<{
   (e: 'red-packet'): void
 }>()
 
-// ==================== Stores ====================
+// Stores
 const route = useRoute()
 const messageStore = messageInfo()
 const conversationStore = conversationInfo()
@@ -180,23 +180,24 @@ const groupMemberStore = groupMemberInfo()
 const fileStatusListInfoStore = fileStatusListInfo()
 const friendInfoStore = friendInfo()
 
-// ==================== 消息分页配置 ====================
+// 消息分页配置
 const messagePageInfo = {
   pageTotal: 0,
   pageNO: 0,
   maxMessageId: null as string | null,
   noData: false
 }
+let messageLoadVersion = 0
 
-// ==================== 响应式状态 ====================
+// 响应式状态
 const messageText = ref('')
 const fileUrl = ref('')
 const scrollbarRef = ref()
-let fileInfoList = ref<FileBaseInfo[]>([])
+const fileInfoList = ref<FileBaseInfo[]>([])
 const quoteMessage = ref<Message | null>(null)
 const showRedPacketDialog = ref(false)
 
-// ==================== 计算属性 ====================
+// 计算属性
 const effectiveConvId = computed(() => {
   return props.convId || (route.query.conversationId as string)
 })
@@ -206,7 +207,14 @@ const messageArr = computed(() => {
   return messageStore.messageMap[convId] || []
 })
 
-// ==================== 头像/名称辅助 ====================
+let retainedConversationId: string | undefined
+watch(effectiveConvId, (conversationId) => {
+  if (retainedConversationId) messageStore.releaseConversation(retainedConversationId)
+  retainedConversationId = conversationId || undefined
+  if (retainedConversationId) messageStore.retainConversation(retainedConversationId)
+}, { immediate: true, flush: 'sync' })
+
+// 头像/名称辅助
 function getAvatarForSender(senderId: string | number): string {
   if (props.getSenderAvatar) return props.getSenderAvatar(senderId)
   return props.conversation.avatar || ''
@@ -222,7 +230,7 @@ function getNameForSender(senderId: string | number): string | undefined {
   return undefined
 }
 
-// ==================== 红包操作 ====================
+// 红包操作
 const handleSendRedPacket = async (data: { amount: number; count: number; blessing: string; type: number }) => {
   const convId = effectiveConvId.value
   const isPrivate = props.conversation.type === 0
@@ -249,7 +257,11 @@ const handleSendRedPacket = async (data: { amount: number; count: number; blessi
       greeting: data.blessing
     })
     // axios拦截器已处理ID字符串化，直接使用
-    const redPacketId = res.data?.id || res.id || ''
+    const redPacketId = res.data?.id
+    if (!redPacketId) {
+      ElMessage.error(res.msg || '红包发送失败')
+      return
+    }
     messagePack.redPacketId = String(redPacketId)
 
     if (!isPrivate) {
@@ -269,7 +281,7 @@ const handleSendRedPacket = async (data: { amount: number; count: number; blessi
   }
 }
 
-// ==================== 文件操作 ====================
+// 文件操作
 const selectFile = async () => {
   const file = await (window as any).uploadFileApi.selectFile('uploadFile')
   if (!file) return
@@ -293,12 +305,12 @@ const handleDeleteFile = (fileId: string) => {
   fileInfoList.value = fileInfoList.value.filter(file => file.fileId != fileId)
 }
 
-// ==================== Emoji ====================
+// Emoji
 const handlerEmoji = (emoji: any) => {
   messageText.value += emoji
 }
 
-// ==================== 截图 ====================
+// 截图
 const captureBtn = () => {
   ; (window as any).chatToolApi.openCapture()
     ; (window as any).chatToolApi.sendImageToMain((fileInfo: any) => {
@@ -320,7 +332,7 @@ const captureBtn = () => {
     })
 }
 
-// ==================== 发送消息 ====================
+// 发送消息
 const handleEnterMessage = (e: KeyboardEvent) => {
   if (e.shiftKey) return
   e.preventDefault()
@@ -379,7 +391,7 @@ const sendMessage = async () => {
     quoteMessage.value = null
   }
 
-  // ---------- 处理文本消息 ----------
+  // 处理文本消息
   if (content !== '') {
     messageText.value = ''
     const messagePack = createMessagePack(receiverId as string, convId, 1, content, null)
@@ -447,7 +459,7 @@ const updateConversationInfo = (messagePack: Message) => {
   })
 }
 
-// ==================== 引用相关 ====================
+// 引用相关
 const getMessageSnapshot = (msg: Message): string => {
   if (!msg) return ''
   if (msg.msgType === 1) return msg.content?.substring(0, 60) || ''
@@ -469,7 +481,7 @@ const getQuoteDisplayText = (message: Message) => {
   return getMessageSnapshot(quoted)
 }
 
-// ==================== 消息包装 ====================
+// 消息包装
 function createMessagePack(receiverId: string | number, convId: string, msgType: number, content: string, file: any) {
   let fileId = ''
   let fileName = ''
@@ -506,7 +518,7 @@ function createMessagePack(receiverId: string | number, convId: string, msgType:
   return messagePack
 }
 
-// ==================== 右键菜单 ====================
+// 右键菜单
 const handleChoice = async (item: any, messageId: string, messageContent: string, msgType: number, remoteUrl: any, fileName: any) => {
   switch (item.label) {
     case '复制': {
@@ -618,17 +630,23 @@ const handleChoice = async (item: any, messageId: string, messageContent: string
 const { scrollToBottom, handleScroll, loading, noMore, isNearBottom } = useChatScroll(
   scrollbarRef,
   {
-    canLoadMore: () => messagePageInfo.pageNO > 0,
-    onLoadMore: async () => { await loadMessage(props.conversation.id) },
+    canLoadMore: () => !noMore.value && messagePageInfo.pageNO > 0,
+    onLoadMore: async () => { await loadMessage(effectiveConvId.value) },
     getFirstMessageId: () => messageArr.value.at(0)?.id
   }
 )
 
 // 加载数据 
 async function loadMessage(newConversationId: any) {
-  const result = await getMessageList(newConversationId, messagePageInfo)
+  const version = messageLoadVersion
+  const pageInfo = { ...messagePageInfo }
+  const result = await getMessageList(newConversationId, pageInfo)
+  // 切换会话或卸载后，旧请求不能回写缓存及当前分页状态。
+  if (version !== messageLoadVersion || newConversationId !== effectiveConvId.value) return
+  Object.assign(messagePageInfo, pageInfo)
   const messageList = result.messageList
   const isFromServer = result.isFromServer
+  if (isFromServer && messageList.length === 0) noMore.value = true
 
   if (messageList.length > 0) {
     messageList.forEach((messagePcak: Message) => {
@@ -671,7 +689,7 @@ const getGroupMemberList = async () => {
   })
 }
 
-// ==================== 监听会话切换 ====================
+// 监听会话切换
 // 同时监听 route query 和 conversation prop，确保 store 延迟加载时也能正确初始化
 watch(
   [() => effectiveConvId.value, () => props.conversation?.id],
@@ -680,8 +698,9 @@ watch(
 
     // 如果 conversation prop 还没就绪（store 延迟加载），跳过本次
     // 当 prop 就绪后会再次触发 watch
-    if (!props.conversation || !props.conversation.id) return
+    if (!props.conversation || props.conversation.id !== newConversationId) return
 
+    const version = ++messageLoadVersion
     try {
       messageStore.clearConversationMessages(newConversationId as string)
 
@@ -689,11 +708,13 @@ watch(
       messagePageInfo.pageNO = 0
       messagePageInfo.maxMessageId = null
       messagePageInfo.noData = false
+      noMore.value = false
 
       fileInfoList.value.length = 0
       quoteMessage.value = null
 
       await loadMessage(newConversationId)
+      if (version !== messageLoadVersion || newConversationId !== effectiveConvId.value) return
 
       // 群聊时加载群成员列表
       if (props.conversation.type === 1) {
@@ -701,7 +722,7 @@ watch(
       }
 
       await nextTick()
-      scrollToBottom()
+      if (version === messageLoadVersion && newConversationId === effectiveConvId.value) scrollToBottom()
     } catch (error) {
       console.error('加载新会话消息失败', error)
     }
@@ -709,15 +730,17 @@ watch(
   { immediate: true }
 )
 
-// ==================== 组件卸载 ====================
+// 组件卸载
 onUnmounted(() => {
+  messageLoadVersion++
+  if (retainedConversationId) messageStore.releaseConversation(retainedConversationId)
   messagePageInfo.pageTotal = 0
   messagePageInfo.pageNO = 0
   messagePageInfo.maxMessageId = null
   messagePageInfo.noData = false
 })
 
-// ==================== 暴露给父组件 ====================
+// 暴露给父组件
 defineExpose({
   sendMessage,
   scrollToBottom,

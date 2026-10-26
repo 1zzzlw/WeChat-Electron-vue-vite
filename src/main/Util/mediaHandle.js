@@ -132,7 +132,7 @@ const generateGroupAvatar = async () => {
  * 更新群聊头像
  */
 const updateGroupAvatar = async (avatarUrlList) => {
-    const localPath = store.get('storeLocation')
+    let localPath = store.get('storeLocation')
     if (localPath === undefined) {
         // 不存在
         localPath = app.getPath('pictures')

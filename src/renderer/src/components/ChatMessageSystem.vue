@@ -39,12 +39,13 @@ const displayContent = computed(() => {
 
     const isMe = (id: any) => String(id) === String(currentUserId.value)
     // 优先使用 JSON 里的 tpl 字段
-    let text = info.tpl || ''
+    const text = info.tpl || ''
 
     switch (subType) {
-        case 10: // 撤回
+        case 10: { // 撤回
             const name = isMe(senderId) ? '你' : (info.opName || '对方')
             return (text || '{name} 撤回了一条消息').replace('{name}', name)
+        }
 
         case 20: // 好友成功
             return text || '你们已成为好友，现在可以开始聊天了！'
@@ -52,17 +53,20 @@ const displayContent = computed(() => {
         case 22: // 拉黑拦截
             return text || '消息已发出，但被对方拒收了。'
 
-        case 30: // 入群
+        case 30: { // 入群
             const joiner = isMe(info.targetId) ? '你' : info.targetName
             return (text || '{name} 加入了群聊').replace('{name}', joiner)
+        }
 
-        case 31: // 踢人
+        case 31: { // 踢人
             const kicked = isMe(info.targetId) ? '你' : info.targetName
             return (text || '{name} 被移出了群聊').replace('{name}', kicked)
+        }
 
-        case 32: // 退群
+        case 32: { // 退群
             const leaver = isMe(senderId) ? '你' : info.opName
             return (text || '{name} 退出了群聊').replace('{name}', leaver)
+        }
 
         case 33: // 解散
             return text || '该群聊已被解散'

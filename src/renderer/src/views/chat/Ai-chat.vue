@@ -572,7 +572,7 @@ const toModelOption = (config: SavedModelConfig): ModelOption => ({
 const loadModelConfigs = async () => {
   try {
     const userId = await getCurrentUserId()
-    const configs = await getModelConfigs(userId) as SavedModelConfig[]
+    const configs = await getModelConfigs(userId)
     const savedModels = configs.map(toModelOption)
 
     const activeModel = savedModels.find((model) => model.isActive)
@@ -655,8 +655,8 @@ const loadMessageHistory = async () => {
   try {
     const userId = await getCurrentUserId()
     const [savedConversations, savedMessages] = await Promise.all([
-      getAIConversations(userId) as Promise<SavedAIConversation[]>,
-      loadMessage(userId) as Promise<SavedAIMessage[]>
+      getAIConversations(userId),
+      loadMessage(userId)
     ])
     agentWorkspaceStore.setConversations(buildConversations(savedConversations, savedMessages))
     void scrollToBottom()
@@ -1092,7 +1092,7 @@ const handleModelConfigSubmit = async (config: AgentModelConfig) => {
       modelName: config.modelName,
       baseUrl: config.baseUrl || null,
       modelTemperature: config.modelTemperature
-    }) as { configId: number }
+    })
     await setStoredModelApiKey(userId, response.configId, config.apiKey)
 
     const model: ModelOption = {

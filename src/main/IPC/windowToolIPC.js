@@ -123,7 +123,7 @@ ipcMain.handle('window:info', () => {
   const cpuInfo = {
     cpuCores: os.cpus().length,
     cpuModel: os.cpus()[0]?.model || 'Unknown',
-    cpuSpeed: `${os.cpus()[0]?.speed} MHz` || 'Unknown',
+    cpuSpeed: os.cpus()[0]?.speed != null ? `${os.cpus()[0].speed} MHz` : 'Unknown',
   }
 
   const totalMem = (os.totalmem() / 1024 / 1024 / 1024).toFixed(2)

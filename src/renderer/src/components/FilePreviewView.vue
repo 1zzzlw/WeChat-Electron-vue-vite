@@ -13,7 +13,7 @@
             <Close />
           </el-icon>
           <span class="pause"></span>
-          <img class="file-video" style="width: 100px; height: 100px" :src="fileInfo.base64"></img>
+          <img class="file-video" style="width: 100px; height: 100px" :src="fileInfo.base64" />
         </div>
         <div class=" file-item" v-else-if="fileInfo.fileType === 4">
           <el-icon class="close-icon" @click="closePreview(fileInfo.fileId)">

@@ -14,7 +14,7 @@ interface PendingMessageInfo {
 // reuse_if_exists 模式：如果消息已存在，则复用已有的消息（不重复添加）
 type EnqueueMode = 'append' | 'reuse_if_exists'
 
-// 每个会话最多缓存的消息数量，防止长期运行后内存无限增长
+// 未打开的会话只保留最新500条；打开的会话保留分页历史，离开后再回收。
 const MAX_MESSAGES_PER_CONVERSATION = 500
 
 export const messageInfo = defineStore('messageInfo', {
@@ -22,6 +22,7 @@ export const messageInfo = defineStore('messageInfo', {
     return {
       // 会话id当键，消息当值
       messageMap: {} as Record<string, Message[]>,
+      activeConversationViews: {} as Record<string, number>,
       fileMessgaeMap: {} as Record<string, Message>,
       // 发送中的消息：用于超时检测
       pendingMessages: new Map<string, PendingMessageInfo>(),
@@ -34,6 +35,18 @@ export const messageInfo = defineStore('messageInfo', {
     }
   },
   actions: {
+    retainConversation(conversationId: string) {
+      this.activeConversationViews[conversationId] = (this.activeConversationViews[conversationId] ?? 0) + 1
+    },
+    releaseConversation(conversationId: string) {
+      const remaining = (this.activeConversationViews[conversationId] ?? 0) - 1
+      if (remaining > 0) {
+        this.activeConversationViews[conversationId] = remaining
+      } else {
+        delete this.activeConversationViews[conversationId]
+        this._trimMessages(conversationId)
+      }
+    },
     loadMessageMap(conversationId: string, message: Message) {
       if (!this.messageMap[conversationId]) {
         this.messageMap[conversationId] = []
@@ -56,6 +69,7 @@ export const messageInfo = defineStore('messageInfo', {
       const newMessages = messages.filter(m => !m.id || !existingIds.has(m.id))
       // Prepend all messages at once instead of repeated unshift
       this.messageMap[conversationId] = [...newMessages, ...this.messageMap[conversationId]]
+      this._trimMessages(conversationId)
     },
     addMessageMap(conversationId: string, message: Message) {
       // 如果该会话ID还没有数组，先初始化一个空数组
@@ -73,6 +87,7 @@ export const messageInfo = defineStore('messageInfo', {
     },
 
     _trimMessages(conversationId: string) {
+      if (this.activeConversationViews[conversationId]) return
       const messages = this.messageMap[conversationId]
       if (messages && messages.length > MAX_MESSAGES_PER_CONVERSATION) {
         this.messageMap[conversationId] = messages.slice(-MAX_MESSAGES_PER_CONVERSATION)
@@ -95,9 +110,10 @@ export const messageInfo = defineStore('messageInfo', {
 
       // 将新消息添加到数组末尾
       messages.push(message)
+      this._trimMessages(conversationId)
 
       // 返回新消息在数组中的索引
-      return messages.length - 1
+      return this.messageMap[conversationId].length - 1
     },
 
     // ---- 通用“挂起 + 超时检测” ----

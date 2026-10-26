@@ -17,6 +17,12 @@
 - npm版本：10.9.4
 - node版本：v22.21.1
 
+## 代码检查与回归测试
+
+运行 `npm run check` 执行 ESLint、类型检查及回归测试。`npm run build` 会先完成这些检查再构建。
+
+命令、覆盖范围与验证结果见[代码检查与回归测试](docs/代码检查与回归测试.md)。
+
 ## 项目部署
 
 ### 部署中间件(MySQL + Redis + Nginx + MinIO + RabbitMQ)

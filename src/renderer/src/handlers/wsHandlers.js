@@ -108,16 +108,17 @@ const handleSystemMessage = (data) => {
         sendTime: ''
     }
     switch (subType) {
-        case SystemMsgSubType.RECALL:
+        case SystemMsgSubType.RECALL: {
             const messageId = content.operationData
             messageInfo().addMessageMap(conversationId, messagePack)
             messageInfo().deleteMessage(conversationId, messageId)
             deleteMessage(conversationId, messageId)
             break
+        }
         case SystemMsgSubType.FRIEND_ADDED:
             messageInfo().addMessageMap(conversationId, messagePack)
             break
-        case SystemMsgSubType.FRIEND_DELETED:
+        case SystemMsgSubType.FRIEND_DELETED: {
             const avatar = content.operationData
             const name = content.opName
 
@@ -137,7 +138,8 @@ const handleSystemMessage = (data) => {
                 },
             })
             break
-        case SystemMsgSubType.FRIEND_BLACKLIST:
+        }
+        case SystemMsgSubType.FRIEND_BLACKLIST: {
             // 被对方拉黑：更新本地好友状态为"对方拉黑了我" (3) + 通知
             const blacklistAvatar = content.operationData
             const blacklistName = content.opName
@@ -159,12 +161,13 @@ const handleSystemMessage = (data) => {
                 },
             })
             break
+        }
         case SystemMsgSubType.GROUP_JOINED:
             messageInfo().addMessageMap(conversationId, messagePack)
             break
         case SystemMsgSubType.GROUP_KICKED:
             break
-        case SystemMsgSubType.GROUP_LEAVED:
+        case SystemMsgSubType.GROUP_LEAVED: {
             messageInfo().addMessageMap(conversationId, messagePack)
             const avatarMember = content.operationData
             const nameMember = content.opName
@@ -181,6 +184,7 @@ const handleSystemMessage = (data) => {
                 },
             })
             break
+        }
         case SystemMsgSubType.GROUP_DISBANDED:
             messageInfo().addMessageMap(conversationId, messagePack)
 

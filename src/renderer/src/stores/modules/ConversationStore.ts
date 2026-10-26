@@ -1,6 +1,19 @@
 import { defineStore } from 'pinia'
 import { Conversation } from '@/types/conversation'
 import { checkCache } from '@/utils/cache'
+import dayjs from 'dayjs'
+
+// 兼容数据库时间戳、日期字符串及当前界面写入的时分秒格式。
+const toMessageTimestamp = (value: Conversation['latestMsgTime']) => {
+  if (value === undefined || value === '') return 0
+  const numeric = Number(value)
+  if (Number.isFinite(numeric)) return numeric
+  const text = String(value)
+  const date = /^\d{2}:\d{2}(:\d{2})?$/.test(text)
+    ? dayjs(`${dayjs().format('YYYY-MM-DD')}T${text}`)
+    : dayjs(text)
+  return date.isValid() ? date.valueOf() : 0
+}
 
 // 会话列表存储模块
 
@@ -51,7 +64,7 @@ export const conversationInfo = defineStore('conversationMap', {
         // Pinned conversations first
         if (a.isTop !== b.isTop) return (b.isTop ?? 0) - (a.isTop ?? 0)
         // Then sort by latest message time (descending)
-        return (b.latestMsgTime ?? 0) - (a.latestMsgTime ?? 0)
+        return toMessageTimestamp(b.latestMsgTime) - toMessageTimestamp(a.latestMsgTime)
       })
     },
     getGroupConversationInfo(conversationId: string) {

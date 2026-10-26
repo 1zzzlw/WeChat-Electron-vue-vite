@@ -1,10 +1,12 @@
 import request from '@/utils/axios/request'
 
+/** @returns {Promise<import('@/types/agentApi').SavedAIMessage[]>} */
 export const loadMessage = (userId, conversationId = undefined, limit = 500) =>
   request.get('/ai-message/loadMessage', {
     params: { userId, conversationId, limit }
   })
 
+/** @returns {Promise<import('@/types/agentApi').SavedAIConversation[]>} */
 export const getAIConversations = (userId) =>
   request.get('/ai-message/conversation/list', { params: { userId } })
 
@@ -14,9 +16,11 @@ export const renameAIConversation = (data) =>
 export const deleteAIConversation = (conversationId, userId) =>
   request.delete(`/ai-message/conversation/${conversationId}`, { params: { userId } })
 
+/** @returns {Promise<import('@/types/agentModel').SavedModelConfig[]>} */
 export const getModelConfigs = (userId) =>
   request.get('/ai-message/config/getConfig', { params: { userId } })
 
+/** @returns {Promise<{ configId: number }>} */
 export const addModelConfig = (data) => request.post('/ai-message/config/add_model', data)
 
 export const updateModelConfig = (data) => request.put('/ai-message/config/updateModel', data)

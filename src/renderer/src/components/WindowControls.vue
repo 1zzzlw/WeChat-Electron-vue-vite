@@ -14,8 +14,8 @@
 import '@/assets/iconfont/iconfont.css'
 import { ref } from 'vue'
 
-let isTop = ref(false)
-let isFullScreen = ref(false)
+const isTop = ref(false)
+const isFullScreen = ref(false)
 
 const props = defineProps({
   showSetTop: {

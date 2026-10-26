@@ -24,7 +24,7 @@ export const GroupNumberExitApi = (conversationId) => request.delete('/conversat
 export const sendGroupApplyApi = (formData) =>
   request.post(`/conversation/createGroup`, formData)
 
-// ==================== 群聊管理 API ====================
+// 群聊管理 API
 
 /** 获取群详情 */
 export const getGroupDetailApi = (conversationId) =>

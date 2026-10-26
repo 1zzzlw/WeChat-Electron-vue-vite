@@ -10,6 +10,9 @@ const IGNORED = new Set(['node_modules', '.git', 'out', 'dist', '.idea', '.vscod
 const MAX_READ_BYTES = 1000000
 const MAX_WRITE_CHARS = 2000000
 const MAX_LIST_ENTRIES = 500
+const MAX_SEARCH_RESULTS = 200       // 单次搜索最多返回200条匹配
+const SEARCH_CONCURRENCY = 4         // 同时读取的搜索文件数量
+const MAX_COMMAND_OUTPUT_LINES = 200 // 命令输出保留前后共200行，另加省略提示
 // 工作区别名 → 绝对路径的热缓存，真相源是 sqlite 的 workspace 表
 const workspaceRoots = new Map()
 

@@ -6,7 +6,7 @@
             </div>
             <div class="note-content-view">
                 <el-scrollbar ref="scrollbarRef" noresize style="height: 100%; width: 100%">
-                    <div v-for="note in favoritesList" class="note-item" @click="openInNote(note.id)">
+                    <div v-for="note in favoritesList" :key="note.id" class="note-item" @click="openInNote(note.id)">
                         <div class="note-title">{{ note.title }}</div>
                         <div class="note-content-html" v-html="note.content"></div>
                         <div class="time">

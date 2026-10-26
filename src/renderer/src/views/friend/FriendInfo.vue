@@ -91,7 +91,7 @@ const router = useRouter()
 const friendInfoStore = friendInfo()
 const conversationStore = conversationInfo()
 const messageStore = messageInfo()
-let friendBaseInfo = ref<Friend>()
+const friendBaseInfo = ref<Friend>()
 
 // 判断是否在黑名单中（我拉黑了对方，status = 2）
 const isBlacklisted = computed(() => {

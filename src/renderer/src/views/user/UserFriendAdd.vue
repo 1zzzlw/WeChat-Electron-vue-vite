@@ -96,7 +96,7 @@ const sendApply = async () => {
   if (res.code === 1) {
     ElMessage.success(`发送好友申请成功`)
     // 发送好友申请，成功后，通知对方好友申请列表更新
-    (window as any).wsApi.sendMessage(5, 0, {
+    ;(window as any).wsApi.sendMessage(5, 0, {
       applyId: applyId,
       toUserId: applyInfo.toUserId,
       applyMsg: applyInfo.applyMsg,

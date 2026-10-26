@@ -10,12 +10,16 @@
     "lint": "eslint --cache .",
     "start": "electron-vite preview",
     "dev": "electron-vite dev",
-    "build": "electron-vite build",
+    "build": "npm run check && electron-vite build",
     "postinstall": "electron-builder install-app-deps",
     "build:unpack": "npm run build && electron-builder --dir",
     "build:win": "npm run build && electron-builder --win",
     "build:mac": "npm run build && electron-builder --mac",
-    "build:linux": "npm run build && electron-builder --linux"
+    "build:linux": "npm run build && electron-builder --linux",
+    "format:check": "prettier --check .",
+    "typecheck": "vue-tsc --noEmit -p tsconfig.json",
+    "test": "node --test --test-timeout=30000 tests/*.test.cjs",
+    "check": "npm run lint && npm run typecheck && npm test"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",
@@ -47,6 +51,11 @@
     "@electron-toolkit/eslint-config": "^2.1.0",
     "@electron-toolkit/eslint-config-prettier": "^3.0.0",
     "@electron/rebuild": "^4.0.2",
+    "@types/dplayer": "^1.25.6",
+    "@types/masonry-layout": "^4.2.8",
+    "@types/node": "^22.19.0",
+    "@typescript-eslint/eslint-plugin": "^8.72.0",
+    "@typescript-eslint/parser": "^8.72.0",
     "@vitejs/plugin-vue": "^6.0.1",
     "electron": "^38.1.2",
     "electron-builder": "^25.1.8",
@@ -54,8 +63,10 @@
     "eslint": "^9.36.0",
     "eslint-plugin-vue": "^10.4.0",
     "prettier": "^3.6.2",
+    "typescript": "~5.9.3",
     "vite": "^7.1.6",
     "vue": "^3.5.21",
-    "vue-eslint-parser": "^10.2.0"
+    "vue-eslint-parser": "^10.2.0",
+    "vue-tsc": "^3.3.13"
   }
 }

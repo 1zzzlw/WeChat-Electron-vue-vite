@@ -129,12 +129,12 @@ const router = createRouter({
             {
               path: '/groupApply',
               name: 'groupApply',
-              component: () => import('../views/group/GroupApply.vue')
+              component: () => import('../views/group/groupApply.vue')
             },
             {
               path: '/groupInfo',
               name: 'groupInfo',
-              component: () => import('../views/group/GroupInfo.vue')
+              component: () => import('../views/group/groupInfo.vue')
             }
           ]
         },

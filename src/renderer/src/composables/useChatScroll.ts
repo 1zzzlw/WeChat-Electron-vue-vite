@@ -75,7 +75,7 @@ export function useChatScroll(
     }
 
     // --- Load more when scrolled to top ---
-    if (scrollTop === 0 && options.canLoadMore()) {
+    if (scrollTop === 0 && !loading.value && options.canLoadMore()) {
       const lastMessageId = options.getFirstMessageId()
 
       loading.value = true

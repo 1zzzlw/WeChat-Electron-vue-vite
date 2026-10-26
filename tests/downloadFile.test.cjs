@@ -305,12 +305,16 @@ async function run() {
             results.push({ name, status: 'FAIL', error: error.stack })
         }
     }
-    console.log(JSON.stringify(results, null, 2))
-    assert.equal(results.filter(r => r.status === 'FAIL').length, 0, '下载回归测试失败')
+    if (results.some(result => result.status === 'FAIL')) {
+        const error = new Error('下载回归测试失败')
+        error.results = results
+        throw error
+    }
     return results
 }
 
 module.exports = { run }
 if (require.main === module) {
-    run().catch(error => { console.error(error); process.exitCode = 1 })
+    run().then(results => console.log('下载回归：' + results.length + '项通过'))
+        .catch(error => { console.error(error.results || error); process.exitCode = 1 })
 }

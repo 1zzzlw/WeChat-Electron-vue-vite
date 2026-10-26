@@ -4,6 +4,7 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "strict": true,
+    "forceConsistentCasingInFileNames": true,
     "jsx": "preserve",
     "resolveJsonModule": true,
     "isolatedModules": true,
@@ -15,7 +16,7 @@
     "paths": {
       "@/*": ["./src/renderer/src/*"]
     },
-    "types": []
+    "types": ["vite/client", "node"]
   },
   "include": [
     "src/renderer/src/**/*.ts",

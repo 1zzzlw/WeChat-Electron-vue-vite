@@ -8,12 +8,12 @@
             <div class="conversation-set">
                 <div class="set1">
                     <span>设为置顶</span>
-                    <el-switch v-model="conversation.isTop" :active-value=1 :inactive-value=0
+                    <el-switch :model-value="conversationStore.conversationMap[conversation.id]?.isTop ?? conversation.isTop" :active-value=1 :inactive-value=0
                         @change="changeTopStatus" />
                 </div>
                 <div class="set2">
                     <span>消息免打扰</span>
-                    <el-switch v-model="conversation.isMute" :active-value=1 :inactive-value=0
+                    <el-switch :model-value="conversationStore.conversationMap[conversation.id]?.isMute ?? conversation.isMute" :active-value=1 :inactive-value=0
                         @change="changeMuteStatus" />
                 </div>
             </div>
@@ -57,12 +57,24 @@ const visible = computed({
     set: (val) => emit('update:modelValue', val)
 })
 
-const changeTopStatus = () => {
-    updateConversationTopStatus(props.conversation.id, props.conversation.userId, props.conversation.isTop)
+const changeTopStatus = (value: string | number | boolean) => {
+    const status = Number(value)
+    conversationStore.setConversationMap(props.conversation.id, {
+        ...props.conversation,
+        ...conversationStore.conversationMap[props.conversation.id],
+        isTop: status
+    })
+    updateConversationTopStatus(props.conversation.id, props.conversation.userId, status)
 }
 
-const changeMuteStatus = () => {
-    updateConversationMuteStatus(props.conversation.id, props.conversation.userId, props.conversation.isMute)
+const changeMuteStatus = (value: string | number | boolean) => {
+    const status = Number(value)
+    conversationStore.setConversationMap(props.conversation.id, {
+        ...props.conversation,
+        ...conversationStore.conversationMap[props.conversation.id],
+        isMute: status
+    })
+    updateConversationMuteStatus(props.conversation.id, props.conversation.userId, status)
 }
 
 const clearMessageHistory = () => {

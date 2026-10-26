@@ -1,6 +1,9 @@
 import request from '@/utils/axios/request'
 
-/** 发送红包 */
+/**
+ * 发送红包；响应拦截器已解包 HTTP response.data。
+ * @returns {Promise<{ code: number, msg?: string, data: { id: string | number } | null }>}
+ */
 export const sendRedPacketApi = (data) =>
   request.post('/redPacket/send', data)
 

@@ -1,7 +1,7 @@
 <template>
   <div class="chat-video">
     <span class="pause"></span>
-    <img :src=previewBase64 alt="视频预览图片" class="chat-video-content" @click="openVideo"></img>
+    <img :src=previewBase64 alt="视频预览图片" class="chat-video-content" @click="openVideo" />
   </div>
 </template>
 
