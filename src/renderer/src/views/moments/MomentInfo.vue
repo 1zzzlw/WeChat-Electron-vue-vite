@@ -170,7 +170,7 @@
 
 <script lang="ts" setup>
 import { ChatLineRound, Check, Coin, Expand, Fold, Plus } from '@element-plus/icons-vue'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import WindowControls from '@/components/WindowControls.vue'
 import { momentDetail, publishComment, comments, commentReplies, publishCommentReply, likeComment } from '@/api/Moments'
 import { MomentsItem } from '@/types/moments'
@@ -393,28 +393,44 @@ const handleLoadMoreReplies = (commentId: number) => {
 }
 
 // electron通信
+let requestedMomentId = ''
+let momentRequestVersion = 0
+let removeWindowListener: (() => void) | undefined
+let disposed = false
 const windowIPC = async () => {
-    let momentDataReceived = false
     const handleMomentData = async (data: any) => {
-        if (!data || momentDataReceived) return
-        momentDataReceived = true
-        console.log('momentInfo received data:', data)
-        const res = await momentDetail(data)
-        momentInfo.value = res.data
-
-        commentPageDTO.value.momentId = res.data.id
-        await getComments()
+        if (!data || disposed || String(data) === requestedMomentId) return
+        requestedMomentId = String(data)
+        const version = ++momentRequestVersion
+        momentInfo.value = undefined
+        commentPageDTO.value = { momentId: 0, page: 1, pageSize: 10 }
+        totalCommentCount.value = 0
+        replyPageMap.value.clear()
+        commentContent.value = ''
+        activeHeadingIndex.value = -1
+        try {
+            const res = await momentDetail(requestedMomentId)
+            if (version !== momentRequestVersion) return
+            if (res.code !== 1 || !res.data) throw new Error(res.msg || '动态加载失败')
+            momentInfo.value = res.data
+            commentPageDTO.value.momentId = res.data.id
+            await getComments()
+        } catch (error) {
+            if (version === momentRequestVersion) {
+                requestedMomentId = ''
+                ElMessage.error(error instanceof Error ? error.message : '动态加载失败')
+            }
+        }
     }
 
-    // 先尝试主动拉取缓存数据（解决路由懒加载导致组件挂载晚于 show 事件的问题）
-    const pendingData = await (window as any).windowToolApi.getPendingData()
-    if (pendingData) {
-        await handleMomentData(pendingData)
-    }
-    // 兜底：如果 show 事件在组件挂载后才触发，仍能通过监听器接收
-    ;(window as any).windowToolApi.sendWindowInfo(async (_e: any, data: any) => {
-        await handleMomentData(data)
+    let receivedPush = false
+    const api = (window as any).windowToolApi
+    removeWindowListener = api.sendWindowInfo((_e: any, data: any) => {
+        receivedPush = true
+        void handleMomentData(data)
     })
+    const pendingData = await api.getPendingData()
+    if (!receivedPush) await handleMomentData(pendingData)
 
     userAvatar.value = await (window as any).userInfoApi.storeGetUserInfo('avatar')
 }
@@ -423,8 +439,10 @@ const windowIPC = async () => {
 const getComments = async () => {
     if (!commentPageDTO.value.momentId) return
 
-    console.log(commentPageDTO.value)
-    const res = await comments(commentPageDTO.value)
+    const version = momentRequestVersion
+    const query = { ...commentPageDTO.value }
+    const res = await comments(query)
+    if (version !== momentRequestVersion) return
 
     if (res.data) {
         totalCommentCount.value = res.data.total
@@ -437,7 +455,7 @@ const getComments = async () => {
         }
 
         // 如果是第一页，直接赋值；如果是加载更多，则追加
-        if (commentPageDTO.value.page === 1) {
+        if (query.page === 1) {
             if (momentInfo.value) {
                 momentInfo.value.comments = res.data.data || []
             }
@@ -469,8 +487,9 @@ const getReplies = async (commentId: number) => {
     const state = replyPageMap.value.get(commentId)
     if (!state) return
 
-    console.log('加载回复, parentId:', commentId, 'page:', state.page)
+    const version = momentRequestVersion
     const res = await commentReplies(commentId, state.page, state.pageSize)
+    if (version !== momentRequestVersion) return
 
     if (res.data) {
         state.total = res.data.total
@@ -493,6 +512,11 @@ const getReplies = async (commentId: number) => {
 }
 onMounted(async () => {
     await windowIPC()
+})
+onUnmounted(() => {
+    disposed = true
+    momentRequestVersion++
+    removeWindowListener?.()
 })
 </script>
 

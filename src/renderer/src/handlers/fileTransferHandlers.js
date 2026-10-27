@@ -7,6 +7,29 @@ import { updateMessage } from '@/db/dualDB'
 
 let _fileTransferHandlersRegistered = false
 
+// 短语音可能先完成上传；只有 REST 已返回 remoteUrl 才允许投递 WS。
+export function sendUploadedFileIfReady(fileId) {
+    const store = messageInfo()
+    const pending = store.getFileMessage(fileId)
+    const status = fileStatusListInfo().getFileUploadUpdateInfo(fileId)?.uploadStatus
+    if (!pending) return
+    if (status === statusMap.fail.value) pending.sendStatus = 2
+    const message = toRaw(pending)
+    if (!message.remoteUrl) return
+    if (status === statusMap.fail.value) {
+        updateMessageFileSendStatusApi(fileId, 2)
+        updateMessage({ fileId }, { sendStatus: 2 })
+        return
+    }
+    if (status !== statusMap.upload_finish.value) return
+    pending.sendStatus = 0
+    store.sendFileMessage(message, message.conversationId, message.receiverIds)
+    // 上传完成后由正常消息及 ACK 管理，移除临时项也避免重复完成事件再次投递。
+    store.removeFileMessage(fileId)
+    updateMessageFileSendStatusApi(fileId, 1)
+    updateMessage({ fileId }, { sendStatus: 1 })
+}
+
 export function registerFileTransferHandlers() {
     if (_fileTransferHandlersRegistered) return
     _fileTransferHandlersRegistered = true
@@ -18,34 +41,9 @@ export function registerFileTransferHandlers() {
 
     window.uploadFileApi.updateUploadStatus(async (e, uploadStatus) => {
         const { fileId, status } = await uploadStatus
-        const condition = {
-            fileId: fileId
-        }
-        let data = {};
-        if (status === 1) {
-            console.log('上传成功')
-            fileStatusListInfo().updateFileUploadStatus(fileId, statusMap.upload_finish.value, 100)
-            data = {
-                sendStatus: 1
-            }
-
-            const rawMessagePack = toRaw(messageInfo().getFileMessage(fileId))
-
-            console.log(rawMessagePack)
-
-            messageInfo().sendFileMessage(rawMessagePack, rawMessagePack.conversationId, rawMessagePack.receiverIds)
-
-            updateMessageFileSendStatusApi(fileId, 1)
-        } else {
-            console.log('上传失败')
-            fileStatusListInfo().updateFileUploadStatus(fileId, statusMap.fail.value, 0)
-            data = {
-                sendStatus: 2
-            }
-            updateMessageFileSendStatusApi(fileId, 2)
-        }
-        updateMessage(condition, data)
-
+        fileStatusListInfo().updateFileUploadStatus(fileId,
+            status === 1 ? statusMap.upload_finish.value : statusMap.fail.value, status === 1 ? 100 : 0)
+        sendUploadedFileIfReady(fileId)
     })
 
     window.uploadFileApi.updateDownloadProgress((e, downloadStatus) => {

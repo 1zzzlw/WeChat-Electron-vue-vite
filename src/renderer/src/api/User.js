@@ -25,3 +25,6 @@ export const searchFriendApi = (number) => request.get('/user/search', {
 
 export const updateUserInfoApi = (data) => request.post('/user/updateInfo', data)
 
+/** @returns {Promise<{code: number, msg?: string, data: {id: string, username: string, account: string, avatar: string, phone: string, email: string | null, birthday: string | null}}>} */
+export const getMyProfileApi = () => request.get('/user/me')
+

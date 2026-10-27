@@ -48,7 +48,9 @@ const currentComponent = computed(() => {
 
 const currentProps = computed(() => {
   switch (props.msgType) {
-    case 2: case 3: case 4: case 5:
+    case 4:
+      return { ...fileProps.value, content: props.content }
+    case 2: case 3: case 5:
       return fileProps.value
     case 6:
       return redPacketProps.value

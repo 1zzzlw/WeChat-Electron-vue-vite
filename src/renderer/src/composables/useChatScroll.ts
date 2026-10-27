@@ -23,6 +23,9 @@ export interface UseChatScrollOptions {
    * the view scrolls back to this message so the user's position is preserved.
    */
   getFirstMessageId: () => string | number | undefined
+
+  /** 加载历史期间若追加了新消息，应跟随最新消息，而不是恢复旧锚点。 */
+  getLastMessageId?: () => string | number | undefined
 }
 
 /**
@@ -48,11 +51,13 @@ export function useChatScroll(
 
   /**
    * Instantly scroll to the bottom of the chat.
-   * Uses `setScrollTop` with a large value to ensure we reach the end.
+   * Uses the actual content height so long conversations also reach the end.
    */
   function scrollToBottom() {
     if (scrollbarRef.value) {
-      scrollbarRef.value.setScrollTop(1000000)
+      const wrap = scrollbarRef.value.$el?.querySelector?.('.el-scrollbar__wrap')
+      scrollbarRef.value.setScrollTop(wrap?.scrollHeight ?? 1000000)
+      isNearBottom.value = true
     }
   }
 
@@ -77,6 +82,7 @@ export function useChatScroll(
     // --- Load more when scrolled to top ---
     if (scrollTop === 0 && !loading.value && options.canLoadMore()) {
       const lastMessageId = options.getFirstMessageId()
+      const previousNewestId = options.getLastMessageId?.()
 
       loading.value = true
       try {
@@ -84,7 +90,9 @@ export function useChatScroll(
         await nextTick()
 
         // Anchor: scroll the previously-first message back into view
-        if (lastMessageId != null) {
+        if (options.getLastMessageId && options.getLastMessageId() !== previousNewestId) {
+          scrollToBottom()
+        } else if (lastMessageId != null) {
           document
             .querySelector('#message' + lastMessageId)
             ?.scrollIntoView()

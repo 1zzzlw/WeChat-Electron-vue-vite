@@ -60,9 +60,9 @@
           <div class="post-item" v-for="post in postList" :key="post.id" :data-post-id="post.id">
             <!-- 用户信息头部 -->
             <div class="post-header">
-              <div class="user-info" @click="openInfo(post.id)">
+              <div class="user-info" @click="openUserMoments(post.userId, post)">
                 <img :src="post.avatar" alt="头像" class="user-avatar" loading="lazy" />
-                <div class="user-details" @click="openInfo(post.id)">
+                <div class="user-details">
                   <div class="username">{{ post.username }}</div>
                   <div class="post-time">{{ formatMomentsTime(post.publishTime) }}</div>
                 </div>
@@ -172,7 +172,6 @@
 <script setup lang="ts">
 import { ChatLineRound, Check, Coin, Plus, Search, Loading } from '@element-plus/icons-vue'
 import { onMounted, ref, onUnmounted, nextTick, watch } from 'vue'
-import { useRouter } from 'vue-router'
 import { listByNewApi, likedApi, listByHot, rewardApi } from '@/api/Moments'
 import { MomentsItem } from '@/types/moments'
 import type { ScrollbarDirection } from 'element-plus'
@@ -181,9 +180,9 @@ import Masonry from 'masonry-layout'
 import emitter from '@/utils/mitt';
 import { formatMomentsTime } from '@/utils/utils'
 import { useMomentsImageLazy } from '@/composables/useMomentsImageLazy'
+import { openUserMoments } from '@/utils/momentWindows'
 
 const searchKeyword = ref('')
-const router = useRouter()
 const activeTag = ref('all')
 const label = ref('0')
 const pageDTO = ref({
@@ -332,7 +331,7 @@ const handleSearch = () => {
 }
 
 const goMyPosts = () => {
-  router.push('/myPosts')
+  openUserMoments()
 }
 
 // 标签点击事件

@@ -39,14 +39,22 @@ contextBridge.exposeInMainWorld('windowToolApi', {
     onWindowWallpaper() {}, registerGlobalShortcut() {}, windowControls() {}, resizeWindow() {},
     getPendingData: async () => ({ conversation }), sendWindowInfo() {}, createNewWindow() {}
 })
-contextBridge.exposeInMainWorld('wsApi', { onMessage() {}, sendMessage() {} })
+contextBridge.exposeInMainWorld('wsApi', {
+    onMessage: callback => ipcRenderer.on('fixture:voice-frame', (_event, type, data) => callback(type, data)),
+    sendMessage: (type, sequence, message) => ipcRenderer.send('fixture:voice-ws', type, message)
+})
 contextBridge.exposeInMainWorld('uploadFileApi', {
-    updateUploadProgress() {}, updateUploadStatus() {}, updateDownloadProgress() {}, updateDownloadStatus() {},
+    saveVoiceRecording: recording => ipcRenderer.invoke('fixture:voice-save', recording),
+    uploadFile: file => ipcRenderer.invoke('fixture:voice-upload', file),
+    updateUploadProgress() {}, updateUploadStatus: callback => ipcRenderer.on('upload-loadStatus', callback),
+    updateDownloadProgress() {}, updateDownloadStatus() {},
     listWorkspaces: async () => []
 })
 contextBridge.exposeInMainWorld('dbApi', {
     queryConversationList: async () => [conversation], queryFriendList: async () => [],
     updateConversation: async () => {}, saveLoadMessage: async () => {},
+    saveSentMessage: message => ipcRenderer.invoke('fixture:voice-persist', message),
+    updateMessageInfo: async () => {},
     getImageUrlList: async () => [], getVideoUrlList: async () => [],
     loadMessage: async () => ({ dataList: [
         { id: 'fixture-message-1', conversationId: 'fixture-chat', senderId: 'fixture-friend', receiverId: 'fixture-user', msgType: 1, content: '今天的天空很好看，分享给你。', sendTime: '2026-10-26T11:00:00', sendStatus: 1 },
@@ -57,6 +65,11 @@ contextBridge.exposeInMainWorld('dbApi', {
 })
 contextBridge.exposeInMainWorld('piniaShareApi', { setStoreInfo() {}, sendStoreInfo() {} })
 contextBridge.exposeInMainWorld('loadApi', {
+    onDataInitSynced: callback => {
+        const handler = (_event, result) => callback(result)
+        ipcRenderer.on('data-init-synced', handler)
+        return () => ipcRenderer.removeListener('data-init-synced', handler)
+    },
     dataInitSuccessAndSkip: callback => {
         const handler = (_event, result) => callback(result)
         ipcRenderer.on('fixture:loaded', handler)

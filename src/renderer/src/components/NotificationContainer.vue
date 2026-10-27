@@ -9,15 +9,14 @@
 </template>
 
 <script setup>
-import { ref, markRaw } from 'vue'
+import { ref, markRaw, onUnmounted } from 'vue'
 import emitter from '@/utils/mitt'
 
 const notifications = ref([])
 let id = 0
 const MAX_NOTIFICATIONS = 4 // 定义最大数量
 
-// 监听全局添加通知事件
-emitter.on('addNotification', (payload) => {
+const addNotification = (payload) => {
     const { component, props, duration = 5000 } = payload || {}
 
     const item = {
@@ -41,13 +40,13 @@ emitter.on('addNotification', (payload) => {
     notifications.value.unshift(item)
 
 
-    // 自动关闭逻辑（默认3秒）
+    // 自动关闭逻辑（默认5秒）
     if (duration > 0) {
         item.timer = setTimeout(() => {
             removeNotification(item.id)
         }, duration)
     }
-})
+}
 
 // 删除通知
 const removeNotification = (targetId) => {
@@ -63,6 +62,14 @@ const removeNotification = (targetId) => {
 
     notifications.value.splice(index, 1)
 }
+
+emitter.on('addNotification', addNotification)
+onUnmounted(() => {
+    emitter.off('addNotification', addNotification)
+    notifications.value.forEach(item => {
+        if (item.timer) clearTimeout(item.timer)
+    })
+})
 </script>
 
 <style scoped>

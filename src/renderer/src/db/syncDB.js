@@ -3,6 +3,7 @@ import { uploadNoteContentApi, updateOldNoteContentApi } from '@/api/Favorites'
 import { updateConversationTopStatusApi, updateConversationMuteStatusApi, deleteConversationApi } from '@/api/Conversation'
 import { clearHistoryMessageApi } from "@/api/Message";
 import { deleteFriendApi, updateFriendRemarkApi, updateFriendStatusApi } from "@/api/Friend";
+import { conversationInfo } from '@/stores/modules/ConversationStore'
 
 /**
  * 同步更新会话置顶：先调服务端，成功后再写本地
@@ -24,10 +25,13 @@ const updateConversationTopStatus = async (conversationId, userId, status) => {
  * @param {*} status -- 更新状态
  */
 const updateConversationMuteStatus = async (conversationId, userId, status) => {
-    await updateConversationMuteStatusApi(conversationId, status)
-    const condition = { id: conversationId, userId: userId }
+    const result = await updateConversationMuteStatusApi(conversationId, status)
+    if (result.code !== 1) throw new Error(result.msg || '更新免打扰状态失败')
+    // 本机写入使用当前登录用户，避免窗口里缓存的 userId 丢失或精度变化。
+    const condition = { id: conversationId }
     const data = { isMute: status }
-    updateConversation(condition, data)
+    conversationInfo().updateConversationMuteStatus(conversationId, status)
+    await updateConversation(condition, data)
 }
 
 const insertNewNote = async (data) => {

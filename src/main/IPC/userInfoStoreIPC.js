@@ -84,9 +84,19 @@ ipcMain.handle('window:setUserInfo', (e, userInfoType, userInfo) => {
     case 'account':
       store.set('account', userInfo)
       break
+    case 'email':
+    case 'birthday':
+      store.set(userInfoType, userInfo)
+      break
     case 'gender':
       store.set('gender', userInfo)
       break
+    case 'notificationSettings': {
+      const settings = typeof userInfo === 'string' ? JSON.parse(userInfo) : userInfo
+      if (!settings || typeof settings !== 'object' || Array.isArray(settings)) throw new Error('通知设置格式无效')
+      store.set('notificationSettings', settings)
+      break
+    }
     case 'modelApiKey':
       setModelApiKey(userInfo)
       break
@@ -119,8 +129,13 @@ ipcMain.handle('window:getUserInfo', (e, userInfoType, userInfo) => {
         return store.get('phone')
       case 'account':
         return store.get('account')
+      case 'email':
+      case 'birthday':
+        return store.get(userInfoType)
       case 'gender':
         return store.get('gender')
+      case 'notificationSettings':
+        return store.get('notificationSettings')
       case 'modelApiKey':
         return getModelApiKey(userInfo)
       default:

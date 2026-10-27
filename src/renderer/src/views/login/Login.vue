@@ -93,6 +93,7 @@ const handleEnterLogin = () => {
 
 const Login = async (formEl: FormInstance | undefined) => {
   if (!formEl) return
+  let removeInitListener: (() => void) | undefined
   try {
     // 验证成功会进入这里，失败会直接跳去 catch
     await formEl.validate()
@@ -107,24 +108,19 @@ const Login = async (formEl: FormInstance | undefined) => {
       (window as any).userInfoApi.storeSetUserInfo('account', result.data.account);
       (window as any).userInfoApi.storeSetUserInfo('gender', result.data.gender);
 
-      // 判断当前登录是否需要初始化
+      // 先监听再打开加载窗口，避免快速点击“进入聊天”时丢失交接通知。
+      const enterRequested = new Promise(resolve => {
+        removeInitListener = (window as any).loadApi.onDataInitComplete(resolve)
+      })
       const isNeed = await (window as any).loadApi.isNeedInitData()
-      if (!isNeed) {
-        // 不需要，更新离线数据
-        // 等待更新成功的通知
-        await (window as any).dbApi.updateDBData()
-        await router.push('/main')
-        await nextTick()
-        await (window as any).windowToolApi.resizeWindow('main')
+      if (isNeed) {
+        await enterRequested
       } else {
-        // 等待通知在路由跳转
-        await new Promise(resolve => {
-          (window as any).loadApi.onDataInitComplete(resolve)
-        })
-        await router.push('/main')
-        await nextTick()
-        await (window as any).windowToolApi.resizeWindow('main')
+        await (window as any).dbApi.updateDBData()
       }
+      await router.push('/main')
+      await nextTick()
+      await (window as any).windowToolApi.resizeWindow('main')
     } else {
       ElMessage.error(result.msg)
       isLoading.value = false
@@ -133,6 +129,8 @@ const Login = async (formEl: FormInstance | undefined) => {
     console.log('error submit!', error)
     ElMessage.error('登录失败')
     isLoading.value = false
+  } finally {
+    removeInitListener?.()
   }
 }
 

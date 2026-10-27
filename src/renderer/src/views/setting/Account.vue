@@ -16,6 +16,7 @@
           生日: {{ birthday }}
         </div>
         <a @click="openEditDialog">修改账号信息</a>
+        <span v-if="profileError" class="profile-error">{{ profileError }} <a @click="loadProfile">重试</a></span>
       </div>
     </div>
     <div class="wallpaper">
@@ -30,23 +31,24 @@
         <el-button @click="changeWallpaper">切换壁纸</el-button>
       </div>
     </div>
-    <el-dialog v-model="showLinkDialog" title="修改账号信息" width="400px">
+    <el-dialog v-model="showLinkDialog" title="修改账号信息" width="420px" :close-on-click-modal="!saving"
+      :close-on-press-escape="!saving" :show-close="!saving">
       <el-form label-width="auto" style="max-width: 600px">
         <el-form-item label="账号">
-          <el-input v-model="accountTemp" clearable />
+          <el-input v-model="accountTemp" maxlength="64" placeholder="字母、数字或下划线" :disabled="saving" clearable />
         </el-form-item>
         <el-form-item label="邮箱">
-          <el-input v-model="emailTemp" clearable />
+          <el-input v-model="emailTemp" maxlength="100" placeholder="选填" :disabled="saving" clearable />
         </el-form-item>
         <el-form-item label="生日">
           <el-col>
             <el-date-picker value-format="YYYY-MM-DD" v-model="birthdayTemp" type="date" placeholder="选择生日"
-              style="width: 100%" />
+              style="width: 100%" :disabled="saving" :disabled-date="date => date > new Date()" />
           </el-col>
         </el-form-item>
         <el-form-item class="button">
-          <el-button type="primary" @click="onSubmit">保存</el-button>
-          <el-button @click="showLinkDialog = false">取消</el-button>
+          <el-button type="primary" :loading="saving" @click="onSubmit">保存</el-button>
+          <el-button :disabled="saving" @click="showLinkDialog = false">取消</el-button>
         </el-form-item>
       </el-form>
     </el-dialog>
@@ -56,7 +58,8 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import { updateUserInfoApi } from '@/api/User'
+import { getMyProfileApi, updateUserInfoApi } from '@/api/User'
+import emitter from '@/utils/mitt'
 
 const avatarUrl = ref('')
 const imagePath = ref(new URL('/wallpaper/1.jpg', import.meta.url).href)
@@ -80,8 +83,38 @@ const emailTemp = ref()
 const birthdayTemp = ref()
 
 const showLinkDialog = ref(false)
+const saving = ref(false)
+const profileLoaded = ref(false)
+const profileError = ref('')
+
+const applyProfile = async (profile) => {
+  account.value = profile.account
+  email.value = profile.email || '无'
+  birthday.value = profile.birthday || '无'
+  avatarUrl.value = profile.avatar
+  phone.value = profile.phone
+  await Promise.all(['account', 'email', 'birthday'].map(key =>
+    window.userInfoApi.storeSetUserInfo(key, profile[key] || '')
+  ))
+}
+
+const loadProfile = async () => {
+  profileError.value = ''
+  try {
+    const result = await getMyProfileApi()
+    if (result.code !== 1 || !result.data) throw new Error(result.msg || '资料加载失败')
+    await applyProfile(result.data)
+    profileLoaded.value = true
+  } catch (error) {
+    profileError.value = error.message || '资料加载失败，请重试'
+  }
+}
 
 const openEditDialog = () => {
+  if (!profileLoaded.value) {
+    ElMessage.warning('请先加载最新的账号资料')
+    return
+  }
   accountTemp.value = account.value
   emailTemp.value = email.value === '无' ? '' : email.value
   birthdayTemp.value = birthday.value === '无' ? '' : birthday.value
@@ -89,28 +122,35 @@ const openEditDialog = () => {
 }
 
 const onSubmit = async () => {
-  account.value = accountTemp.value
-  email.value = emailTemp.value
-  birthday.value = birthdayTemp.value
-
-  // 保存到electron-store
-  await window.userInfoApi.storeSetUserInfo('account', accountTemp.value)
-  await window.userInfoApi.storeSetUserInfo('email', emailTemp.value)
-  await window.userInfoApi.storeSetUserInfo('birthday', birthdayTemp.value)
-
-  // 调用服务端API更新
-  try {
-    await updateUserInfoApi({
-      account: accountTemp.value,
-      email: emailTemp.value,
-      birthday: birthdayTemp.value
-    })
-    ElMessage.success('修改成功')
-  } catch (error) {
-    ElMessage.error('修改失败')
+  if (saving.value) return
+  const nextAccount = (accountTemp.value || '').trim()
+  const nextEmail = (emailTemp.value || '').trim()
+  if (!/^[A-Za-z0-9_]{1,64}$/.test(nextAccount)) {
+    ElMessage.warning('账号限64位以内的字母、数字或下划线')
+    return
   }
-
-  showLinkDialog.value = false
+  if (nextEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(nextEmail)) {
+    ElMessage.warning('请输入有效的邮箱地址')
+    return
+  }
+  saving.value = true
+  try {
+    const result = await updateUserInfoApi({
+      account: nextAccount,
+      email: nextEmail || null,
+      birthday: birthdayTemp.value || null
+    })
+    if (result.code !== 1 || !result.data) throw new Error(result.msg || '修改失败')
+    // 服务端确认成功后再更新界面和缓存，失败时保留输入以便重试。
+    await applyProfile(result.data)
+    emitter.emit('profile:updated', { userId: result.data.id })
+    ElMessage.success('修改成功')
+    showLinkDialog.value = false
+  } catch (error) {
+    ElMessage.error(error.message || '修改失败')
+  } finally {
+    saving.value = false
+  }
 }
 
 const selectWallpaper = (current, prev) => {
@@ -126,12 +166,13 @@ onMounted(async () => {
   avatarUrl.value = await window.userInfoApi.storeGetUserInfo('avatar')
   account.value = await window.userInfoApi.storeGetUserInfo('account')
   phone.value = await window.userInfoApi.storeGetUserInfo('phone')
-  email.value = await window.userInfoApi.storeGetUserInfo('email') || '无'
-  birthday.value = await window.userInfoApi.storeGetUserInfo('birthday') || '无'
+  await loadProfile()
 })
 </script>
 
 <style scoped>
+.profile-error { color: var(--color-text-muted); font-size: 12px; }
+.profile-error a { cursor: pointer; color: var(--color-accent); }
 .account-count {
   display: flex;
   flex-direction: column;

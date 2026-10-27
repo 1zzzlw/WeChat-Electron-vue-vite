@@ -67,14 +67,10 @@ const changeTopStatus = (value: string | number | boolean) => {
     updateConversationTopStatus(props.conversation.id, props.conversation.userId, status)
 }
 
-const changeMuteStatus = (value: string | number | boolean) => {
+const changeMuteStatus = async (value: string | number | boolean) => {
     const status = Number(value)
-    conversationStore.setConversationMap(props.conversation.id, {
-        ...props.conversation,
-        ...conversationStore.conversationMap[props.conversation.id],
-        isMute: status
-    })
-    updateConversationMuteStatus(props.conversation.id, props.conversation.userId, status)
+    try { await updateConversationMuteStatus(props.conversation.id, props.conversation.userId, status) }
+    catch (error) { ElMessage.error(error instanceof Error ? error.message : '更新免打扰状态失败') }
 }
 
 const clearMessageHistory = () => {

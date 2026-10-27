@@ -103,7 +103,7 @@ const getFileInfo = async (path) => {
  * 上传文件
  * @param file -- 文件信息
  */
-const uploadFile = async (file) => {
+const uploadFile = async (file, source = refs.mainWindow?.webContents) => {
     const { fileId, fileName, fileSize, fileType, localPath } = file
 
     // 如果暂停队列里面包含该文件，说明是执行的继续操作
@@ -136,7 +136,7 @@ const uploadFile = async (file) => {
     const chunksList = res.data
 
     // 分片上传
-    fileUpload(localPath, fileSize, fileId, fileName, fileType, verify, minioFilePath, chunksList)
+    fileUpload(localPath, fileSize, fileId, fileName, fileType, verify, minioFilePath, chunksList, source)
 
     // 分块数量
     const chunkCount = Math.ceil(fileSize / CHUNK_SIZE)
@@ -156,9 +156,13 @@ const uploadFile = async (file) => {
  *  @param arrayBuffer -- 文件buffer信息，进行分片上传
  *  @param fileSize -- 文件大小
  */
-const fileUpload = async (localPath, fileSize, fileId, fileName, fileType, verify, minioFilePath, chunksList) => {
+const fileUpload = async (localPath, fileSize, fileId, fileName, fileType, verify, minioFilePath, chunksList, source) => {
     let startTime = Date.now()
     const uploadQueue = getOrCreateUploadQueue(fileId)
+    // 独立聊天窗口也能录音，进度和完成事件应回到实际发起上传的窗口。
+    const notify = (channel, payload) => {
+        if (source && !source.isDestroyed()) source.send(channel, payload)
+    }
 
     // 保存上传凭证
     fileVerifyMap.set(fileId, verify)
@@ -213,7 +217,7 @@ const fileUpload = async (localPath, fileSize, fileId, fileName, fileType, verif
                 const speed = uploadedBytes / timeElapsed
                 const speedMB = (speed / 1024 / 1024).toFixed(2)
 
-                refs.mainWindow.webContents.send('upload-progress', {
+                notify('upload-progress', {
                     fileId: fileId,
                     uploadProgress: progress,
                     uploadSpeed: speedMB
@@ -232,7 +236,11 @@ const fileUpload = async (localPath, fileSize, fileId, fileName, fileType, verif
             }
         }, { signal: controller.signal }).catch((err) => {
             if (err?.name === 'AbortError') return
-            console.log(err)
+            if (fileVerifyMap.has(fileId)) {
+                notify('upload-loadStatus', { fileId, status: 2 })
+                cleanupFileUploadState(fileId)
+            }
+            console.error('文件分片上传失败', err?.message)
         })
     },
         (fileIndex) => {
@@ -246,7 +254,7 @@ const fileUpload = async (localPath, fileSize, fileId, fileName, fileType, verif
             }).then(() => {
                 console.log('文件上传成功')
                 // 上传成功，修改发送状态
-                refs.mainWindow.webContents.send('upload-loadStatus', {
+                notify('upload-loadStatus', {
                     fileId: fileId,
                     status: 1
                 })
@@ -254,7 +262,7 @@ const fileUpload = async (localPath, fileSize, fileId, fileName, fileType, verif
             }).catch(() => {
                 console.log('文件上传失败')
                 // 上传失败，修改发送状态
-                refs.mainWindow.webContents.send('upload-loadStatus', {
+                notify('upload-loadStatus', {
                     fileId: fileId,
                     status: 2
                 })

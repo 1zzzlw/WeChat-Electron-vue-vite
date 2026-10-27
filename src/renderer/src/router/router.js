@@ -59,6 +59,11 @@ const router = createRouter({
       component: () => import('../views/moments/UpdateMoment.vue')
     },
     {
+      path: '/userMoments',
+      name: 'userMoments',
+      component: () => import('../views/moments/UserMoments.vue')
+    },
+    {
       path: '/setting',
       name: 'setting',
       component: () => import('../views/setting/SetUserInfo.vue'),
@@ -182,11 +187,6 @@ const router = createRouter({
           component: () => import('../views/moments/Moments.vue')
         },
         {
-          path: '/myPosts',
-          name: 'myPosts',
-          component: () => import('../views/moments/MyPosts.vue')
-        },
-        {
           path: '/wallet',
           name: 'wallet',
           component: () => import('../views/wallet/wallet.vue')
@@ -206,6 +206,7 @@ const childWindowWhitelist = [
   '/createNote',
   '/createMomentView',
   '/updateMomentView',
+  '/userMoments',
   '/MomentInfoView',
   '/setting',
   '/imagePreview',

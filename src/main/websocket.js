@@ -5,7 +5,8 @@ import { deleteMessage } from './DB/delete'
 import { updateConversation } from './DB/update'
 import { getConversationInfoById } from './DB/select'
 import { join } from 'path'
-import { pathToFileURL } from 'url'
+import { queryAll } from './DB/mainDB'
+import { broadcastConversationUpdate, isConversationVisible } from './Util/conversationState'
 import { encodeMessage, decodeMessage, bufferToHexString } from './protocol.js'
 
 // ===== 托盘闪动相关 =====
@@ -154,47 +155,49 @@ class WebSocketManager {
             console.info(`收到WS消息-类型${messageType}:`, data);
 
             if (messageType === 2 || messageType === 4) {
+                const duplicate = queryAll('select id from message where id = ?', [String(data.id)]).length > 0
+                const userId = String(store.get('userId'))
+                const conversation = getConversationInfoById(userId, data.conversationId)[0]
+                const incoming = String(data.senderId) !== userId
+                const visible = isConversationVisible(data.conversationId)
+                const previousCount = Math.max(0, Number(conversation?.unreadCount) || 0)
+                const unreadCount = visible ? 0 : previousCount + (incoming && !duplicate ? 1 : 0)
                 // 保存到数据库里
                 saveSentMessage(data)
                 // 更新会话列表
                 const condition = {
-                    id: data.conversationId
+                    id: data.conversationId, userId
                 }
                 const messageData = {
                     latestMsg: data.content,
-                    latestMsgTime: data.receiveTime
+                    latestMsgTime: data.sendTime || data.receiveTime,
+                    unreadCount,
+                    status: 1
                 }
                 updateConversation(condition, messageData)
+                broadcastConversationUpdate(data.conversationId, messageData)
 
                 // 检查会话免打扰状态，决定是否闪动托盘 & 播放提示音
                 try {
-                    const userId = store.get('userId')
-                    const convInfo = getConversationInfoById(userId, data.conversationId)
-                    const isMute = convInfo && convInfo.length > 0 && convInfo[0].isMute === 1
-                    if (!isMute) {
-                        flashTrayIcon()
-                        // 检查通知设置，决定是否播放消息提示音
-                        try {
-                            const notifSettings = store.get('notificationSettings')
-                            if (notifSettings && notifSettings.playSound !== false) {
-                                const soundPath = app.isPackaged
-                                    ? join(process.resourcesPath, 'message-sound.mp3')
-                                    : join(__dirname, '../../resources/message-sound.mp3')
-                                const soundUrl = pathToFileURL(soundPath).href
-                                BrowserWindow.getAllWindows().forEach(win => {
-                                    if (win && !win.isDestroyed()) {
-                                        win.webContents.send('play:messageSound', soundUrl)
-                                    }
-                                })
-                            }
-                        } catch (e) {
-                            // 提示音播放失败不影响主流程
+                    const rawSettings = store.get('notificationSettings')
+                    const settings = (typeof rawSettings === 'string' ? JSON.parse(rawSettings) : rawSettings) || {}
+                    const now = new Date()
+                    const clock = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+                    const start = settings.dndStartTime || '23:00'
+                    const end = settings.dndEndTime || '08:00'
+                    const withinDnd = settings.doNotDisturb === true && (start === end ||
+                        (start < end ? clock >= start && clock < end : clock >= start || clock < end))
+                    const enabled = settings.enableNotification !== false && !withinDnd &&
+                        (messageType === 4 ? settings.notifyGroupChat !== false : settings.notifyPrivateChat !== false)
+                    if (incoming && !duplicate && Number(conversation?.isMute) !== 1 && enabled) {
+                        if (!visible && settings.flashTaskbar !== false) flashTrayIcon()
+                        // 只交给主窗口播放一次；未保存设置时默认开启声音。
+                        if (settings.playSound !== false && refs.mainWindow && !refs.mainWindow.isDestroyed()) {
+                            refs.mainWindow.webContents.send('play:messageSound')
                         }
                     }
                 } catch (e) {
                     console.warn('查询会话免打扰状态失败', e)
-                    // 查询失败时默认闪动
-                    flashTrayIcon()
                 }
             } else if (messageType === 13) {
                 // 保存到数据库里

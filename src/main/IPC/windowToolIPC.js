@@ -72,24 +72,39 @@ ipcMain.on('window:type', async (e, windowType) => {
 
 // 进入main窗口
 const enterMain = async () => {
-  // 进入Main窗口
-  refs.mainWindow.setSize(main_width, main_height)
-  refs.mainWindow.center()
-  // 开启窗口尺寸改变
-  refs.mainWindow.setResizable(true)
-  refs.mainWindow.setMinimumSize(main_width, main_height)
-  // 让隐藏页面以主界面尺寸完成一次合成，避免 show 时露出旧登录帧。
   const window = refs.mainWindow
+  if (!window || window.isDestroyed()) return
+  // 进入Main窗口
+  window.setSize(main_width, main_height)
+  window.center()
+  // 开启窗口尺寸改变
+  window.setResizable(true)
+  window.setMinimumSize(main_width, main_height)
+  // 隐藏窗口的合成可能不返回，不能让截图成为进入主界面的无限等待条件。
+  const backgroundThrottling = window.webContents.getBackgroundThrottling()
+  let paintTimer
   try {
-    await window.webContents.capturePage(undefined, { stayHidden: true })
+    window.webContents.setBackgroundThrottling(false)
+    await Promise.race([
+      window.webContents.capturePage(undefined, { stayHidden: true }),
+      new Promise(resolve => {
+        paintTimer = setTimeout(() => {
+          console.warn('主界面绘制确认超时，继续进入聊天')
+          resolve()
+        }, 500)
+      })
+    ])
   } catch (error) {
     console.warn('主界面首次绘制确认失败:', error)
+  } finally {
+    clearTimeout(paintTimer)
+    if (!window.isDestroyed()) window.webContents.setBackgroundThrottling(backgroundThrottling)
   }
   if (window.isDestroyed()) return
-  // 建立ws连接
-  websocket.connect()
+  // 先交接可用界面，连接或同步不应阻止窗口显示。
   window.show()
   finishLoadingWindow()
+  websocket.connect()
 }
 
 // 更新窗口壁纸

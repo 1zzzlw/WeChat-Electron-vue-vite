@@ -69,6 +69,18 @@ export const transferOwnerApi = (conversationId, newOwnerId) =>
 export const batchInviteMembersApi = (conversationId, userIds) =>
   request.post('/conversation/batchInvite', userIds, { params: { conversationId } })
 
-/** 清除会话未读消息计数 */
-export const clearUnreadApi = (conversationId) =>
-  request.put(`/conversation/isReaded/${conversationId}`)
+/**
+ * 清除已展示的消息；响应拦截器已解包 HTTP response.data。
+ * @param {string} conversationId
+ * @param {string=} maxMessageId
+ * @returns {Promise<{ code: number, msg?: string }>}
+ */
+export const clearUnreadApi = (conversationId, maxMessageId = undefined) =>
+  request.put(`/conversation/isReaded/${conversationId}`, {}, { params: { maxMessageId } })
+
+/**
+ * 手动标记至少一条未读，保留原来更大的未读计数。
+ * @returns {Promise<{ code: number, msg?: string, data: number }>}
+ */
+export const markUnreadApi = (conversationId) =>
+  request.put(`/conversation/markUnread/${conversationId}`)

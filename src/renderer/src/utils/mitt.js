@@ -7,17 +7,19 @@ let isGlobalListenerRegistered = false
 const _emit = emitter.emit.bind(emitter)
 const _on = emitter.on.bind(emitter)
 
-// Override emit: broadcast via IPC (the IPC listener will fire local callbacks)
+// 当前窗口立即派发；主进程的 store 广播只发送给其他窗口，不会回送来源窗口。
 emitter.emit = (eventName, payload = null) => {
+    _emit(eventName, payload)
+
+    // WS 已向各窗口分发通知，卡片只在本地显示；Vue 组件包含函数，不能转为 JSON 传输。
+    if (eventName === 'addNotification') return
+
     if (window.piniaShareApi) {
-        // Broadcast via IPC to all windows (including this one)
+        // 其余业务事件携带可序列化的数据，继续同步其他窗口。
         window.piniaShareApi.sendStoreInfo(
             '__events',
             JSON.stringify({ event: eventName, payload })
         )
-    } else {
-        // Fallback: local emit only (when IPC is not available)
-        _emit(eventName, payload)
     }
 }
 

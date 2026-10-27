@@ -16,11 +16,7 @@ export function shareStorePlugin({ store }: PiniaPluginContext) {
         if (store.$id === targetStoreName) {
             isPassiveUpdate = true
 
-            const item = localStorage.getItem(targetStoreName)
-            console.log(item)
-            if (item != null) {
-                store.$patch(JSON.parse(item))
-            }
+            store.$patch(JSON.parse(data))
         }
     })
 

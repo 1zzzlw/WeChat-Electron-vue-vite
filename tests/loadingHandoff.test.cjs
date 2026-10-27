@@ -17,6 +17,8 @@ function harness(options = {}) {
         setMinimumSize() {}, setResizable() {}, center() {},
         webContents: {
             send: channel => order.push(channel),
+            getBackgroundThrottling: () => true,
+            setBackgroundThrottling() {},
             capturePage: async (_rect, settings) => {
                 assert.equal(settings.stayHidden, true)
                 order.push('paint-start')

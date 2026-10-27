@@ -1,7 +1,15 @@
-import { ipcMain, dialog } from "electron";
+import { ipcMain, dialog, app } from "electron";
+import path from 'node:path'
+import { saveVoiceRecording } from '../File/voiceRecording'
+import { store } from '../shared'
 import { getFileInfo, uploadFile, stopUpload } from '../File/fileUpload'
 import { downloadFile, pauseDownload, saveAsMedia } from '../File/downloadFile'
 import { executeWorkspaceTool, listLocalWorkspaces, registerWorkspace } from '../File/fileInfo'
+
+ipcMain.handle('voice:save-recording', async (_event, recording) => {
+    const base = store.get('storeLocation') || app.getPath('downloads')
+    return saveVoiceRecording(recording, path.join(base, new Date().toISOString().slice(0, 10), 'voice'))
+})
 // 从本地选择文件或目录
 ipcMain.handle('select-file', async (e, file) => {
     let fileInfo = {}
@@ -34,7 +42,7 @@ ipcMain.handle('select-file', async (e, file) => {
 ipcMain.handle('upload-file', async (e, file) => {
     // 接收到需要上传的文件，开始上传文件
     console.log(file)
-    const minioFilePath = await uploadFile(file)
+    const minioFilePath = await uploadFile(file, e.sender)
     return minioFilePath
 })
 
@@ -44,7 +52,7 @@ ipcMain.on('update-pauseStatus', (e, file, isPause) => {
         stopUpload(file.fileId)
     } else {
         // 重新上传
-        uploadFile(file)
+        uploadFile(file, e.sender)
     }
 })
 

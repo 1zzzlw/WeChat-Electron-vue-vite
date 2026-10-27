@@ -35,6 +35,12 @@ export const conversationInfo = defineStore('conversationMap', {
     // 只持久化指定状态
     pick: ['conversationMap', '_cacheVersion', '_cacheTimestamp']
   },
+  getters: {
+    // 免打扰只影响提醒，不排除在所有会话的未读总数之外。
+    totalUnreadCount: state => Object.values(state.conversationMap)
+      .filter(conversation => conversation.type !== 2 && conversation.status !== 0)
+      .reduce((total, conversation) => total + Math.max(0, Number(conversation.unreadCount) || 0), 0)
+  },
   actions: {
     // 初始化缓存
     initCache(userId: string) {
@@ -52,7 +58,8 @@ export const conversationInfo = defineStore('conversationMap', {
 
       this.conversationMap[conversationId] = {
         ...oldInfo,
-        ...partialInfo
+        ...partialInfo,
+        id: conversationId
       }
     },
     getGroupConversationList() {

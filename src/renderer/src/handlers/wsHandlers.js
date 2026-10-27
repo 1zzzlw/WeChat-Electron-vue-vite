@@ -1,4 +1,3 @@
-import router from '@/router/router'
 import { messageInfo } from '@/stores/modules/MessageStore'
 import { userApplyListInfo } from '@/stores/modules/UserApplyListStore'
 import { conversationInfo } from '@/stores/modules/ConversationStore'
@@ -10,29 +9,8 @@ import { SystemMsgSubType } from '@/utils/constants'
 import NotificationCard from '@/components/NotificationCard.vue'
 import { groupMemberInfo } from '@/stores/modules/GroupMemberStore'
 
-// 独立窗口当前正在查看的会话ID（由 StandaloneChat.vue 通过 emitter 通知）
-let standaloneActiveConvId = null
-emitter.on('standaloneActiveConvId', (convId) => {
-    standaloneActiveConvId = convId
-})
-
 function updateMessageStore(data) {
-    const path = router.currentRoute.value.path
-    const routeConvId = router.currentRoute.value.query.conversationId
-    console.info('当前路径:', path)
-    console.info('当前路由参数:', router.currentRoute.value.query)
-
-    // 判断是否在当前聊天页面（兼容主窗口 /chat 和独立窗口 /standaloneChat）
-    let isInCurrentChatPage = false
-    if (path === '/chat') {
-        isInCurrentChatPage = routeConvId === data.conversationId
-    } else if (path === '/standaloneChat') {
-        isInCurrentChatPage = standaloneActiveConvId === data.conversationId
-    }
-
-    if (!isInCurrentChatPage) {
-        conversationInfo().addUnreadCount(data.conversationId)
-    }
+    // 未读计数由主进程统一落库并广播，避免多个窗口分别累加。
     messageInfo().addMessageMap(data.conversationId, data)
 }
 
@@ -293,6 +271,10 @@ let _wsHandlersRegistered = false
 export function registerWsHandlers() {
     if (_wsHandlersRegistered) return
     _wsHandlersRegistered = true
+
+    window.dbApi.onConversationUpdated?.((conversationId, changes) => {
+        conversationInfo().setConversationMap(conversationId, changes)
+    })
 
     window.wsApi.onMessage((messageType, data) => {
         const handler = messageHandlers[messageType]

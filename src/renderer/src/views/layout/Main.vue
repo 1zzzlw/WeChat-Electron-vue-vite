@@ -11,10 +11,13 @@
           </template>
         </el-popover>
         <UserOnlineStatus />
-        <router-link to="/messageList" class="left-icon">
+        <router-link to="/messageList" class="left-icon message-nav" :aria-label="`消息，${conversationStore.totalUnreadCount} 条未读`">
           <el-icon size="30">
             <ChatRound />
           </el-icon>
+          <span v-if="conversationStore.totalUnreadCount > 0" class="message-nav-badge" :title="`${conversationStore.totalUnreadCount} 条未读消息`">
+            {{ conversationStore.totalUnreadCount > 99 ? '99+' : conversationStore.totalUnreadCount }}
+          </span>
         </router-link>
         <router-link to="/list" class="left-icon">
           <el-icon size="30">
@@ -62,8 +65,10 @@ import UserOnlineStatus from '@/components/UserOnlineStatus.vue'
 import UserInfoCart from '@/components/UserInfoCart.vue'
 import '@/assets/iconfont/iconfont.css'
 import Notification from '@/components/NotificationContainer.vue'
+import { conversationInfo } from '@/stores/modules/ConversationStore'
 
 const avatarUrl = ref('')
+const conversationStore = conversationInfo()
 const containerRef = ref(null)
 
 const openSettingView = () => {
@@ -146,6 +151,9 @@ onMounted(async () => {
   transition: all 0.3s ease;
   color: var(--color-text-secondary);
 }
+
+.message-nav { position: relative; }
+.message-nav-badge { position: absolute; top: -3px; right: -6px; min-width: 18px; height: 18px; padding: 0 4px; box-sizing: border-box; display: grid; place-items: center; border: 2px solid var(--color-nav-surface); border-radius: 12px; background: #ef5267; color: #fff; font-size: 10px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; box-shadow: 0 2px 7px rgba(213, 57, 83, .2); }
 
 .iconfont {
   font-size: 30px;

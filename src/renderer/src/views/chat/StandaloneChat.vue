@@ -15,12 +15,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import WindowControls from '@/components/WindowControls.vue'
 import PrivateChat from '@/views/chat/PrivateChat.vue'
 import GroupChat from '@/views/chat/GroupChat.vue'
 import { type Conversation, initConversation } from '@/types/conversation'
-import emitter from '@/utils/mitt'
 import { registerWsHandlers } from '@/handlers/wsHandlers'
 import { registerFileTransferHandlers } from '@/handlers/fileTransferHandlers'
 
@@ -43,13 +42,6 @@ const handleWindowData = (data: any) => {
   }
 }
 
-// 当会话ID变化时，通知 wsHandlers 当前正在查看的会话
-watch(() => conversation.value.id, (newId) => {
-  if (newId) {
-    emitter.emit('standaloneActiveConvId', newId)
-  }
-}, { immediate: true })
-
 onMounted(async () => {
   // 独立窗口需要单独注册 WS 消息监听器（App.vue 的监听器不能跨窗口生效）
   registerWsHandlers()
@@ -71,10 +63,6 @@ onMounted(async () => {
   })
 })
 
-onUnmounted(() => {
-  // 窗口关闭时清除标记
-  emitter.emit('standaloneActiveConvId', null)
-})
 </script>
 
 <style scoped>

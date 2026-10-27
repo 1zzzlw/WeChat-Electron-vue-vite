@@ -4,6 +4,11 @@ import { queryConversation, queryFriend, loadMessage, getFriendInfoById, getConv
 import { saveSentMessage, saveLoadMessage, addConversation, addFriendRelation, uploadNoteContent, addFavorites } from '../DB/insert'
 import { updateConversation, updateMessage, updateOldNoteContent, updateFriendRelation } from '../DB/update'
 import { clearHistoryMessage, deleteMessage, deleteFriend, deleteConversation, deleteFavorite } from '../DB/delete'
+import { broadcastConversationUpdate, setActiveConversation } from '../Util/conversationState'
+
+ipcMain.on('conversation:set-active', (event, conversationId) => {
+  setActiveConversation(event.sender, typeof conversationId === 'string' ? conversationId : null)
+})
 
 // ─── 统一的 IPC 错误处理包装器 ───────────────────────────────────────
 
@@ -114,7 +119,9 @@ safeOn('save:loadMessage', (_event, messageList) => {
 
 safeOn('update:conversation', (_event, condition, data) => {
   console.log('会话列表更新数据', condition, data)
-  updateConversation(condition, data)
+  const userId = String(store.get('userId'))
+  updateConversation({ ...condition, userId }, data)
+  if (condition.id) broadcastConversationUpdate(condition.id, data)
 })
 
 safeOn('add:conversation', (_event, conversationPack) => {

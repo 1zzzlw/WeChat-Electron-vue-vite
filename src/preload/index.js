@@ -52,7 +52,7 @@ const loadApi = {
   isNeedInitData: () => {
     return ipcRenderer.invoke('loading-isNeedInit')
   },
-  // 初始化完成，进入main界面
+  // 跳过加载等待，数据同步继续在主进程进行。
   loadFinish: () => {
     ipcRenderer.send('close-loading-window')
   },
@@ -68,6 +68,12 @@ const loadApi = {
   // 向渲染进程发送消息，在跳转路由，防止第一次进入消息加载不出来
   onDataInitComplete: (callback) => {
     ipcRenderer.once('data-init-complete', callback)
+    return () => ipcRenderer.removeListener('data-init-complete', callback)
+  },
+  onDataInitSynced: (callback) => {
+    const handler = (_event, result) => callback(result)
+    ipcRenderer.on('data-init-synced', handler)
+    return () => ipcRenderer.removeListener('data-init-synced', handler)
   }
 }
 
@@ -97,6 +103,12 @@ const dbApi = {
   },
   updateConversation: (condition, data) => {
     ipcRenderer.send('update:conversation', condition, data)
+  },
+  setActiveConversation: (conversationId) => ipcRenderer.send('conversation:set-active', conversationId),
+  onConversationUpdated: (callback) => {
+    const listener = (_event, conversationId, changes) => callback(conversationId, changes)
+    ipcRenderer.on('conversation:updated', listener)
+    return () => ipcRenderer.removeListener('conversation:updated', listener)
   },
   addConversation: (conversationPack) => {
     ipcRenderer.send('add:conversation', conversationPack)
@@ -158,6 +170,7 @@ const dbApi = {
 }
 
 const uploadFileApi = {
+  saveVoiceRecording: (recording) => ipcRenderer.invoke('voice:save-recording', recording),
   selectFile: (file) => {
     return ipcRenderer.invoke('select-file', file)
   },
@@ -225,6 +238,7 @@ const windowToolApi = {
   // 向新建窗口发送窗口信息
   sendWindowInfo: (windowInfo) => {
     ipcRenderer.on('newWindowInfo', windowInfo)
+    return () => ipcRenderer.removeListener('newWindowInfo', windowInfo)
   },
   // 懒加载组件挂载后主动拉取待发送数据（解决路由懒加载时序问题）
   getPendingData: () => {
@@ -313,7 +327,7 @@ const piniaShareApi = {
 const soundApi = {
   // 主进程通知播放消息提示音
   onPlayMessageSound: (callback) => {
-    const handler = (_event, soundUrl) => callback(soundUrl)
+    const handler = () => callback()
     ipcRenderer.on('play:messageSound', handler)
     // 返回移除监听器的函数
     return () => ipcRenderer.removeListener('play:messageSound', handler)

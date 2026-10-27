@@ -7,6 +7,23 @@ import { initAndUpdateUserLoginRecord } from '../DB/mainDB'
 import { initConversationList, initFriendList, initMessageList } from "../API/initData";
 
 let loadingWindow = null
+let autoEnterTimer = null
+let entryRequested = false
+
+const clearAutoEnterTimer = () => {
+    if (autoEnterTimer !== null) clearTimeout(autoEnterTimer)
+    autoEnterTimer = null
+}
+
+// 手动跳过和自动进入共用一次交接，避免重复跳转或重复连接 WS。
+const requestEnterChat = (window) => {
+    if (window !== loadingWindow || !window || window.isDestroyed() || entryRequested) return
+    const mainWindow = refs.mainWindow
+    if (!mainWindow || mainWindow.isDestroyed()) return
+    entryRequested = true
+    clearAutoEnterTimer()
+    mainWindow.webContents.send('data-init-complete')
+}
 
 const loading_width = 640
 const loading_height = 520
@@ -26,18 +43,24 @@ ipcMain.handle('loading-isNeedInit', (e) => {
             backgroundColor: '#dcedf8',
         }
         loadingWindow = createExtraWindow('loading', options, 'standalone', null)
+        entryRequested = false
 
         // 等待加载窗口准备就绪后，通知开始数据初始化
         const window = loadingWindow
+        // 从加载窗口真正出现时开始计时，不依赖网络同步或渲染进程的计时器。
+        window.once('show', () => {
+            autoEnterTimer = setTimeout(() => requestEnterChat(window), 10000)
+        })
         window.once('closed', () => {
             // 只有意外关闭时恢复来源窗口；正常交接由 enterMain 显示已绘制的主界面。
             if (loadingWindow !== window) return
+            clearAutoEnterTimer()
             loadingWindow = null
             if (refs.mainWindow && !refs.mainWindow.isDestroyed()) refs.mainWindow.show()
         })
         window.webContents.once('did-finish-load', () => {
             console.log('加载窗口已准备就绪，开始数据初始化')
-            initializationData(window)
+            initializationData(window, userId)
         })
 
         return true
@@ -47,23 +70,25 @@ ipcMain.handle('loading-isNeedInit', (e) => {
     }
 })
 
-// 数据库加载完成，可以进入main界面
+// 跳过等待：数据可以继续同步，主窗口完成路由挂载后再关闭加载页。
 ipcMain.on('close-loading-window', (e) => {
     if (!loadingWindow || loadingWindow.isDestroyed() || loadingWindow.webContents !== e.sender) return
-    // 保留加载窗口，隐藏的主窗口完成路由和首次绘制后再关闭。
-    refs.mainWindow.webContents.send('data-init-complete')
+    requestEnterChat(loadingWindow)
 })
 
 export function finishLoadingWindow() {
+    clearAutoEnterTimer()
     const window = loadingWindow
     loadingWindow = null
     if (window && !window.isDestroyed()) window.destroy()
 }
 
 // 初始化数据到数据库
-const initializationData = async (window) => {
+const initializationData = async (window, userId) => {
     try {
         const data = await fetchMySQLData()
+        // 跳过加载后用户可能已切换账号，不能将旧账号的同步结果写入新会话。
+        if (String(store.get('userId')) !== String(userId)) return
 
         const keys = Object.keys(data);
         // 将数据加载到本地数据库中
@@ -73,10 +98,14 @@ const initializationData = async (window) => {
             }
         }
 
-        const userId = store.get('userId');
         initAndUpdateUserLoginRecord(userId);
 
-        // 向加载窗口发送可以跳过动画的请求，直接进入聊天软件
+        const mainWindow = refs.mainWindow
+        if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.send('data-init-synced', { userId: String(userId) })
+        }
+
+        // 更新仍在显示的加载页状态，不改变用户的跳过/倒计时选择。
         if (!window.isDestroyed()) {
             window.webContents.send('skip', { ok: true })
         }

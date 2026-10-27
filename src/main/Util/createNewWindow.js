@@ -30,6 +30,7 @@ const WINDOW_CONFIGS = {
         createMomentView: '/createMomentView',
         updateMomentView: '/updateMomentView',
         momentInfoView: '/momentInfoView',
+        userMoments: '/userMoments',
         standaloneChat: '/standaloneChat'
         // TODO 可以继续添加其他路由页面
     }
@@ -44,9 +45,17 @@ const WINDOW_CONFIGS = {
  */
 function createExtraWindow(windowType, options = {}, loadType = 'vue', data) {
     console.log('打开', windowType)
-    if (getWindow(windowType) != null) {
-        console.log('该窗口已存在')
-        return
+    const existing = getWindow(windowType)
+    if (existing) {
+        // 动态相关窗口复用时传入新目标，由页面处理切换与未保存的编辑。
+        if (data != undefined && ['userMoments', 'momentInfoView', 'updateMomentView'].includes(windowType)) {
+            pendingWindowData.set(windowType, data)
+            existing.webContents.send('newWindowInfo', data)
+        }
+        if (existing.isMinimized()) existing.restore()
+        existing.show()
+        existing.focus()
+        return existing
     }
 
     // 动态获取 icon 路径
@@ -113,8 +122,9 @@ function createExtraWindow(windowType, options = {}, loadType = 'vue', data) {
         // 快速通道：组件如果已经挂载，show 时直接推送
         window.once('show', () => {
             if (!window.isDestroyed()) {
-                console.log(data)
-                window.webContents.send('newWindowInfo', data)
+                // 初始化期间也可能切换目标；已被页面主动取走时无需重复推送。
+                const latestData = pendingWindowData.get(windowType)
+                if (latestData !== undefined) window.webContents.send('newWindowInfo', latestData)
             }
         })
     }

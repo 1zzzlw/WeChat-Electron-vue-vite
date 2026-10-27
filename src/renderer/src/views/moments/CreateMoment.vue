@@ -379,7 +379,8 @@ const saveContent = async () => {
     const data = {
         content: editor.value.getHTML()
     }
-    await publishApi(data)
+    const result = await publishApi(data)
+    if (result.code !== 1) throw new Error(result.msg || '发布失败')
 
     ElMessage.success('发布成功')
 

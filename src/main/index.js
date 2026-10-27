@@ -40,6 +40,7 @@ function createMainWindow() {
     backgroundColor: '#d6eaf8',
     ...(process.platform === 'linux' ? { icon: iconPath } : {}),
     webPreferences: {
+      autoplayPolicy: 'no-user-gesture-required',
       webSecurity: false,
       nodeIntegration: false,
       contextIsolation: true,

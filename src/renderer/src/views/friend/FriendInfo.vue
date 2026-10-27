@@ -58,9 +58,7 @@
         <div>地址: {{ friendBaseInfo?.address }}</div>
         <div>生日: {{ friendBaseInfo?.birthday }}</div>
       </div>
-      <div class="moments">
-        朋友圈
-      </div>
+      <FriendMomentsPreview :user-id="friendBaseInfo ? String(friendBaseInfo.friendId) : undefined" :profile="friendBaseInfo" />
       <div class="button">
         <el-button @click="sendMessage">发消息</el-button>
         <el-button>语音聊天</el-button>
@@ -85,6 +83,7 @@ import { deleteFriendSync, deleteConversationSync, updateFriendRemarkSync, updat
 import { createSystemMessagePack, createContentJson } from '@/utils/systemMessageUtil'
 import { SystemMsgSubType, getSystemMsgText } from '@/utils/constants'
 import dayjs from 'dayjs'
+import FriendMomentsPreview from '@/components/FriendMomentsPreview.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -273,7 +272,9 @@ const sendMessage = async () => {
 
 const loadFriendInfo = async (friendId: any) => {
   // 获得好友的信息
-  friendBaseInfo.value = await getFriendInfoById(friendId)
+  friendBaseInfo.value = undefined
+  const info = await getFriendInfoById(friendId)
+  if (String(route.query.friendId) === String(friendId)) friendBaseInfo.value = info
 }
 
 // 好友是否在线
@@ -439,18 +440,6 @@ img {
 .baseInfo div::before {
   content: "• ";
   color: var(--color-text-muted);
-}
-
-.moments {
-  width: 100%;
-  height: 140px;
-  background: rgba(var(--color-surface-rgb), 0.4);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-text-secondary);
-  font-size: 14px;
 }
 
 .button {

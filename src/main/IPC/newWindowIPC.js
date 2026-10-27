@@ -29,8 +29,10 @@ let createMomentViewWindow = null
 let updateMomentViewWindow = null
 let momentInfoWindow = null
 let standaloneChatWindow = null
+let userMomentsWindow = null
 
 const createMapping = {
+  userMoments: { width: 820, height: 640, resizable: true, ref: 'userMomentsWindow' },
   addFriend: { width: friendAdd_width, height: friendAdd_height, ref: 'addFriendWindow' },
   createGroup: { width: createGroup_width, height: createGroup_height, ref: 'createGroupWindow' },
   settingView: { width: settingView_width, height: settingView_height, ref: 'settingViewWindow' },
@@ -44,6 +46,7 @@ const createMapping = {
 }
 
 const refMap = {
+  userMomentsWindow,
   addFriendWindow,
   createGroupWindow,
   settingViewWindow,
@@ -63,6 +66,7 @@ ipcMain.on('create-new-window', (e, windowType, data) => {
     }
 
     const routeMap = {
+        userMoments: 'userMoments',
         addFriend: 'friendAdd',
         createGroup: 'createGroup',
         settingView: 'setting',

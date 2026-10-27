@@ -22,17 +22,17 @@
             'top-bg': conversation.isTop === 1
           }" @click="starCall(conversation)">
             <ContextMenu :menu="[
-              conversation.isTop === 0 ? { label: '置顶聊天' } : { label: '取消置顶' },
-              { label: '标为未读' },
+              conversation.isTop === 1 ? { label: '取消置顶' } : { label: '置顶聊天' },
+              Number(conversation.unreadCount) > 0 ? { label: '标为已读' } : { label: '标为未读' },
               { divider: true },
-              conversation.isMute === 0 ? { label: '消息免打扰' } : { label: '取消消息免打扰' },
+              conversation.isMute === 1 ? { label: '取消消息免打扰' } : { label: '消息免打扰' },
               { label: '独立窗口显示' },
               { divider: true },
               { label: '删除' },
             ]" @select="(item) => handleChoice(item, conversation.id)">
               <div class="left-list">
                 <div class="left-image">
-                  <UnreadCounts :unreadCounts="conversation.unreadCount" />
+                  <UnreadCounts class="avatar-unread" :unreadCounts="Number(conversation.unreadCount) || 0" />
                   <div v-if="conversation.type === 2 && conversation.avatar === null" class="iconfont icon-ai-chat">
                   </div>
                   <img v-else :src="conversation.avatar + '?t=' + Date.now()" alt="头像" class="left-list-img" />
@@ -47,7 +47,10 @@
                   <div class="left-list-time" v-if="conversation.latestMsgTime !== 'Invalid Date'">
                     {{ conversation.latestMsgTime }}
                   </div>
-                  <div class="conversation-status"></div>
+                  <div v-if="conversation.isMute === 1 || conversation.isTop === 1" class="conversation-status">
+                    <el-icon v-if="conversation.isTop === 1" title="已置顶" aria-label="已置顶"><Top /></el-icon>
+                    <el-icon v-if="conversation.isMute === 1" title="消息免打扰" aria-label="消息免打扰"><MuteNotification /></el-icon>
+                  </div>
                 </div>
               </div>
             </ContextMenu>
@@ -70,7 +73,8 @@
 import { ref, onMounted, computed, toRaw } from 'vue'
 import { useRouter } from 'vue-router'
 import { conversationInfo } from '@/stores/modules/ConversationStore'
-import { Plus } from '@element-plus/icons-vue'
+import { Plus, MuteNotification, Top } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
 import { Conversation } from '@/types/conversation'
 import AutocompleteSearch from '@/components/AutocompleteSearch.vue'
 import UnreadCounts from '@/components/UnreadCounts.vue'
@@ -79,7 +83,7 @@ import ChatWelcome from '@/components/ChatWelcome.vue'
 import { getConversationList, updateConversation } from '@/db/dualDB'
 import { formatMessageTime } from '@/utils/utils'
 import { updateConversationTopStatus, updateConversationMuteStatus } from '@/db/syncDB'
-import { clearUnreadApi } from '@/api/Conversation'
+import { markConversationRead, markConversationUnread } from '@/services/conversationRead'
 import { Friend } from '@/types/friend'
 import { getFriendList } from '@/db/dualDB'
 import { friendInfo } from '@/stores/modules/ContactListStore'
@@ -97,13 +101,9 @@ const starCall = async (conversation: Conversation) => {
   if (!userId.value) {
     return
   }
-  // 清除会话缓存中的未读消息数量
-  conversationStore.clearUnreadCount(conversation.id as string)
-
-  // 清除本地数据库中的未读消息数量
-  const condition = { id: conversation.id }
-  const data = { unreadCount: 0 }
-  updateConversation(condition, data)
+  if (conversation.type !== 2) {
+    void markConversationRead(conversation.id).catch(error => ElMessage.warning(`未读状态暂未同步：${error.message}`))
+  }
 
   if (conversation.type === 2) {
     // 进入ai聊天窗口
@@ -121,9 +121,6 @@ const starCall = async (conversation: Conversation) => {
     })
   }
 
-  // 向后端发送消息已读状态更新请求
-  clearUnreadApi(conversation.id)
-
 }
 
 const createGroupChat = () => {
@@ -131,59 +128,58 @@ const createGroupChat = () => {
   (window as any).windowToolApi.createNewWindow('createGroup')
 }
 
-const handleChoice = (item: any, conversationId: string) => {
-  switch (item.label) {
-    case '置顶聊天': {
-      // 更新缓存
-      conversationStore.updateConversationTopStatus(conversationId, 1)
-      updateConversationTopStatus(conversationId, userId.value, 1)
-      break
-    }
-    case '取消置顶': {
-      conversationStore.updateConversationTopStatus(conversationId, 0)
-      updateConversationTopStatus(conversationId, userId.value, 0)
-      break
-    }
-    case '标为未读': {
-      break
-    }
-    case '消息免打扰': {
-      // 更新缓存
-      conversationStore.updateConversationMuteStatus(conversationId, 1)
-      updateConversationMuteStatus(conversationId, userId.value, 1)
-      break
-    }
-    case '取消消息免打扰': {
-      // 更新缓存
-      conversationStore.updateConversationMuteStatus(conversationId, 0)
-      updateConversationMuteStatus(conversationId, userId.value, 0)
-      break
-    }
-    case '独立窗口显示': {
-      const conversation = conversationStore.conversationMap[conversationId]
-      if (conversation) {
-        (window as any).windowToolApi.createNewWindow('standaloneChat', { conversation: toRaw(conversation) })
-        // 主窗口跳转会话列表，不再显示聊天视图（避免缓存同步等问题）
-        active.value = ''
+const handleChoice = async (item: any, conversationId: string) => {
+  try {
+    switch (item.label) {
+      case '置顶聊天': {
+        // 更新缓存
+        conversationStore.updateConversationTopStatus(conversationId, 1)
+        updateConversationTopStatus(conversationId, userId.value, 1)
+        break
+      }
+      case '取消置顶': {
+        conversationStore.updateConversationTopStatus(conversationId, 0)
+        updateConversationTopStatus(conversationId, userId.value, 0)
+        break
+      }
+      case '标为未读': {
+        await markConversationUnread(conversationId)
+        break
+      }
+      case '标为已读': {
+        await markConversationRead(conversationId)
+        break
+      }
+      case '消息免打扰': {
+        await updateConversationMuteStatus(conversationId, userId.value, 1)
+        break
+      }
+      case '取消消息免打扰': {
+        await updateConversationMuteStatus(conversationId, userId.value, 0)
+        break
+      }
+      case '独立窗口显示': {
+        const conversation = conversationStore.conversationMap[conversationId]
+        if (conversation) {
+          (window as any).windowToolApi.createNewWindow('standaloneChat', { conversation: toRaw(conversation) })
+          // 主窗口跳转会话列表，不再显示聊天视图（避免缓存同步等问题）
+          active.value = ''
+          router.push('/messageList')
+        }
+        break
+      }
+      case '删除': {
+        // 更新会话状态为不显示
+        const condition = { id: conversationId }
+        const data = { status: 0 }
+        updateConversation(condition, data)
+        conversationStore.removeConversation(conversationId)
         router.push('/messageList')
+        break
       }
-      break
     }
-    case '删除': {
-      // 更新会话状态为不显示
-      const condition = {
-        id: conversationId
-      }
-      const data = {
-        status: 0
-      }
-      updateConversation(condition, data)
-      // 从会话缓存中清除
-      conversationStore.removeConversation(conversationId)
-      // 切换路由
-      router.push('/messageList')
-      break
-    }
+  } catch (error) {
+    ElMessage.error(error instanceof Error ? error.message : '更新会话状态失败，请重试')
   }
 }
 
@@ -195,26 +191,20 @@ const addFriend = () => {
 
 
 const loadConversationList = async () => {
-  // 判断缓存中是否存在，存在可以不去sqlite中加载数据
-  const cache = conversationStore.initCache(userId.value as string)
-
-  if (!cache) {
-    // 此时缓存为空或缓存失效
-    const conversationList = await getConversationList()
-
-    // 将会话信息存入pinia缓存中
-    conversationList.forEach((conversation: Conversation) => {
-      conversation.latestMsgTime = formatMessageTime(conversation.latestMsgTime)
-      conversationStore.setConversationMap(conversation.id, conversation)
-    })
-  }
+  conversationStore.initCache(userId.value as string)
+  // 登录同步写入 SQLite 后，以数据库的未读/免打扰状态更新旧的界面缓存。
+  const conversationList = await getConversationList()
+  conversationList.forEach((conversation: Conversation) => {
+    conversation.latestMsgTime = formatMessageTime(conversation.latestMsgTime)
+    conversationStore.setConversationMap(conversation.id, conversation)
+  })
 }
 
 // 可以检测会话的更新实时展示
 const conversationListArr = computed(() => {
   // AI 工作台使用 Main 的独立导航，普通会话列表只保留单聊和群聊
   const list = Object.values(conversationStore.conversationMap)
-    .filter((conversation) => conversation.type !== 2)
+    .filter((conversation) => conversation.type !== 2 && conversation.status !== 0)
 
   // 按置顶和时间排序
   return list.sort((a: any, b: any) => {
@@ -295,9 +285,12 @@ onMounted(async () => {
 
 .right-count {
   flex-shrink: 0;
-  margin-left: 40px;
-  position: relative;
+  min-width: 40px;
   height: 50px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
 }
 
 .top-bg {
@@ -309,19 +302,9 @@ onMounted(async () => {
   position: relative;
 }
 
-.top-bg::before {
-  content: '📌';
-  position: absolute;
-  right: 10px;
-  top: 5px;
-  font-size: 12px;
-  opacity: 0.6;
-}
-
 .left-list-time {
-  position: absolute;
-  top: 2px;
-  right: 0;
+  min-height: 14px;
+  line-height: 14px;
   white-space: nowrap;
   font-size: 10px;
 }
@@ -332,9 +315,36 @@ onMounted(async () => {
   right: 0;
 }
 
-.left-list-img {
+.conversation-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: auto;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  line-height: 1;
+}
+
+/* 固定头像尺寸；角标脱离普通文档流，不挤压头像、昵称或时间。 */
+.left-image {
+  position: relative;
+  flex: 0 0 50px;
   width: 50px;
   height: 50px;
+}
+
+.avatar-unread {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  z-index: 1;
+}
+
+.left-list-img {
+  display: block;
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
   border-radius: 10px;
   /* 防止头像被压缩 */
   flex-shrink: 0;

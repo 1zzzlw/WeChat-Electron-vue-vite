@@ -1,7 +1,7 @@
 <template>
   <div class="chat-count">
     <ChatHeader :conversation="conversation" />
-    <div class="chat-content">
+    <div class="chat-content" @load.capture="followMessageMedia" @loadedmetadata.capture="followMessageMedia">
       <el-scrollbar ref="scrollbarRef" @scroll="handleScroll" noresize style="height: 100%; width: 100%">
         <div class="chat-message" v-for="(message, index) in messageArr" :key="message.id" :id="`message${message.id}`">
           <!-- 展示时间 -->
@@ -87,6 +87,7 @@
         <Close />
       </el-icon>
     </div>
+    <VoiceRecorderPanel v-if="voiceVisible" :key="effectiveConvId" :send-recording="sendVoiceRecording" @close="voiceVisible = false" />
     <div class="chat-tool">
       <el-popover placement="top" trigger="click"
         popper-style="width: 300px; height: 300px; display: flex; flex-wrap: wrap; overflow-y: auto; scrollbar-width: none; padding-left: 6px;">
@@ -99,6 +100,8 @@
         </template>
       </el-popover>
       <el-button :icon="Folder" size="large" square @click="selectFile"></el-button>
+      <el-button :icon="Microphone" size="large" square title="发送语音" :class="{ 'voice-tool-active': voiceVisible }"
+        :aria-pressed="voiceVisible" @click="voiceVisible = !voiceVisible"></el-button>
       <el-button :icon="Scissor" size="large" square :disabled="capturing" title="截图" @click="captureBtn"></el-button>
       <el-button :icon="VideoCamera" size="large" square></el-button>
       <el-button :icon="Money" size="large" square class="red-packet-btn" title="发红包"
@@ -132,7 +135,7 @@ import { statusMap } from '@/utils/constants'
 import { conversationInfo } from '@/stores/modules/ConversationStore'
 import { friendInfo } from '@/stores/modules/ContactListStore'
 import { fileStatusListInfo } from '@/stores/modules/FileStatusInfoStore'
-import { Eleme, Folder, Scissor, VideoCamera, Close, Loading, WarningFilled, Money } from '@element-plus/icons-vue'
+import { Eleme, Folder, Scissor, VideoCamera, Close, Loading, WarningFilled, Money, Microphone } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { groupMemberInfo } from '@/stores/modules/GroupMemberStore'
 import { getGroupMemberListApi } from '@/api/Conversation'
@@ -150,6 +153,11 @@ import { SystemMsgSubType, getSystemMsgText } from '@/utils/constants'
 import { useChatScroll } from '@/composables/useChatScroll'
 import SendRedPacket from '@/components/SendRedPacket.vue'
 import { sendRedPacketApi } from '@/api/RedPacket'
+import VoiceRecorderPanel from '@/components/VoiceRecorderPanel.vue'
+import type { VoiceRecording } from '@/types/voice'
+import { sendUploadedFileIfReady } from '@/handlers/fileTransferHandlers'
+import { useConversationRead } from '@/composables/useConversationRead'
+import emitter from '@/utils/mitt'
 
 // Props
 const props = withDefaults(defineProps<{
@@ -191,21 +199,25 @@ let messageLoadVersion = 0
 
 // 响应式状态
 const messageText = ref('')
-const fileUrl = ref('')
 const scrollbarRef = ref()
 const fileInfoList = ref<FileBaseInfo[]>([])
 const quoteMessage = ref<Message | null>(null)
 const showRedPacketDialog = ref(false)
+const voiceVisible = ref(false)
 
 // 计算属性
 const effectiveConvId = computed(() => {
   return props.convId || (route.query.conversationId as string)
 })
 
+watch(effectiveConvId, () => { voiceVisible.value = false })
+
 const messageArr = computed(() => {
   const convId = effectiveConvId.value
   return messageStore.messageMap[convId] || []
 })
+
+useConversationRead(effectiveConvId, messageArr)
 
 let retainedConversationId: string | undefined
 watch(effectiveConvId, (conversationId) => {
@@ -348,6 +360,44 @@ const captureBtn = async () => {
   }
 }
 
+// 录音、附件复用同一文件消息流程；先登记消息，防止小文件上传回调先到。
+const sendFile = async (file: FileBaseInfo, convId: string, receiverId: string | number, receiverIds: string[]) => {
+  const messagePack = createMessagePack(receiverId, convId, file.fileType, file.content, file)
+  messagePack.receiverIds = receiverIds
+  messageStore.addFileMessage(file.fileId, messagePack)
+  const fileStatusInfo: FileUploadStatusInfo = {
+    fileId: file.fileId, chunkCount: 0, uploadStatus: statusMap.uploading.value,
+    uploadProgress: 0, uploadSpeed: 0, pause: false
+  }
+  fileStatusListInfoStore.addFileUploadUpdateInfo(file.fileId, fileStatusInfo)
+  const { minioFilePath, chunkCount } = await (window as any).uploadFileApi.uploadFile(toRaw(file))
+  messagePack.remotePath = minioFilePath
+  fileStatusInfo.chunkCount = chunkCount
+  await sendApi(messagePack)
+}
+
+const canSendTo = (receiverId: string | number) => {
+  if (props.conversation.type !== 0) return true
+  const relation = friendInfoStore.friendInfoMap[receiverId]?.relationStatus
+  if (relation === 2 || relation === 3) {
+    ElMessage.warning(relation === 2 ? '对方已被你拉黑，无法发送消息' : '消息已发出，但被对方拒收了')
+    return false
+  }
+  return true
+}
+
+const sendVoiceRecording = async (recording: VoiceRecording) => {
+  const convId = effectiveConvId.value
+  const isPrivate = props.conversation.type === 0
+  const receiverId = isPrivate ? props.conversation.targetId || '' : convId
+  if (!canSendTo(receiverId)) throw new Error('当前好友关系不允许发送语音')
+  const receiverIds = isPrivate ? [] : (groupMemberStore.groupMemberMap[convId] || [])
+    .filter(item => String(item.userId) !== String(props.userId)).map(item => String(item.userId))
+  const file = await (window as any).uploadFileApi.saveVoiceRecording(recording)
+  if (convId !== effectiveConvId.value) throw new Error('会话已切换，语音未发送')
+  await sendFile(file, convId, receiverId, receiverIds)
+}
+
 // 发送消息
 const handleEnterMessage = (e: KeyboardEvent) => {
   if (e.shiftKey) return
@@ -359,20 +409,9 @@ const sendMessage = async () => {
   const convId = effectiveConvId.value
   const content = messageText.value
   const isPrivate = props.conversation.type === 0
-  const receiverId = isPrivate ? props.conversation.targetId : convId
+  const receiverId = isPrivate ? props.conversation.targetId || '' : convId
 
-  // 私聊拉黑检查
-  if (isPrivate && receiverId) {
-    const friendData = friendInfoStore.friendInfoMap[receiverId as string | number]
-    if (friendData?.relationStatus === 2) {
-      ElMessage.warning('对方已被你拉黑，无法发送消息')
-      return
-    }
-    if (friendData?.relationStatus === 3) {
-      ElMessage.warning('消息已发出，但被对方拒收了')
-      return
-    }
-  }
+  if (!canSendTo(receiverId)) return
 
   // 获取接收者ID列表
   const receiverIds = isPrivate ? [] : (
@@ -384,24 +423,7 @@ const sendMessage = async () => {
   //  处理文件消息
   if (fileInfoList.value.length > 0) {
     for (const file of fileInfoList.value) {
-      const { minioFilePath, chunkCount } = await (window as any).uploadFileApi.uploadFile(toRaw(file))
-      file.remotePath = minioFilePath
-
-      const fileStatusInfo: FileUploadStatusInfo = {
-        fileId: file.fileId,
-        chunkCount,
-        uploadStatus: statusMap.uploading.value,
-        uploadProgress: 0,
-        uploadSpeed: 0,
-        pause: false
-      }
-      fileStatusListInfoStore.addFileUploadUpdateInfo(file.fileId, fileStatusInfo)
-
-      const messagePack = createMessagePack(receiverId as string, convId, file.fileType, file.content, file)
-      messagePack.receiverIds = receiverIds as string[]
-      messageStore.addFileMessage(file.fileId, messagePack)
-
-      sendApi(messagePack)
+      await sendFile(file, convId, receiverId, receiverIds as string[])
     }
     fileInfoList.value.length = 0
     quoteMessage.value = null
@@ -422,18 +444,15 @@ const sendMessage = async () => {
 }
 
 const sendApi = (messagePack: Message) => {
-  sendMessageApi(messagePack).then(async (res) => {
-    messageText.value = ''
-    fileUrl.value = ''
-
+  return sendMessageApi(messagePack).then(async (res) => {
     if (res.data) {
       const message = res.data
 
       messagePack.remoteUrl = message.remoteUrl
       messageStore.addMessageMap(messagePack.conversationId, messagePack)
 
-      // 文件消息立即持久化到 IndexedDB，防止切换路由后上传组件消失
-      saveSentMessage({ ...messagePack, receiverIds: [] })
+      // 文件消息立即持久化到本地数据库，防止切换路由后上传组件消失
+      await saveSentMessage({ ...messagePack, receiverIds: [] })
 
       conversationStore.setConversationMap(messagePack.conversationId, {
         latestMsg: messagePack.content,
@@ -456,6 +475,9 @@ const sendApi = (messagePack: Message) => {
 
       await nextTick()
       scrollToBottom()
+      sendUploadedFileIfReady(messagePack.fileId)
+    } else {
+      throw new Error('文件消息未保存，请重试')
     }
   })
 }
@@ -481,7 +503,8 @@ const getMessageSnapshot = (msg: Message): string => {
   if (msg.msgType === 1) return msg.content?.substring(0, 60) || ''
   if (msg.msgType === 2) return '[图片]'
   if (msg.msgType === 3) return '[视频]'
-  if (msg.msgType === 4) return `[文件] ${msg.fileName || ''}`
+  if (msg.msgType === 4) return '[语音]'
+  if (msg.msgType === 5) return `[文件] ${msg.fileName || ''}`
   if (msg.msgType === 6) return '[红包]'
   return msg.content?.substring(0, 60) || '[消息]'
 }
@@ -648,9 +671,26 @@ const { scrollToBottom, handleScroll, loading, noMore, isNearBottom } = useChatS
   {
     canLoadMore: () => !noMore.value && messagePageInfo.pageNO > 0,
     onLoadMore: async () => { await loadMessage(effectiveConvId.value) },
-    getFirstMessageId: () => messageArr.value.at(0)?.id
+    getFirstMessageId: () => messageArr.value.at(0)?.id,
+    getLastMessageId: () => messageArr.value.at(-1)?.id
   }
 )
+
+// 新消息追加后跟到最新一条；向头部加载历史、ACK 更新 ID 不触发滚动。
+watch(
+  () => [effectiveConvId.value, messageArr.value.length, messageArr.value.at(-1)?.id] as const,
+  async ([conversationId, count, lastId], [previousId, previousCount, previousLastId]) => {
+    if (conversationId !== previousId || count <= previousCount || !lastId || lastId === previousLastId) return
+    await nextTick()
+    if (conversationId === effectiveConvId.value) scrollToBottom()
+  },
+  { flush: 'post' }
+)
+
+// 图片和媒体元数据可能晚于消息 DOM 到达，仍在底部时继续跟随高度变化。
+function followMessageMedia() {
+  if (isNearBottom.value && !loading.value) scrollToBottom()
+}
 
 // 加载数据 
 async function loadMessage(newConversationId: any) {
@@ -705,6 +745,25 @@ const getGroupMemberList = async () => {
   })
 }
 
+// 用户提前跳过加载后，同步落库时补齐当前会话，不清除已经收到或正在发送的消息。
+const refreshInitializedMessages = async ({ userId }: { userId: string }) => {
+  const conversationId = effectiveConvId.value
+  if (!conversationId || userId !== String(props.userId)) return
+  const version = ++messageLoadVersion
+  Object.assign(messagePageInfo, { pageTotal: 0, pageNO: 0, maxMessageId: null, noData: false })
+  noMore.value = false
+  try {
+    await loadMessage(conversationId)
+    if (version !== messageLoadVersion || conversationId !== effectiveConvId.value) return
+    if (props.conversation.type === 1) await getGroupMemberList()
+    await nextTick()
+    if (version === messageLoadVersion && conversationId === effectiveConvId.value) scrollToBottom()
+  } catch (error) {
+    console.error('刷新初始化会话消息失败', error)
+  }
+}
+emitter.on('data:initialized', refreshInitializedMessages)
+
 // 监听会话切换
 // 同时监听 route query 和 conversation prop，确保 store 延迟加载时也能正确初始化
 watch(
@@ -748,6 +807,7 @@ watch(
 
 // 组件卸载
 onUnmounted(() => {
+  emitter.off('data:initialized', refreshInitializedMessages)
   removeCaptureListener()
   messageLoadVersion++
   if (retainedConversationId) messageStore.releaseConversation(retainedConversationId)
@@ -782,6 +842,8 @@ defineExpose({
   flex: 1;
   overflow: hidden;
 }
+
+.voice-tool-active { color: var(--color-text-accent); background: var(--color-accent-soft); box-shadow: inset 0 0 0 1px var(--color-border-primary); }
 
 img {
   width: 50px;

@@ -30,7 +30,7 @@
                     <div class="header-title">修改动态</div>
                 </div>
                 <div class="header-actions">
-                    <el-button class="save-btn" type="primary" @click="saveContent" :loading="saving">保存修改</el-button>
+                    <el-button class="save-btn" type="primary" @click="saveContent" :loading="saving" :disabled="!postId">保存修改</el-button>
                 </div>
             </div>
 
@@ -137,7 +137,10 @@ const currentLine = ref(1)
 const saving = ref(false)
 
 // 帖子原始数据（从窗口数据中获取）
-const postId = ref<number>(0)
+const postId = ref<string>('')
+let loadedContent = ''
+let removeWindowListener: (() => void) | undefined
+let disposed = false
 
 const updateLineStyles = () => {
     nextTick(() => {
@@ -233,16 +236,27 @@ onMounted(async () => {
         resizeObserver.observe(editorEl)
     }
 
-    // 获取传递的数据
-    const data = await (window as any).windowToolApi?.getPendingData()
-    if (data) {
-        postId.value = data.id || 0
-        const content = data.content || ''
-        // 将 HTML 内容填入编辑器
-        if (editor.value && content) {
-            editor.value.commands.setContent(content)
+    const applyPost = (data: any) => {
+        if (disposed || !data?.id || String(data.id) === postId.value) return
+        if (saving.value || (postId.value && editor.value?.getHTML() !== loadedContent)) {
+            ElMessage.warning('请先保存或关闭当前正在编辑的动态，再编辑另一条')
+            return
         }
+        postId.value = String(data.id)
+        editor.value?.commands.setContent(data.content || '')
+        loadedContent = editor.value?.getHTML() || ''
+        activeHeadingIndex.value = -1
+        if (editorMainRef.value) editorMainRef.value.scrollTop = 0
+        updateLineStyles()
     }
+    const api = (window as any).windowToolApi
+    let receivedPush = false
+    removeWindowListener = api.sendWindowInfo((_event: unknown, data: any) => {
+        receivedPush = true
+        applyPost(data)
+    })
+    const data = await api.getPendingData()
+    if (!receivedPush) applyPost(data)
 })
 
 const headings = computed(() => {
@@ -295,6 +309,8 @@ const scrollToHeading = (index: number) => {
 }
 
 onBeforeUnmount(() => {
+    disposed = true
+    removeWindowListener?.()
     editor.value?.destroy()
     if (resizeObserver) {
         resizeObserver.disconnect()
@@ -382,7 +398,8 @@ const saveContent = async () => {
         const content = editor.value.getHTML()
 
         // 调用更新 API
-        await updateMomentApi({ id: postId.value, content })
+        const result = await updateMomentApi({ id: postId.value, content })
+        if (result.code !== 1) throw new Error(result.msg || '修改失败')
 
         // 释放临时 URL
         for (const img of pendingImages.value) {

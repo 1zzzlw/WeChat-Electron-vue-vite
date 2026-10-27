@@ -94,17 +94,19 @@ const submitForm = async () => {
       // 清空缓存的注册信息
       registerInfoStore.$reset()
 
-      // 判断并初始化
-      await (window as any).loadApi.isNeedInitData()
-
-      // 等待通知在路由跳转
-      await new Promise(resolve => {
-        (window as any).loadApi.onDataInitComplete(resolve)
+      let removeInitListener: (() => void) | undefined
+      const enterRequested = new Promise(resolve => {
+        removeInitListener = (window as any).loadApi.onDataInitComplete(resolve)
       })
-      console.info('初始化完成, 进入main界面');
-      await router.push('/main')
-      await nextTick()
-      await (window as any).windowToolApi.resizeWindow('main')
+      try {
+        const isNeed = await (window as any).loadApi.isNeedInitData()
+        if (isNeed) await enterRequested
+        await router.push('/main')
+        await nextTick()
+        await (window as any).windowToolApi.resizeWindow('main')
+      } finally {
+        removeInitListener?.()
+      }
     } else {
       ElMessage.error(res.msg)
     }

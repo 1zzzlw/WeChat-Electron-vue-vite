@@ -2,6 +2,8 @@ const canvas = document.querySelector('canvas')
 const context = canvas.getContext('2d')
 const motion = matchMedia('(prefers-reduced-motion: reduce)')
 const button = document.querySelector('.continue')
+const countdown = document.querySelector('.countdown')
+const deadline = Date.now() + 10000
 let frame = 0
 let complete = false
 let failed = false
@@ -76,19 +78,29 @@ window.addEventListener('resize', restart)
 document.addEventListener('visibilitychange', restart)
 motion.addEventListener('change', restart)
 button.addEventListener('click', () => {
+  if (button.disabled) return
   button.disabled = true
+  button.textContent = '正在进入…'
+  countdown.textContent = '正在打开聊天界面'
+  clearInterval(countdownTimer)
   window.loadApi.loadFinish()
 })
+// 展示倒计时；真正的 10 秒自动进入由主进程负责，后台节流不会阻止交接。
+const countdownTimer = setInterval(() => {
+  const seconds = Math.max(0, Math.ceil((deadline - Date.now()) / 1000))
+  countdown.textContent = seconds > 0 ? `${seconds} 秒后自动进入，也可以点击跳过等待` : '正在打开聊天界面'
+  if (seconds === 0) clearInterval(countdownTimer)
+}, 1000)
 const removeListener = window.loadApi.dataInitSuccessAndSkip(result => {
   complete = true
   failed = result?.ok === false
   document.querySelector('h1').textContent = failed ? '暂时未能完成同步' : '一切就绪，开始对话'
   document.querySelector('.description').textContent = failed ? '网络暂不可用，你可以先进入聊天，稍后重试同步。' : '会话与联系人已同步完成'
   document.querySelector('.working').hidden = true
-  button.hidden = false
   restart()
 })
 window.addEventListener('pagehide', () => {
+  clearInterval(countdownTimer)
   if (frame) cancelAnimationFrame(frame)
   removeListener()
 })
