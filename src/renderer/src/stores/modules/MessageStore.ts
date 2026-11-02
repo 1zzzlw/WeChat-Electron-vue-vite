@@ -8,6 +8,7 @@ interface PendingMessageInfo {
   status: 0
   conversationId: string  // 如 "user_123" 或 "group_456"
   index: number       // 在messageMap数组中的位置
+  message: Message   // 切换会话清理界面缓存后，仍能完成 ACK 和持久化。
 }
 
 // append 模式：总是追加消息到末尾
@@ -105,7 +106,10 @@ export const messageInfo = defineStore('messageInfo', {
       if (mode === 'reuse_if_exists') {
         const existedIndex = messages.findIndex(m => m.id === message.id)
         // 直接返回该消息的索引
-        if (existedIndex !== -1) return existedIndex
+        if (existedIndex !== -1) {
+          Object.assign(messages[existedIndex], message, { sendStatus: 0 })
+          return existedIndex
+        }
       }
 
       // 将新消息添加到数组末尾
@@ -123,7 +127,8 @@ export const messageInfo = defineStore('messageInfo', {
         sentAt: Date.now(),
         status: 0,
         conversationId,
-        index
+        index,
+        message: this.messageMap[conversationId][index]
       })
       this.startTimeoutChecker()
     },
@@ -155,6 +160,7 @@ export const messageInfo = defineStore('messageInfo', {
         opts.receiverIds && opts.receiverIds.length > 0
           ? { ...message, receiverIds: opts.receiverIds }
           : message
+      payload.sendStatus = 0
 
       // 将消息添加到 messageMap 中，并获取其索引
       const index = this._ensureMessageInMap(conversationId, payload, enqueueMode)
@@ -236,10 +242,11 @@ export const messageInfo = defineStore('messageInfo', {
 
       // 2. 更新messageMap中的消息状态
       const message = this.messageMap[pendingInfo.conversationId]
-        ?.find(item => item.id === messageId)
+        ?.find(item => item.id === messageId) || pendingInfo.message
 
       if (message) {
         message.sendStatus = 2
+        ;(window as any).dbApi?.updateMessageInfo?.({ id: messageId }, { sendStatus: 2 })
       }
 
       // 3. 触发UI更新（显示感叹号）
@@ -270,7 +277,7 @@ export const messageInfo = defineStore('messageInfo', {
       if (pendingInfo) {
         // 正常 ACK：通过待确认记录找到会话
         message = this.messageMap[pendingInfo.conversationId]
-          ?.find(item => item.id === messageId)
+          ?.find(item => item.id === messageId) || pendingInfo.message
       } else {
         // 迟到 ACK：通过临时 ID 查找缓存中的消息
         for (const messages of Object.values(this.messageMap)) {
@@ -301,31 +308,14 @@ export const messageInfo = defineStore('messageInfo', {
      * 收到服务端错误响应
      */
     onReceiveError(messageId: string, error: string) {
-      const pendingInfo = this.pendingMessages.get(messageId)
-
-      if (pendingInfo) {
-        // 1. 从pendingMessages中移除
-        this.pendingMessages.delete(messageId)
-
-        // 2. 更新messageMap中的消息状态
-        const message = this.messageMap[pendingInfo.conversationId]
-          ?.find(item => item.id === messageId)
-
-        if (message) {
-          // TODO : 可以在这里记录错误信息，或者触发UI提示
-          message.sendStatus = 2
-        }
-
-        // 3. 如果所有消息都处理完了，停止计时器
-        if (this.pendingMessages.size === 0) {
-          this.stopTimeoutChecker()
-        }
-      }
+      this.markMessageFailed(messageId, error)
     },
     /**
      * 手动标记消息为失败
      */
     markMessageFailed(messageId: string, error: string) {
+      const pending = this.pendingMessages.get(messageId)
+      if (pending) pending.message.sendStatus = 2
       // 查找消息（可能在pendingMessages或messageMap中）
       for (const [sessionKey, messages] of Object.entries(this.messageMap)) {
         const index = messages.findIndex(msg => msg.id === messageId)
@@ -337,6 +327,8 @@ export const messageInfo = defineStore('messageInfo', {
 
       // 从pendingMessages中移除（如果存在）
       this.pendingMessages.delete(messageId)
+      ;(window as any).dbApi?.updateMessageInfo?.({ id: messageId }, { sendStatus: 2 })
+      if (this.pendingMessages.size === 0) this.stopTimeoutChecker()
     },
     clearConversationMessages(conversationId: string) {
       if (this.messageMap[conversationId]) {

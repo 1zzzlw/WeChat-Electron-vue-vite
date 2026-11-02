@@ -18,7 +18,7 @@ function harness(options = {}) {
     let window
     const image = (width, height) => ({
         getSize: () => ({ width, height }), isEmpty: () => false,
-        toPNG: () => Buffer.from('png'), toDataURL: () => 'data:image/png;base64,preview',
+        toPNG: () => Buffer.from('png'), toJPEG: () => Buffer.from('jpeg'),
         resize: size => image(size.width, size.height),
         crop: rect => { crops.push(rect); return image(rect.width, rect.height) }
     })
@@ -31,7 +31,7 @@ function harness(options = {}) {
     }
     const display = { id: 2, bounds: { x: -1920, y: 0, width: 1920, height: 1080 }, scaleFactor: 2 }
     const scope = {
-        Buffer, refs: { mainWindow: source },
+        Buffer, pathToFileURL: require('node:url').pathToFileURL, refs: { mainWindow: source },
         ipcMain: { handle: (name, fn) => handlers.set(name, fn), on: (name, fn) => events.set(name, fn) },
         BrowserWindow: { fromWebContents: () => source, getFocusedWindow: () => source },
         screen: { getDisplayMatching: () => display, getPrimaryDisplay: () => display },
@@ -59,6 +59,7 @@ function harness(options = {}) {
         console: { error() {} },
         require: name => name === 'fs' ? {
             promises: {
+                mkdir: async () => {},
                 writeFile: async (...args) => {
                     writes.push(args)
                     if (options.write) await options.write()
@@ -100,7 +101,7 @@ async function run() {
         await h.save({ x: 0, y: 0, width: 1920, height: 1080 })
         assert.equal(h.crops[0].width, 7680)
         assert.equal(h.crops[0].height, 4320)
-        assert.equal(h.writes.length, 1)
+        assert.equal(h.writes.length, 2, '原图和缩略图分别保存为文件')
         assert.equal(h.clipboards.length, 1)
         assert.equal(h.sent[0].result.ok, true)
     })
@@ -136,7 +137,7 @@ async function run() {
         assert.equal(second.ok, false)
         release()
         await first
-        assert.equal(h.writes.length, 1)
+        assert.equal(h.writes.length, 2)
         assert.equal(h.sent.length, 1)
     })
     await check('磁盘失败后窗口恢复并允许重新截图', async () => {

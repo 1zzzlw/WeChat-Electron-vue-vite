@@ -3,17 +3,41 @@
 
     <div class="img-wrap">
       <!-- <img class="icon" src="../assets/download.svg" alt="" /> -->
-      <img :src=previewBase64 alt="聊天图片" class="chat-image-content" @click="openImage">
+      <img v-if="imageSource" :src="imageSource" alt="聊天图片" class="chat-image-content" loading="lazy" @error="fallbackToOriginal" @click="openImage">
+      <button v-else class="media-placeholder" @click="openImage">图片加载失败，点击查看原图</button>
     </div>
 
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { getImageUrlList } from '@/db/dualDB'
 
-const loading = ref()
+const props = defineProps<{
+  sendStatus: number
+  fileId: string
+  fileName: string
+  fileSize: number
+  localPath: string
+  remoteUrl: string
+  previewUrl: string
+  downloadStatus: number
+  receiveTime: string
+}>()
+
+const failedPreview = ref(false)
+const failedOriginal = ref(false)
+const imageSource = computed(() => failedOriginal.value ? '' : failedPreview.value
+  ? props.remoteUrl : props.previewUrl || (props.remoteUrl ? `${props.remoteUrl}.preview` : ''))
+const fallbackToOriginal = () => {
+  if (!failedPreview.value) failedPreview.value = true
+  else failedOriginal.value = true
+}
+watch(() => [props.previewUrl, props.remoteUrl], () => {
+  failedPreview.value = false
+  failedOriginal.value = false
+})
 
 const openImage = async () => {
   const imageUrlList = await getImageUrlList();
@@ -24,23 +48,6 @@ const openImage = async () => {
     imageUrlList: imageUrlList
   })
 }
-
-const props = defineProps<{
-  sendStatus: number
-  fileId: string
-  fileName: string
-  fileSize: number
-  localPath: string
-  remoteUrl: string
-  previewBase64: string
-  downloadStatus: number
-  receiveTime: string
-}>()
-
-onMounted(() => {
-  loading.value = props.sendStatus === 1 ? false : true;
-})
-
 </script>
 
 <style scoped>
@@ -61,6 +68,7 @@ onMounted(() => {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
   image-rendering: high-quality;
 }
+.media-placeholder { min-height: 100px; padding: 16px; color: var(--color-text-muted); background: var(--color-surface-1); border: 0; cursor: pointer; }
 
 .icon {
   width: 80px;

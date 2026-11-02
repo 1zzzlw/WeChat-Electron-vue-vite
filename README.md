@@ -6,6 +6,8 @@
 
 ## 核心技术栈
 
+图片/视频消息已改为独立缩略图上传，WS 和新消息数据库记录不再携带 Base64。三端部署与兼容说明见工作区后端项目的 `docs/媒体消息去除Base64.md`；需要完整重启 Electron。
+
 - 后端：Java，SpringBoot，Netty，Redis，RabbitMQ，MySQL，Minio
 - 前端： Vite/Vue3，TypeScript，JavaScript，Electron，WebSocket，SQLite3
 

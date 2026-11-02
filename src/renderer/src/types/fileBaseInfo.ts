@@ -4,7 +4,8 @@ import type { statusMap } from '@/utils/constants'
 export type UploadStatus = typeof statusMap[keyof typeof statusMap]['value'];
 
 export interface FileBaseInfo {
-    base64?: string
+    previewPath?: string
+    previewUrl?: string
     fileId: string
     fileName: string
     fileSize: number

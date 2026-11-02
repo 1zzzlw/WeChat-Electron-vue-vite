@@ -4,7 +4,7 @@ import { conversationInfo } from '@/stores/modules/ConversationStore'
 import { friendInfo } from '@/stores/modules/ContactListStore'
 import emitter from '@/utils/mitt'
 import dayjs from 'dayjs'
-import { saveSentMessage, deleteMessage, deleteConversation, deleteFriend, updateFriendRelation } from '@/db/dualDB'
+import { saveSentMessage, deleteMessage, deleteConversation, deleteFriend, updateFriendRelation, updateMessage } from '@/db/dualDB'
 import { SystemMsgSubType } from '@/utils/constants'
 import NotificationCard from '@/components/NotificationCard.vue'
 import { groupMemberInfo } from '@/stores/modules/GroupMemberStore'
@@ -221,15 +221,19 @@ function handleFriendAccepted(data) {
 function handleAckMessage(data) {
     console.log('接收到ACK确认消息', data)
     if (data.status === 0) {
-        const messagePack = messageInfo().onReceiveAck(data.tempId)
+        const messagePack = messageInfo().onReceiveAck(String(data.tempId))
         if (!messagePack) {
-            console.warn('ACK对应的消息未找到（可能已超时）, tempId:', data.tempId)
+            // 切换会话、缓存回收后迟到的 ACK，仍需结束本地数据库中的发送中状态。
+            updateMessage({ id: String(data.tempId) }, { id: String(data.messageId), sendStatus: 1 })
             return
         }
-        messagePack.id = data.messageId
+        messagePack.id = String(data.messageId)
         const message = { ...messagePack, receiverIds: [] }
         console.log(message)
         saveSentMessage(message)
+    } else {
+        messageInfo().onReceiveError(String(data.tempId), data.errorCase || '消息发送失败')
+        updateMessage({ id: String(data.tempId) }, { sendStatus: 2 })
     }
 }
 

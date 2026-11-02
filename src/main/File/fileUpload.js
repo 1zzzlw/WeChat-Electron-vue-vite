@@ -1,9 +1,10 @@
 import fs from 'fs/promises'
+import { pathToFileURL } from 'node:url'
 import { store, refs } from '../shared.js'
 import { createHash } from 'crypto'
 import { FILE_TYPE_MAP, getFileName, getFileType } from './filterFileKind'
 import { createWorkerProcess, CHUNK_SIZE } from './createWorkerProcess'
-import { verifyFileUpload, uploadFileChunk, checkUploaded, mergeFile } from '../API/message'
+import { verifyFileUpload, uploadFileChunk, checkUploaded, mergeFile, uploadPreview } from '../API/message'
 import { generateImagePreview, generateVideoPreview } from '../Util/mediaHandle'
 import { MessageQueue } from '../Util/messageQueue'
 
@@ -73,14 +74,13 @@ const getFileInfo = async (path) => {
     // 文件的唯一标识，相当于文件的唯一id
     const fileId = generateFileId(fileName, fileSize, fileMtimeMs, fileIno)
 
-    let base64 = null
+    let previewPath = null
 
     if (fileType === 2) {
-        // 图片，生成blob预览图展示在前端
-        base64 = await generateImagePreview(fileSize, fileName, path)
+        previewPath = await generateImagePreview(fileSize, fileId, path)
     } else if (fileType === 3) {
         // 视频，使用FFmpeg生成视频的预览图
-        base64 = await generateVideoPreview(fileName, path)
+        previewPath = await generateVideoPreview(fileId, path)
     } else if (fileType === 4) {
         // 音频，对音频的相关操作
     } else {
@@ -89,7 +89,8 @@ const getFileInfo = async (path) => {
 
     // 返回用于展示的文件信息
     return {
-        base64: base64,
+        previewPath,
+        previewUrl: previewPath ? pathToFileURL(previewPath).href : '',
         fileId: fileId,
         fileName: fileName,
         fileSize: fileSize,
@@ -124,9 +125,25 @@ const uploadFile = async (file, source = refs.mainWindow?.webContents) => {
     let verify
     let minioFilePath
     await verifyFileUpload(fileId).then((res) => {
+        if (res.code !== 1 || !res.data) throw new Error(res.msg || '获取上传凭证失败')
         verify = res.data.verify
         minioFilePath = res.data.minioFilePath
     })
+
+    // 预览先通过 HTTP 上传；失败则不发送会缺失封面的媒体消息。
+    if (fileType === 2 || fileType === 3) {
+        const previewPath = file.previewPath || (fileType === 2
+            ? await generateImagePreview(fileSize, fileId, localPath)
+            : await generateVideoPreview(fileId, localPath))
+        const preview = await fs.readFile(previewPath)
+        const form = new FormData()
+        form.append('preview', new Blob([preview], { type: 'image/jpeg' }), 'preview.jpg')
+        form.append('fileId', fileId)
+        form.append('verify', verify)
+        form.append('fileType', String(fileType))
+        const result = await uploadPreview(form)
+        if (result.code !== 1 || !result.data) throw new Error(result.msg || '预览图上传失败')
+    }
 
     // 获得上传凭证成功，从服务端拉取已经上传过的分块
     const res = await checkUploaded({
@@ -196,9 +213,10 @@ const fileUpload = async (localPath, fileSize, fileId, fileName, fileType, verif
             formData.append('verify', currentVerify)
 
             try {
-                await uploadFileChunk(formData, {
+                const result = await uploadFileChunk(formData, {
                     signal: controller.signal
                 })
+                if (result.code !== 1) throw new Error(result.msg || '文件分片上传失败')
 
                 const uploadedSet = uploadedChunkIndexSetMap.get(fileId)
                 const isFirstSuccess = !uploadedSet?.has(currentFileIndex)
@@ -251,7 +269,8 @@ const fileUpload = async (localPath, fileSize, fileId, fileName, fileType, verif
                 fileType: fileType,
                 minioFilePath: minioFilePath,
                 chunkCount: fileIndex
-            }).then(() => {
+            }).then((result) => {
+                if (result.code !== 1) throw new Error(result.msg || '文件合并失败')
                 console.log('文件上传成功')
                 // 上传成功，修改发送状态
                 notify('upload-loadStatus', {
@@ -268,6 +287,12 @@ const fileUpload = async (localPath, fileSize, fileId, fileName, fileType, verif
                 })
                 cleanupFileUploadState(fileId)
             })
+        },
+        (error) => {
+            if (!fileVerifyMap.has(fileId)) return
+            console.error('文件读取或分块处理失败', error?.message)
+            notify('upload-loadStatus', { fileId, status: 2 })
+            cleanupFileUploadState(fileId)
         }
     )
     fileStreamControllerMap.set(fileId, streamController)

@@ -6,7 +6,7 @@ const CHUNK_SIZE = 1024 * 1024 * 5
 // 根据文件id创建一个管理分块状态的集合
 const fileChunkStatusMap = new Map()
 
-const createWorkerProcess = (localPath, fileSize, fileId, chunksList, callback, onComplete) => {
+const createWorkerProcess = (localPath, fileSize, fileId, chunksList, callback, onComplete, onError) => {
     // 计算分块数量
     const chunkCount = Math.ceil(fileSize / CHUNK_SIZE)
     // 计算每个线程处理的分块数量
@@ -15,6 +15,7 @@ const createWorkerProcess = (localPath, fileSize, fileId, chunksList, callback, 
     let isMerging = false
     let fileIndex = 0
     let isReadComplete = false
+    let stopped = false
 
     console.log(`该文件需要分${chunkCount}块，每个线程需要处理${threadChunkCount}块`)
 
@@ -47,15 +48,20 @@ const createWorkerProcess = (localPath, fileSize, fileId, chunksList, callback, 
             return
         }
         // 分块读取数据
-        const arrayBuffer = chunk.buffer
-        // 将分块文件推入线程中进行计算
-        const task = await pool.run({ arrayBuffer, currentFileIndex, fileId })
-        callback({
-            task, updateStatus: (chunkIndex) => {
-                chunkStatus.chunkStatusArray[chunkIndex] = 1
-                checkAndMerge()
-            }
-        })
+        const arrayBuffer = chunk.buffer.slice(chunk.byteOffset, chunk.byteOffset + chunk.byteLength)
+        try {
+            const task = await pool.run({ arrayBuffer, currentFileIndex, fileId })
+            if (stopped) return
+            callback({
+                task, updateStatus: (chunkIndex) => {
+                    if (stopped) return
+                    chunkStatus.chunkStatusArray[chunkIndex] = 1
+                    checkAndMerge()
+                }
+            })
+        } catch (error) {
+            fail(error)
+        }
     })
 
     readStream.on('end', async () => {
@@ -68,12 +74,17 @@ const createWorkerProcess = (localPath, fileSize, fileId, chunksList, callback, 
     })
 
     // 读取出错
-    readStream.on('error', (err) => {
-        console.log(err)
-    });
+    const fail = (error) => {
+        if (stopped) return
+        stopped = true
+        readStream.destroy()
+        fileChunkStatusMap.delete(fileId)
+        onError?.(error)
+    }
+    readStream.on('error', fail)
 
     const checkAndMerge = () => {
-        if (isMerging) return
+        if (isMerging || stopped) return
 
         if (isReadComplete && !chunkStatus.chunkStatusArray.includes(0)) {
             // 通知外层可以合并了
@@ -85,7 +96,11 @@ const createWorkerProcess = (localPath, fileSize, fileId, chunksList, callback, 
     return {
         pause: () => readStream.pause(),
         resume: () => readStream.resume(),
-        stop: () => readStream.destroy(),
+        stop: () => {
+            stopped = true
+            readStream.destroy()
+            fileChunkStatusMap.delete(fileId)
+        },
     }
 }
 

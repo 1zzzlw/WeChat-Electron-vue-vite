@@ -32,7 +32,10 @@
                   <div> {{ message.content }} </div>
                 </div>
                 <MessageContentManage v-else v-bind="message" :isUpload="true" />
-                <div class="icon send-load" v-if="message.sendStatus === 0">
+                <div v-if="message.sendStatus === 0 && mediaUploadLabel(message)" class="media-upload-status">
+                  {{ mediaUploadLabel(message) }}
+                </div>
+                <div class="icon send-load" v-if="message.sendStatus === 0 && !mediaUploadLabel(message)" title="等待服务器确认消息">
                   <el-icon>
                     <Loading />
                   </el-icon>
@@ -188,6 +191,16 @@ const groupMemberStore = groupMemberInfo()
 const fileStatusListInfoStore = fileStatusListInfo()
 const friendInfoStore = friendInfo()
 
+// 媒体上传期间只展示上传进度；完成后才显示 WS 等待确认图标。
+const mediaUploadLabel = (message: Message) => {
+  if (![2, 3].includes(message.msgType) || !message.fileId) return ''
+  const upload = fileStatusListInfoStore.getFileUploadUpdateInfo(message.fileId)
+  if (upload?.uploadStatus !== statusMap.uploading.value) return ''
+  if (upload.pause) return '上传已暂停'
+  const progress = Math.min(100, Math.max(0, Math.round(upload.uploadProgress || 0)))
+  return progress === 100 ? '正在合并文件…' : `上传中 ${progress}%`
+}
+
 // 消息分页配置
 const messagePageInfo = {
   pageTotal: 0,
@@ -302,7 +315,8 @@ const selectFile = async () => {
     return
   }
   fileInfoList.value.push({
-    base64: file.base64,
+    previewPath: file.previewPath,
+    previewUrl: file.previewUrl,
     fileId: file.fileId,
     fileName: file.fileName,
     fileSize: file.fileSize,
@@ -338,7 +352,7 @@ const removeCaptureListener = (window as any).chatToolApi.onCaptureResult((resul
   if (fileInfoList.value.length >= 3) { ElMessage.error('最多3个文件，截图已保存到图片目录'); return }
   const fileInfo = result.fileInfo
   fileInfoList.value.push({
-    base64: fileInfo.base64, fileId: fileInfo.fileId, fileName: fileInfo.fileName,
+    previewPath: fileInfo.previewPath, previewUrl: fileInfo.previewUrl, fileId: fileInfo.fileId, fileName: fileInfo.fileName,
     fileSize: fileInfo.fileSize, fileType: 2, content: fileInfo.content || '[照片]',
     localPath: fileInfo.localPath, remotePath: ''
   })
@@ -370,10 +384,16 @@ const sendFile = async (file: FileBaseInfo, convId: string, receiverId: string |
     uploadProgress: 0, uploadSpeed: 0, pause: false
   }
   fileStatusListInfoStore.addFileUploadUpdateInfo(file.fileId, fileStatusInfo)
-  const { minioFilePath, chunkCount } = await (window as any).uploadFileApi.uploadFile(toRaw(file))
-  messagePack.remotePath = minioFilePath
-  fileStatusInfo.chunkCount = chunkCount
-  await sendApi(messagePack)
+  try {
+    const { minioFilePath, chunkCount } = await (window as any).uploadFileApi.uploadFile(toRaw(file))
+    messagePack.remotePath = minioFilePath
+    fileStatusInfo.chunkCount = chunkCount
+    await sendApi(messagePack)
+  } catch (error) {
+    messageStore.removeFileMessage(file.fileId)
+    fileStatusListInfoStore.updateFileUploadStatus(file.fileId, statusMap.fail.value, 0)
+    throw error
+  }
 }
 
 const canSendTo = (receiverId: string | number) => {
@@ -444,7 +464,10 @@ const sendMessage = async () => {
 }
 
 const sendApi = (messagePack: Message) => {
-  return sendMessageApi(messagePack).then(async (res) => {
+  // 本地文件预览地址仅供发送者界面使用，不提交到 HTTP 预存接口。
+  const metadata = { ...messagePack }
+  delete metadata.previewUrl
+  return sendMessageApi(metadata).then(async (res) => {
     if (res.data) {
       const message = res.data
 
@@ -526,10 +549,9 @@ function createMessagePack(receiverId: string | number, convId: string, msgType:
   let fileName = ''
   let fileSize = 0
   let localPath = ''
-  let base64 = ''
   let remotePath = ''
   if (file != null) {
-    ({ fileId, fileName, fileSize, localPath, base64, remotePath } = file)
+    ({ fileId, fileName, fileSize, localPath, remotePath } = file)
   }
   const sendTimeStamp = dayjs().valueOf()
   const sendTime = dayjs(sendTimeStamp).format('YYYY-MM-DD HH:mm:ss')
@@ -548,7 +570,7 @@ function createMessagePack(receiverId: string | number, convId: string, msgType:
     fileName: fileName,
     fileSize: fileSize,
     localPath: localPath,
-    previewBase64: base64,
+    previewUrl: file?.previewUrl || '',
     remotePath: remotePath,
     quoteMsgId: quoteMessage.value ? quoteMessage.value.id as unknown as number : null,
     quoteContent: quoteMessage.value ? getMessageSnapshot(quoteMessage.value) : null,
@@ -1081,6 +1103,13 @@ img {
   color: #f53f3f;
   cursor: pointer;
   margin-top: -3px;
+}
+
+.media-upload-status {
+  margin-top: 6px;
+  color: var(--color-text-muted);
+  font-size: 11px;
+  text-align: right;
 }
 
 /* 引用预览栏 */

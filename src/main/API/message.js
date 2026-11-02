@@ -7,3 +7,5 @@ export const uploadFileChunk = (formData, options = {}) => request.post('/messag
 export const checkUploaded = (data) => request.get(`/message/checkUploaded`, { params: data })
 
 export const mergeFile = (data) => request.post('/message/merge', data)
+
+export const uploadPreview = (data) => request.post('/message/uploadPreview', data)

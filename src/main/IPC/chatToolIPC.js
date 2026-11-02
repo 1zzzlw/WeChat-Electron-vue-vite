@@ -2,6 +2,7 @@ import { ipcMain, app, clipboard, nativeImage, BrowserWindow, screen, desktopCap
 import { refs } from '../shared.js'
 import { createExtraWindow } from '../Util/createNewWindow'
 import { setTimeout as delay } from 'node:timers/promises'
+import { pathToFileURL } from 'node:url'
 const crypto = require('crypto')
 const path = require('path')
 const fs = require('fs')
@@ -68,9 +69,17 @@ ipcMain.handle('window:save-capture', async (event, rect) => {
         const ratio = Math.min(1, 300 / size.width, 300 / size.height)
         const preview = ratio < 1 ? image.resize({ width: Math.max(1, Math.round(size.width * ratio)),
             height: Math.max(1, Math.round(size.height * ratio)) }) : image
+        const previewDirectory = path.join(app.getPath('userData'), 'media-previews')
+        await fs.promises.mkdir(previewDirectory, { recursive: true })
+        const previewPath = path.join(previewDirectory, `${fileId}.jpg`)
+        await fs.promises.writeFile(previewPath, preview.toJPEG(75))
+        if (captureSession !== session) {
+            await fs.promises.unlink(previewPath).catch(() => {})
+            return { canceled: true }
+        }
         finishCapture(session, { ok: true, fileInfo: {
             fileId, fileName, fileSize: buffer.length, fileType: 'image/png',
-            content: '', base64: preview.toDataURL(), localPath: savePath, remotePath: ''
+            content: '', previewPath, previewUrl: pathToFileURL(previewPath).href, localPath: savePath, remotePath: ''
         } })
         return { ok: true }
     } catch (error) {

@@ -22,7 +22,7 @@ const fileProps = computed(() => ({
   fileSize: props.fileSize || 0,
   localPath: props.localPath || '',
   remoteUrl: props.remoteUrl || '',
-  previewBase64: props.previewBase64 || '',
+  previewUrl: props.previewUrl || '',
   downloadStatus: props.downloadStatus || 0,
   receiveTime: props.receiveTime || '',
   isUpload: props.isUpload || false

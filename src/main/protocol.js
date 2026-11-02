@@ -24,7 +24,10 @@ const HEADER_SIZE = 4 + 1 + 1 + 1 + 4 + 1 + 4 // 16 bytes
  */
 export function encodeMessage(messageType, sequenceId, jsonObject) {
   const encoder = new TextEncoder()
-  const jsonBytes = encoder.encode(JSON.stringify(jsonObject))
+  // 历史缓存重发也不能将预览内容或本地预览地址重新带入 WS。
+  const metadata = { ...jsonObject }
+  for (const key of ['previewBase64', 'preview_base64', 'base64', 'previewPath', 'previewUrl']) delete metadata[key]
+  const jsonBytes = encoder.encode(JSON.stringify(metadata))
   const totalLength = HEADER_SIZE + jsonBytes.length
   const buffer = new ArrayBuffer(totalLength)
   const view = new DataView(buffer)

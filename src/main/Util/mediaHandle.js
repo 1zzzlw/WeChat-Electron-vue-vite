@@ -2,7 +2,6 @@ import dayjs from 'dayjs'
 import fs from 'fs/promises'
 import { createWriteStream } from 'fs';
 import pathToFfmpegStatic from 'ffmpeg-static'
-import ffmprobeStatic from 'ffprobe-static'
 import { exec } from 'child_process'
 import { store } from '../shared.js'
 import path from 'path'
@@ -14,78 +13,26 @@ const pathToFfmpeg = app.isPackaged
     ? pathToFfmpegStatic.replace('app.asar', 'app.asar.unpacked')
     : pathToFfmpegStatic
 
-const ffmprobePath = app.isPackaged
-    ? ffmprobeStatic.path.replace('app.asar', 'app.asar.unpacked')
-    : ffmprobeStatic.path
-
-/**
- * 限制图片尺寸，生成图片预览图用于展示头像，聊天内容的照片
- * @param fileSize -- 文件大小
- * @param fileName -- 文件名称
- * @param path -- 文件路径
- */
-const generateImagePreview = async (fileSize, fileName, path) => {
-    if (fileSize <= 30720) {
-        // 照片尺寸小于30KB，直接生成blob返回给前端展示
-        const buffer = await fs.readFile(path)
-        const base64 = `data:image/jpeg;base64,${buffer.toString('base64')}`
-        return base64
-    }
-    const targetPath = await generatePath(fileName)
-    const cmd = pathToFfmpeg + ` -y -i "${path}" -vf scale=200:-1 -q:v 30 -compression_level 9 "${targetPath}"`
-    await execCommand(cmd)
-    const buffer = await fs.readFile(targetPath)
-    const mimeType = getImageMimeType(buffer)
-    const base64 = `data:${mimeType};base64,${buffer.toString('base64')}`
-    // 删除临时预览照片
-    await fs.unlink(targetPath)
-    return base64
+// 预览保留为小文件，只返回本地路径；图片字节不再编码为 base64。
+const previewPathFor = async (key) => {
+    const folder = path.join(app.getPath('userData'), 'media-previews')
+    await fs.mkdir(folder, { recursive: true })
+    return path.join(folder, `${key}.jpg`)
 }
 
-/**
- * 根据buffer获得照片类型
- * @param buffer 
- * @returns 
- */
-const getImageMimeType = (buffer) => {
-    const header = buffer.toString('hex', 0, 4)
-    if (header.startsWith('ffd8')) return 'image/jpeg'
-    if (header.startsWith('8950')) return 'image/png'
-    if (header.startsWith('4749')) return 'image/gif'
-    if (header.startsWith('5249')) return 'image/webp'
-    return 'image/jpeg' // 默认
-}
-
-/**
- * 生成视频的预览图，展示在聊天窗口内
- * @param fileName -- 文件名称
- * @param videoPath -- 文件路径
- */
-const generateVideoPreview = async (fileName, videoPath) => {
-    let command = ffmprobePath + ` -v error -select_streams v:0 -show_entries stream=codec_name "${videoPath}"`
-    let result = await execCommand(command)
-    // 去掉空格
-    result = result.replaceAll("\r\n", "")
-    let targetPath
-    // 按照等号分割
-    result = result.substring(result.indexOf('=') + 1)
-    const codec = result.substring(0, result.indexOf('['))
-    if ('hevc' === codec) {
-        targetPath = await generatePath(fileName)
-        command = pathToFfmpeg + ` -y -i "${videoPath}" -c:v libx264 -crf 20 ${targetPath}`
-        await execCommand(command)
-    }
-    // 生成缩略图
-    const baseName = fileName.replace(path.extname(fileName), '') + '_thumb.jpg'
-    targetPath = await generatePath(baseName)
-    command = pathToFfmpeg + ` -y -ss 2 -i "${videoPath}" -vframes 1 -vf "scale=min(300\\,iw):min(300\\,ih):force_original_aspect_ratio=decrease" -q:v 8 -f mjpeg "${targetPath}"`
+const generateImagePreview = async (_fileSize, key, sourcePath) => {
+    const targetPath = await previewPathFor(key)
+    const command = `"${pathToFfmpeg}" -y -i "${sourcePath}" -frames:v 1 -vf "scale=320:320:force_original_aspect_ratio=decrease" -q:v 6 "${targetPath}"`
     await execCommand(command)
-    // 生成缩略图的base64
-    const buffer = await fs.readFile(targetPath)
-    const base64 = `data:image/jpeg;base64,${buffer.toString('base64')}`
-    // 删除临时预览照片
-    await fs.unlink(targetPath)
-    return base64
+    return targetPath
+}
+
+const generateVideoPreview = async (key, videoPath) => {
+    const targetPath = await previewPathFor(key)
+    // 取首个可解码画面，避免不足2秒的短视频无法生成封面。
+    const command = `"${pathToFfmpeg}" -y -i "${videoPath}" -frames:v 1 -vf "scale=320:320:force_original_aspect_ratio=decrease" -q:v 6 "${targetPath}"`
+    await execCommand(command)
+    return targetPath
 }
 
 /**
@@ -235,7 +182,6 @@ const execCommand = (command) => {
 
 export {
     generatePath,
-    getImageMimeType,
     generateImagePreview,
     generateVideoPreview,
     generateGroupAvatar,

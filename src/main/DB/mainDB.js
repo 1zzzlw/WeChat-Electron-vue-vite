@@ -59,6 +59,8 @@ const initTableColumnsMap = () => {
         let columns = queryAll(sql, []);
         const columnMapItem = {}
         for (let j = 0; j < columns.length; j++) {
+            // 兼容已有 SQLite 表，旧列由用户自行清理，不再参与任何新写入。
+            if (tables[i].name === 'message' && columns[j].name === 'preview_base64') continue
             // 格式 userId: 'user_id'
             columnMapItem[toCamelCase(columns[j].name)] = columns[j].name
         }

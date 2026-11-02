@@ -13,8 +13,11 @@ export function sendUploadedFileIfReady(fileId) {
     const pending = store.getFileMessage(fileId)
     const status = fileStatusListInfo().getFileUploadUpdateInfo(fileId)?.uploadStatus
     if (!pending) return
-    if (status === statusMap.fail.value) pending.sendStatus = 2
-    const message = toRaw(pending)
+    if (status === statusMap.fail.value) {
+        pending.sendStatus = 2
+        store.markMessageFailed(String(pending.id), '文件上传失败')
+    }
+    const message = { ...toRaw(pending) }
     if (!message.remoteUrl) return
     if (status === statusMap.fail.value) {
         updateMessageFileSendStatusApi(fileId, 2)
@@ -23,11 +26,12 @@ export function sendUploadedFileIfReady(fileId) {
     }
     if (status !== statusMap.upload_finish.value) return
     pending.sendStatus = 0
+    // 文件可用与消息确认是两个状态；SQLite 等待 ACK 后才写发送成功。
+    updateMessage({ id: message.id }, { sendStatus: 0 })
     store.sendFileMessage(message, message.conversationId, message.receiverIds)
     // 上传完成后由正常消息及 ACK 管理，移除临时项也避免重复完成事件再次投递。
     store.removeFileMessage(fileId)
     updateMessageFileSendStatusApi(fileId, 1)
-    updateMessage({ fileId }, { sendStatus: 1 })
 }
 
 export function registerFileTransferHandlers() {

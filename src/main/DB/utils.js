@@ -9,6 +9,8 @@ const convertDBObjToCamelCase = (data) => {
     }
     const convertData = {}
     for (let item in data) {
+        // 旧库仍有此列时不再将内嵌图片带回渲染缓存。
+        if (item === 'preview_base64') continue
         convertData[toCamelCase(item)] = data[item]
     }
     return convertData

@@ -20,7 +20,7 @@ export interface Message {
     remotePath?: string | null
     localPath?: string | null
     remoteUrl?: string | null
-    previewBase64?: string | null
+    previewUrl?: string | null
     downloadStatus?: number
     receiveTime?: string
     /** 关联红包ID，msg_type=6 时使用（使用字符串避免精度丢失） */

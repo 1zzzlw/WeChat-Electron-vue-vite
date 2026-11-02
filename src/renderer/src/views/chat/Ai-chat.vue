@@ -1280,6 +1280,8 @@ const handleSubmit = async () => {
       }
     }
 
+    console.log(requestData, '发送给 AI 的请求数据')
+
     // 等待 AI 响应流式返回
     const responseContent = await streamAIMessage(
       requestData,
