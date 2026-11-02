@@ -57,16 +57,14 @@ export const friendInfo = defineStore('friendInfo', {
       }
     },
     addUserOnline(friendId: string) {
+      friendId = String(friendId)
       this.onlineUserIds.add(friendId)
-      this.friendInfoMap[friendId].isOnline = true
+      if (this.friendInfoMap[friendId]) this.friendInfoMap[friendId].isOnline = true
     },
     addUserListOnline(friendIds: Array<string>) {
-      for (const friendId of friendIds) {
-        this.onlineUserIds.add(friendId)
-        if (this.friendInfoMap[friendId]) {
-          this.friendInfoMap[friendId].isOnline = true
-        }
-      }
+      // 登录返回完整在线列表，空列表也需要清除旧状态。
+      this.onlineUserIds = new Set(friendIds.map(String))
+      this.restoreOnlineStatus()
     },
     isUserOnline(friendId: string) {
       if (!this.friendInfoMap[friendId]) {
@@ -81,16 +79,15 @@ export const friendInfo = defineStore('friendInfo', {
       return this.friendInfoMap[friendId].isOnline
     },
     removeUserOnline(friendId: string) {
+      friendId = String(friendId)
       this.onlineUserIds.delete(friendId)
       if (this.friendInfoMap[friendId]) {
         this.friendInfoMap[friendId].isOnline = false
       }
     },
     restoreOnlineStatus() {
-      this.onlineUserIds.forEach(friendId => {
-        if (this.friendInfoMap[friendId]) {
-          this.friendInfoMap[friendId].isOnline = true
-        }
+      Object.entries(this.friendInfoMap).forEach(([friendId, friend]) => {
+        friend.isOnline = this.onlineUserIds.has(friendId)
       })
     },
     // 更新好友信息

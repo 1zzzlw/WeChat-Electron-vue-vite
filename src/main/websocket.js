@@ -1,10 +1,9 @@
 import { store, refs, getTrayIcon, getEmptyTrayIcon } from './shared.js'
-import { app, Notification, nativeImage, BrowserWindow } from 'electron'
+import { nativeImage, BrowserWindow } from 'electron'
 import { saveSentMessage, addConversation, addFriendRelation } from './DB/insert'
 import { deleteMessage } from './DB/delete'
 import { updateConversation } from './DB/update'
 import { getConversationInfoById } from './DB/select'
-import { join } from 'path'
 import { queryAll } from './DB/mainDB'
 import { broadcastConversationUpdate, isConversationVisible } from './Util/conversationState'
 import { encodeMessage, decodeMessage, bufferToHexString } from './protocol.js'
@@ -78,12 +77,14 @@ class WebSocketManager {
         this.heartTimer = null
         // 重连计时器
         this.reconnectTimer = null
+        this.connectTimer = null
+        this.lastMessageAt = 0
+        this.presenceReady = false
+        this.presencePending = false
         // 当前是否正在连接
         this.isConnect = false
         // 当前的重连次数
         this.reconnectCount = 0
-        // 最大重连次数
-        this.reconnectCountMax = 3
         // 重连锁
         this.lockReconnect = false
         // 防止 onOpen 被多次调用时重复注册 focus 监听器
@@ -110,18 +111,32 @@ class WebSocketManager {
 
     // 创建连接请求
     createWebSocket(token) {
-        this.ws.websocket = new WebSocket(`ws://127.0.0.1:80/ws?token=${token}`)
+        const previous = this.ws.websocket
+        if (previous) {
+            previous.onopen = previous.onmessage = previous.onerror = previous.onclose = null
+            previous.close()
+        }
+        clearTimeout(this.connectTimer)
+        const socket = new WebSocket(`ws://127.0.0.1:80/ws?token=${token}`)
+        this.ws.websocket = socket
+        this.isConnect = true
 
         // ws的状态为正在连接
         this.ws.status = WebSocket.CONNECTING
 
         // 设置为二进制发送
-        this.ws.websocket.binaryType = 'arraybuffer'
-        // 这里的bind保证回调方法里的 this 永远指向 WebSocketManager，而不是 WebSocket 本身。
-        this.ws.websocket.onopen = this.onOpen.bind(this)
-        this.ws.websocket.onmessage = this.onMessage.bind(this)
-        this.ws.websocket.onerror = this.onError.bind(this)
-        this.ws.websocket.onclose = this.onClose.bind(this)
+        socket.binaryType = 'arraybuffer'
+        // 只处理当前连接的回调，避免旧连接干扰重连。
+        socket.onopen = () => { if (socket === this.ws.websocket) this.onOpen() }
+        socket.onmessage = event => { if (socket === this.ws.websocket) this.onMessage(event) }
+        socket.onerror = () => { if (socket === this.ws.websocket) this.onError() }
+        socket.onclose = () => { if (socket === this.ws.websocket) this.onClose() }
+        this.connectTimer = setTimeout(() => {
+            if (socket === this.ws.websocket && socket.readyState === WebSocket.CONNECTING) {
+                console.warn('WebSocket 握手超时，重新连接')
+                this.onClose()
+            }
+        }, 30000)
     }
 
     // 开启连接通道
@@ -130,20 +145,22 @@ class WebSocketManager {
 
         // 清除重连计时器
         this.clearReconnectTimer()
-
-        // 开启心跳计时器
-        this.startHeartbeat()
+        clearTimeout(this.connectTimer)
 
         // 初始化
         this.lockReconnect = false
         this.reconnectCount = 0
         this.ws.status = WebSocket.OPEN
+        this.lastMessageAt = Date.now()
+        this.startHeartbeat()
+        if (this.presenceReady) this.requestPresence()
 
         // 窗口获得焦点时停止托盘闪动（只注册一次，防止重连时重复累积）
         if (refs.mainWindow && !this._focusListenerRegistered) {
             this._focusListenerRegistered = true
             refs.mainWindow.on('focus', () => {
                 stopTrayFlash()
+                this.requestPresence()
             })
         }
     }
@@ -152,6 +169,9 @@ class WebSocketManager {
     onMessage(event) {
         try {
             const { messageType, data } = decodeMessage(event.data)
+            this.lastMessageAt = Date.now()
+            if (messageType === 0) return
+            if (messageType === 10) this.presencePending = false
             console.info(`收到WS消息-类型${messageType}:`, data);
 
             if (messageType === 2 || messageType === 4) {
@@ -242,22 +262,35 @@ class WebSocketManager {
     // 连接通道出错
     onError() {
         console.warn('websocket 出错')
-        // 重置连接状态
-        this.isConnect = false
-
-        // 开启重连计时器，尝试重连
-        this.tryRecoonectTimer()
+        this.onClose()
     }
 
     // 连接通道关闭
     onClose() {
         console.warn('websocker 关闭')
         this.isConnect = false
+        this.ws.status = WebSocket.CLOSED
+        this.presencePending = false
+        clearTimeout(this.connectTimer)
+        const socket = this.ws.websocket
+        this.ws.websocket = null
+        if (socket) {
+            socket.onopen = socket.onmessage = socket.onerror = socket.onclose = null
+            socket.close()
+        }
 
         // 停止心跳
         this.stopHeartbeat()
         // 开启重连计时器
         this.tryRecoonectTimer()
+    }
+
+    // 页面就绪后按需获取在线列表，合并尚未完成的请求。
+    requestPresence() {
+        this.presenceReady = true
+        if (this.ws.status !== WebSocket.OPEN || this.presencePending) return
+        this.presencePending = true
+        this.sendMessage(19, 0, {})
     }
 
     // 发送消息
@@ -268,15 +301,16 @@ class WebSocketManager {
         }
 
         const buffer = encodeMessage(messageType, sequenceId, jsonObject)
-        console.log(buffer)
-        console.log(bufferToHexString(buffer))
+        if (messageType !== 0) {
+            console.log(buffer)
+            console.log(bufferToHexString(buffer))
+        }
         // 发送
         this.send(buffer)
     }
 
     send(buffer) {
         if (this.ws.websocket?.readyState === WebSocket.OPEN) {
-            console.info('发送消息:', buffer)
             this.ws.websocket.send(buffer)
         }
     }
@@ -292,48 +326,16 @@ class WebSocketManager {
         this.lockReconnect = true
         this.isConnect = false
 
-        if (this.reconnectCount >= this.reconnectCountMax) {
-            console.warn('达到最大重连次数，停止重连')
-
-            this.clearReconnectTimer()
-            this.stopHeartbeat()
-            if (this.ws.websocket) {
-                this.ws.websocket.close()
-                this.ws.websocket = null
-            }
-
-            // 动态获取 icon 路径
-            const iconPath = app.isPackaged
-                ? join(process.resourcesPath, 'icon.png')
-                : join(__dirname, '../../resources/icon.png')
-
-            const notification = new Notification({
-                icon: iconPath,
-                title: '连接已断开',
-                body: '无法连接服务器，应用将自动关闭',
-                silent: false
-            })
-
-            // 显示通知
-            notification.show()
-
-            setTimeout(() => {
-                // 直接退出程序
-                refs.mainWindow.destroy()
-                app.quit()
-            }, 2000)
-
-            return
-        }
-
         this.clearReconnectTimer()
 
+        const delay = [2000, 4000, 8000, 15000, 30000][Math.min(this.reconnectCount, 4)]
         this.reconnectTimer = setTimeout(() => {
             console.log('尝试重连...')
             this.reconnectCount++
             this.lockReconnect = false
-            this.createWebSocket(token)
-        }, 5000)
+            // 重连时重新读取 token，避免沿用计时开始时的过期凭证。
+            this.connect()
+        }, delay)
     }
 
     // 清除重连计时器
@@ -348,12 +350,17 @@ class WebSocketManager {
     startHeartbeat() {
         // 先停止之前的心跳，防止重复
         this.stopHeartbeat()
+        this.sendMessage(0, 0, {})
         this.heartTimer = setInterval(() => {
-            if (this.ws.websocket?.readyState === WebSocket.OPEN) {
-                const heartbeatContent = { action: 'heartbeat' }
-                this.sendMessage(0, 0, heartbeatContent)
+            if (Date.now() - this.lastMessageAt >= 90000) {
+                console.warn('WebSocket 90秒未收到回包，重新连接')
+                this.onClose()
+                return
             }
-        }, 60000)
+            if (this.ws.websocket?.readyState === WebSocket.OPEN) {
+                this.sendMessage(0, 0, {})
+            }
+        }, 30000)
     }
 
     // 关闭心跳计时器

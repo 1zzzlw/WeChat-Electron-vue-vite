@@ -47,11 +47,7 @@ function handleFriendOnline(data) {
 }
 
 function handleBatchOnline(data) {
-    console.log('登录成功，在线好友列表', data.friendIdList)
-    // 清除持久化缓存（仅清 localStorage，不影响当前内存中的 store 数据）
-    // 不能使用 $reset()：会话列表依赖已加载的持久化数据，reset 会导致会话消失
-    localStorage.removeItem('friendInfo-store')
-    localStorage.removeItem('conversation-store')
+    console.log('在线好友列表', data.friendIdList)
     friendInfo().addUserListOnline(data.friendIdList)
 }
 
@@ -288,4 +284,6 @@ export function registerWsHandlers() {
             console.warn(`未处理的WS消息类型: ${messageType}`)
         }
     })
+    // 监听就绪后补取当前在线列表，覆盖刷新或窗口初始化期间错过的通知。
+    window.wsApi.sendMessage(19, 0, {})
 }
