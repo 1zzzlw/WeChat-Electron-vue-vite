@@ -543,6 +543,7 @@ const saveContent = async () => {
 /* ---- 主内容区 ---- */
 .main-content {
     flex: 1;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -662,6 +663,7 @@ const saveContent = async () => {
 
 .editor-layout {
     display: flex;
+    width: 100%;
     min-height: 100%;
 }
 
@@ -684,7 +686,7 @@ const saveContent = async () => {
     position: absolute;
     width: 100%;
     font-size: 12px;
-    color: rgba(var(--color-accent-rgb), 0.45) !important;
+    color: var(--color-text-accent) !important;
     font-family: 'Consolas', monospace;
     display: flex;
     align-items: center;
@@ -702,9 +704,10 @@ const saveContent = async () => {
 }
 
 .editor-content-wrapper {
-    flex: 1;
+    flex: 1 1 0;
     min-width: 0;
-    width: fit-content;
+    display: flex;
+    flex-direction: column;
 }
 
 :deep(.editor-content-wrapper .ProseMirror) {
@@ -717,8 +720,10 @@ const saveContent = async () => {
     word-break: break-all;
     white-space: pre-wrap;
     margin: 0;
-    display: inline-block;
-    min-width: 150px;
+    display: block;
+    width: 100%;
+    flex: 1;
+    min-width: 0;
     caret-color: var(--color-accent);
 }
 

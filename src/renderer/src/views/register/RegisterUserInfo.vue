@@ -1,14 +1,15 @@
 <template>
   <div class="registerUserInfo-count">
-    <span></span>
+    <div class="auth-brand"><b>im</b><span>LUMINA / CONNECT</span></div>
     <div class="register-top">
-      <h1 class="title">注册</h1>
+      <h1 class="title">完善你的信息</h1>
+      <p class="auth-subtitle">02 / 设置密码，保护每一段对话。</p>
     </div>
     <div class="registerUserInfo-mid">
-      <el-form class="registerUserInfo-form" :model="registerUserInfoForm" :rules="rules" ref="ruleFormRef"
+      <el-form label-position="top" class="registerUserInfo-form" :model="registerUserInfoForm" :rules="rules" ref="ruleFormRef"
         @keyup.enter="handleEnterRegisterUserInfo">
-        <el-form-item prop="password">
-          <el-input placeholder="创建密码" v-model="registerUserInfoForm.password" spellcheck="false" clearable>
+        <el-form-item prop="password" label="密码">
+          <el-input type="password" autocomplete="new-password" placeholder="创建密码" v-model="registerUserInfoForm.password" spellcheck="false" clearable>
             <template #prepend>
               <el-icon>
                 <Lock />
@@ -17,8 +18,8 @@
           </el-input>
         </el-form-item>
 
-        <el-form-item prop="confirmPassword">
-          <el-input placeholder="确认密码" type="password" v-model="confirmPassword" spellcheck="false" clearable>
+        <el-form-item prop="confirmPassword" label="确认密码">
+          <el-input autocomplete="new-password" placeholder="确认密码" type="password" v-model="confirmPassword" spellcheck="false" clearable>
             <template #prepend>
               <el-icon>
                 <Lock />
@@ -27,7 +28,7 @@
           </el-input>
         </el-form-item>
 
-        <el-form-item prop="sex">
+        <el-form-item prop="gender" label="性别">
           <el-select placeholder="性别" v-model="registerUserInfoForm.gender" size="large" placement="top" clearable
             class="gender-select" popper-class="register-select-popper">
             <el-option label="男" value="1" />
@@ -36,7 +37,7 @@
         </el-form-item>
 
         <div class="registerUserInfo-form-button">
-          <el-button type="primary" @click="returnStep">返回</el-button>
+          <el-button @click="returnStep">上一步</el-button>
           <el-button type="primary" @click="nextStep(ruleFormRef)">下一步</el-button>
         </div>
       </el-form>
@@ -118,80 +119,5 @@ const nextStep = async (formRef: FormInstance | undefined) => {
 
 <style scoped>
 @import '@/css/account.css';
-
-:deep(.el-select__wrapper) {
-  background: rgba(0, 0, 0, 0.15) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
-  border-radius: 8px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-:deep(.el-select__wrapper:hover) {
-  background: rgba(0, 0, 0, 0.2) !important;
-  border-color: rgba(255, 118, 224, 0.5) !important;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
-  transform: translateY(-1px);
-}
-
-:deep(.el-select__wrapper.is-focus) {
-  background: rgba(0, 0, 0, 0.25) !important;
-  border-color: #ff76e0 !important;
-  box-shadow: 0 0 12px rgba(255, 118, 224, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
-}
-
-:deep(.el-select__placeholder) {
-  color: rgba(255, 255, 255, 0.7) !important;
-}
-
-:deep(.el-select__selected-item) {
-  color: #ffffff !important;
-}
-
-:deep(.el-select__caret) {
-  color: rgba(255, 255, 255, 0.6) !important;
-}
-
-.registerUserInfo-mid {
-  height: 320px;
-}
-</style>
-
-<style>
-/* 全局样式覆盖 el-select 下拉框 popper */
-.register-select-popper.el-popper {
-  background: rgba(40, 20, 40, 0.8) !important;
-  backdrop-filter: blur(12px) !important;
-  border: 1px solid rgba(255, 118, 224, 0.3) !important;
-  border-radius: 8px !important;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3) !important;
-}
-
-.register-select-popper .el-select-dropdown__item {
-  color: rgba(255, 255, 255, 0.8) !important;
-  background-color: transparent !important;
-  transition: all 0.2s ease !important;
-}
-
-.register-select-popper .el-select-dropdown__item.hover,
-.register-select-popper .el-select-dropdown__item:hover {
-  background: rgba(255, 118, 224, 0.25) !important;
-  color: #ff76e0 !important;
-}
-
-.register-select-popper .el-select-dropdown__item.selected {
-  color: #ff76e0 !important;
-  font-weight: 600 !important;
-  background: rgba(255, 118, 224, 0.15) !important;
-}
-
-.register-select-popper .el-select-dropdown__item.selected.hover,
-.register-select-popper .el-select-dropdown__item.selected:hover {
-  background: rgba(255, 118, 224, 0.3) !important;
-}
-
-.register-select-popper .el-popper__arrow::before {
-  background: rgba(40, 20, 40, 0.8) !important;
-  border: 1px solid rgba(255, 118, 224, 0.3) !important;
-}
+.gender-select { width: 100%; }
 </style>

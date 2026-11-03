@@ -2,7 +2,7 @@
   <div class="user-message-list">
     <div class="user-message-list-left">
       <div class="message-list-top">
-        <AutocompleteSearch />
+        <AutocompleteSearch @select-contact="openContact" @select-conversation="starCall" @select-message="openMessage" />
         <el-dropdown trigger="click">
           <el-button style="background-color: var(--color-surface-1); border-color: var(--color-border-subtle);"
             :icon="Plus" square></el-button>
@@ -80,11 +80,12 @@ import AutocompleteSearch from '@/components/AutocompleteSearch.vue'
 import UnreadCounts from '@/components/UnreadCounts.vue'
 import ContextMenu from '@/components/ContextMenu.vue';
 import ChatWelcome from '@/components/ChatWelcome.vue'
-import { getConversationList, updateConversation } from '@/db/dualDB'
+import { getConversationList, getConversationInfoById, updateConversation } from '@/db/dualDB'
 import { formatMessageTime } from '@/utils/utils'
 import { updateConversationTopStatus, updateConversationMuteStatus } from '@/db/syncDB'
 import { markConversationRead, markConversationUnread } from '@/services/conversationRead'
 import { Friend } from '@/types/friend'
+import type { LocalMessageMatch } from '@/types/localSearch'
 import { getFriendList } from '@/db/dualDB'
 import { friendInfo } from '@/stores/modules/ContactListStore'
 
@@ -95,7 +96,12 @@ const userName = ref('')
 const conversationStore = conversationInfo()
 const friendInfoStore = friendInfo()
 
-const starCall = async (conversation: Conversation) => {
+const starCall = async (conversation: Conversation, messageId?: string) => {
+  if (conversation.status === 0 || !conversationStore.conversationMap[conversation.id]) {
+    conversation = { ...conversation, status: 1, latestMsgTime: formatMessageTime(conversation.latestMsgTime) }
+    conversationStore.setConversationMap(conversation.id, conversation)
+    updateConversation({ id: conversation.id }, { status: 1 })
+  }
   active.value = conversation.id
 
   if (!userId.value) {
@@ -110,17 +116,27 @@ const starCall = async (conversation: Conversation) => {
     await router.push({
       path: '/aiChat',
       // 传递会话id
-      query: { conversationId: conversation.id }
+      query: { conversationId: conversation.id, ...(messageId ? { messageId } : {}) }
     })
   } else {
     // 进入好友聊天窗口
     await router.push({
       path: '/chat',
       // 传递会话id
-      query: { conversationId: conversation.id }
+      query: { conversationId: conversation.id, ...(messageId ? { messageId } : {}) }
     })
   }
 
+}
+
+const openContact = (friend: Friend) => router.push({ path: '/friendInfo', query: { friendId: String(friend.friendId) } })
+const openMessage = async (message: LocalMessageMatch) => {
+  try {
+    const conversation = conversationStore.conversationMap[message.conversationId]
+      || await getConversationInfoById(message.conversationId)
+    if (!conversation) throw new Error('会话不存在')
+    await starCall(conversation, message.id)
+  } catch { ElMessage.error('暂时无法打开此会话，请重试') }
 }
 
 const createGroupChat = () => {

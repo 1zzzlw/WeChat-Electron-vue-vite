@@ -24,6 +24,8 @@ app.whenReady().then(async () => {
     app.setPath('userData', output)
     const source = await fs.readFile(path.join(root, 'src/main/File/voiceRecording.js'), 'utf8')
     const { saveVoiceRecording } = await import('data:text/javascript;base64,' + Buffer.from(source).toString('base64'))
+    ipcMain.on('fixture:style:initial', event => { event.returnValue = 'ai-native' })
+    ipcMain.handle('fixture:style:get', () => 'ai-native')
     let theme = 'light'
     ipcMain.on('fixture:theme:initial', event => { event.returnValue = theme })
     ipcMain.handle('fixture:theme:get', () => theme)

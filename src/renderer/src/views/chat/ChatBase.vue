@@ -1,9 +1,10 @@
 <template>
   <div class="chat-count">
     <ChatHeader :conversation="conversation" />
+    <div v-if="searchMessageId" class="search-history-banner"><span>正在查看搜索记录</span><el-button link @click="returnToLatest">返回最新消息</el-button></div>
     <div class="chat-content" @load.capture="followMessageMedia" @loadedmetadata.capture="followMessageMedia">
       <el-scrollbar ref="scrollbarRef" @scroll="handleScroll" noresize style="height: 100%; width: 100%">
-        <div class="chat-message" v-for="(message, index) in messageArr" :key="message.id" :id="`message${message.id}`">
+        <div class="chat-message" :class="{ 'search-match': String(message.id) === searchMessageId }" v-for="(message, index) in messageArr" :key="message.id" :id="`message${message.id}`">
           <!-- 展示时间 -->
           <ChatMessageTime :dataTime="message.sendTime"
             v-if="index > 0 && dayjs(message.sendTime).diff(dayjs(messageArr[index - 1].sendTime)) >= 300000">
@@ -102,7 +103,7 @@
           <el-button :icon="Eleme" size="large" square></el-button>
         </template>
       </el-popover>
-      <el-button :icon="Folder" size="large" square @click="selectFile"></el-button>
+      <el-button :icon="Folder" size="large" square aria-label="添加附件" title="添加附件" @click="selectFile"></el-button>
       <el-button :icon="Microphone" size="large" square title="发送语音" :class="{ 'voice-tool-active': voiceVisible }"
         :aria-pressed="voiceVisible" @click="voiceVisible = !voiceVisible"></el-button>
       <el-button :icon="Scissor" size="large" square :disabled="capturing" title="截图" @click="captureBtn"></el-button>
@@ -115,7 +116,7 @@
         clearable @keydown.enter="handleEnterMessage" />
     </form>
     <div class="sendButton">
-      <el-button type="primary" @click="sendMessage">发送</el-button>
+      <el-button type="primary" @click="sendMessage">{{ fileInfoList.length ? `发送 (${fileInfoList.length})` : '发送' }}</el-button>
     </div>
   </div>
 
@@ -126,7 +127,7 @@
 
 <script setup lang="ts">
 import { computed, nextTick, ref, watch, onUnmounted, toRaw } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import emojis from '@/emoji/emoji'
 import { sendMessageApi, recallMessageApi } from '@/api/Message'
 import { saveFavoriteApi } from '@/api/Favorites'
@@ -185,6 +186,10 @@ const emit = defineEmits<{
 
 // Stores
 const route = useRoute()
+const router = useRouter()
+const searchMessageId = computed(() => typeof route.query.messageId === 'string' ? route.query.messageId : '')
+const locatingSearch = ref(false)
+const returnToLatest = () => router.replace({ path: route.path, query: { ...route.query, messageId: undefined } })
 const messageStore = messageInfo()
 const conversationStore = conversationInfo()
 const groupMemberStore = groupMemberInfo()
@@ -426,6 +431,7 @@ const handleEnterMessage = (e: KeyboardEvent) => {
 }
 
 const sendMessage = async () => {
+  if (searchMessageId.value) await returnToLatest()
   const convId = effectiveConvId.value
   const content = messageText.value
   const isPrivate = props.conversation.type === 0
@@ -691,7 +697,7 @@ const handleChoice = async (item: any, messageId: string, messageContent: string
 const { scrollToBottom, handleScroll, loading, noMore, isNearBottom } = useChatScroll(
   scrollbarRef,
   {
-    canLoadMore: () => !noMore.value && messagePageInfo.pageNO > 0,
+    canLoadMore: () => !locatingSearch.value && !noMore.value && messagePageInfo.pageNO > 0,
     onLoadMore: async () => { await loadMessage(effectiveConvId.value) },
     getFirstMessageId: () => messageArr.value.at(0)?.id,
     getLastMessageId: () => messageArr.value.at(-1)?.id
@@ -702,7 +708,7 @@ const { scrollToBottom, handleScroll, loading, noMore, isNearBottom } = useChatS
 watch(
   () => [effectiveConvId.value, messageArr.value.length, messageArr.value.at(-1)?.id] as const,
   async ([conversationId, count, lastId], [previousId, previousCount, previousLastId]) => {
-    if (conversationId !== previousId || count <= previousCount || !lastId || lastId === previousLastId) return
+    if (searchMessageId.value || conversationId !== previousId || count <= previousCount || !lastId || lastId === previousLastId) return
     await nextTick()
     if (conversationId === effectiveConvId.value) scrollToBottom()
   },
@@ -711,16 +717,17 @@ watch(
 
 // 图片和媒体元数据可能晚于消息 DOM 到达，仍在底部时继续跟随高度变化。
 function followMessageMedia() {
-  if (isNearBottom.value && !loading.value) scrollToBottom()
+  if (!searchMessageId.value && isNearBottom.value && !loading.value) scrollToBottom()
 }
 
 // 加载数据 
-async function loadMessage(newConversationId: any) {
+async function loadMessage(newConversationId: any, anchorMessageId?: string) {
   const version = messageLoadVersion
-  const pageInfo = { ...messagePageInfo }
+  const pageInfo: typeof messagePageInfo & { anchorMessageId?: string } = { ...messagePageInfo, anchorMessageId }
   const result = await getMessageList(newConversationId, pageInfo)
   // 切换会话或卸载后，旧请求不能回写缓存及当前分页状态。
   if (version !== messageLoadVersion || newConversationId !== effectiveConvId.value) return
+  delete pageInfo.anchorMessageId
   Object.assign(messagePageInfo, pageInfo)
   const messageList = result.messageList
   const isFromServer = result.isFromServer
@@ -742,6 +749,7 @@ async function loadMessage(newConversationId: any) {
   if (isFromServer && messageList.length > 0) {
     saveLoadMessage(messageList)
   }
+  return result.anchorFound
 }
 
 const getGroupMemberList = async () => {
@@ -779,11 +787,11 @@ const refreshInitializedMessages = async (payload: unknown) => {
   Object.assign(messagePageInfo, { pageTotal: 0, pageNO: 0, maxMessageId: null, noData: false })
   noMore.value = false
   try {
-    await loadMessage(conversationId)
+    await loadMessage(conversationId, searchMessageId.value || undefined)
     if (version !== messageLoadVersion || conversationId !== effectiveConvId.value) return
     if (props.conversation.type === 1) await getGroupMemberList()
     await nextTick()
-    if (version === messageLoadVersion && conversationId === effectiveConvId.value) scrollToBottom()
+    if (version === messageLoadVersion && conversationId === effectiveConvId.value) focusLoadedMessages()
   } catch (error) {
     console.error('刷新初始化会话消息失败', error)
   }
@@ -793,8 +801,8 @@ emitter.on('data:initialized', refreshInitializedMessages)
 // 监听会话切换
 // 同时监听 route query 和 conversation prop，确保 store 延迟加载时也能正确初始化
 watch(
-  [() => effectiveConvId.value, () => props.conversation?.id],
-  async ([newConversationId], [oldConversationId]) => {
+  [() => effectiveConvId.value, () => props.conversation?.id, () => searchMessageId.value],
+  async ([newConversationId, , anchorMessageId], [oldConversationId]) => {
     if (!newConversationId) return
 
     // 如果 conversation prop 还没就绪（store 延迟加载），跳过本次
@@ -802,6 +810,7 @@ watch(
     if (!props.conversation || props.conversation.id !== newConversationId) return
 
     const version = ++messageLoadVersion
+    locatingSearch.value = true
     try {
       messageStore.clearConversationMessages(newConversationId as string)
 
@@ -811,11 +820,19 @@ watch(
       messagePageInfo.noData = false
       noMore.value = false
 
-      fileInfoList.value.length = 0
-      quoteMessage.value = null
+      if (newConversationId !== oldConversationId) {
+        fileInfoList.value.length = 0
+        quoteMessage.value = null
+      }
 
-      await loadMessage(newConversationId)
+      const found = await loadMessage(newConversationId, anchorMessageId || undefined)
       if (version !== messageLoadVersion || newConversationId !== effectiveConvId.value) return
+
+      if (anchorMessageId && !found) {
+        ElMessage.warning('该消息已删除或不在本地记录中')
+        await returnToLatest()
+        return
+      }
 
       // 群聊时加载群成员列表
       if (props.conversation.type === 1) {
@@ -823,13 +840,22 @@ watch(
       }
 
       await nextTick()
-      if (version === messageLoadVersion && newConversationId === effectiveConvId.value) scrollToBottom()
+      if (version === messageLoadVersion && newConversationId === effectiveConvId.value) focusLoadedMessages()
     } catch (error) {
       console.error('加载新会话消息失败', error)
+    } finally {
+      if (version === messageLoadVersion) locatingSearch.value = false
     }
   },
   { immediate: true }
 )
+
+function focusLoadedMessages() {
+  if (searchMessageId.value) {
+    document.getElementById('message' + searchMessageId.value)?.scrollIntoView({ block: 'center' })
+    isNearBottom.value = false
+  } else scrollToBottom()
+}
 
 // 组件卸载
 onUnmounted(() => {
@@ -859,10 +885,13 @@ defineExpose({
   flex-direction: column;
   justify-content: space-between;
   background-color: var(--color-chat-surface);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: var(--surface-filter);
+  -webkit-backdrop-filter: var(--surface-filter);
   -webkit-app-region: no-drag;
 }
+
+.search-history-banner { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-shrink: 0; padding: 8px 20px; color: var(--color-text-secondary); background: var(--color-surface-1); border-bottom: 1px solid var(--color-border-subtle); font-size: 12px; }
+.chat-message.search-match { background: var(--color-accent-soft); box-shadow: inset 3px 0 var(--color-accent); }
 
 .chat-content {
   flex: 1;
@@ -874,7 +903,7 @@ defineExpose({
 img {
   width: 50px;
   height: 50px;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
 }
 
 .chat-list-left {
@@ -929,7 +958,7 @@ img {
 }
 
 .chat-tool button:hover {
-  color: rgba(var(--color-accent-rgb), 0.9);
+  color: var(--color-text-accent);
   text-shadow: 0 0 6px rgba(var(--color-accent-rgb), 0.3);
 }
 
@@ -960,8 +989,8 @@ img {
 
 .chat-input :deep(.el-textarea__inner) {
   background-color: var(--color-input-surface);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: var(--surface-filter);
+  -webkit-backdrop-filter: var(--surface-filter);
   color: var(--color-text-primary);
   box-shadow: none;
   border: 1px solid rgba(var(--color-accent-rgb), 0.2);
@@ -1028,12 +1057,12 @@ img {
 /* 聊天气泡样式 */
 .chat-bubble {
   padding: 8px 12px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   max-width: 400px;
   word-break: break-all;
   position: relative;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: var(--surface-filter);
+  -webkit-backdrop-filter: var(--surface-filter);
 }
 
 .left-bubble {
@@ -1126,8 +1155,8 @@ img {
   background: rgba(var(--color-accent-rgb), 0.12);
   border-left: 3px solid rgba(var(--color-accent-rgb), 0.6);
   border-radius: 0 6px 6px 0;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: var(--surface-filter);
+  -webkit-backdrop-filter: var(--surface-filter);
 }
 
 .quote-preview-content {
@@ -1140,7 +1169,7 @@ img {
 
 .quote-preview-label {
   font-size: 12px;
-  color: rgba(var(--color-accent-rgb), 0.9);
+  color: var(--color-text-accent);
   font-weight: 500;
   white-space: nowrap;
 }

@@ -9,6 +9,8 @@ let complete = false
 let failed = false
 let width = 360
 let height = 240
+let palette
+let swiss = false
 
 function resize() {
   const bounds = canvas.getBoundingClientRect()
@@ -36,24 +38,24 @@ function draw(time) {
   const cx = width / 2
   const cy = height / 2
   const glow = context.createRadialGradient(cx, cy, 10, cx, cy, 140)
-  glow.addColorStop(0, '#86c9f333')
-  glow.addColorStop(1, '#86c9f300')
+  glow.addColorStop(0, palette.glow)
+  glow.addColorStop(1, 'transparent')
   context.fillStyle = glow
   context.fillRect(0, 0, width, height)
   context.save()
   context.translate(cx, cy)
   context.scale(Math.min(1, width / 300), 1)
   context.lineWidth = 13
-  context.lineCap = 'round'
+  context.lineCap = swiss ? 'butt' : 'round'
   const gradient = context.createLinearGradient(0, -64, 0, 64)
-  gradient.addColorStop(0, failed ? '#e5b690' : '#a4d8f7')
-  gradient.addColorStop(1, failed ? '#c28b66' : '#5b9ed9')
+  gradient.addColorStop(0, failed ? palette.warning : palette.accent)
+  gradient.addColorStop(1, failed ? palette.warning : palette.accent)
   for (let index = 0; index < strokes.length; index++) {
     const [start, end] = strokes[index]
     context.beginPath()
     context.moveTo(...start)
     context.lineTo(...end)
-    context.strokeStyle = '#70a7cf18'
+    context.strokeStyle = palette.border
     context.stroke()
     const progress = motion.matches ? 1 : Math.min(1, Math.max(0, (t - index * 1.5) / 1.5))
     if (!progress) continue
@@ -61,8 +63,8 @@ function draw(time) {
     context.moveTo(...start)
     context.lineTo(start[0] + (end[0] - start[0]) * progress, start[1] + (end[1] - start[1]) * progress)
     context.strokeStyle = gradient
-    context.shadowColor = '#73b8e488'
-    context.shadowBlur = complete || motion.matches ? 8 : 10 + Math.sin(t * 2) * 4
+    context.shadowColor = palette.glow
+    context.shadowBlur = swiss || motion.matches ? 0 : 8
     context.stroke()
     context.shadowBlur = 0
   }
@@ -71,6 +73,12 @@ function draw(time) {
 }
 
 function restart() {
+  const style = getComputedStyle(document.documentElement)
+  palette = { accent: style.getPropertyValue('--color-accent').trim(),
+    border: style.getPropertyValue('--color-border-subtle').trim(),
+    warning: style.getPropertyValue('--color-warning').trim(),
+    glow: style.getPropertyValue('--color-loading-glow').trim() }
+  swiss = document.documentElement.dataset.uiStyle === 'swiss'
   if (frame) cancelAnimationFrame(frame)
   if (!document.hidden) { resize(); draw(performance.now()) }
 }
@@ -91,6 +99,8 @@ const countdownTimer = setInterval(() => {
   countdown.textContent = seconds > 0 ? `${seconds} 秒后自动进入，也可以点击跳过等待` : '正在打开聊天界面'
   if (seconds === 0) clearInterval(countdownTimer)
 }, 1000)
+const removeThemeListener = window.themeApi.onThemeChanged(restart)
+const removeStyleListener = window.themeApi.onStyleChanged(restart)
 const removeListener = window.loadApi.dataInitSuccessAndSkip(result => {
   complete = true
   failed = result?.ok === false
@@ -103,5 +113,7 @@ window.addEventListener('pagehide', () => {
   clearInterval(countdownTimer)
   if (frame) cancelAnimationFrame(frame)
   removeListener()
+  removeThemeListener()
+  removeStyleListener()
 })
 restart()

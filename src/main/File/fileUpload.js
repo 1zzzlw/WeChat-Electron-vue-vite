@@ -55,6 +55,7 @@ const completedChunksMap = new Map()
 const uploadControllers = new Map()
 // 保存文件上传凭证，键为文件id，值为凭证信息
 const fileVerifyMap = new Map()
+let uploadEpoch = 0
 
 /**
  * 根据文件路径获取文件的信息
@@ -105,6 +106,7 @@ const getFileInfo = async (path) => {
  * @param file -- 文件信息
  */
 const uploadFile = async (file, source = refs.mainWindow?.webContents) => {
+    const epoch = uploadEpoch
     const { fileId, fileName, fileSize, fileType, localPath } = file
 
     // 如果暂停队列里面包含该文件，说明是执行的继续操作
@@ -130,6 +132,8 @@ const uploadFile = async (file, source = refs.mainWindow?.webContents) => {
         minioFilePath = res.data.minioFilePath
     })
 
+    if (epoch !== uploadEpoch) throw new Error('账号已退出，上传已取消')
+
     // 预览先通过 HTTP 上传；失败则不发送会缺失封面的媒体消息。
     if (fileType === 2 || fileType === 3) {
         const previewPath = file.previewPath || (fileType === 2
@@ -151,6 +155,8 @@ const uploadFile = async (file, source = refs.mainWindow?.webContents) => {
         fileId: fileId
     })
     const chunksList = res.data
+
+    if (epoch !== uploadEpoch) throw new Error('账号已退出，上传已取消')
 
     // 分片上传
     fileUpload(localPath, fileSize, fileId, fileName, fileType, verify, minioFilePath, chunksList, source)
@@ -341,7 +347,17 @@ const generateFileId = (fileName, fileSize, fileMtimeMs, fileIno) => {
     return createHash('md5').update(fileIdentifier).digest('hex')
 }
 
+const cancelAllUploads = () => {
+    uploadEpoch++
+    for (const [fileId, queue] of fileUploadQueueMap) {
+        queue.pause()
+        queue.clear('账号已退出')
+        cleanupFileUploadState(fileId)
+    }
+}
+
 export {
+    cancelAllUploads,
     getFileInfo,
     uploadFile,
     stopUpload

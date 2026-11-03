@@ -1,5 +1,5 @@
 import { store } from '../shared.js'
-import { ipcMain, safeStorage } from 'electron'
+import { ipcMain, safeStorage, BrowserWindow } from 'electron'
 
 const MODEL_API_KEYS_STORE_KEY = 'modelApiKeys'
 
@@ -69,12 +69,6 @@ ipcMain.handle('window:setUserInfo', (e, userInfoType, userInfo) => {
     case 'storeLocation':
       store.set('storeLocation', userInfo)
       break
-    case 'wallpaper':
-      store.set('wallpaper', userInfo)
-      break
-    case 'wallpaperPath':
-      store.set('wallpaperPath', userInfo)
-      break
     case 'username':
       store.set('username', userInfo)
       break
@@ -86,6 +80,7 @@ ipcMain.handle('window:setUserInfo', (e, userInfoType, userInfo) => {
       break
     case 'email':
     case 'birthday':
+    case 'address':
       store.set(userInfoType, userInfo)
       break
     case 'gender':
@@ -100,6 +95,11 @@ ipcMain.handle('window:setUserInfo', (e, userInfoType, userInfo) => {
     case 'modelApiKey':
       setModelApiKey(userInfo)
       break
+  }
+  if (['username', 'avatar', 'account', 'phone', 'email', 'birthday', 'gender', 'address'].includes(userInfoType)) {
+    for (const window of BrowserWindow.getAllWindows()) {
+      if (!window.isDestroyed()) window.webContents.send('user:profile-changed', { key: userInfoType, value: userInfo })
+    }
   }
   return true
 })
@@ -119,10 +119,6 @@ ipcMain.handle('window:getUserInfo', (e, userInfoType, userInfo) => {
         return store.get('userId')
       case 'storeLocation':
         return store.get('storeLocation')
-      case 'wallpaper':
-        return store.get('wallpaper')
-      case 'wallpaperPath':
-        return store.get('wallpaperPath')
       case 'username':
         return store.get('username')
       case 'phone':
@@ -131,6 +127,7 @@ ipcMain.handle('window:getUserInfo', (e, userInfoType, userInfo) => {
         return store.get('account')
       case 'email':
       case 'birthday':
+      case 'address':
         return store.get(userInfoType)
       case 'gender':
         return store.get('gender')

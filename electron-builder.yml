@@ -1,5 +1,5 @@
-appId: com.easychat.im
-productName: zzz-im-web
+appId: com.lumina.agent
+productName: Lumina
 copyright: Copyright @ 个人项目 2025
 directories:
   buildResources: build
@@ -19,6 +19,10 @@ extraResources:
       - '**/*'
   - from: resources/icon.png
     to: icon.png
+  - from: resources/icon.ico
+    to: icon.ico
+  - from: resources/icon.svg
+    to: icon.svg
 asarUnpack:
   - resources/**
   - node_modules/ffmpeg-static/**
@@ -26,11 +30,11 @@ asarUnpack:
 win:
   target: nsis
   icon: build/favicon.ico
-  executableName: zzz-im-web
+  executableName: Lumina
 nsis:
-  artifactName: ${name}-${version}-setup.${ext}
-  shortcutName: ${productName}
-  uninstallDisplayName: ${productName}
+  artifactName: ${productName}-${version}-setup.${ext}
+  shortcutName: Lumina · 微光
+  uninstallDisplayName: Lumina · 微光
   createDesktopShortcut: always
   installerIcon: build/favicon.ico
   uninstallerIcon: build/favicon.ico
@@ -43,7 +47,7 @@ mac:
     - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
   notarize: false
 dmg:
-  artifactName: ${name}-${version}.${ext}
+  artifactName: ${productName}-${version}.${ext}
 linux:
   target:
     - AppImage
@@ -52,7 +56,7 @@ linux:
   maintainer: electronjs.org
   category: Utility
 appImage:
-  artifactName: ${name}-${version}.${ext}
+  artifactName: ${productName}-${version}.${ext}
 npmRebuild: false
 publish:
   provider: generic

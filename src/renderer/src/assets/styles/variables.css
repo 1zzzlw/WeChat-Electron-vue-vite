@@ -1,4 +1,4 @@
-/* 基础主题由 public/theme.css 共享；账号页的特色动画保留在 account.css。 */
+/* 基础主题由 public/theme.css 共享，Element Plus 使用相同的语义变量。 */
 :root {
   --el-color-primary: var(--color-accent);
   --el-color-primary-light-3: var(--color-surface-2);
@@ -31,5 +31,5 @@
   --el-border-radius-small: var(--radius-sm);
   --el-box-shadow-light: var(--shadow-md);
   --el-font-family: var(--font-family);
-  --el-mask-color: rgba(16, 43, 63, .38);
+  --el-mask-color: rgba(0, 0, 0, .45);
 }

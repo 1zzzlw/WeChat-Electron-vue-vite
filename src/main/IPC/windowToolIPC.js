@@ -8,11 +8,11 @@ import os from 'os'
 
 let shortcutsRegistered = false
 
-const login_width = 300
-const login_height = 370
+const login_width = 400
+const login_height = 580
 const main_width = 1100
 const main_height = 700
-const register_height = 490
+const register_height = 640
 
 // 控制窗口相关操作
 ipcMain.on('window:controls', (e, windowType, controlType, value) => {
@@ -106,11 +106,6 @@ const enterMain = async () => {
   finishLoadingWindow()
   websocket.connect()
 }
-
-// 更新窗口壁纸
-ipcMain.on('send:wallpaper', (e, imagePath) => {
-  refs.mainWindow.webContents.send('on:wallpaper', imagePath)
-})
 
 // 注册快捷键统一放在这个方法里面
 function registerShortcuts() {

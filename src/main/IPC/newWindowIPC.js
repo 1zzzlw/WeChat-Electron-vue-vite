@@ -1,8 +1,8 @@
 import { ipcMain } from 'electron'
 import { createExtraWindow, windowPool } from '../Util/createNewWindow'
 
-const friendAdd_width = 350
-const friendAdd_height = 520
+const friendAdd_width = 400
+const friendAdd_height = 640
 const createGroup_width = 820
 const createGroup_height = 620
 const settingView_width = 800

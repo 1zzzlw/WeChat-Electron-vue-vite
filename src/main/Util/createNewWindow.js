@@ -1,4 +1,5 @@
 import { is } from '@electron-toolkit/utils'
+import { getIconPath } from '../shared.js'
 import { app, BrowserWindow, shell, ipcMain } from 'electron'
 import { join } from 'path'
 import { pathToFileURL } from 'url'
@@ -59,9 +60,7 @@ function createExtraWindow(windowType, options = {}, loadType = 'vue', data) {
     }
 
     // 动态获取 icon 路径
-    const iconPath = app.isPackaged
-        ? join(process.resourcesPath, 'icon.png')
-        : join(__dirname, '../../../resources/icon.png')
+    const iconPath = getIconPath()
 
     const defaultOptions = {
         icon: iconPath,
@@ -106,7 +105,7 @@ function createExtraWindow(windowType, options = {}, loadType = 'vue', data) {
     window.on('ready-to-show', () => {
         clearTimeout(loadTimeout)
         window.show()
-        window.setTitle('EasyChat')
+        window.setTitle('Lumina · 微光')
     })
 
     window.on('closed', () => {

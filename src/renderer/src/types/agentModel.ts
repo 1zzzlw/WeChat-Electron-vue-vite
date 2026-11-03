@@ -9,6 +9,7 @@ export interface ModelOption {
   modelTemperature?: number
   isActive?: boolean
   isDefault?: boolean
+  isPublic?: boolean
 }
 
 export interface AgentModelConfig {
@@ -21,7 +22,7 @@ export interface AgentModelConfig {
 }
 
 export interface SavedModelConfig {
-  id: number
+  id: string
   userId: string
   configName: string
   providerName: string
@@ -29,16 +30,17 @@ export interface SavedModelConfig {
   baseUrl: string | null
   modelTemperature: number
   isActive: boolean
+  isPublic: boolean
   createdAt: string
   updatedAt: string
 }
 
 export const DEFAULT_MODEL: ModelOption = {
-  id: 'default-qwen-vl-ocr-2025-11-20',
+  id: 'system-default',
   configName: '系统默认模型',
   providerName: 'default',
-  modelName: 'qwen-vl-ocr-2025-11-20',
-  description: '适合复杂分析与编码任务',
+  modelName: '',
+  description: '使用管理员提供的默认对话配置',
   modelTemperature: 1,
   isActive: true,
   isDefault: true

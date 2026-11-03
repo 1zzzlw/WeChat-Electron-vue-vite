@@ -539,7 +539,7 @@ const saveContent = async () => {
 
 .empty-nav {
     text-align: center;
-    color: rgba(var(--color-accent-rgb), 0.3);
+    color: var(--color-text-accent);
     font-size: 12px;
     margin-top: 20px;
 }
@@ -556,6 +556,7 @@ const saveContent = async () => {
 /* 编辑器布局：行号 + 内容 */
 .editor-layout {
     display: flex;
+    width: 100%;
     min-height: 100%;
     position: relative;
 }
@@ -581,7 +582,7 @@ const saveContent = async () => {
     /* 采用绝对定位 */
     width: 100%;
     font-size: 12px;
-    color: rgba(var(--color-accent-rgb), 0.45) !important;
+    color: var(--color-text-accent) !important;
     font-family: 'Consolas', monospace;
     display: flex;
     align-items: center;
@@ -672,7 +673,7 @@ const saveContent = async () => {
     background: rgba(var(--color-surface-rgb), 0.4);
     border: 1px solid var(--color-border-subtle);
     border-radius: 4px;
-    color: rgba(var(--color-accent-rgb), 0.7);
+    color: var(--color-text-accent);
     cursor: pointer;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -702,9 +703,10 @@ const saveContent = async () => {
 }
 
 .editor-content-wrapper {
-    flex: 1;
+    flex: 1 1 0;
     min-width: 0;
-    width: fit-content;
+    display: flex;
+    flex-direction: column;
 }
 
 /* 标题体系规范化样式 */
@@ -716,9 +718,10 @@ const saveContent = async () => {
     line-height: 1.8;
     font-size: 15px;
     margin: 0;
-    width: auto;
-    display: inline-block;
-    min-width: 150px;
+    display: block;
+    width: 100%;
+    flex: 1;
+    min-width: 0;
     padding: 15px;
     /* 允许在任何字符间断行，防止长英文撑爆宽度 */
     word-break: break-all;
@@ -816,7 +819,7 @@ const saveContent = async () => {
 :deep(.ProseMirror p.is-editor-empty:first-child::before) {
     content: '分享这一刻的想法...';
     float: left;
-    color: rgba(var(--color-accent-rgb), 0.3);
+    color: var(--color-text-accent);
     pointer-events: none;
     height: 0;
 }

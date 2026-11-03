@@ -1,24 +1,39 @@
 <template>
   <Teleport to="body">
     <Transition name="model-dialog-fade">
-      <div v-if="modelValue" class="model-dialog-mask" role="presentation" @mousedown.self="handleClose">
-        <section class="model-config-dialog" role="dialog" aria-modal="true" aria-labelledby="model-config-title">
+      <div
+        v-if="modelValue"
+        class="model-dialog-mask"
+        role="presentation"
+        @mousedown.self="handleClose"
+        @keydown="handleDialogKeydown"
+      >
+        <section
+          ref="dialogRef"
+          class="model-config-dialog"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="model-config-title"
+          :aria-busy="saving"
+        >
           <header class="model-dialog-header">
             <div class="model-dialog-title">
-              <span class="model-dialog-icon"><el-icon><Cpu /></el-icon></span>
+              <span class="model-dialog-icon"
+                ><el-icon><Cpu /></el-icon
+              ></span>
               <div>
                 <span>MODEL PROVIDER</span>
                 <h2 id="model-config-title">{{ isEditing ? '编辑大模型' : '添加大模型' }}</h2>
               </div>
             </div>
-            <button type="button" aria-label="关闭模型配置" @click="handleClose">
+            <button type="button" aria-label="关闭模型配置" :disabled="saving" @click="handleClose">
               <el-icon><Close /></el-icon>
             </button>
           </header>
 
           <form class="model-config-form" @submit.prevent="handleSubmit">
             <p class="model-form-description">
-              配置一个可供 Agent 使用的模型。模型信息会保存到服务端，API Key 仅在当前页面会话中使用。
+              配置聊天使用的模型。模型信息保存到服务端，API Key 由本机系统加密保存。
             </p>
 
             <label class="model-form-field">
@@ -26,7 +41,12 @@
                 <strong>配置名称</strong>
                 <small>用于在模型列表中识别该配置</small>
               </span>
-              <input v-model="form.configName" type="text" placeholder="例如：我的 DeepSeek" autocomplete="off" />
+              <input
+                v-model="form.configName"
+                type="text"
+                placeholder="例如：我的 DeepSeek"
+                autocomplete="off"
+              />
             </label>
 
             <label class="model-form-field">
@@ -35,7 +55,11 @@
                 <small>用于区分模型服务来源</small>
               </span>
               <select v-model="form.providerName">
-                <option v-for="provider in providerOptions" :key="provider.value" :value="provider.value">
+                <option
+                  v-for="provider in providerOptions"
+                  :key="provider.value"
+                  :value="provider.value"
+                >
                   {{ provider.label }}
                 </option>
               </select>
@@ -46,7 +70,12 @@
                 <strong>大模型名称</strong>
                 <small>填写服务端实际调用的模型标识</small>
               </span>
-              <input v-model="form.modelName" type="text" placeholder="例如：gpt-5" autocomplete="off" />
+              <input
+                v-model="form.modelName"
+                type="text"
+                placeholder="例如：gpt-5"
+                autocomplete="off"
+              />
             </label>
 
             <label v-if="form.providerName === 'custom'" class="model-form-field">
@@ -54,7 +83,12 @@
                 <strong>Base URL</strong>
                 <small>自定义 OpenAI 兼容服务的接口地址</small>
               </span>
-              <input v-model="form.baseUrl" type="url" placeholder="例如：https://example.com/v1" autocomplete="off" />
+              <input
+                v-model="form.baseUrl"
+                type="url"
+                placeholder="例如：https://example.com/v1"
+                autocomplete="off"
+              />
             </label>
 
             <label class="model-form-field">
@@ -62,7 +96,12 @@
                 <strong>API Key</strong>
                 <small>不会保存到模型配置数据库</small>
               </span>
-              <input v-model="form.apiKey" type="password" placeholder="输入模型服务 API Key" autocomplete="new-password" />
+              <input
+                v-model="form.apiKey"
+                type="password"
+                placeholder="输入模型服务 API Key"
+                autocomplete="new-password"
+              />
             </label>
 
             <label class="model-form-field">
@@ -71,21 +110,38 @@
                 <small>数值越大，回答越有随机性</small>
               </span>
               <span class="model-temperature-stepper">
-                <button type="button" aria-label="降低模型温度" @click="adjustTemperature(-0.1)">−</button>
-                <input v-model.number="form.modelTemperature" type="number" min="0" max="2" step="0.1" />
-                <button type="button" aria-label="提高模型温度" @click="adjustTemperature(0.1)">+</button>
+                <button type="button" aria-label="降低模型温度" @click="adjustTemperature(-0.1)">
+                  −
+                </button>
+                <input
+                  v-model.number="form.modelTemperature"
+                  type="number"
+                  min="0"
+                  max="2"
+                  step="0.1"
+                />
+                <button type="button" aria-label="提高模型温度" @click="adjustTemperature(0.1)">
+                  +
+                </button>
               </span>
             </label>
 
             <div class="model-form-notice">
               <el-icon><Lock /></el-icon>
-              <span>关闭或刷新页面后，自定义模型的 API Key 需要重新填写。</span>
+              <span>API Key 按账号和模型配置分别保存，不会写入聊天记录或服务端模型表。</span>
             </div>
 
             <footer class="model-dialog-footer">
-              <button class="model-cancel-button" type="button" @click="handleClose">取消</button>
-              <button class="model-submit-button" type="submit" :disabled="!canSubmit">
-                {{ isEditing ? '保存修改' : '添加模型' }}
+              <button
+                class="model-cancel-button"
+                type="button"
+                :disabled="saving"
+                @click="handleClose"
+              >
+                取消
+              </button>
+              <button class="model-submit-button" type="submit" :disabled="!canSubmit || saving">
+                {{ saving ? '正在保存…' : isEditing ? '保存修改' : '添加模型' }}
               </button>
             </footer>
           </form>
@@ -96,7 +152,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, watch, type PropType } from 'vue'
+import { computed, nextTick, reactive, ref, watch, type PropType } from 'vue'
 import { Close, Cpu, Lock } from '@element-plus/icons-vue'
 import type { AgentModelConfig } from '@/types'
 
@@ -108,6 +164,10 @@ const props = defineProps({
   config: {
     type: Object as PropType<AgentModelConfig | null>,
     default: null
+  },
+  saving: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -125,6 +185,9 @@ const form = reactive<AgentModelConfig>({
   modelTemperature: 1
 })
 
+const dialogRef = ref<HTMLElement | null>(null)
+let returnFocus: HTMLElement | null = null
+
 const providerOptions = [
   { value: 'openai', label: 'OpenAI（服务端预置）' },
   { value: 'deepseek', label: 'DeepSeek（服务端预置）' },
@@ -138,25 +201,29 @@ const isEditing = computed(() => props.config !== null)
 
 const canSubmit = computed(() => {
   return Boolean(
-    form.configName.trim()
-    && form.providerName
-    && form.modelName.trim()
-    && (form.providerName !== 'custom' || form.baseUrl.trim())
+    form.configName.trim() &&
+      form.providerName &&
+      form.modelName.trim() &&
+      (form.providerName !== 'custom' || form.baseUrl.trim())
   )
 })
 
-watch(
-  [() => props.modelValue, () => props.config],
-  ([visible]) => {
-    if (!visible) return
-    form.configName = props.config?.configName ?? ''
-    form.providerName = props.config?.providerName ?? 'openai'
-    form.modelName = props.config?.modelName ?? ''
-    form.baseUrl = props.config?.baseUrl ?? ''
-    form.apiKey = props.config?.apiKey ?? ''
-    form.modelTemperature = props.config?.modelTemperature ?? 1
+watch([() => props.modelValue, () => props.config], async ([visible]) => {
+  if (!visible) {
+    await nextTick()
+    returnFocus?.focus()
+    return
   }
-)
+  returnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null
+  form.configName = props.config?.configName ?? ''
+  form.providerName = props.config?.providerName ?? 'openai'
+  form.modelName = props.config?.modelName ?? ''
+  form.baseUrl = props.config?.baseUrl ?? ''
+  form.apiKey = props.config?.apiKey ?? ''
+  form.modelTemperature = props.config?.modelTemperature ?? 1
+  await nextTick()
+  dialogRef.value?.querySelector<HTMLInputElement>('input')?.focus()
+})
 
 const adjustTemperature = (amount: number) => {
   const value = Number(form.modelTemperature) || 0
@@ -164,11 +231,34 @@ const adjustTemperature = (amount: number) => {
 }
 
 const handleClose = () => {
+  if (props.saving) return
   emit('update:modelValue', false)
 }
 
+const handleDialogKeydown = (event: KeyboardEvent) => {
+  if (event.key === 'Escape') {
+    event.preventDefault()
+    handleClose()
+    return
+  }
+  if (event.key !== 'Tab') return
+  const elements = dialogRef.value?.querySelectorAll<HTMLElement>(
+    'button:not(:disabled), input:not(:disabled), select:not(:disabled)'
+  )
+  if (!elements?.length) return
+  const first = elements[0]
+  const last = elements[elements.length - 1]
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault()
+    last.focus()
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault()
+    first.focus()
+  }
+}
+
 const handleSubmit = () => {
-  if (!canSubmit.value) return
+  if (!canSubmit.value || props.saving) return
   emit('submit', {
     ...form,
     configName: form.configName.trim(),
@@ -177,7 +267,6 @@ const handleSubmit = () => {
     baseUrl: form.providerName === 'custom' ? form.baseUrl.trim() : '',
     apiKey: form.apiKey.trim()
   })
-  handleClose()
 }
 </script>
 
@@ -201,7 +290,9 @@ const handleSubmit = () => {
   background: var(--color-bg-deep);
   border: 1px solid var(--color-border-subtle);
   border-radius: 14px;
-  box-shadow: 0 30px 90px rgba(4, 8, 13, 0.5), inset 0 1px rgba(255, 255, 255, 0.035);
+  box-shadow:
+    0 30px 90px rgba(4, 8, 13, 0.5),
+    inset 0 1px rgba(255, 255, 255, 0.035);
 }
 
 .model-dialog-header {
@@ -318,7 +409,10 @@ const handleSubmit = () => {
   border-radius: 8px;
   outline: 0;
   user-select: text;
-  transition: border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    background 0.16s ease;
 }
 
 .model-form-field input:focus,
@@ -444,7 +538,9 @@ const handleSubmit = () => {
 
 .model-dialog-fade-enter-active .model-config-dialog,
 .model-dialog-fade-leave-active .model-config-dialog {
-  transition: opacity 0.16s ease, transform 0.16s ease;
+  transition:
+    opacity 0.16s ease,
+    transform 0.16s ease;
 }
 
 .model-dialog-fade-enter-from,

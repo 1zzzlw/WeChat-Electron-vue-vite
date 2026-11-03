@@ -11,7 +11,7 @@ const errors = []
 const results = []
 const windows = []
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
-const timeout = setTimeout(() => { console.error('Electron 页面验证超时'); app.exit(1) }, 30000)
+const timeout = setTimeout(() => { console.error('Electron 页面验证超时'); app.exit(1) }, 60000)
 
 function windowFor(width, height) {
     const win = new BrowserWindow({
@@ -34,9 +34,18 @@ app.whenReady().then(async () => {
     const saveWindow = async (window, file) => {
         // 路由 DOM 就绪后再等两帧，避免离屏截图拿到上一页的合成帧。
         await window.webContents.executeJavaScript('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))')
+        if (await window.webContents.executeJavaScript("!!document.querySelector('.el-dialog, .local-search-popper')")) await delay(320)
         await delay(50)
         await fs.writeFile(path.join(output, file), (await window.webContents.capturePage()).toPNG())
     }
+    let styleMode = 'ai-native'
+    ipcMain.on('fixture:style:initial', event => { event.returnValue = styleMode })
+    ipcMain.handle('fixture:style:get', () => styleMode)
+    ipcMain.handle('fixture:style:set', (_event, value) => {
+        styleMode = value
+        for (const window of windows) window.webContents.send('fixture:style:changed', value)
+        return value
+    })
     let themeMode = 'light'
     ipcMain.on('fixture:theme:initial', event => { event.returnValue = themeMode })
     ipcMain.handle('fixture:theme:get', () => themeMode)
@@ -101,7 +110,7 @@ app.whenReady().then(async () => {
     const loading = windowFor(640, 520)
     await loading.loadFile(path.join(root, 'public/loading.html'))
     await delay(150)
-    assert.equal(await loading.webContents.executeJavaScript("document.querySelector('.continue').hidden"), true)
+    assert.equal(await loading.webContents.executeJavaScript("document.querySelector('.continue').hidden"), false)
     await saveWindow(loading, 'loading.png')
     loading.webContents.send('fixture:loaded', { ok: true })
     await delay(40)
@@ -126,6 +135,8 @@ app.whenReady().then(async () => {
     await loading.webContents.session.protocol.handle('http', request => {
         if (/verify/i.test(request.url)) return new Response(preview.toPNG(), { headers: { 'Content-Type': 'image/png' } })
         let response = { code: 1, data: [] }
+        if (/moments\/user/.test(request.url)) response = { code: 1, data: { total: 0, data: [] } }
+        if (/user\/me/.test(request.url)) response = { code: 1, data: { id: 'fixture-user', account: 'fixture', email: '', birthday: '', avatar: '', phone: '13800000000' } }
         if (/ai-message/.test(request.url)) response = []
         if (/wallet\/info/.test(request.url)) response = { code: 1, data: { balance: 1280.5, freezeBalance: 20 } }
         if (/wallet\/records/.test(request.url)) response = { code: 1, data: { total: 2, data: [
@@ -147,8 +158,8 @@ app.whenReady().then(async () => {
     })()`)
     assert.equal(theme.found, true, JSON.stringify({ errors, url: workbench.webContents.getURL(),
         body: await workbench.webContents.executeJavaScript('document.body.innerText.slice(0, 1200)') }))
-    assert.equal(theme.accent, '#287eb5')
-    assert.equal(theme.blur, 'blur(20px)')
+    assert.equal(theme.accent, '#6840b5')
+    assert.equal(theme.blur, 'none')
     await delay(300)
     await saveWindow(workbench, 'workbench.png')
     await workbench.loadFile(path.join(root, 'out/renderer/index.html'), { hash: '/messageList' })
@@ -195,12 +206,12 @@ app.whenReady().then(async () => {
     const searchFocus = await workbench.webContents.executeJavaScript(`(() => {
         const input = document.querySelector('.message-list-top input')
         input.focus()
-        return { shadow: getComputedStyle(input.closest('.el-input__wrapper')).boxShadow,
-            outline: getComputedStyle(input).outlineStyle }
+        return { outline: getComputedStyle(input.closest('.el-input__wrapper')).outlineStyle,
+            inputOutline: getComputedStyle(input).outlineStyle }
     })()`)
-    assert.equal(searchFocus.shadow, 'none')
     assert.equal(searchFocus.outline, 'none')
-    results.push('主界面搜索框聚焦也无蓝色边框或光圈')
+    assert.equal(searchFocus.inputOutline, 'none')
+    results.push('主界面搜索框聚焦后保持单层边界')
     await workbench.loadFile(path.join(root, 'out/renderer/index.html'), { hash: '/wallet' })
     for (let index = 0; index < 60; index++) {
         if (await workbench.webContents.executeJavaScript("document.querySelectorAll('.bill-item').length === 2")) break
@@ -226,9 +237,9 @@ app.whenReady().then(async () => {
     }
     await saveWindow(workbench, 'wallet-dark.png')
     results.push('钱包亮暗主题、余额卡片、账单列表和充值弹窗完成实际渲染验证，未提交交易')
-    const borders = []
-    for (const [route, height] of [['login', 370], ['register', 490]]) {
-        const account = windowFor(300, height)
+    const backgrounds = []
+    for (const [route, height] of [['login', 580], ['register', 640]]) {
+        const account = windowFor(400, height)
         await account.loadFile(path.join(root, 'out/renderer/index.html'), { hash: '/' + route })
         for (let index = 0; index < 60; index++) {
             if (await account.webContents.executeJavaScript('!!document.querySelector(".' + route + '-count")')) break
@@ -240,19 +251,206 @@ app.whenReady().then(async () => {
             input.focus()
             const wrapper = input.closest('.el-input__wrapper')
             return { inputShadow: getComputedStyle(input).boxShadow, inputOutline: getComputedStyle(input).outlineStyle,
-                wrapperShadow: getComputedStyle(wrapper).boxShadow }
+                wrapperOutline: getComputedStyle(wrapper).outlineStyle }
         })()`)
         assert.equal(focusStyle.inputShadow, 'none')
         assert.equal(focusStyle.inputOutline, 'none')
-        assert.equal(focusStyle.wrapperShadow, 'none')
-        borders.push(await account.webContents.executeJavaScript('getComputedStyle(document.querySelector(".' + route + '-count"), "::before").backgroundImage'))
+        assert.equal(focusStyle.wrapperOutline, 'none')
+        backgrounds.push(await account.webContents.executeJavaScript('getComputedStyle(document.querySelector(".' + route + '-count"), "::before").backgroundImage'))
         await saveWindow(account, route + '.png')
     }
-    assert.notEqual(borders[0], borders[1])
-    assert.ok(borders.every(value => value.includes('conic-gradient')))
+    assert.deepEqual(backgrounds, ['none', 'none'])
     assert.deepEqual(errors.filter(message => /TypeError|ReferenceError/.test(message)), [])
-    results.push('构建产物加载天空主题，AI 工作台保留玻璃模糊，登录/注册分别保留青蓝与粉紫动画')
-    results.push('登录、注册输入框聚焦后均无蓝色边框、光圈')
+    results.push('构建产物使用新主题，登录与注册无照片背景或旋转边框')
+    results.push('登录、注册输入框聚焦后保持单层边界')
+
+    // 四种组合实际渲染：字体、单层输入框、登录入口与默认布局。
+    const waitFor = async (window, expression) => {
+        for (let attempt = 0; attempt < 100; attempt++) {
+            if (await window.webContents.executeJavaScript(expression)) return
+            await delay(30)
+        }
+        throw new Error('页面状态未就绪：' + expression + ' URL=' + window.webContents.getURL() + ' BODY=' + await window.webContents.executeJavaScript('document.body.innerText.slice(0, 1600)'))
+    }
+    const videoFile = path.join(output, 'preview-sample.webm')
+    await require('node:util').promisify(require('node:child_process').execFile)(require('ffmpeg-static'),
+        ['-y', '-f', 'lavfi', '-i', 'color=c=0x65558f:s=320x180:r=5', '-t', '1', '-c:v', 'libvpx', '-b:v', '80k', videoFile], { windowsHide: true })
+    const sampleImage = 'data:image/png;base64,' + preview.toPNG().toString('base64')
+    const selectedFiles = [
+        { fileId: 'preview-image', fileName: '设计草图.png', fileType: 2, fileSize: 2097152, previewUrl: sampleImage, localPath: sampleImage, content: '[图片]' },
+        { fileId: 'preview-video', fileName: '产品演示.webm', fileType: 3, fileSize: 4194304, previewUrl: sampleImage, localPath: videoFile, content: '[视频]' },
+        { fileId: 'preview-document', fileName: '项目需求说明与界面设计验收清单-最终版本.pdf', fileType: 5, fileSize: 15360, localPath: '', content: '[文件]' }
+    ]
+    let fileCursor = 0
+    ipcMain.handle('fixture:select-file', () => selectedFiles[fileCursor++])
+    const groupWindow = windowFor(820, 620)
+    const searchContact = { friendId: 'fixture-friend', username: '晴空', remark: '设计伙伴', account: 'qingkong01', avatar: sampleImage, relationStatus: 1 }
+    const searchConversations = [
+        { id: 'fixture-chat', userId: 'fixture-user', targetId: 'fixture-friend', name: '设计讨论', type: 0, status: 1, avatar: sampleImage },
+        { id: 'fixture-group', userId: 'fixture-user', targetId: 'fixture-group', name: '项目设计群', type: 1, status: 1, avatar: sampleImage }
+    ]
+    ipcMain.handle('fixture:search-local', async (_event, request) => {
+        if (request.query === 'slow') { await delay(400); return { contacts: [{ ...searchContact, username: '过期结果', remark: '' }], conversations: [], messages: [] } }
+        if (request.query === 'fast') return { contacts: [{ ...searchContact, username: '最新结果', remark: '' }], conversations: [], messages: [] }
+        const keyword = request.query.trim().toLowerCase()
+        const matches = value => String(value || '').toLowerCase().includes(keyword)
+        const contacts = [searchContact].filter(item => [item.username, item.remark, item.account].some(matches))
+        return { contacts, conversations: request.scope === 'contacts' ? [] : searchConversations.filter(item => matches(item.name)),
+            messages: request.scope === 'contacts' || !matches('这是一条本地设计消息') ? [] : [{ id: 'history-020', conversationId: 'fixture-chat', content: '这是一条本地设计消息', sendTime: '2026-11-03T10:00:00', msgType: 1, conversationName: '设计讨论', conversationAvatar: sampleImage, conversationType: 0 }] }
+    })
+    const fillInput = (window, selector, value) => window.webContents.executeJavaScript('(' + function (selector, value) {
+        const input = document.querySelector(selector)
+        input.focus()
+        input.value = value
+        input.dispatchEvent(new Event('input', { bubbles: true }))
+    }.toString() + ')(' + JSON.stringify(selector) + ',' + JSON.stringify(value) + ')')
+    const auth = windowFor(400, 580)
+    const settings = windowFor(1000, 700)
+    for (const style of ['ai-native', 'swiss']) {
+        for (const mode of ['light', 'dark']) {
+            const label = style + '-' + mode
+            await workbench.loadFile(path.join(root, 'out/renderer/index.html'), { hash: '/messageList' })
+            await waitFor(workbench, "!!document.querySelector('.style-option')")
+            await workbench.webContents.executeJavaScript("document.querySelectorAll('.style-option')[" + (style === 'swiss' ? 1 : 0) + "].click()")
+            await waitFor(workbench, "document.documentElement.dataset.uiStyle === '" + style + "'")
+            await workbench.webContents.executeJavaScript("document.querySelectorAll('.theme-options button')[" + (mode === 'dark' ? 1 : 0) + "].click()")
+            await waitFor(workbench, "document.documentElement.dataset.theme === '" + mode + "'")
+            const metrics = await workbench.webContents.executeJavaScript('(' + function () {
+                const el = document.querySelector('.chat-welcome')
+                const input = document.querySelector('.message-list-top input')
+                input.focus()
+                const wrapper = getComputedStyle(input.closest('.el-input__wrapper'))
+                return { weight: getComputedStyle(document.body).fontWeight,
+                    spacing: getComputedStyle(document.body).letterSpacing,
+                    descriptionWeight: getComputedStyle(document.querySelector('.welcome-description')).fontWeight,
+                    outline: wrapper.outlineStyle, shadow: wrapper.boxShadow,
+                    borderWidth: wrapper.borderTopWidth, inputWeight: getComputedStyle(input).fontWeight,
+                    scrollHeight: el.scrollHeight, height: el.clientHeight,
+                    scrollbar: getComputedStyle(el).scrollbarWidth }
+            }.toString() + ')()')
+            assert.equal(metrics.weight, '400', label)
+            assert.equal(metrics.spacing, 'normal', label)
+            assert.equal(metrics.descriptionWeight, '400', label)
+            assert.equal(metrics.inputWeight, '400', label)
+            assert.equal(metrics.outline, 'none', label)
+            assert.equal(metrics.shadow, 'none', label)
+            assert.ok(parseFloat(metrics.borderWidth) > 0 && parseFloat(metrics.borderWidth) <= 1, label)
+            assert.equal(metrics.scrollbar, 'none', label)
+            assert.ok(await workbench.webContents.executeJavaScript("document.querySelector('.welcome-date').getBoundingClientRect().top > 60"), label + ' 日期应避开窗口控制区')
+            assert.ok(metrics.scrollHeight <= metrics.height + 1, label + JSON.stringify(metrics))
+            await saveWindow(workbench, label + '-welcome.png')
+            assert.equal(await loading.webContents.executeJavaScript('document.documentElement.dataset.uiStyle'), style)
+            assert.equal(await loading.webContents.executeJavaScript('document.documentElement.dataset.theme'), mode)
+            await saveWindow(loading, label + '-loading.png')
+            for (const route of ['login', 'pendingLogin', 'register', 'registerUserInfo', 'uploadAvatar']) {
+                auth.setContentSize(400, ['login', 'pendingLogin'].includes(route) ? 580 : 640)
+                await auth.loadFile(path.join(root, 'out/renderer/index.html'), { hash: '/' + route })
+                await waitFor(auth, "!!document.querySelector('.auth-brand')")
+                const authMetrics = await auth.webContents.executeJavaScript('(' + function () {
+                    const el = document.querySelector('.auth-brand').parentElement
+                    return { style: document.documentElement.dataset.uiStyle,
+                        theme: document.documentElement.dataset.theme,
+                        switchers: document.querySelectorAll('.appearance-switcher').length,
+                        scrollHeight: el.scrollHeight, height: el.clientHeight,
+                        weight: getComputedStyle(document.body).fontWeight }
+                }.toString() + ')()')
+                assert.equal(authMetrics.style, style, label + route)
+                assert.equal(authMetrics.theme, mode, label + route)
+                assert.equal(authMetrics.switchers, 0, label + route)
+                assert.equal(authMetrics.weight, '400', label + route)
+                assert.ok(authMetrics.scrollHeight <= authMetrics.height + 1, label + route + JSON.stringify(authMetrics))
+                await saveWindow(auth, label + '-' + route + '.png')
+            }
+            await settings.loadFile(path.join(root, 'out/renderer/index.html'), { hash: '/account' })
+            await waitFor(settings, "document.querySelectorAll('.style-option').length === 2")
+            await saveWindow(settings, label + '-settings.png')
+            await groupWindow.loadFile(path.join(root, 'out/renderer/index.html'), { hash: '/createGroup', query: { appearance: label } })
+            await waitFor(groupWindow, "document.querySelectorAll('.contact-row').length === 5")
+            assert.equal(await groupWindow.webContents.executeJavaScript("document.querySelector('.create-btn').disabled"), true)
+            await groupWindow.webContents.executeJavaScript("document.querySelectorAll('.contact-row input')[1].click(); document.querySelectorAll('.contact-row input')[2].click()")
+            assert.equal(await groupWindow.webContents.executeJavaScript("document.querySelectorAll('.selected-row').length"), 2)
+            await groupWindow.webContents.executeJavaScript("document.querySelector('.selected-row button').click()")
+            assert.equal(await groupWindow.webContents.executeJavaScript("document.querySelectorAll('.selected-row').length"), 1)
+            await groupWindow.webContents.executeJavaScript("var input = document.querySelector('.group-name input'); input.value = '产品设计小组'; input.dispatchEvent(new Event('input', { bubbles: true }))")
+            assert.equal(await groupWindow.webContents.executeJavaScript("document.querySelector('.create-btn').disabled"), false)
+            await saveWindow(groupWindow, label + '-create-group.png')
+            await groupWindow.webContents.executeJavaScript("var search = document.querySelector('.contacts-panel input'); search.value = '不存在的联系人'; search.dispatchEvent(new Event('input', { bubbles: true }))")
+            await waitFor(groupWindow, "document.querySelectorAll('.contact-row').length === 0")
+            assert.equal(await groupWindow.webContents.executeJavaScript("document.querySelectorAll('.selected-row').length"), 1)
+            await workbench.loadFile(path.join(root, 'out/renderer/index.html'), { hash: '/list' })
+            await waitFor(workbench, "!!document.querySelector('.list-top input')")
+            await fillInput(workbench, '.list-top input', '设计')
+            await waitFor(workbench, "document.querySelectorAll('.contact-result').length === 1")
+            assert.equal(await workbench.webContents.executeJavaScript("document.querySelectorAll('.conversation-result, .message-result').length"), 0)
+            await saveWindow(workbench, label + '-contact-search.png')
+            await workbench.webContents.executeJavaScript("document.querySelector('.contact-result').click()")
+            await waitFor(workbench, "!!document.querySelector('.userInfo h1')")
+            assert.equal(await workbench.webContents.executeJavaScript("document.querySelector('.userInfo h1').textContent"), '设计伙伴')
+            assert.ok(workbench.webContents.getURL().includes('friendId=fixture-friend'))
+            await saveWindow(workbench, label + '-friend-details.png')
+            await workbench.loadFile(path.join(root, 'out/renderer/index.html'), { hash: '/messageList' })
+            await waitFor(workbench, "!!document.querySelector('.message-list-top input')")
+            await fillInput(workbench, '.message-list-top input', '设计')
+            await waitFor(workbench, "document.querySelectorAll('.message-result').length === 1")
+            assert.equal(await workbench.webContents.executeJavaScript("document.querySelectorAll('.contact-result').length"), 1)
+            assert.equal(await workbench.webContents.executeJavaScript("document.querySelectorAll('.conversation-result').length"), 2)
+            await saveWindow(workbench, label + '-local-search.png')
+            await workbench.webContents.executeJavaScript("document.querySelector('.message-result').click()")
+            await waitFor(workbench, "!!document.querySelector('.chat-count')")
+            assert.ok(workbench.webContents.getURL().includes('conversationId=fixture-chat'))
+            await waitFor(workbench, "!!document.querySelector('.chat-message.search-match')")
+            assert.ok(workbench.webContents.getURL().includes('messageId=history-020'))
+            assert.equal(await workbench.webContents.executeJavaScript("document.querySelector('.chat-message.search-match').id"), 'messagehistory-020')
+            await saveWindow(workbench, label + '-message-position.png')
+            await workbench.webContents.executeJavaScript("document.querySelector('.search-history-banner button').click()")
+            await waitFor(workbench, "!document.querySelector('.search-history-banner') && document.querySelectorAll('.chat-message').length === 2")
+            if (style === 'ai-native' && mode === 'light') {
+                await fillInput(workbench, '.message-list-top input', 'slow')
+                await delay(220)
+                await fillInput(workbench, '.message-list-top input', 'fast')
+                await delay(500)
+                assert.ok(await workbench.webContents.executeJavaScript("document.querySelector('.local-search-results').textContent.includes('最新结果') && !document.querySelector('.local-search-results').textContent.includes('过期结果')"))
+                await fillInput(workbench, '.message-list-top input', '')
+                await waitFor(workbench, "document.querySelectorAll('.contact-result').length === 0")
+            }
+            results.push(label + '：联系人模糊搜索与详情路由、本地会话/群聊/消息动态搜索通过')
+            await workbench.loadFile(path.join(root, 'out/renderer/index.html'), { hash: '/collectList' })
+            await waitFor(workbench, "!!document.querySelector('.collect-bottom')")
+            assert.equal(await workbench.webContents.executeJavaScript("document.querySelectorAll('.collect-bottom .left-list').length"), 0)
+            assert.equal(await workbench.webContents.executeJavaScript("document.querySelector('.tags-empty').textContent"), '暂无标签')
+            await workbench.webContents.executeJavaScript("document.querySelector('.el-collapse-item__header').click()")
+            await saveWindow(workbench, label + '-favorites.png')
+            await workbench.loadFile(path.join(root, 'out/renderer/index.html'), { hash: '/messageList' })
+            await waitFor(workbench, "!!document.querySelector('.message-list-bottom .left-list')")
+            await workbench.webContents.executeJavaScript("document.querySelector('.message-list-bottom .left-list').click()")
+            await waitFor(workbench, "!!document.querySelector('.chat-count')")
+            fileCursor = 0
+            for (let file = 0; file < 3; file++) {
+                await workbench.webContents.executeJavaScript("document.querySelector('button[aria-label=添加附件]').click()")
+                await waitFor(workbench, "document.querySelectorAll('.attachment-card').length === " + (file + 1))
+            }
+            assert.ok(await workbench.webContents.executeJavaScript("document.querySelector('.attachment-list').textContent.includes('2.0 MB') && document.querySelector('.attachment-list').textContent.includes('15.0 KB')"))
+            await saveWindow(workbench, label + '-attachments.png')
+            for (const [index, kind] of ['image', 'video', 'document'].entries()) {
+                await workbench.webContents.executeJavaScript("document.querySelectorAll('.attachment-preview')[" + index + "].click()")
+                await waitFor(workbench, "!!document.querySelector('.preview-stage')")
+                if (kind === 'image') await waitFor(workbench, "document.querySelector('.full-image')?.naturalWidth > 0")
+                if (kind === 'video') await waitFor(workbench, "document.querySelector('.full-video')?.readyState >= 1")
+                await saveWindow(workbench, label + '-preview-' + kind + '.png')
+                await workbench.webContents.executeJavaScript("document.querySelector('.el-dialog__footer button').click()")
+                await waitFor(workbench, "!document.querySelector('.preview-stage')")
+            }
+            await workbench.webContents.executeJavaScript("document.querySelector('.remove-file').click()")
+            await waitFor(workbench, "document.querySelectorAll('.attachment-card').length === 2")
+            results.push(label + '：群聊选择、搜索与移除、附件预览与移除、收藏空标签通过')
+            await workbench.loadFile(path.join(root, 'out/renderer/index.html'), { hash: '/aiWorkspace' })
+            await waitFor(workbench, "!!document.querySelector('.agent-workbench')")
+            if (style === 'swiss') assert.equal(await workbench.webContents.executeJavaScript("getComputedStyle(document.querySelector('.agent-workbench')).backgroundImage"), 'none')
+            await saveWindow(workbench, label + '-agent.png')
+            results.push(label + '：主界面、设置、登录注册全流程、加载页与工作台渲染通过')
+        }
+    }
+    assert.deepEqual(errors.filter(message => /TypeError|ReferenceError/.test(message)), [])
 
     // 仅检查系统抓屏 API 能返回图像，不保存桌面内容。
     try {

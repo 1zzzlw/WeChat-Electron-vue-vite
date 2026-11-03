@@ -6,6 +6,11 @@ window.addEventListener('DOMContentLoaded', installUiSounds, { once: true })
 
 // 首屏绘制前恢复主题；后续广播直接同步所有 Vue 和独立 HTML 窗口。
 let currentTheme = ipcRenderer.sendSync('theme:initial')
+let currentStyle = ipcRenderer.sendSync('style:initial')
+const applyStyle = value => {
+  currentStyle = value === 'swiss' ? 'swiss' : 'ai-native'
+  if (document.documentElement) document.documentElement.dataset.uiStyle = currentStyle
+}
 const applyTheme = theme => {
   currentTheme = theme
   const root = document.documentElement
@@ -26,9 +31,20 @@ const applyTheme = theme => {
       (_match, _quote, url) => `url(${JSON.stringify(new URL(url, stylesheet.href).href)})`))
   }
 }
-window.addEventListener('DOMContentLoaded', () => applyTheme(currentTheme), { once: true })
+window.addEventListener('DOMContentLoaded', () => {
+  applyTheme(currentTheme)
+  applyStyle(currentStyle)
+}, { once: true })
 ipcRenderer.on('theme:changed', (_event, theme) => applyTheme(theme))
+ipcRenderer.on('style:changed', (_event, value) => applyStyle(value))
 const themeApi = {
+  getStyle: () => ipcRenderer.invoke('style:get'),
+  setStyle: value => ipcRenderer.invoke('style:set', value),
+  onStyleChanged: callback => {
+    const handler = (_event, value) => callback(value)
+    ipcRenderer.on('style:changed', handler)
+    return () => ipcRenderer.removeListener('style:changed', handler)
+  },
   getTheme: () => ipcRenderer.invoke('theme:get'),
   setTheme: theme => ipcRenderer.invoke('theme:set', theme),
   onThemeChanged: callback => {
@@ -39,6 +55,11 @@ const themeApi = {
 }
 
 const userInfoApi = {
+  onProfileChanged: callback => {
+    const handler = (_event, change) => callback(change)
+    ipcRenderer.on('user:profile-changed', handler)
+    return () => ipcRenderer.removeListener('user:profile-changed', handler)
+  },
   storeSetUserInfo: (userInfoType, userInfo) => {
     return ipcRenderer.invoke('window:setUserInfo', userInfoType, userInfo)
   },
@@ -78,6 +99,7 @@ const loadApi = {
 }
 
 const dbApi = {
+  searchLocal: request => ipcRenderer.invoke('search:local', request),
   // 查询会话列表
   queryConversationList: () => {
     return ipcRenderer.invoke('query:conversation')
@@ -204,15 +226,6 @@ const uploadFileApi = {
   },
   saveAsMedia: (fileInfo) => {
     ipcRenderer.send('saveAs-media', fileInfo)
-  },
-  registerWorkspace: (workspaceName, dirPath) => {
-    return ipcRenderer.invoke('workspace:register-local', workspaceName, dirPath)
-  },
-  listWorkspaces: () => {
-    return ipcRenderer.invoke('workspace:list-local')
-  },
-  executeWorkspaceTool: (request) => {
-    return ipcRenderer.invoke('workspace:execute-tool', request)
   }
 }
 
@@ -243,12 +256,6 @@ const windowToolApi = {
   // 懒加载组件挂载后主动拉取待发送数据（解决路由懒加载时序问题）
   getPendingData: () => {
     return ipcRenderer.invoke('window:getPendingData')
-  },
-  sendWindowWallpaper: (imagePath) => {
-    ipcRenderer.send('send:wallpaper', imagePath)
-  },
-  onWindowWallpaper: (callback) => {
-    ipcRenderer.on('on:wallpaper', callback)
   },
   // 注册快捷键通知
   registerGlobalShortcut: () => {
@@ -287,6 +294,12 @@ const chatToolApi = {
 }
 
 const wsApi = {
+  getConnectionStatus: () => ipcRenderer.invoke('ws:status:get'),
+  onConnectionStatus: callback => {
+    const handler = (_event, status) => callback(status)
+    ipcRenderer.on('ws:status', handler)
+    return () => ipcRenderer.removeListener('ws:status', handler)
+  },
   // 发送消息
   sendMessage: (messageType, sequenceId, data) => {
     ipcRenderer.send('ws:send', {

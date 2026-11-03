@@ -8,7 +8,6 @@
 import { onMounted, onUnmounted } from 'vue'
 import { registerWsHandlers } from '@/handlers/wsHandlers'
 import { registerFileTransferHandlers } from '@/handlers/fileTransferHandlers'
-import { initWallpaper, registerWallpaperHandlers } from '@/handlers/wallpaperHandlers'
 import { getConversationList, getFriendList } from '@/db/dualDB'
 import { conversationInfo } from '@/stores/modules/ConversationStore'
 import { friendInfo } from '@/stores/modules/ContactListStore'
@@ -46,11 +45,8 @@ const refreshInitializedData = async ({ userId }: { userId: string }) => {
 }
 
 onMounted(async () => {
-  // 壁纸初始化
-  initWallpaper()
   registerWsHandlers()
   registerFileTransferHandlers()
-  registerWallpaperHandlers()
   removeDataSyncListener = (window as any).loadApi.onDataInitSynced(refreshInitializedData)
 
   // 注册消息提示音监听

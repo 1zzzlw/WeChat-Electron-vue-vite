@@ -1,30 +1,60 @@
 <template>
-  <div class="apply-count">
-    <div class="apply-info">
-      <div class="info-top">
-        <img :src="applyInfo?.avatar" alt="" class="img" />
-        <h1>{{ applyInfo?.username }}</h1>
-      </div>
-      <div class="info-mid">
-        <div class="title">好友留言</div>
-        <p>{{ applyInfo?.applyMsg }}</p>
-      </div>
-      <div class="info-bottom">
-        <div class="btn-group" v-if="applyInfo?.isDealt == 0">
-          <el-button type="success" @click="agreeButton">同意</el-button>
-          <el-button type="danger" @click="refuseButton">拒绝</el-button>
+  <main class="contact-detail-page apply-count">
+    <article v-if="applyInfo" class="contact-detail-card apply-info">
+      <header class="detail-identity">
+        <el-avatar :size="72" :src="applyInfo.avatar">{{
+          applyInfo.username?.slice(0, 1)
+        }}</el-avatar>
+        <div class="detail-heading">
+          <p class="detail-eyebrow">FRIEND REQUEST · 好友申请</p>
+          <h1>{{ applyInfo.username }}</h1>
+          <p class="detail-id">账号 · {{ applyInfo.account || '未填写' }}</p>
         </div>
-        <div class="btn-group" v-else-if="applyInfo?.isDealt == 1">
-          <el-button type="success" disabled v-if="applyInfo.dealResult == 1">已同意</el-button>
-          <el-button type="danger" disabled v-else-if="applyInfo.dealResult == 0">已拒绝</el-button>
-        </div>
-      </div>
-    </div>
-  </div>
+        <span class="detail-status">{{
+          applyInfo.isDealt === 0 ? '等待处理' : applyInfo.dealResult === 1 ? '已同意' : '已拒绝'
+        }}</span>
+      </header>
+      <section class="detail-section">
+        <h2>验证消息</h2>
+        <blockquote class="detail-message">
+          {{ applyInfo.applyMsg || '对方希望与你成为好友。' }}
+        </blockquote>
+      </section>
+      <section class="detail-section">
+        <h2>申请人资料</h2>
+        <dl class="detail-grid">
+          <div>
+            <dt>性别</dt>
+            <dd>{{ applyInfo.gender === 1 ? '男' : applyInfo.gender === 0 ? '女' : '未填写' }}</dd>
+          </div>
+          <div>
+            <dt>地区</dt>
+            <dd>{{ applyInfo.address || '未填写' }}</dd>
+          </div>
+        </dl>
+      </section>
+      <footer class="detail-actions">
+        <template v-if="applyInfo.isDealt === 0"
+          ><el-button :disabled="processing" @click="refuseButton">拒绝申请</el-button
+          ><el-button type="primary" :loading="processing" @click="agreeButton"
+            >同意添加</el-button
+          ></template
+        >
+        <p v-else>
+          {{
+            applyInfo.dealResult === 1
+              ? '你们已经是好友，去开启新的对话吧。'
+              : '这条好友申请已处理。'
+          }}
+        </p>
+      </footer>
+    </article>
+    <div v-else class="detail-empty">请选择左侧的好友申请。</div>
+  </main>
 </template>
-
 <script lang="ts" setup>
 import { ref, onMounted, computed } from 'vue'
+import '@/css/contactDetail.css'
 import { useRoute } from 'vue-router'
 import { userApplyListInfo } from '@/stores/modules/UserApplyListStore'
 import { friendInfo } from '@/stores/modules/ContactListStore'
@@ -49,30 +79,35 @@ const avatar = ref()
 const userId = ref()
 const gender = ref()
 
-const agreeButton = () => {
-  dealApplyApi(applyInfo.value?.applyId, 1, applyInfo.value?.fromUserId).then(async (res: any) => {
+const processing = ref(false)
+const agreeButton = async () => {
+  if (processing.value || !applyInfo.value || applyInfo.value.isDealt !== 0) return
+  const application = applyInfo.value
+  processing.value = true
+  try {
+    const res: any = await dealApplyApi(application.applyId, 1, application.fromUserId)
     if (res.code === 1) {
       ElMessage.success('同意成功')
-      if (applyInfo.value) {
-        applyInfo.value.isDealt = 1
-        applyInfo.value.dealResult = 0
+      if (application) {
+        application.isDealt = 1
+        application.dealResult = 1
       }
-      userApplyStore.updateUserApplyMap(applyInfo.value?.applyId as string, {
+      userApplyStore.updateUserApplyMap(application.applyId as string, {
         isDealt: 1,
         dealResult: 1
       })
       const isOnline = res.data.isOnline === 1 ? true : false
       const firendPack = {
         userId: userId.value,
-        friendId: applyInfo.value?.fromUserId,
-        username: applyInfo.value?.username,
-        avatar: applyInfo.value?.avatar,
-        account: applyInfo.value?.account,
-        gender: applyInfo.value?.gender,
-        phone: applyInfo.value?.phone,
-        email: applyInfo.value?.email,
-        birthday: applyInfo.value?.birthday,
-        address: applyInfo.value?.address,
+        friendId: application.fromUserId,
+        username: application.username,
+        avatar: application.avatar,
+        account: application.account,
+        gender: application.gender,
+        phone: application.phone,
+        email: application.email,
+        birthday: application.birthday,
+        address: application.address,
         remark: '',
         relationStatus: 1,
         isOnline: isOnline
@@ -80,14 +115,14 @@ const agreeButton = () => {
       const conversationPack = {
         id: res.data.conversationId,
         userId: userId.value,
-        targetId: String(applyInfo.value?.fromUserId),
-        name: applyInfo.value?.username,
-        avatar: applyInfo.value?.avatar,
+        targetId: String(application.fromUserId),
+        name: application.username,
+        avatar: application.avatar,
         remark: '',
         type: 0
       }
       // 加入好友关系缓存
-      friendInfoStore.setFriendMap(applyInfo.value?.fromUserId as string, firendPack)
+      friendInfoStore.setFriendMap(application.fromUserId as string, firendPack)
       // 将好友关系加入本地数据库
       addFriendRelation(firendPack)
       // 将会话关系加入本地数据库
@@ -98,47 +133,65 @@ const agreeButton = () => {
       // 通知好友添加成功
       const wsFriendPack = {
         userId: userId.value,
-        friendId: applyInfo.value?.fromUserId,
+        friendId: application.fromUserId,
         username: username.value,
         account: account.value,
         gender: gender.value,
         phone: phone.value,
         avatar: avatar.value,
         dealResult: 1
-      };
-      (window as any).wsApi.sendMessage(14, 0, wsFriendPack)
+      }
+      ;(window as any).wsApi.sendMessage(14, 0, wsFriendPack)
 
       // 发送系统消息包
       const tpl = getSystemMsgText(SystemMsgSubType.FRIEND_ADDED, { name: username.value })
-      const content = createContentJson(tpl, username.value, applyInfo.value?.fromUserId, applyInfo.value?.username, applyInfo.value?.avatar)
+      const content = createContentJson(
+        tpl,
+        username.value,
+        application.fromUserId,
+        application.username,
+        application.avatar
+      )
 
-      const receiverIds = [applyInfo.value?.fromUserId]
+      const receiverIds = [application.fromUserId]
 
-      const systemMessagePack = await createSystemMessagePack(applyInfo.value?.fromUserId, conversationPack.id, SystemMsgSubType.FRIEND_ADDED, content, receiverIds)
+      const systemMessagePack = await createSystemMessagePack(
+        application.fromUserId,
+        conversationPack.id,
+        SystemMsgSubType.FRIEND_ADDED,
+        content,
+        receiverIds
+      )
 
-      messageStore.sendSystemMessage(systemMessagePack as Message, conversationPack.id, receiverIds as string[])
+      messageStore.sendSystemMessage(
+        systemMessagePack as Message,
+        conversationPack.id,
+        receiverIds as string[]
+      )
     } else {
       ElMessage.error('同意失败')
     }
-  })
+  } catch {
+    ElMessage.error('处理好友申请失败，请重试')
+  } finally {
+    processing.value = false
+  }
 }
 
-const refuseButton = () => {
-  dealApplyApi(applyInfo.value?.applyId, 0, applyInfo.value?.fromUserId).then((res: any) => {
-    if (res.code === 1) {
-      ElMessage.success('拒绝成功')
-      if (applyInfo.value) {
-        applyInfo.value.isDealt = 1
-        applyInfo.value.dealResult = 0
-      }
-      userApplyStore.updateUserApplyMap(applyInfo.value?.applyId as string, {
-        isDealt: 1,
-        dealResult: 0
-      })
-    } else {
-      ElMessage.error('拒绝失败')
-    }
-  })
+const refuseButton = async () => {
+  if (processing.value || !applyInfo.value || applyInfo.value.isDealt !== 0) return
+  const application = applyInfo.value
+  processing.value = true
+  try {
+    const res: any = await dealApplyApi(application.applyId, 0, application.fromUserId)
+    if (res.code !== 1) throw new Error(res.msg || '处理失败')
+    userApplyStore.updateUserApplyMap(application.applyId, { isDealt: 1, dealResult: 0 })
+    ElMessage.success('已拒绝好友申请')
+  } catch {
+    ElMessage.error('处理好友申请失败，请重试')
+  } finally {
+    processing.value = false
+  }
 }
 
 onMounted(async () => {
@@ -152,175 +205,3 @@ onMounted(async () => {
 
 const applyInfo = computed(() => userApplyStore.getUserApplyMap(route.query.applyId as string))
 </script>
-
-<style scoped>
-.apply-count {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-
-.apply-info {
-  width: 660px;
-  height: 580px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-  background: rgba(70, 100, 130, 0.2);
-  backdrop-filter: blur(12px);
-  transition: all 0.2s ease;
-  border: 1px solid var(--color-border-subtle);
-  border-radius: 15px;
-  -webkit-app-region: no-drag;
-}
-
-.apply-info:hover {
-  transform: scale(1.02);
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
-}
-
-.info-top {
-  width: 100%;
-  height: 150px;
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  padding-left: 40px;
-  gap: 20px;
-  border-bottom: 1px solid var(--color-border-subtle);
-  background: rgba(var(--color-surface-rgb), 0.4);
-}
-
-.img {
-  width: 100px;
-  height: 100px;
-  border-radius: 10px;
-  border: 3px solid var(--color-border-subtle);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  transition: all 0.2s ease;
-}
-
-.img:hover {
-  transform: scale(1.05);
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
-}
-
-h1 {
-  color: var(--color-text-primary);
-  font-size: 28px;
-  font-weight: 600;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.info-mid {
-  width: 100%;
-  height: 200px;
-  display: flex;
-  position: relative;
-  justify-content: center;
-  align-items: center;
-  border-bottom: 1px solid var(--color-border-subtle);
-  background: rgba(var(--color-surface-rgb), 0.4);
-}
-
-.title {
-  position: absolute;
-  top: 0;
-  left: 0;
-  font-size: 20px;
-  font-weight: bold;
-  color: var(--color-text-primary);
-  padding: 10px;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-}
-
-.info-mid p {
-  color: var(--color-text-secondary);
-  font-size: 16px;
-  padding: 0 40px;
-  line-height: 1.6;
-}
-
-.info-bottom {
-  width: 100%;
-  height: 230px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: rgba(var(--color-surface-rgb), 0.4);
-}
-
-.btn-group {
-  width: 400px;
-  height: 100px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 20px;
-}
-
-.el-button {
-  width: 50%;
-  transition: all 0.2s ease;
-  border-radius: 8px;
-  font-weight: 600;
-  height: 50px;
-  font-size: 16px;
-}
-
-.el-button--success {
-  background-color: rgba(80, 150, 220, 0.8);
-  border-color: rgba(80, 150, 220, 0.8);
-  color: var(--color-text-primary);
-  border-radius: 8px;
-  transition: all 0.2s ease;
-  --el-button-disabled-bg-color: rgba(80, 150, 220, 0.4);
-  --el-button-disabled-border-color: rgba(80, 150, 220, 0.4);
-  --el-button-disabled-text-color: var(--color-text-secondary);
-}
-
-.el-button--success.is-disabled {
-  background-color: rgba(80, 150, 220, 0.4);
-  border-color: rgba(80, 150, 220, 0.5);
-  color: var(--color-text-secondary);
-  cursor: not-allowed;
-  transform: none;
-}
-
-.el-button--success:hover {
-  background-color: rgba(80, 150, 220, 1);
-  border-color: rgba(80, 150, 220, 1);
-  transform: scale(1.03);
-}
-
-.el-button--danger {
-  background-color: rgba(var(--color-surface-rgb), 0.8);
-  border-color: rgba(70, 90, 120, 0.8);
-  color: var(--color-text-primary);
-  border-radius: 8px;
-  transition: all 0.2s ease;
-  --el-button-disabled-bg-color: rgba(var(--color-surface-rgb), 0.55);
-  --el-button-disabled-border-color: rgba(70, 90, 120, 0.4);
-  --el-button-disabled-text-color: var(--color-text-secondary);
-}
-
-.el-button--danger.is-disabled {
-  background-color: rgba(var(--color-surface-rgb), 0.55);
-  border-color: rgba(70, 90, 120, 0.5);
-  color: var(--color-text-secondary);
-  cursor: not-allowed;
-  transform: none;
-}
-
-.el-button--danger:hover {
-  background-color: rgba(245, 108, 108, 1);
-  border-color: rgba(245, 108, 108, 1);
-  transform: scale(1.03);
-}
-
-.el-button.is-disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-</style>

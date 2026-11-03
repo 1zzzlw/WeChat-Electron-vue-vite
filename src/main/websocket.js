@@ -122,7 +122,7 @@ class WebSocketManager {
         this.isConnect = true
 
         // ws的状态为正在连接
-        this.ws.status = WebSocket.CONNECTING
+        this.setStatus(WebSocket.CONNECTING)
 
         // 设置为二进制发送
         socket.binaryType = 'arraybuffer'
@@ -150,7 +150,7 @@ class WebSocketManager {
         // 初始化
         this.lockReconnect = false
         this.reconnectCount = 0
-        this.ws.status = WebSocket.OPEN
+        this.setStatus(WebSocket.OPEN)
         this.lastMessageAt = Date.now()
         this.startHeartbeat()
         if (this.presenceReady) this.requestPresence()
@@ -269,7 +269,7 @@ class WebSocketManager {
     onClose() {
         console.warn('websocker 关闭')
         this.isConnect = false
-        this.ws.status = WebSocket.CLOSED
+        this.setStatus(WebSocket.CLOSED)
         this.presencePending = false
         clearTimeout(this.connectTimer)
         const socket = this.ws.websocket
@@ -283,6 +283,33 @@ class WebSocketManager {
         this.stopHeartbeat()
         // 开启重连计时器
         this.tryRecoonectTimer()
+    }
+
+    // 主动退出不进入重连分支，下一次登录仍可重新 connect。
+    disconnect() {
+        this.clearReconnectTimer()
+        clearTimeout(this.connectTimer)
+        this.stopHeartbeat()
+        this.lockReconnect = false
+        this.reconnectCount = 0
+        this.presenceReady = false
+        this.presencePending = false
+        this.isConnect = false
+        this.setStatus(WebSocket.CLOSED)
+        const socket = this.ws.websocket
+        this.ws.websocket = null
+        if (socket) {
+            socket.onopen = socket.onmessage = socket.onerror = socket.onclose = null
+            socket.close()
+        }
+        stopTrayFlash()
+    }
+
+    setStatus(status) {
+        this.ws.status = status
+        for (const window of BrowserWindow.getAllWindows()) {
+            if (!window.isDestroyed()) window.webContents.send('ws:status', status)
+        }
     }
 
     // 页面就绪后按需获取在线列表，合并尚未完成的请求。

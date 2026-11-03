@@ -72,6 +72,44 @@ test('WebSocket 弱网恢复', async t => {
         return { manager: module.exports.default, sockets, received, tick, setToken: value => { token = value } }
     }
 
+    await t.test('连接、断开和重连向窗口广播真实连接状态', () => {
+        const { manager, sockets, received, tick } = create()
+        assert.equal(manager.ws.status, 3)
+        manager.connect()
+        assert.equal(received.at(-1)[0], 'ws:status')
+        assert.equal(received.at(-1)[1], 0)
+        sockets[0].open()
+        assert.equal(received.at(-1)[1], 1)
+        const staleClose = sockets[0].onclose
+        manager.onError()
+        assert.equal(received.at(-1)[1], 3)
+        tick(2000)
+        assert.equal(received.at(-1)[1], 0)
+        sockets[1].open()
+        staleClose()
+        assert.equal(received.at(-1)[1], 1)
+        manager.disconnect()
+        assert.equal(received.at(-1)[1], 3)
+    })
+    await t.test('主动退出取消心跳和重连，旧回调无效，重新登录可再次连接', () => {
+        const { manager, sockets, tick, setToken } = create()
+        manager.connect()
+        sockets[0].open()
+        const staleClose = sockets[0].onclose
+        manager.onError()
+        manager.disconnect()
+        staleClose()
+        tick(180000)
+        assert.equal(sockets.length, 1)
+        assert.equal(manager.ws.websocket, null)
+        assert.equal(manager.ws.status, 3)
+        assert.equal(manager.heartTimer, null)
+        assert.equal(manager.reconnectTimer, null)
+        setToken('second-user-token')
+        manager.connect()
+        assert.equal(sockets.length, 2)
+        assert.ok(sockets[1].url.endsWith('token=second-user-token'))
+    })
     await t.test('连接后立即请求在线列表，延迟回包仍可正常广播', () => {
         const { manager, sockets, received, tick } = create()
         manager.requestPresence()
@@ -83,8 +121,8 @@ test('WebSocket 弱网恢复', async t => {
         sockets[0].snapshot(['200'])
         tick(35000)
         assert.equal(manager.ws.status, 1)
-        assert.equal(received[0][1], 10)
-        assert.equal(received[0][2].friendIdList[0], '200')
+        assert.equal(received.find(frame => frame[0] === 'ws:receive')[1], 10)
+        assert.equal(received.find(frame => frame[0] === 'ws:receive')[2].friendIdList[0], '200')
     })
     await t.test('连接假活时超时重连，重连后重新请求完整状态', () => {
         const { manager, sockets, tick } = create()
@@ -150,7 +188,7 @@ test('WebSocket 弱网恢复', async t => {
         }
         assert.equal(sockets[0].sent.filter(frame => frame.messageType === 19).length, 1)
         assert.equal(sockets[0].sent.filter(frame => frame.messageType === 0).length, 5)
-        assert.equal(received.length, 0)
+        assert.equal(received.filter(frame => frame[0] === 'ws:receive').length, 0)
         assert.equal(manager.ws.status, 1)
     })
     await t.test('页面监听较晚时等待页面请求，并合并尚未完成的请求', () => {

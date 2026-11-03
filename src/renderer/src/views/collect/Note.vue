@@ -167,7 +167,7 @@ onUnmounted(() => {
     right: 12px;
     bottom: 8px;
     font-size: 12px;
-    color: rgba(var(--color-accent-rgb), 0.6);
+    color: var(--color-text-accent);
     z-index: 1;
     white-space: nowrap;
     opacity: 0.8;
@@ -238,7 +238,7 @@ onUnmounted(() => {
     font-size: 1.2em;
     font-weight: bold;
     margin: 0.6em 0 0.3em;
-    color: rgba(var(--color-accent-rgb), 0.9);
+    color: var(--color-text-accent);
 }
 
 :deep(.note-content-html p) {
@@ -312,7 +312,7 @@ onUnmounted(() => {
 }
 
 :deep(.note-content-html a:hover) {
-    color: rgba(var(--color-accent-rgb), 0.8);
+    color: var(--color-text-accent);
     text-shadow: 0 0 8px rgba(var(--color-accent-rgb), 0.4);
 }
 </style>

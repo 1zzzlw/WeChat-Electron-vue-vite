@@ -3,7 +3,6 @@ const { app, BrowserWindow, ipcMain, nativeImage } = require('electron')
 const assert = require('node:assert/strict')
 const fs = require('node:fs/promises')
 const path = require('node:path')
-const { pathToFileURL } = require('node:url')
 
 const root = path.join(__dirname, '..')
 const roles = {
@@ -20,8 +19,9 @@ const timeout = setTimeout(() => { console.error('指针验证超时'); app.exit
 app.whenReady().then(async () => {
     let theme = 'light'
     ipcMain.on('theme:initial', event => { event.returnValue = 'light' })
-    ipcMain.handle('window:getUserInfo', (_event, key) => key === 'wallpaperPath'
-        ? pathToFileURL(path.join(root, 'public/wallpaper/1.jpg')).href : key === 'token' ? 'cursor-test-token' : '')
+    ipcMain.on('style:initial', event => { event.returnValue = 'ai-native' })
+    ipcMain.handle('style:get', () => 'ai-native')
+    ipcMain.handle('window:getUserInfo', (_event, key) => key === 'token' ? 'cursor-test-token' : '')
     ipcMain.handle('query:conversation', () => [])
     ipcMain.handle('query:friend', () => [])
     ipcMain.handle('query:favoritesAll', () => [])

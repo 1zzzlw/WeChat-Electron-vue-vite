@@ -51,13 +51,15 @@
     <!-- 帖子列表 -->
     <div class="moments-content">
       <el-scrollbar ref="scrollbarRef" style="height: 100%; width: 100%">
-        <div class="post-list" ref="postListRef">
-          <div v-if="postList.length === 0" class="empty-state">
-            <p>还没有动态，快来发布第一条吧！</p>
+        <div class="post-list" ref="postListRef" @load.capture="onImageSettled" @error.capture="onImageSettled">
+          <div v-if="postList.length === 0" class="empty-state" role="status">
+            <p>{{ loading ? '正在加载动态…' : loadError || '还没有动态，快来发布第一条吧！' }}</p>
+            <el-button v-if="loadError" @click="changeSortWay">重新加载</el-button>
           </div>
 
           <!-- 单条动态 -->
-          <div class="post-item" v-for="post in postList" :key="post.id" :data-post-id="post.id">
+          <div class="post-item" v-for="(post, index) in postList" :key="post.id" :data-post-id="post.id">
+            <div class="post-card" :style="{ '--card-delay': Math.min(index % 20, 6) * 25 + 'ms' }">
             <!-- 用户信息头部 -->
             <div class="post-header">
               <div class="user-info" @click="openUserMoments(post.userId, post)">
@@ -107,6 +109,7 @@
                 <span>{{ post.rewardAmount > 0 ? '¥' + post.rewardAmount : '打赏' }}</span>
               </div>
             </div>
+            </div>
           </div>
         </div>
 
@@ -118,6 +121,7 @@
             </el-icon>
             <span>正在加载更多...</span>
           </div>
+          <div v-else-if="loadError" class="loading-status"><el-button @click="loadMore('bottom')">加载失败，点击重试</el-button></div>
           <div v-else-if="noMore" class="no-more-status">
             <span>— 没有更多动态了 —</span>
           </div>
@@ -186,7 +190,7 @@ const searchKeyword = ref('')
 const activeTag = ref('all')
 const label = ref('0')
 const pageDTO = ref({
-  page: 1,
+  page: 0,
   pageSize: 20
 })
 const postList = ref<MomentsItem[]>([])
@@ -200,130 +204,103 @@ const rewardCustomInput = ref('')
 const rewardSubmitting = ref(false)
 const rewardPresets = [1, 5, 10, 20, 50]
 
-// 监听帖子列表变化，自动刷新布局，主要是因为Masonry不是响应式布局，每次新增都需要重新排列
-watch(postList, async () => {
-  await nextTick()
-  if (masonry) {
-    masonry.reloadItems?.()
-    observeImages()
-    masonry.layout?.()
-  }
-  imageLazy.observeAll()
-}, { deep: true })
-
-const loadMoreRef = ref()
-let observer: IntersectionObserver | null = null
-// 添加加载状态
-const loading = ref(false)
-// 添加是否加载完毕状态
-const noMore = ref(false)
-// 帖子列表容器引用
+const loadMoreRef = ref<HTMLElement>()
 const postListRef = ref<HTMLElement | null>(null)
-// Masonry 实例
-let masonry: any = null
-// 帖子数量上限（防止无限增长导致内存溢出）
+const scrollbarRef = ref()
+const loading = ref(false)
+const noMore = ref(false)
+const loadError = ref('')
 const MAX_POSTS = 150
+let masonry: Masonry | null = null
+let observer: IntersectionObserver | null = null
+let resizeObserver: ResizeObserver | null = null
+let layoutFrame = 0
+let itemsChanged = false
+let viewportChanged = false
+let disposed = false
+let listVersion = 0
+let scrollAnchor: { id: string; top: number } | null = null
+const motion = matchMedia('(prefers-reduced-motion: reduce)')
+const imageLazy = useMomentsImageLazy(postListRef, { preloadMargin: 800 })
 
-// 图片懒加载 + DOM 裁剪 composable
-const imageLazy = useMomentsImageLazy(postListRef, {
-  preloadMargin: 800,
-  pruneThreshold: 3,
-  maxRenderedPosts: 80
-})
-
-/**
- * 处理帖子列表数据：内容预处理 + 数量上限裁剪
- */
-function processIncomingPosts(moments: any[]): any[] {
-  return moments.map((n: any) => ({
-    ...n,
-    content: imageLazy.processContent(n.content || '')
-  }))
-}
-
-/**
- * 限制帖子总数，超出上限时移除最旧的
- */
-function trimPostList() {
-  while (postList.value.length > MAX_POSTS) {
-    postList.value.shift()
-  }
-}
-
-// 滚动底部监听
-async function loadMore(direction: ScrollbarDirection | string) {
-  if (direction === 'bottom') {
-    if (loading.value || noMore.value) return
-
-    loading.value = true
-
-    try {
-      // 查询下一页，累加到帖子集合里
-      const sortWay = label.value
-      let moments
-      if (sortWay == '0') {
-        // 最热
-        pageDTO.value.page += 1
-        const page = pageDTO.value.page
-        const pageSize = pageDTO.value.pageSize
-        const res = await listByHot(page, pageSize)
-        moments = res.data.data
-      } else {
-        // 查询最后一条帖子的id
-        const lastId = postList.value[postList.value.length - 1].id
-        const res = await listByNewApi(lastId)
-        moments = res.data
-      }
-
-      moments = processIncomingPosts(moments)
-      moments.forEach((n: any) => {
-        postList.value.push(n)
-      })
-      trimPostList()
-      // 新数据加载完成后，触发 Masonry 重新布局
-      await nextTick()
-      if (masonry) {
-        masonry.reloadItems?.() // 重新扫描子元素
-        observeImages() // 监听新加载的图片
-        masonry.layout?.() // 重新布局
-      }
-    } catch (error) {
-      console.error('加载失败', error)
-    } finally {
-      loading.value = false
-    }
-  }
-}
-
-async function changeSortWay() {
-  postList.value = []
-  const sortWay = label.value
-  let moments
-  // 首页加载
-  if (sortWay == '0') {
-    // 最热
-    const pageSize = pageDTO.value.pageSize
-    const res = await listByHot(1, pageSize)
-    moments = res.data.data
-  } else {
-    // 最新
-    const res = await listByNewApi(0)
-    moments = res.data
-  }
-
-  moments = processIncomingPosts(moments)
-  moments.forEach((n: any) => {
-    postList.value.push(n)
-  })
-
-  // 排序切换后重新布局
-  await nextTick()
-  if (masonry) {
-    masonry.reloadItems?.()
-    observeImages() // 重新监听新数据的图片
+// 图片、数据与窗口尺寸的更新在一帧内合并；只有列表成员变化才重新扫描卡片。
+function scheduleLayout() {
+  if (disposed || layoutFrame) return
+  layoutFrame = requestAnimationFrame(() => {
+    layoutFrame = 0
+    if (!masonry || !postListRef.value) return
+    if (viewportChanged) { postListRef.value.style.width = ''; viewportChanged = false }
+    const listChanged = itemsChanged
+    const instant = listChanged || !!scrollAnchor
+    if (listChanged) { masonry.reloadItems?.(); itemsChanged = false }
+    // 新卡片直接放到目标列，入场动画由内层负责，防止从原点滑过视口误触发全部图片加载。
+    if (instant) masonry.option?.({ transitionDuration: 0 })
     masonry.layout?.()
-  }
+    if (scrollAnchor) {
+      const card = [...postListRef.value.querySelectorAll<HTMLElement>('.post-item')].find(item => item.dataset.postId === scrollAnchor!.id)
+      const viewport = postListRef.value.closest('.el-scrollbar__wrap')
+      if (card && viewport) viewport.scrollTop += card.getBoundingClientRect().top - scrollAnchor.top
+      scrollAnchor = null
+    }
+    if (listChanged) imageLazy.observeAll()
+    if (instant) updateMotion()
+    // 排序或短页面加载后重新检查末尾，避免哨兵始终可见时停止翻页。
+    if (observer && loadMoreRef.value) { observer.unobserve(loadMoreRef.value); observer.observe(loadMoreRef.value) }
+  })
 }
+function onImageSettled(event: Event) {
+  if (event.target instanceof HTMLImageElement && !event.target.classList.contains('user-avatar')) scheduleLayout()
+}
+watch(() => postList.value.map(post => post.id), () => {
+  itemsChanged = true
+  scheduleLayout()
+}, { flush: 'post' })
+
+function processIncomingPosts(moments: MomentsItem[]) {
+  return moments.map(post => ({ ...post, content: imageLazy.processContent(post.content || '') }))
+}
+
+async function fetchPosts(reset: boolean) {
+  if (!reset && (loading.value || noMore.value)) return
+  const version = reset ? ++listVersion : listVersion
+  const nextPage = reset ? 1 : pageDTO.value.page + 1
+  const sort = label.value
+  loading.value = true
+  loadError.value = ''
+  if (reset) { scrollAnchor = null; postList.value = []; pageDTO.value.page = 0; noMore.value = false; scrollbarRef.value?.setScrollTop(0) }
+  try {
+    const response = sort === '0'
+      ? await listByHot(nextPage, pageDTO.value.pageSize)
+      : await listByNewApi(reset ? 0 : postList.value.at(-1)?.id || 0)
+    if (disposed || version !== listVersion) return
+    const incoming = sort === '0' ? response.data?.data : response.data
+    if (!Array.isArray(incoming)) throw new Error('动态加载失败，请重试')
+    const existing = new Set(postList.value.map(post => post.id))
+    const additions = processIncomingPosts(incoming).filter(post => {
+      if (existing.has(post.id)) return false
+      existing.add(post.id)
+      return true
+    })
+    // 页面末尾不再重复请求空结果；分页游标只在请求成功后推进。
+    noMore.value = incoming.length === 0 || additions.length === 0
+    pageDTO.value.page = nextPage
+    const merged = [...postList.value, ...additions]
+    if (merged.length > MAX_POSTS && postListRef.value) {
+      const viewport = postListRef.value.closest('.el-scrollbar__wrap')?.getBoundingClientRect()
+      const retained = new Set(merged.slice(-MAX_POSTS).map(post => String(post.id)))
+      const anchor = [...postListRef.value.querySelectorAll<HTMLElement>('.post-item')].find(card => {
+        const rect = card.getBoundingClientRect()
+        return viewport && retained.has(card.dataset.postId || '') && rect.bottom > viewport.top && rect.top < viewport.bottom
+      })
+      if (anchor) scrollAnchor = { id: anchor.dataset.postId!, top: anchor.getBoundingClientRect().top }
+    }
+    postList.value = merged.slice(-MAX_POSTS)
+  } catch {
+    if (!disposed && version === listVersion) loadError.value = '动态加载失败，请重试'
+  } finally { if (!disposed && version === listVersion) loading.value = false }
+}
+const loadMore = (direction: ScrollbarDirection | string) => { if (direction === 'bottom') return fetchPosts(false) }
+const changeSortWay = () => fetchPosts(true)
 
 // 搜索事件
 const handleSearch = () => {
@@ -402,188 +379,47 @@ const submitReward = async () => {
   }
 }
 
-// 初始化帖子
-const listMoments = async () => {
-  // 首页加载
-  const pageSize = pageDTO.value.pageSize
-  const res = await listByHot(1, pageSize)
-  let moments = res.data.data
-  moments = processIncomingPosts(moments)
-  moments.forEach((n: any) => {
-    postList.value.push(n)
-  })
-}
-
-// 初始化底部监测器
-const initObserver = () => {
-  // 创建观察器
-  observer = new IntersectionObserver(
-    (entries) => {
-      // entries[0].isIntersecting 为 true 表示探测器进入了视野
-      if (entries[0].isIntersecting && !loading.value && !noMore.value) {
-        loadMore('bottom')
-      }
-    },
-    {
-      // rootMargin 可以提前触发。比如 '100px' 表示距离底部还有 100px 就开始预加载
-      rootMargin: '10px'
-    }
-  )
-
-  // 开始观察探测器元素
-  if (loadMoreRef.value) {
-    observer.observe(loadMoreRef.value)
-  }
-}
-
-// 初始化 Masonry
-const initMasonry = () => {
-  if (!postListRef.value) return
-
-  // 如果已经存在实例，先销毁
-  if (masonry) {
-    masonry.destroy?.()
-  }
-
-  masonry = new Masonry(postListRef.value, {
-    // 必需配置
-    itemSelector: '.post-item',
-    columnWidth: '.post-item',
-
-    // 可选配置
-    gutter: 15, // 列间距
-    fitWidth: true, // 容器自适应宽度
-    originLeft: true, // 从左到右排列（设为 false 从右到左）
-    originTop: true, // 从上到下排列
-    percentPosition: false, // 使用像素定位（true 为百分比）
-    horizontalOrder: true, // 保持水平顺序
-
-    // 动画配置
-    transitionDuration: '0',
-    stagger: 0, // 交错动画延迟（ms）
-
-    // 性能优化
-    resize: true, // 窗口resize时自动重排
-    initLayout: true // 初始化时自动布局
-  })
-}
-
-// 监听图片加载并刷新 Masonry
-let layoutTimer: any = null
-const debouncedLayout = () => {
-  if (layoutTimer) clearTimeout(layoutTimer)
-  layoutTimer = setTimeout(() => {
-    if (masonry) {
-      // 在重排前重置容器宽度，让 Masonry 重新计算可用空间
-      if (postListRef.value) {
-        postListRef.value.style.width = ''
-      }
-      masonry.reloadItems?.()
-      masonry.layout?.()
-    }
-  }, 100)
-}
-
-// 记录已附加事件监听器的图片，便于卸载时清理
-const observedImages = new Set<HTMLImageElement>()
-
-const observeImages = () => {
-  if (!postListRef.value) return
-
-  const images = postListRef.value.querySelectorAll<HTMLImageElement>('img')
-  images.forEach((img) => {
-    if (img.getAttribute('data-observed')) return
-    img.setAttribute('data-observed', 'true')
-
-    if (img.complete) {
-      debouncedLayout()
-    } else {
-      img.addEventListener('load', debouncedLayout)
-      img.addEventListener('error', debouncedLayout)
-      observedImages.add(img)
-    }
-  })
-}
-
-// 监听新帖子发布事件：重新获取数据并重新布局
-const handleNewPostPublished = async () => {
-  // 重置列表和状态
-  postList.value = []
-  noMore.value = false
-
-  // 重新获取最新数据
-  await listMoments()
-
-  // 等待 DOM 更新后重新布局
-  await nextTick()
-
-  if (masonry) {
-    masonry.reloadItems?.()
-    observeImages()
-    masonry.layout?.()
-  }
-}
-
-let resizeObserver: ResizeObserver | null = null
+const handleNewPostPublished = () => { void fetchPosts(true) }
+const updateMotion = () => { masonry?.option?.({ transitionDuration: motion.matches ? 0 : '0.22s' }) }
 
 onMounted(async () => {
-  await listMoments()
-
-  // DOM 更新后初始化 Masonry
   await nextTick()
-  initMasonry()
-  // 监听图片加载
-  observeImages()
-  if (masonry) {
-    masonry.layout?.()
-  }
-
-  // 初始化图片懒加载 observer
+  if (!postListRef.value) return
+  masonry = new Masonry(postListRef.value, {
+    itemSelector: '.post-item', columnWidth: '.post-item', gutter: 16, fitWidth: true,
+    horizontalOrder: true, transitionDuration: motion.matches ? 0 : '0.22s', resize: false, initLayout: false
+  })
   imageLazy.initObserver()
-  imageLazy.observeAll()
-
-  // 当懒加载恢复内容或激活图片后，触发 masonry 重排
-  if (postListRef.value) {
-    postListRef.value.addEventListener('images-activated', debouncedLayout)
-    postListRef.value.addEventListener('content-restored', () => {
-      if (masonry) {
-        masonry.reloadItems?.()
-        masonry.layout?.()
-      }
-    })
-  }
-
-  initObserver()
-
-  // 监听父级容器（.moments-content）的尺寸变化，实现全自动布局
-  // parentElement.parentElement 指向 el-scrollbar 的外层 div
-  const parentEl = postListRef.value?.parentElement?.parentElement
-  if (parentEl) {
-    resizeObserver = new ResizeObserver(() => {
-      debouncedLayout()
-    })
-    resizeObserver.observe(parentEl)
-  }
-
+  const viewport = postListRef.value.closest('.el-scrollbar__wrap')
+  observer = new IntersectionObserver(entries => {
+    if (!loadError.value && entries.some(entry => entry.isIntersecting)) void fetchPosts(false)
+  }, { root: viewport, rootMargin: '160px 0px' })
+  await fetchPosts(true)
+  if (disposed) return
+  await nextTick()
+  if (loadMoreRef.value) observer.observe(loadMoreRef.value)
+  let previousWidth = viewport?.clientWidth
+  resizeObserver = new ResizeObserver(() => {
+    const width = viewport?.clientWidth
+    if (width === previousWidth) return
+    previousWidth = width
+    viewportChanged = true
+    scheduleLayout()
+  })
+  if (viewport) resizeObserver.observe(viewport)
+  motion.addEventListener('change', updateMotion)
   emitter.on('moments:updated', handleNewPostPublished)
 })
-
-// 销毁实例
 onUnmounted(() => {
-  if (observer) observer.disconnect()
-  if (resizeObserver) resizeObserver.disconnect()
+  disposed = true
+  listVersion++
+  if (layoutFrame) cancelAnimationFrame(layoutFrame)
+  observer?.disconnect()
+  resizeObserver?.disconnect()
   imageLazy.destroy()
-  if (masonry) {
-    masonry.destroy?.()
-  }
-  if (layoutTimer) clearTimeout(layoutTimer)
+  masonry?.destroy?.()
+  motion.removeEventListener('change', updateMotion)
   emitter.off('moments:updated', handleNewPostPublished)
-  // 清理图片事件监听器
-  observedImages.forEach((img) => {
-    img.removeEventListener('load', debouncedLayout)
-    img.removeEventListener('error', debouncedLayout)
-  })
-  observedImages.clear()
 })
 </script>
 
@@ -593,7 +429,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   padding: 0 20px;
-  background: linear-gradient(135deg, rgba(var(--color-accent-rgb), 0.15) 0%, rgba(0, 217, 255, 0.1) 100%);
+  background: var(--color-bg-deep);
   border-bottom: 1px solid rgba(var(--color-accent-rgb), 0.3);
   -webkit-app-region: drag;
 }
@@ -612,8 +448,8 @@ onUnmounted(() => {
   padding: 12px 20px;
   background: rgba(var(--color-surface-rgb), 0.4);
   border-bottom: 1px solid var(--color-border-subtle);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .toolbar-left,
@@ -626,7 +462,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   padding: 6px 16px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   border: 1px solid rgba(var(--color-accent-rgb), 0.3);
   background: rgba(var(--color-accent-rgb), 0.1);
   color: var(--color-accent);
@@ -675,7 +511,7 @@ onUnmounted(() => {
   box-shadow:
     0 4px 12px rgba(0, 0, 0, 0.15),
     inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
-  border-radius: 8px 0 0 8px;
+  border-radius: var(--radius-md) 0 0 8px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -754,7 +590,7 @@ onUnmounted(() => {
 :deep(.toolbar-right .el-select .el-select__wrapper) {
   background: rgba(var(--color-surface-rgb), 0.4) !important;
   border: 1px solid var(--color-border-subtle) !important;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   box-shadow:
     0 4px 12px rgba(0, 0, 0, 0.15),
     inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
@@ -832,9 +668,9 @@ onUnmounted(() => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: rgba(var(--color-surface-rgb), 0.55);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: var(--color-app-bg);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   -webkit-app-region: no-drag;
   position: relative;
 }
@@ -851,7 +687,7 @@ onUnmounted(() => {
   justify-content: center;
   align-items: center;
   padding: 30px 0;
-  color: rgba(var(--color-accent-rgb), 0.6);
+  color: var(--color-text-accent);
   font-size: 14px;
   min-height: 20px;
   /* 确保始终有高度 */
@@ -866,7 +702,7 @@ onUnmounted(() => {
 }
 
 .no-more-status {
-  opacity: 0.5;
+  color: var(--color-text-muted);
   letter-spacing: 1px;
 }
 
@@ -876,28 +712,11 @@ onUnmounted(() => {
   position: relative;
   margin: 0 auto;
   /* 强制容器跟随父级缩小，触发 Masonry 响应 */
-  max-width: 100% !important;
+  max-width: 100%;
 }
 
-.post-item {
-  width: 295px;
-  margin-bottom: 15px;
-  padding: 20px;
-  background: rgba(var(--color-surface-rgb), 0.4);
-  border-radius: 12px;
-  border: 1px solid rgba(var(--color-accent-rgb), 0.15);
-  backdrop-filter: blur(10px);
-  transition: opacity 0.4s, background 0.4s, border-color 0.4s, box-shadow 0.4s, filter 0.4s;
-  animation: cardEnter 0.4s ease-out forwards;
-  opacity: 0;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  display: block;
-
-  /* 浏览器跳过屏幕外卡片的渲染，但保留布局占位 —— 与 Masonry 完全兼容 */
-  content-visibility: auto;
-  contain-intrinsic-size: auto 400px;
-}
-
+.post-item { width: 295px; margin-bottom: 16px; }
+.post-card { padding: 20px; background: var(--color-bg-deep); border-radius: var(--radius-lg); border: 1px solid var(--color-border-subtle); box-shadow: var(--shadow-sm); animation: cardEnter .28s ease-out backwards; animation-delay: var(--card-delay, 0ms); transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
 @keyframes cardEnter {
   from {
     opacity: 0;
@@ -916,7 +735,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   padding: 80px 20px;
-  color: rgba(var(--color-accent-rgb), 0.5);
+  color: var(--color-text-accent);
   gap: 16px;
 }
 
@@ -929,7 +748,7 @@ onUnmounted(() => {
   height: 56px;
   border-radius: 50%;
   background: rgba(var(--color-accent-rgb), 0.85);
-  backdrop-filter: blur(8px);
+  backdrop-filter: none;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -938,7 +757,7 @@ onUnmounted(() => {
     0 4px 16px rgba(var(--color-accent-rgb), 0.4),
     0 0 0 1px rgba(var(--color-accent-rgb), 0.3);
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  color: #000;
+  color: var(--color-on-accent);
   z-index: 1000;
 }
 
@@ -955,7 +774,7 @@ onUnmounted(() => {
   box-shadow: 0 4px 12px rgba(var(--color-accent-rgb), 0.5);
 }
 
-.post-item:hover {
+.post-card:hover {
   background: rgba(var(--color-surface-rgb), 0.4);
   border-color: rgba(var(--color-accent-rgb), 0.4);
   box-shadow:
@@ -1062,7 +881,7 @@ onUnmounted(() => {
   min-height: 100px;
   /* 预留最小高度，减少重排剧烈程度 */
   background: rgba(var(--color-surface-rgb), 0.4);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   margin: 8px auto;
   border: 2px solid rgba(var(--color-accent-rgb), 0.2);
   box-shadow: 0 2px 8px rgba(var(--color-accent-rgb), 0.15);
@@ -1198,7 +1017,7 @@ onUnmounted(() => {
   width: 320px;
   background: var(--color-bg-deep);
   border: 1px solid rgba(var(--color-accent-rgb), 0.35);
-  border-radius: 16px;
+  border-radius: var(--radius-md);
   padding: 24px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
@@ -1264,7 +1083,7 @@ onUnmounted(() => {
 .reward-confirm-btn {
   flex: 1;
   padding: 10px 0;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   font-size: 14px;
   cursor: pointer;
   border: none;
@@ -1294,15 +1113,16 @@ onUnmounted(() => {
   opacity: 0.5;
   cursor: not-allowed;
 }
+@media (prefers-reduced-motion: reduce) { .post-card { animation: none; transition: none; } }
 </style>
 
 <style>
 /* 全局样式覆盖 el-select 下拉框 popper，因为 popper 默认挂载在 body 上 */
 .moments-select-popper.el-popper {
   background: rgba(var(--color-surface-rgb), 0.8) !important;
-  backdrop-filter: blur(12px) !important;
+  backdrop-filter: none !important;
   border: 1px solid rgba(var(--color-accent-rgb), 0.3) !important;
-  border-radius: 8px !important;
+  border-radius: var(--radius-md) !important;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3) !important;
 }
 

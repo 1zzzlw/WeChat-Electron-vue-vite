@@ -10,8 +10,8 @@
               fill="currentColor" />
           </svg>
         </div>
-        <h1 class="app-name">QuickTalk</h1>
-        <p class="app-tagline">即时通讯，触手可及</p>
+        <h1 class="app-name">Lumina · 微光</h1>
+        <p class="app-tagline">不刺眼，但足够温暖。</p>
       </div>
 
       <!-- 版本信息 -->
@@ -152,7 +152,7 @@
 
     <!-- 版权信息 -->
     <div class="copyright">
-      <p>© 2024 QuickTalk IM · Developed by 林威</p>
+      <p>© 2024 Lumina IM · Developed by 林威</p>
     </div>
   </div>
 </template>
@@ -260,7 +260,7 @@ const openWebsite = () => {
   width: 48px;
   height: 48px;
   margin: 0 auto 5px;
-  color: rgba(var(--color-accent-rgb), 0.8);
+  color: var(--color-text-accent);
 }
 
 .app-name {
@@ -342,7 +342,7 @@ const openWebsite = () => {
 .tech-tag {
   padding: 2px 7px;
   background: rgba(var(--color-accent-rgb), 0.15);
-  color: rgba(var(--color-accent-rgb), 0.9);
+  color: var(--color-text-accent);
   border-radius: 3px;
   font-size: 9px;
   border: 1px solid rgba(var(--color-accent-rgb), 0.2);
@@ -428,7 +428,7 @@ const openWebsite = () => {
 .memory-used {
   font-size: 10px;
   font-weight: 600;
-  color: rgba(var(--color-accent-rgb), 0.9);
+  color: var(--color-text-accent);
 }
 
 .memory-total {
@@ -472,7 +472,7 @@ const openWebsite = () => {
   gap: 4px;
   padding: 4px 8px;
   background: rgba(var(--color-accent-rgb), 0.15);
-  color: rgba(var(--color-accent-rgb), 0.9);
+  color: var(--color-text-accent);
   border: 1px solid rgba(var(--color-accent-rgb), 0.25);
   border-radius: 4px;
   font-size: 10px;

@@ -1,175 +1,94 @@
 <template>
-  <div class="file-preview-view">
-    <div class="content">
-      <div class="content-main" v-for="fileInfo in fileList" :key="fileInfo.fileId">
-        <div class="file-item" v-if="fileInfo.fileType === 2">
-          <el-icon class="close-icon" @click="closePreview(fileInfo.fileId)">
-            <Close />
-          </el-icon>
-          <img class="file-image" style="width: 100px; height: 100px" :src="fileInfo.previewUrl" alt="图片预览" />
-        </div>
-        <div class="file-item" v-else-if="fileInfo.fileType === 3">
-          <el-icon class="close-icon" @click="closePreview(fileInfo.fileId)">
-            <Close />
-          </el-icon>
-          <span class="pause"></span>
-          <img class="file-video" style="width: 100px; height: 100px" :src="fileInfo.previewUrl" alt="视频封面" />
-        </div>
-        <div class=" file-item" v-else-if="fileInfo.fileType === 4">
-          <el-icon class="close-icon" @click="closePreview(fileInfo.fileId)">
-            <Close />
-          </el-icon>
-          <audio class="file-audio" style="width: 100px; height: 100px" :src="fileInfo.localPath"></audio>
-        </div>
-        <div class="file-item" v-else>
-          <div class="file">
-            <el-icon class="close-icon" @click="closePreview(fileInfo.fileId)">
-              <Close />
-            </el-icon>
-            <img style="width: 80px; height: 80px" src="../assets/wenjian.svg" alt="" />
-            <div class="file-content">
-              <div class="file-name">名称：{{ fileInfo.fileName }}</div>
-              <div class="file-size">大小：{{ fileInfo.fileSize }} KB</div>
-            </div>
-          </div>
-        </div>
-      </div>
+  <section class="file-preview-view" aria-label="待发送附件">
+    <header class="attachment-heading"><strong>待发送附件 <span>{{ fileInfoList.length }}</span></strong><span>{{ formatSize(totalSize) }} · 点击查看预览</span></header>
+    <div class="attachment-list">
+      <article v-for="file in fileInfoList" :key="file.fileId" class="attachment-card">
+        <button type="button" class="attachment-preview" :aria-label="'预览 ' + file.fileName" @click="openPreview(file)">
+          <img v-if="[2, 3].includes(file.fileType) && file.previewUrl" :src="file.previewUrl" alt="" />
+          <el-icon v-else aria-hidden="true"><Headset v-if="file.fileType === 4" /><Document v-else /></el-icon>
+          <span v-if="file.fileType === 3" class="video-badge" aria-hidden="true"><el-icon><VideoPlay /></el-icon></span>
+        </button>
+        <div class="attachment-info"><strong :title="file.fileName">{{ file.fileName }}</strong><span>{{ typeLabel(file.fileType) }} · {{ formatSize(file.fileSize) }}</span></div>
+        <button type="button" class="remove-file" :aria-label="'移除 ' + file.fileName" @click="removeFile(file.fileId)"><el-icon aria-hidden="true"><Close /></el-icon></button>
+      </article>
     </div>
-  </div>
+    <el-dialog v-model="previewVisible" :title="previewFile?.fileName" width="min(760px, calc(100vw - 48px))" align-center destroy-on-close>
+      <template v-if="previewFile">
+        <div class="preview-stage">
+          <p v-if="previewError" class="preview-error" role="status">无法预览此文件，你仍可返回编辑并发送附件。</p>
+          <img v-else-if="previewFile.fileType === 2" class="full-image" :src="localSource(previewFile)" alt="待发送的图片" @error="previewError = true" />
+          <video v-else-if="previewFile.fileType === 3" class="full-video" :src="localSource(previewFile)" :poster="previewFile.previewUrl" controls preload="metadata" @error="previewError = true"></video>
+          <audio v-else-if="previewFile.fileType === 4" :src="localSource(previewFile)" controls preload="metadata" @error="previewError = true"></audio>
+          <div v-else class="document-preview"><el-icon aria-hidden="true"><Document /></el-icon><strong>{{ previewFile.fileName }}</strong><p>文件已就绪，发送后对方可以下载查看。</p></div>
+        </div>
+        <div class="preview-meta"><span>{{ typeLabel(previewFile.fileType) }}</span><span>{{ formatSize(previewFile.fileSize) }}</span><span>待发送</span></div>
+      </template>
+      <template #footer><el-button type="primary" @click="previewVisible = false">返回编辑</el-button></template>
+    </el-dialog>
+  </section>
 </template>
 
 <script setup lang="ts">
-import { reactive, watch } from 'vue'
-import { Close } from '@element-plus/icons-vue'
-import { FileBaseInfo } from '@/types/fileBaseInfo'
+import { computed, ref } from 'vue'
+import { Close, Document, Headset, VideoPlay } from '@element-plus/icons-vue'
+import type { FileBaseInfo } from '@/types/fileBaseInfo'
 
-const props = defineProps({
-  fileInfoList: {
-    type: Array as () => FileBaseInfo[],
-    default: () => []
-  }
-})
-
-const emit = defineEmits(['delete-file'])
-const fileList = reactive([...props.fileInfoList])
-
-const closePreview = (fileId: string) => {
+const props = withDefaults(defineProps<{ fileInfoList?: FileBaseInfo[] }>(), { fileInfoList: () => [] })
+const emit = defineEmits<{ 'delete-file': [fileId: string] }>()
+const previewFile = ref<FileBaseInfo | null>(null)
+const previewVisible = ref(false)
+const previewError = ref(false)
+const totalSize = computed(() => props.fileInfoList.reduce((sum, file) => sum + Number(file.fileSize), 0))
+const typeLabel = (type: number) => ({ 2: '图片', 3: '视频', 4: '音频' })[type] || '文件'
+const formatSize = (bytes: number) => {
+  if (bytes < 1024) return bytes + ' B'
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
+  if (bytes < 1024 * 1024 * 1024) return (bytes / 1024 / 1024).toFixed(1) + ' MB'
+  return (bytes / 1024 / 1024 / 1024).toFixed(1) + ' GB'
+}
+const localSource = (file: FileBaseInfo) => {
+  if (!file.localPath) return file.previewUrl || ''
+  if (/^(file|blob|data|https?):/i.test(file.localPath)) return file.localPath
+  const url = new URL('file:///')
+  url.pathname = '/' + file.localPath.replace(/\\/g, '/').replace(/^\//, '')
+  return url.href
+}
+const openPreview = (file: FileBaseInfo) => {
+  previewFile.value = file
+  previewError.value = false
+  previewVisible.value = true
+}
+const removeFile = (fileId: string) => {
+  if (previewFile.value?.fileId === fileId) previewVisible.value = false
   emit('delete-file', fileId)
 }
-
-watch(
-  () => props.fileInfoList,
-  (newList) => {
-    // 清空本地列表，重新同步
-    fileList.length = 0
-    newList.forEach((item) => fileList.push({ ...item }))
-  },
-  { immediate: true, deep: true } // 立即执行+深度监听
-)
 </script>
 
 <style scoped>
-.close-icon {
-  position: absolute;
-  top: 5px;
-  right: 5px;
-  font-size: 20px;
-  color: var(--color-text-primary);
-  border-radius: 50%;
-  background-color: rgba(var(--color-surface-rgb), 0.4);
-  transition: all 0.2s ease;
-  z-index: 10;
-}
-
-.close-icon:hover {
-  cursor: pointer;
-  transform: scale(1.1);
-  background-color: rgba(var(--color-surface-rgb), 0.4);
-}
-
-.file-preview-view {
-  width: 100%;
-  height: 120px;
-  display: flex;
-  position: relative;
-  opacity: 0.8;
-  overflow: hidden;
-  background: rgba(var(--color-surface-rgb), 0.4);
-  backdrop-filter: blur(8px);
-  border: 1px solid var(--color-border-subtle);
-}
-
-.content {
-  width: 100%;
-  height: 100%;
-  padding: 0 20px 0 20px;
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-start;
-  align-items: center;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: none;
-  gap: 20px;
-}
-
-.content::-webkit-scrollbar {
-  display: none;
-}
-
-.content-main {
-  height: 100%;
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-start;
-  align-items: center;
-  flex: 0 0 auto;
-  gap: 20px;
-}
-
-.file-item {
-  height: 100px;
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.file {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 5px;
-}
-
-.file-name {
-  width: 140px;
-  /* 强制文本不换行 */
-  white-space: nowrap;
-  /* 隐藏超出部分 */
-  overflow: hidden;
-  /* 超出部分显示省略号 */
-  text-overflow: ellipsis;
-  /* 行内块级，适配行内元素 */
-  display: inline-block;
-  text-align: center;
-}
-
-.pause {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 0;
-  height: 0;
-  border-style: solid;
-  /* 适配100x100px视频预览图的三角形尺寸，比例协调 */
-  border-width: 18px 0 18px 30px;
-  /* 半透明黑色三角形，可按需调整颜色/透明度 */
-  border-color: transparent transparent transparent rgba(0, 0, 0, 0.6);
-  /* 关键：防止遮挡关闭按钮的点击事件 */
-  pointer-events: none;
-  /* 层级：在视频图上方、关闭图标（z-index:10）下方 */
-  z-index: 5;
-}
+.file-preview-view { flex-shrink: 0; min-width: 0; padding: 12px 16px; color: var(--color-text-primary); background: var(--color-composer-surface); border-top: 1px solid var(--color-border-subtle); }
+.attachment-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 10px; font-size: 11px; color: var(--color-text-secondary); }
+.attachment-heading strong { font-size: 12px; font-weight: 500; color: var(--color-text-primary); }
+.attachment-heading strong span { margin-left: 4px; color: var(--color-accent); font-variant-numeric: tabular-nums; }
+.attachment-list { display: flex; gap: 10px; overflow-x: auto; padding: 2px; }
+.attachment-card { position: relative; display: flex; align-items: center; gap: 10px; flex: 0 0 224px; min-width: 0; padding: 8px 32px 8px 8px; border: 1px solid var(--color-border-subtle); border-radius: var(--radius-md); background: var(--color-bg-deep); }
+.attachment-preview { position: relative; display: grid; place-items: center; flex: 0 0 56px; width: 56px; height: 56px; overflow: hidden; border-radius: var(--radius-sm); background: var(--color-surface-1); color: var(--color-accent); cursor: var(--cursor-pointer, pointer); }
+.attachment-preview img { width: 100%; height: 100%; object-fit: contain; }
+.attachment-preview > .el-icon { font-size: 28px; }
+.video-badge { position: absolute; inset: 0; display: grid; place-items: center; background: #00000045; color: #ffffff; font-size: 24px; }
+.attachment-info { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.attachment-info strong { color: var(--color-text-primary); font-size: 12px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.attachment-info > span { color: var(--color-text-secondary); font-size: 11px; white-space: nowrap; }
+.remove-file { position: absolute; top: 4px; right: 4px; display: grid; place-items: center; width: 26px; height: 26px; color: var(--color-text-secondary); border-radius: var(--radius-sm); cursor: var(--cursor-pointer, pointer); }
+.remove-file:hover { color: var(--color-danger); background: var(--color-surface-2); }
+.preview-stage { display: grid; place-items: center; min-height: 180px; max-height: 60vh; padding: 16px; overflow: auto; border: 1px solid var(--color-border-subtle); border-radius: var(--radius-md); background: var(--color-surface-1); }
+.full-image, .full-video { display: block; max-width: 100%; max-height: 52vh; object-fit: contain; }
+.full-video { width: 100%; }
+.preview-stage audio { max-width: 100%; }
+.document-preview { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 24px; color: var(--color-text-primary); text-align: center; overflow-wrap: anywhere; }
+.document-preview .el-icon { font-size: 52px; color: var(--color-accent); }
+.document-preview strong { font-size: 16px; font-weight: 500; }
+.document-preview p, .preview-error { font-size: 13px; color: var(--color-text-secondary); }
+.preview-meta { display: flex; flex-wrap: wrap; gap: 16px; padding-top: 14px; font-size: 12px; color: var(--color-text-secondary); }
+:deep(.el-dialog__title) { display: block; padding-right: 24px; font-size: 16px; overflow-wrap: anywhere; }
+@media (max-width: 600px) { .attachment-heading > span { display: none; } .attachment-card { flex-basis: 210px; } }
 </style>

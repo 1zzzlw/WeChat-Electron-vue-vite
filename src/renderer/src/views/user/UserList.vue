@@ -2,7 +2,7 @@
   <div class="user-list">
     <div class="user-list-left">
       <div class="list-top">
-        <AutocompleteSearch />
+        <AutocompleteSearch scope="contacts" @select-contact="starCall" />
       </div>
       <div class="list-bottom">
         <el-scrollbar>
@@ -186,7 +186,7 @@ onMounted(async () => {
 @import "@/css/layout.css";
 
 .online-status {
-  color: rgba(102, 217, 102, 0.9);
+  color: var(--color-success);
   font-weight: 500;
   position: relative;
   padding-left: 16px;
@@ -208,7 +208,7 @@ onMounted(async () => {
 }
 
 .offline-status {
-  color: rgba(150, 150, 150, 0.9);
+  color: var(--color-text-muted);
   font-weight: 500;
   position: relative;
   padding-left: 16px;
@@ -293,6 +293,9 @@ onMounted(async () => {
 
 .user-list-right {
   flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
   -webkit-app-region: drag;
 }
 </style>

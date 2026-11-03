@@ -1,40 +1,56 @@
 <template>
-    <div class="groupApply-count">
-        <div class="groupApply-info">
-            <div class="info-top">
-                <img :src="groupApplyInfo?.userAvatar + '?t=' + Date.now()" alt="" class="img" />
-                <h1>{{ groupApplyInfo?.groupName || '测试群聊' }}</h1>
-            </div>
-            <div class="info-mid">
-                <div class="title">群聊信息</div>
-                <div class="group-detail">
-                    <div class="detail-item">
-                        <span class="label">群ID：</span>
-                        <span class="value">{{ groupApplyInfo?.conversationId }}</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="label">群公告：</span>
-                        <span class="value">{{ '欢迎加入本群聊！' }}</span>
-                    </div>
-                    <div class="detail-item">
-                    </div>
-                </div>
-            </div>
-            <div class="info-bottom">
-                <div class="btn-group" v-if="groupApplyInfo?.status == 1">
-                    <el-button type="success" @click="agreeButton" :loading="isLoading">同意</el-button>
-                    <el-button type="danger" @click="refuseButton">拒绝</el-button>
-                </div>
-                <div class="btn-group" v-else>
-                    <el-button type="success" disabled v-if="groupApplyInfo?.status == 2">已同意</el-button>
-                    <el-button type="danger" disabled v-else-if="groupApplyInfo?.status == 3">已拒绝</el-button>
-                </div>
-            </div>
+  <main class="contact-detail-page groupApply-count">
+    <article v-if="groupApplyInfo" class="contact-detail-card groupApply-info">
+      <header class="detail-identity">
+        <el-avatar :size="72" :src="groupApplyInfo.userAvatar">群</el-avatar>
+        <div class="detail-heading">
+          <p class="detail-eyebrow">GROUP INVITATION · 群聊申请</p>
+          <h1>{{ groupApplyInfo.groupName || '群聊邀请' }}</h1>
+          <p class="detail-id">邀请你加入这段群体对话</p>
         </div>
-    </div>
+        <span class="detail-status">{{
+          groupApplyInfo.status === 1
+            ? '等待处理'
+            : groupApplyInfo.status === 2
+              ? '已加入'
+              : '已拒绝'
+        }}</span>
+      </header>
+      <section class="detail-section">
+        <h2>邀请信息</h2>
+        <dl class="detail-grid">
+          <div>
+            <dt>群号</dt>
+            <dd>{{ groupApplyInfo.conversationId }}</dd>
+          </div>
+          <div>
+            <dt>邀请人 ID</dt>
+            <dd>{{ groupApplyInfo.userId }}</dd>
+          </div>
+        </dl>
+      </section>
+      <section class="detail-section">
+        <h2>一起开启对话</h2>
+        <p class="detail-message">加入后，你可以与群成员交流并接收群聊消息。</p>
+      </section>
+      <footer class="detail-actions">
+        <template v-if="groupApplyInfo.status === 1"
+          ><el-button :disabled="isLoading" @click="refuseButton">拒绝邀请</el-button
+          ><el-button type="primary" :loading="isLoading" @click="agreeButton"
+            >接受并加入</el-button
+          ></template
+        >
+        <p v-else>
+          {{ groupApplyInfo.status === 2 ? '你已加入这个群聊。' : '这条群聊邀请已处理。' }}
+        </p>
+      </footer>
+    </article>
+    <div v-else class="detail-empty">请选择左侧的群聊申请。</div>
+  </main>
 </template>
 <script lang="ts" setup>
 import { ref, computed } from 'vue'
+import '@/css/contactDetail.css'
 import { useRoute } from 'vue-router'
 import { userApplyListInfo } from '@/stores/modules/UserApplyListStore'
 import { ElMessage } from 'element-plus'
@@ -58,13 +74,16 @@ const messageStore = messageInfo()
 
 // 同意申请
 const agreeButton = async () => {
-    isLoading.value = true
+  if (isLoading.value || !groupApplyInfo.value || groupApplyInfo.value.status !== 1) return
+  const application = groupApplyInfo.value
+  isLoading.value = true
+  try {
     const userId = await (window as any).userInfoApi.storeGetUserInfo('userId')
     const username = await (window as any).userInfoApi.storeGetUserInfo('username')
     const avatar = await (window as any).userInfoApi.storeGetUserInfo('avatar')
 
     // 获取群成员信息列表
-    const groupMemberList: any = await getGroupMemberListApi(groupApplyInfo.value?.conversationId)
+    const groupMemberList: any = await getGroupMemberListApi(application.conversationId)
 
     const avatarUrlList = groupMemberList.data.map((userInfo: any) => userInfo.avatar)
     const receiverIds = groupMemberList.data.map((userInfo: any) => userInfo.userId)
@@ -76,263 +95,87 @@ const agreeButton = async () => {
 
     const formData = new FormData()
     formData.append('groupAvatarBlob', groupAvatarBlob)
-    formData.append('conversationId', groupApplyInfo.value?.conversationId as string)
-    formData.append('userId', groupApplyInfo.value?.userId as string)
+    formData.append('conversationId', application.conversationId as string)
+    formData.append('userId', application.userId as string)
     formData.append('memberId', userId)
     formData.append('status', '2')
 
     const conversationRes: any = await dealGroupApplyApi(formData)
     if (conversationRes.code === 1) {
-        ElMessage.success('入群成功')
-        // 更新群聊申请状态
-        userApplyStore.updateGroupApplyStatus(groupApplyInfo.value?.id as string, 2)
+      ElMessage.success('入群成功')
+      // 更新群聊申请状态
+      userApplyStore.updateGroupApplyStatus(application.id as string, 2)
 
-        const conversationPack = conversationRes.data
+      const conversationPack = conversationRes.data
 
-        // 将群聊会话添加到本地数据库
-        addConversation(conversationPack)
-        // 群会话添加到缓存
-        conversationStore.setConversationMap(conversationPack.id, conversationPack)
+      // 将群聊会话添加到本地数据库
+      addConversation(conversationPack)
+      // 群会话添加到缓存
+      conversationStore.setConversationMap(conversationPack.id, conversationPack)
 
-        // 发送自己入群的通知，需要提供部分信息，用于新成员的展示
-        const wsGroupMemberPack = {
-            conversationId: groupApplyInfo.value?.conversationId,
-            userId: userId,
-            username: username,
-            avatar: avatar,
-            role: 0,
-            receiverIds: receiverIds
-        };
-        (window as any).wsApi.sendMessage(17, 0, wsGroupMemberPack)
+      // 发送自己入群的通知，需要提供部分信息，用于新成员的展示
+      const wsGroupMemberPack = {
+        conversationId: application.conversationId,
+        userId: userId,
+        username: username,
+        avatar: avatar,
+        role: 0,
+        receiverIds: receiverIds
+      }
+      ;(window as any).wsApi.sendMessage(17, 0, wsGroupMemberPack)
 
-        // 发送入群成功的系统通知
-        const tpl = getSystemMsgText(SystemMsgSubType.GROUP_JOINED, { name: username })
-        const content = createContentJson(tpl, username, '', '', '')
+      // 发送入群成功的系统通知
+      const tpl = getSystemMsgText(SystemMsgSubType.GROUP_JOINED, { name: username })
+      const content = createContentJson(tpl, username, '', '', '')
 
-        const systemMessagePack = await createSystemMessagePack(conversationPack.id, conversationPack.id, SystemMsgSubType.GROUP_JOINED, content, receiverIds)
+      const systemMessagePack = await createSystemMessagePack(
+        conversationPack.id,
+        conversationPack.id,
+        SystemMsgSubType.GROUP_JOINED,
+        content,
+        receiverIds
+      )
 
-        messageStore.sendSystemMessage(systemMessagePack as Message, conversationPack.id, receiverIds as string[])
+      messageStore.sendSystemMessage(
+        systemMessagePack as Message,
+        conversationPack.id,
+        receiverIds as string[]
+      )
     } else {
-        ElMessage.error('入群失败')
+      ElMessage.error('入群失败')
     }
+  } catch {
+    ElMessage.error('处理群聊邀请失败，请重试')
+  } finally {
+    isLoading.value = false
+  }
 }
 
-// 拒绝申请
+// 拒绝邀请
 const refuseButton = async () => {
+  if (isLoading.value || !groupApplyInfo.value || groupApplyInfo.value.status !== 1) return
+  const application = groupApplyInfo.value
+  isLoading.value = true
+  try {
     const userId = await (window as any).userInfoApi.storeGetUserInfo('userId')
-
     const formData = new FormData()
-    const groupAvatarBlob = new Blob()
-    formData.append('groupAvatarBlob', groupAvatarBlob)
-    formData.append('conversationId', groupApplyInfo.value?.conversationId as string)
-    formData.append('userId', groupApplyInfo.value?.userId as string)
+    formData.append('groupAvatarBlob', new Blob())
+    formData.append('conversationId', application.conversationId)
+    formData.append('userId', String(application.userId))
     formData.append('memberId', userId)
     formData.append('status', '3')
-
-    dealGroupApplyApi(formData).then((res: any) => {
-        if (res.code === 1) {
-            ElMessage.success('忽略入群成功')
-            userApplyStore.updateGroupApplyStatus(groupApplyInfo.value?.userId as string, 3)
-        } else {
-            ElMessage.error('忽略入群失败')
-        }
-    })
+    const res: any = await dealGroupApplyApi(formData)
+    if (res.code !== 1) throw new Error(res.msg || '处理失败')
+    userApplyStore.updateGroupApplyStatus(application.id, 3)
+    ElMessage.success('已拒绝群聊邀请')
+  } catch {
+    ElMessage.error('处理群聊邀请失败，请重试')
+  } finally {
+    isLoading.value = false
+  }
 }
 
 const groupApplyInfo = computed(() => {
-    return UserApplyListStore.getGroupApplyMap(route.query.applyId as string)
+  return UserApplyListStore.getGroupApplyMap(route.query.applyId as string)
 })
 </script>
-<style scoped>
-.groupApply-count {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-}
-
-.groupApply-info {
-    width: 660px;
-    height: 580px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-    background: rgba(70, 100, 130, 0.2);
-    backdrop-filter: blur(12px);
-    transition: all 0.2s ease;
-    border: 1px solid var(--color-border-subtle);
-    border-radius: 15px;
-    -webkit-app-region: no-drag;
-}
-
-.groupApply-info:hover {
-    transform: scale(1.02);
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
-}
-
-.info-top {
-    width: 100%;
-    height: 150px;
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    padding-left: 40px;
-    gap: 20px;
-    border-bottom: 1px solid var(--color-border-subtle);
-    background: rgba(var(--color-surface-rgb), 0.4);
-}
-
-.img {
-    width: 100px;
-    height: 100px;
-    border-radius: 10px;
-    border: 3px solid var(--color-border-subtle);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    transition: all 0.2s ease;
-}
-
-.img:hover {
-    transform: scale(1.05);
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
-}
-
-h1 {
-    color: var(--color-text-primary);
-    font-size: 28px;
-    font-weight: 600;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.info-mid {
-    width: 100%;
-    height: 200px;
-    display: flex;
-    position: relative;
-    justify-content: flex-start;
-    align-items: flex-start;
-    padding: 40px;
-    border-bottom: 1px solid var(--color-border-subtle);
-    background: rgba(var(--color-surface-rgb), 0.4);
-}
-
-.title {
-    position: absolute;
-    top: 0;
-    left: 0;
-    font-size: 20px;
-    font-weight: bold;
-    color: var(--color-text-primary);
-    padding: 10px;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-}
-
-.group-detail {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    width: 100%;
-    margin-top: 20px;
-}
-
-.detail-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.label {
-    color: var(--color-text-secondary);
-    font-size: 16px;
-    font-weight: 500;
-    min-width: 80px;
-}
-
-.value {
-    color: var(--color-text-secondary);
-    font-size: 16px;
-    line-height: 1.6;
-    word-break: break-all;
-}
-
-.info-bottom {
-    width: 100%;
-    height: 230px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: rgba(var(--color-surface-rgb), 0.4);
-}
-
-.btn-group {
-    width: 400px;
-    height: 100px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 20px;
-}
-
-.el-button {
-    width: 50%;
-    transition: all 0.2s ease;
-    border-radius: 8px;
-    font-weight: 600;
-    height: 50px;
-    font-size: 16px;
-}
-
-.el-button--success {
-    background-color: rgba(80, 150, 220, 0.8);
-    border-color: rgba(80, 150, 220, 0.8);
-    color: var(--color-text-primary);
-    border-radius: 8px;
-    transition: all 0.2s ease;
-    --el-button-disabled-bg-color: rgba(80, 150, 220, 0.4);
-    --el-button-disabled-border-color: rgba(80, 150, 220, 0.4);
-    --el-button-disabled-text-color: var(--color-text-secondary);
-}
-
-.el-button--success.is-disabled {
-    background-color: rgba(80, 150, 220, 0.4);
-    border-color: rgba(80, 150, 220, 0.5);
-    color: var(--color-text-secondary);
-    cursor: not-allowed;
-    transform: none;
-}
-
-.el-button--success:hover {
-    background-color: rgba(80, 150, 220, 1);
-    border-color: rgba(80, 150, 220, 1);
-    transform: scale(1.03);
-}
-
-.el-button--danger {
-    background-color: rgba(var(--color-surface-rgb), 0.8);
-    border-color: rgba(70, 90, 120, 0.8);
-    color: var(--color-text-primary);
-    border-radius: 8px;
-    transition: all 0.2s ease;
-    --el-button-disabled-bg-color: rgba(var(--color-surface-rgb), 0.55);
-    --el-button-disabled-border-color: rgba(70, 90, 120, 0.4);
-    --el-button-disabled-text-color: var(--color-text-secondary);
-}
-
-.el-button--danger.is-disabled {
-    background-color: rgba(var(--color-surface-rgb), 0.55);
-    border-color: rgba(70, 90, 120, 0.5);
-    color: var(--color-text-secondary);
-    cursor: not-allowed;
-    transform: none;
-}
-
-.el-button--danger:hover {
-    background-color: rgba(245, 108, 108, 1);
-    border-color: rgba(245, 108, 108, 1);
-    transform: scale(1.03);
-}
-
-.el-button.is-disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-}
-</style>

@@ -6,99 +6,22 @@ import { readSSE } from '@/utils/sse'
 const sendStreamRequest = (baseURL, data, accessToken, signal) =>
   fetch(`${baseURL}/ai-message/sendMessage`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `${accessToken}`
-    },
+    headers: { 'Content-Type': 'application/json', Authorization: `${accessToken}` },
     body: JSON.stringify(data),
     signal
   })
 
 async function refreshAccessToken() {
-  console.info('AI请求token过期，刷新token')
   const userId = await window.userInfoApi.storeGetUserInfo('userId')
-  const isSuccess = await refreshToken(userId)
-
-  if (isSuccess) return
-
-  console.info('刷新token失败，返回登录界面')
+  if (await refreshToken(userId)) return
   window.api.resizeWindow('login')
   window.location.href = '#/login'
-  if (window.WSManager) window.WSManager.disconnect()
+  window.WSManager?.disconnect()
   throw new Error('登录已过期，请重新登录')
 }
 
-async function dispatchStreamEvent(event, handlers, streamState) {
-  let eventData
-  try {
-    eventData = JSON.parse(event.data)
-  } catch {
-    throw new Error(`无法解析 SSE 事件数据：${event.event}`)
-  }
-
-  if (event.event === 'run.started') {
-    handlers.onStarted?.(eventData)
-    return
-  }
-
-  if (event.event === 'message.reasoning.delta') {
-    const delta = eventData.delta ?? ''
-    handlers.onReasoningDelta?.(delta, eventData)
-    return
-  }
-
-  if (event.event === 'message.delta') {
-    const delta = eventData.delta ?? ''
-    streamState.fullContent += delta
-    handlers.onDelta?.(delta, eventData)
-    return
-  }
-
-  if (event.event === 'message.completed') {
-    streamState.fullContent = eventData.content ?? streamState.fullContent
-    handlers.onCompleted?.(eventData)
-    return
-  }
-
-  if (event.event === 'tool.request') {
-    if (!handlers.onToolRequest) throw new Error('客户端没有配置本地文件工具处理器')
-    console.info('[IM Agent] 调用本地文件工具', {
-      tool: eventData.operation,
-      workspace: eventData.workspaceName,
-      path: eventData.path,
-      toolCallId: eventData.toolCallId
-    })
-    await handlers.onToolRequest(eventData)
-    return
-  }
-
-  if (event.event === 'tool.completed') {
-    handlers.onToolCompleted?.(eventData)
-    return
-  }
-
-  if (event.event === 'plan.created') {
-    handlers.onPlanCreated?.(eventData)
-    return
-  }
-
-  if (event.event === 'plan.step.updated') {
-    handlers.onPlanStepUpdated?.(eventData)
-    return
-  }
-
-  if (event.event === 'run.failed') {
-    throw new Error(eventData.message || '模型调用失败')
-  }
-
-  if (event.event === 'done') {
-    streamState.doneReceived = true
-    handlers.onDone?.(eventData)
-  }
-}
-
 /**
- * 发送 AI 消息并消费同一个 HTTP 响应中的 SSE 事件流。
+ * 只消费对外回复；内部推理、规划和工具事件不进入人物聊天界面。
  * @param {import('@/types').SendAIMessageRequest} data
  * @param {import('@/types').AIStreamHandlers} [handlers]
  * @param {AbortSignal} [signal]
@@ -107,32 +30,51 @@ async function dispatchStreamEvent(event, handlers, streamState) {
 export async function streamAIMessage(data, handlers = {}, signal) {
   const baseURL = request.defaults.baseURL || window.location.origin
   let response = await sendStreamRequest(baseURL, data, getAccessToken(), signal)
-
   if (response.status === 401) {
     if (response.body) await response.body.cancel().catch(() => {})
     await refreshAccessToken()
     response = await sendStreamRequest(baseURL, data, getAccessToken(), signal)
   }
-
   if (!response.ok) {
-    const errorText = await response.text()
-    throw new Error(`请求失败: ${response.status} - ${errorText}`)
+    const payload = await response.json().catch(() => ({}))
+    const detail = payload.error || payload.detail
+    const message = typeof detail === 'string' ? detail : detail?.message
+    throw Object.assign(new Error(message || `消息发送失败（${response.status}），请稍后重试`), {
+      code: detail?.code
+    })
   }
-
-  const contentType = response.headers.get('content-type') || ''
-  if (!contentType.includes('text/event-stream')) {
-    throw new Error(`服务端没有返回 SSE，实际类型：${contentType || '未知'}`)
+  if (!(response.headers.get('content-type') || '').includes('text/event-stream')) {
+    throw new Error('聊天服务返回了无法识别的响应，请稍后重试')
   }
-
-  const streamState = {
-    fullContent: '',
-    doneReceived: false
-  }
-
+  let fullContent = ''
+  let doneReceived = false
   for await (const event of readSSE(response)) {
-    await dispatchStreamEvent(event, handlers, streamState)
+    // 不解析不需要的内部事件，避免把推理或工具载荷交给 UI。
+    if (
+      !['run.started', 'message.delta', 'message.completed', 'run.failed', 'done'].includes(
+        event.event
+      )
+    )
+      continue
+    let payload
+    try {
+      payload = JSON.parse(event.data)
+    } catch {
+      throw new Error('聊天消息格式异常，请重新连接')
+    }
+    if (event.event === 'run.started') handlers.onStarted?.(payload)
+    if (event.event === 'message.delta') {
+      const delta = payload.delta ?? ''
+      fullContent += delta
+      handlers.onDelta?.(delta)
+    }
+    if (event.event === 'message.completed') {
+      fullContent = payload.content ?? fullContent
+      handlers.onCompleted?.({ messageId: payload.messageId, content: fullContent })
+    }
+    if (event.event === 'run.failed') throw new Error(payload.message || '聊天服务暂时无法回复')
+    if (event.event === 'done') doneReceived = true
   }
-
-  if (!streamState.doneReceived) throw new Error('SSE 连接提前结束，未收到 done 事件')
-  return streamState.fullContent
+  if (!doneReceived) throw new Error('连接已中断，回复可能尚未收取完整')
+  return fullContent
 }

@@ -2,7 +2,6 @@
 const { app, BrowserWindow, ipcMain, nativeImage } = require('electron')
 const assert = require('node:assert/strict')
 const path = require('node:path')
-const { pathToFileURL } = require('node:url')
 
 const root = path.join(__dirname, '..')
 const windows = []
@@ -72,8 +71,9 @@ const events = window => isolated(window, () => window.soundEvents)
 
 app.whenReady().then(async () => {
     ipcMain.on('theme:initial', event => { event.returnValue = 'light' })
-    ipcMain.handle('window:getUserInfo', (_event, key) => key === 'wallpaperPath'
-        ? pathToFileURL(path.join(root, 'public/wallpaper/1.jpg')).href : '')
+    ipcMain.on('style:initial', event => { event.returnValue = 'ai-native' })
+    ipcMain.handle('style:get', () => 'ai-native')
+    ipcMain.handle('window:getUserInfo', (_event, key) => '')
     ipcMain.handle('window:setUserInfo', () => {})
     for (const page of ['vue', 'standalone']) {
         const window = new BrowserWindow({ width: 1100, height: 700, show: false, frame: false,

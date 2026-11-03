@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 128 128" fill="none">
+  <title>Lumina IM · AI 对话</title>
+  <desc>黑白极简风格的 IM 字母、对话轮廓与智能星芒。</desc>
+  <rect x="2" y="2" width="124" height="124" rx="26" fill="#111111"/>
+  <path d="M36 25H88C98 25 105 32 105 42V73C105 83 98 90 88 90H60L43 105V90H36C26 90 19 83 19 73V42C19 32 26 25 36 25Z" stroke="#FFFFFF" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M38 53V74M55 74V47L68 62L81 47V74" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="38" cy="44" r="3.5" fill="#FFFFFF"/>
+  <path d="M105 13L108 21L116 24L108 27L105 35L102 27L94 24L102 21L105 13Z" fill="#FFFFFF" stroke="#111111" stroke-width="3" stroke-linejoin="round"/>
+</svg>

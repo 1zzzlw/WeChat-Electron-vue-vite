@@ -1,9 +1,9 @@
 <template>
-    <el-drawer v-model="visible" title="" modal-penetrable :show-close="false">
+    <el-drawer v-model="visible" title="群聊资料" class="chat-details-drawer" size="min(420px, calc(100vw - 32px))" append-to-body destroy-on-close>
         <div class="group-drawer-content">
             <div class="group-header">
                 <div class="group-avatar">
-                    <img :src="conversation.avatar + '?t=' + Date.now()" alt="群头像">
+                    <img :src="conversation.avatar" alt="群头像">
                 </div>
                 <div class="group-name">
                     {{ conversation.remark || conversation.name }}
@@ -377,7 +377,7 @@ watch(() => props.conversation.id, async () => {
     height: 100%;
     display: flex;
     flex-direction: column;
-    padding: 30px 20px 20px;
+    padding: 0;
     box-sizing: border-box;
     overflow-y: auto;
 }
@@ -386,25 +386,25 @@ watch(() => props.conversation.id, async () => {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-bottom: 35px;
+    margin-bottom: 20px;
     padding-bottom: 25px;
     border-bottom: 1px solid rgba(var(--color-accent-rgb), 0.2);
 }
 
 .group-avatar {
     position: relative;
-    width: 100px;
-    height: 100px;
+    width: 72px;
+    height: 72px;
     margin-bottom: 15px;
 }
 
 .group-avatar img {
     width: 100%;
     height: 100%;
-    border-radius: 16px;
+    border-radius: var(--radius-md);
     object-fit: cover;
     border: 3px solid rgba(var(--color-accent-rgb), 0.4);
-    box-shadow: 0 0 20px rgba(var(--color-accent-rgb), 0.3);
+    box-shadow: var(--shadow-sm);
 }
 
 .avatar-badge {
@@ -413,19 +413,19 @@ watch(() => props.conversation.id, async () => {
     right: -5px;
     padding: 4px 10px;
     background: rgba(var(--color-accent-rgb), 0.9);
-    border-radius: 12px;
+    border-radius: var(--radius-md);
     font-size: 11px;
     color: #000;
     font-weight: 600;
     border: 2px solid rgba(20, 25, 35, 0.8);
-    box-shadow: 0 0 10px rgba(var(--color-accent-rgb), 0.5);
+    box-shadow: var(--shadow-sm);
 }
 
 .group-name {
     font-size: 20px;
     font-weight: 600;
     color: var(--color-accent);
-    text-shadow: 0 0 8px rgba(var(--color-accent-rgb), 0.3);
+    text-shadow: none;
     margin-bottom: 6px;
     display: flex;
     align-items: center;
@@ -434,7 +434,7 @@ watch(() => props.conversation.id, async () => {
 
 .edit-group-icon {
     font-size: 14px;
-    color: rgba(var(--color-accent-rgb), 0.5);
+    color: var(--color-text-accent);
     cursor: pointer;
     transition: all 0.2s ease;
 }
@@ -446,7 +446,7 @@ watch(() => props.conversation.id, async () => {
 
 .group-id {
     font-size: 13px;
-    color: rgba(var(--color-accent-rgb), 0.6);
+    color: var(--color-text-accent);
 }
 
 .group-settings {
@@ -492,7 +492,7 @@ watch(() => props.conversation.id, async () => {
 }
 
 .members-more {
-    color: rgba(var(--color-accent-rgb), 0.6);
+    color: var(--color-text-accent);
     font-size: 16px;
     cursor: pointer;
     transition: all 0.3s;
@@ -500,7 +500,7 @@ watch(() => props.conversation.id, async () => {
 
 .members-more:hover {
     color: var(--color-accent);
-    text-shadow: 0 0 8px rgba(var(--color-accent-rgb), 0.4);
+    text-shadow: none;
 }
 
 .members-list {
@@ -517,10 +517,10 @@ watch(() => props.conversation.id, async () => {
     gap: 6px;
     cursor: pointer;
     padding: 8px 4px;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     transition: all 0.3s;
     justify-content: center;
-    color: rgba(var(--color-accent-rgb), 0.6);
+    color: var(--color-text-accent);
 }
 
 .member-more-item:hover {
@@ -540,7 +540,7 @@ watch(() => props.conversation.id, async () => {
     width: 100%;
     padding: 15px;
     background: rgba(var(--color-accent-rgb), 0.05);
-    border-radius: 10px;
+    border-radius: var(--radius-md);
     border: 1px solid rgba(var(--color-accent-rgb), 0.2);
     margin-bottom: auto;
 }
@@ -592,7 +592,7 @@ watch(() => props.conversation.id, async () => {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
@@ -610,20 +610,20 @@ watch(() => props.conversation.id, async () => {
 .action-btn.secondary:hover {
     background: rgba(var(--color-accent-rgb), 0.2);
     border-color: rgba(var(--color-accent-rgb), 0.5);
-    box-shadow: 0 0 15px rgba(var(--color-accent-rgb), 0.3);
+    box-shadow: var(--shadow-sm);
     transform: translateY(-2px);
 }
 
 .action-btn.danger {
     background: rgba(255, 71, 87, 0.1);
     border: 1px solid rgba(255, 71, 87, 0.3);
-    color: #ff4757;
+    color: var(--color-danger);
 }
 
 .action-btn.danger:hover {
     background: rgba(255, 71, 87, 0.2);
     border-color: rgba(255, 71, 87, 0.5);
-    box-shadow: 0 0 15px rgba(255, 71, 87, 0.3);
+    box-shadow: var(--shadow-sm);
     transform: translateY(-2px);
 }
 
@@ -655,7 +655,7 @@ watch(() => props.conversation.id, async () => {
 }
 
 .members-invite {
-    color: rgba(var(--color-accent-rgb), 0.6);
+    color: var(--color-text-accent);
     font-size: 18px;
     cursor: pointer;
     transition: all 0.3s;
@@ -668,18 +668,18 @@ watch(() => props.conversation.id, async () => {
     color: var(--color-accent);
     border-color: rgba(var(--color-accent-rgb), 0.7);
     background: rgba(var(--color-accent-rgb), 0.15);
-    text-shadow: 0 0 8px rgba(var(--color-accent-rgb), 0.4);
+    text-shadow: none;
     transform: scale(1.1);
 }
 
 :deep(.el-switch) {
     --el-switch-on-color: var(--color-accent);
-    --el-switch-off-color: rgba(255, 255, 255, 0.2);
+    --el-switch-off-color: var(--color-surface-3);
     --el-switch-core-border-color: rgba(var(--color-accent-rgb), 0.3);
 }
 
 :deep(.el-switch.is-checked .el-switch__core) {
-    box-shadow: 0 0 12px rgba(var(--color-accent-rgb), 0.5);
+    box-shadow: var(--shadow-sm);
 }
 </style>
 
@@ -688,10 +688,9 @@ watch(() => props.conversation.id, async () => {
 .edit-group-name-dialog {
     background: var(--color-bg-deep) !important;
     border: 1px solid rgba(var(--color-accent-rgb), 0.25) !important;
-    border-radius: 14px !important;
-    backdrop-filter: blur(20px) !important;
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35),
-        0 0 20px rgba(var(--color-accent-rgb), 0.08) !important;
+    border-radius: var(--radius-md) !important;
+    backdrop-filter: none !important;
+    box-shadow: var(--shadow-sm);
     padding: 0 !important;
     overflow: hidden;
 }
@@ -728,13 +727,13 @@ watch(() => props.conversation.id, async () => {
 .edit-group-name-dialog .el-message-box__input .el-input__wrapper {
     background: rgba(var(--color-surface-rgb), 0.8) !important;
     border: 1px solid rgba(var(--color-accent-rgb), 0.25) !important;
-    border-radius: 8px !important;
-    box-shadow: none !important;
+    border-radius: var(--radius-md) !important;
+    box-shadow: var(--shadow-sm);
 }
 
 .edit-group-name-dialog .el-message-box__input .el-input__wrapper.is-focus {
     border-color: var(--color-accent) !important;
-    box-shadow: 0 0 8px rgba(var(--color-accent-rgb), 0.2) !important;
+    box-shadow: var(--shadow-sm);
 }
 
 .edit-group-name-dialog .el-message-box__input .el-input__inner {
@@ -749,7 +748,7 @@ watch(() => props.conversation.id, async () => {
 }
 
 .edit-group-name-dialog .el-message-box__btns .el-button {
-    border-radius: 8px !important;
+    border-radius: var(--radius-md) !important;
     padding: 8px 20px !important;
     font-size: 14px !important;
     transition: all 0.2s ease !important;
@@ -776,17 +775,16 @@ watch(() => props.conversation.id, async () => {
 .edit-group-name-dialog .el-message-box__btns .el-button--primary:hover {
     background: rgba(var(--color-accent-rgb), 0.35) !important;
     border-color: rgba(var(--color-accent-rgb), 0.7) !important;
-    box-shadow: 0 0 12px rgba(var(--color-accent-rgb), 0.25) !important;
+    box-shadow: var(--shadow-sm);
 }
 
 /* 群操作确认弹窗 */
 .group-action-confirm-dialog {
     background: var(--color-bg-deep) !important;
     border: 1px solid rgba(var(--color-accent-rgb), 0.25) !important;
-    border-radius: 14px !important;
-    backdrop-filter: blur(20px) !important;
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35),
-        0 0 20px rgba(var(--color-accent-rgb), 0.08) !important;
+    border-radius: var(--radius-md) !important;
+    backdrop-filter: none !important;
+    box-shadow: var(--shadow-sm);
     padding: 0 !important;
     overflow: hidden;
 }
@@ -832,7 +830,7 @@ watch(() => props.conversation.id, async () => {
 }
 
 .group-action-confirm-dialog .el-message-box__btns .el-button {
-    border-radius: 8px !important;
+    border-radius: var(--radius-md) !important;
     padding: 8px 20px !important;
     font-size: 14px !important;
     transition: all 0.2s ease !important;
@@ -859,6 +857,6 @@ watch(() => props.conversation.id, async () => {
 .group-action-confirm-dialog .el-message-box__btns .el-button--primary:hover {
     background: rgba(var(--color-accent-rgb), 0.35) !important;
     border-color: rgba(var(--color-accent-rgb), 0.7) !important;
-    box-shadow: 0 0 12px rgba(var(--color-accent-rgb), 0.25) !important;
+    box-shadow: var(--shadow-sm);
 }
 </style>

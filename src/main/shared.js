@@ -11,7 +11,17 @@
 
 import { app, nativeImage } from 'electron'
 import { join } from 'path'
+import { existsSync } from 'node:fs'
 import Store from 'electron-store'
+
+// 改名后继续读取既有账号与聊天记录；显式指定的自定义数据目录不覆盖。
+const defaultUserData = app.getPath('userData')
+const appData = app.getPath('appData')
+const legacyUserData = join(appData, 'zzz-im-web')
+app.setName('Lumina')
+if (existsSync(legacyUserData) && [join(appData, 'Lumina'), join(appData, 'lumina-agent')].includes(defaultUserData)) {
+  app.setPath('userData', legacyUserData)
+}
 
 // ─── electron-store 实例（立即创建） ──────────────────────────────────
 
@@ -30,14 +40,14 @@ export const refs = {
 
 // ─── 图标工具函数 ─────────────────────────────────────────────────────
 
-export function getIconPath() {
+export function getIconPath(format = process.platform === 'win32' ? 'ico' : 'png') {
   return app.isPackaged
-    ? join(process.resourcesPath, 'icon.png')
-    : join(__dirname, '../../resources/icon.png')
+    ? join(process.resourcesPath, `icon.${format}`)
+    : join(__dirname, `../../resources/icon.${format}`)
 }
 
 export function getTrayIcon() {
-  return nativeImage.createFromPath(getIconPath())
+  return nativeImage.createFromPath(getIconPath('png')).resize({ width: 20, height: 20 })
 }
 
 export function getEmptyTrayIcon() {

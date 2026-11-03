@@ -1,13 +1,14 @@
 <template>
   <div class="register-count">
-    <span></span>
+    <div class="auth-brand"><b>im</b><span>LUMINA / CONNECT</span></div>
     <div class="register-top">
-      <h1 class="title">注册</h1>
+      <h1 class="title">创建你的账号</h1>
+      <p class="auth-subtitle">01 / 验证手机号，开始新的连接。</p>
     </div>
     <div class="register-mid">
-      <el-form @keyup.enter="handleEnterRegister" class="register-form" :model="registerForm" ref="ruleFormRef"
+      <el-form label-position="top" @keyup.enter="handleEnterRegister" class="register-form" :model="registerForm" ref="ruleFormRef"
         :rules="rules">
-        <el-form-item prop="username">
+        <el-form-item prop="username" label="用户名">
           <el-input placeholder="输入用户名" v-model="registerForm.username" spellcheck="false" clearable>
             <template #prepend>
               <el-icon>
@@ -16,8 +17,8 @@
             </template>
           </el-input>
         </el-form-item>
-        <el-form-item prop="phone">
-          <el-input placeholder="输入手机号" v-model="registerForm.phone" spellcheck="false" clearable>
+        <el-form-item prop="phone" label="手机号">
+          <el-input autocomplete="tel" inputmode="tel" placeholder="输入手机号" v-model="registerForm.phone" spellcheck="false" clearable>
             <template #prepend>
               <el-icon>
                 <Phone />
@@ -26,8 +27,8 @@
           </el-input>
         </el-form-item>
 
-        <el-form-item prop="email">
-          <el-input placeholder="输入验证码" v-model="registerForm.phoneCode" spellcheck="false" clearable>
+        <el-form-item prop="phoneCode" label="短信验证码">
+          <el-input autocomplete="one-time-code" inputmode="numeric" placeholder="输入验证码" v-model="registerForm.phoneCode" spellcheck="false" clearable>
             <template #append>
               <el-button type="primary" @click="getCode(ruleFormRef, 'phone')" :disabled="isCounting">{{ isCounting ?
                 `${count}秒后重新获取` : '获取验证码' }}</el-button>
@@ -36,14 +37,13 @@
         </el-form-item>
 
         <div class="register-form-button">
-          <el-button type="primary" @click="returnLogin">返回</el-button>
+          <el-button @click="returnLogin">返回登录</el-button>
           <el-button type="primary" @click="nextStep(ruleFormRef, 'username')">下一步</el-button>
         </div>
       </el-form>
     </div>
     <div class="register-bottom">
-      {{ correctCode }}
-      <router-link to="">协议</router-link>
+      已有账号？随时返回登录。
     </div>
   </div>
   <WindowControls :showSetTop="false" :showSetMiniSize="false" :showSetFullScreen="false" windowType="mainWindow" />
@@ -182,45 +182,4 @@ onUnmounted(() => {
 
 <style scoped>
 @import '@/css/account.css';
-
-:deep(.el-input-group__append) {
-  /* 适配注册页的红粉色系，更柔和不刺眼 */
-  background: rgba(237, 40, 100, 0.7);
-  /* 玻璃边框+圆角，贴合整体风格 */
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 4px;
-  /* 去掉默认阴影，加细腻内发光 */
-  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.2);
-  /* 文字样式优化 */
-  color: #fff;
-  font-size: 13px;
-  /* 交互动效增强 */
-  transition: all 0.2s ease;
-}
-
-/* hover效果：提亮+轻微放大 */
-:deep(.el-input-group__append):hover {
-  background: rgba(237, 40, 100, 0.85);
-  transform: scale(1.02);
-  box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.3);
-}
-
-/* 不可点击时的样式（比如倒计时中） */
-:deep(.el-input-group__append):disabled {
-  background: rgba(237, 40, 100, 0.4);
-  cursor: not-allowed;
-  transform: none;
-}
-
-.register-bottom {
-  display: flex;
-  justify-content: end;
-  margin-top: 20px;
-  font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
-  font-style: italic;
-  text-align: center;
-  color: #ffffff;
-  text-decoration: underline;
-  -webkit-app-region: no-drag;
-}
 </style>

@@ -58,8 +58,8 @@ import WindowControls from '@/components/WindowControls.vue'
   flex-direction: column;
   justify-content: center;
   background: rgba(var(--color-surface-rgb), 0.4);
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
+  backdrop-filter: var(--surface-filter);
+  -webkit-backdrop-filter: var(--surface-filter);
   -webkit-app-region: drag;
   border-right: 1px solid var(--color-border-subtle);
   padding: 20px 0;
@@ -89,7 +89,7 @@ import WindowControls from '@/components/WindowControls.vue'
   display: flex;
   align-items: center;
   padding: 12px 16px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   color: var(--color-text-primary);
   font-size: 14px;
   cursor: pointer;
@@ -119,8 +119,8 @@ import WindowControls from '@/components/WindowControls.vue'
   flex: 1;
   padding: 24px 32px;
   background: rgba(var(--color-surface-rgb), 0.4);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: var(--surface-filter);
+  -webkit-backdrop-filter: var(--surface-filter);
   -webkit-app-region: drag;
 }
 </style>

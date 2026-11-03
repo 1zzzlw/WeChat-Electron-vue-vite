@@ -295,12 +295,12 @@ onUnmounted(() => {
     align-items: center;
     justify-content: center;
     gap: 12px;
-    color: rgba(var(--color-accent-rgb), 0.4);
+    color: var(--color-text-accent);
 }
 
 .empty-icon {
     font-size: 48px;
-    color: rgba(var(--color-accent-rgb), 0.5);
+    color: var(--color-text-accent);
     animation: pulse 2s ease-in-out infinite;
 }
 
@@ -318,12 +318,12 @@ onUnmounted(() => {
 
 .empty-text {
     font-size: 16px;
-    color: rgba(var(--color-accent-rgb), 0.7);
+    color: var(--color-text-accent);
 }
 
 .empty-tip {
     font-size: 13px;
-    color: rgba(var(--color-accent-rgb), 0.5);
+    color: var(--color-text-accent);
 }
 
 .favorite-item {
@@ -447,7 +447,7 @@ onUnmounted(() => {
 
 .file-content .el-icon {
     font-size: 20px;
-    color: rgba(var(--color-accent-rgb), 0.7);
+    color: var(--color-text-accent);
 }
 
 .file-content span {
@@ -505,7 +505,7 @@ onUnmounted(() => {
     font-size: 1.1em;
     font-weight: bold;
     margin: 0.3em 0 0.2em;
-    color: rgba(var(--color-accent-rgb), 0.9);
+    color: var(--color-text-accent);
 }
 
 :deep(.note-content-html p) {
@@ -577,7 +577,7 @@ onUnmounted(() => {
 
 .source {
     font-size: 12px;
-    color: rgba(var(--color-accent-rgb), 0.7);
+    color: var(--color-text-accent);
     max-width: 40%;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -586,7 +586,7 @@ onUnmounted(() => {
 
 .time {
     font-size: 12px;
-    color: rgba(var(--color-accent-rgb), 0.6);
+    color: var(--color-text-accent);
 }
 
 .item-actions {
@@ -597,7 +597,7 @@ onUnmounted(() => {
 
 .action-icon {
     font-size: 16px;
-    color: rgba(var(--color-accent-rgb), 0.6);
+    color: var(--color-text-accent);
     cursor: pointer;
     transition: all 0.3s ease;
     padding: 4px;

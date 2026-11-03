@@ -49,6 +49,7 @@ const getMessageList = async (conversationId, messagePageInfo) => {
         }
     }
     const messagePageResult = await window.dbApi.loadMessage(conversationId, {
+        anchorMessageId: messagePageInfo.anchorMessageId,
         pageNO: messagePageInfo.pageNO,
         maxMessageId: messagePageInfo.maxMessageId
     })
@@ -80,6 +81,7 @@ const getMessageList = async (conversationId, messagePageInfo) => {
     console.log(messagePageInfo)
     return {
         messageList: messageList,
+        anchorFound: messagePageResult.anchorFound,
         isFromServer: false
     }
 }

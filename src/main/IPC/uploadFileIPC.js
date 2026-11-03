@@ -4,7 +4,6 @@ import { saveVoiceRecording } from '../File/voiceRecording'
 import { store } from '../shared'
 import { getFileInfo, uploadFile, stopUpload } from '../File/fileUpload'
 import { downloadFile, pauseDownload, saveAsMedia } from '../File/downloadFile'
-import { executeWorkspaceTool, listLocalWorkspaces, registerWorkspace } from '../File/fileInfo'
 
 ipcMain.handle('voice:save-recording', async (_event, recording) => {
     const base = store.get('storeLocation') || app.getPath('downloads')
@@ -81,29 +80,4 @@ ipcMain.on('saveAs-media', async (e, fileInfo) => {
     const remoteUrl = fileInfo.remoteUrl
     console.log(filePath)
     saveAsMedia(remoteUrl, filePath).catch(err => console.error('另存为失败', err.message))
-})
-
-ipcMain.handle('workspace:register-local', async (e, workspaceName, dirPath) => {
-    if (!workspaceName || !dirPath || typeof dirPath !== 'string') {
-        return { error: '工作区参数不完整' }
-    }
-    try {
-        return await registerWorkspace(workspaceName, dirPath)
-    } catch (err) {
-        console.error('注册本地工作区失败', err)
-        return { error: err.message }
-    }
-})
-
-ipcMain.handle('workspace:list-local', async () => {
-    try {
-        return listLocalWorkspaces()
-    } catch (err) {
-        console.error('读取本地工作区列表失败', err)
-        return []
-    }
-})
-
-ipcMain.handle('workspace:execute-tool', async (e, request) => {
-    return await executeWorkspaceTool(request)
 })

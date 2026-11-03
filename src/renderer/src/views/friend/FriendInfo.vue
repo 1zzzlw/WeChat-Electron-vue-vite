@@ -1,78 +1,40 @@
 <template>
-  <div class="friendInfo-count">
-    <div class="userInfo">
-      <el-popover placement="bottom-end" trigger="click" :width="160" transition="friend-pop-transition">
-        <div class="setButton">
-          <div class="set-item" @click="setRemark">
-            <el-icon><Edit /></el-icon>
-            <span>设置备注</span>
+  <main class="friendInfo-count">
+    <div v-if="loadingProfile || profileError" class="profile-state" role="status"><p>{{ loadingProfile ? '正在加载联系人信息…' : profileError }}</p><el-button v-if="profileError" @click="loadFriendInfo(route.query.friendId)">重新加载</el-button></div>
+    <article v-else-if="friendBaseInfo" class="userInfo">
+      <p class="profile-kicker">CONTACT / 个人资料</p>
+      <header class="accountInfo">
+        <img class="profile-avatar" :src="friendBaseInfo.avatar" alt="联系人头像" />
+        <div class="accountInfo-info"><h1>{{ friendBaseInfo.remark || friendBaseInfo.username }}</h1><p v-if="friendBaseInfo.remark" class="profile-username">{{ friendBaseInfo.username }}</p><span class="profile-account">账号：{{ friendBaseInfo.account || '未填写' }}</span><span class="profile-status" :class="{ online: userOnlineStatus }"><i></i>{{ userOnlineStatus ? '在线' : '离线' }}</span></div>
+        <el-popover placement="bottom-end" trigger="click" :width="176">
+          <div class="setButton">
+            <button type="button" class="set-item" @click="setRemark"><el-icon><Edit /></el-icon>设置备注</button>
+            <button type="button" class="set-item" @click="toggleBlacklist" :disabled="isBlockedByThem"><el-icon><WarningFilled /></el-icon>{{ isBlockedByThem ? '对方已将你拉黑' : isBlacklisted ? '移出黑名单' : '加入黑名单' }}</button>
+            <div class="set-divider"></div>
+            <button type="button" class="set-item danger" @click="deleteFriend"><el-icon><Delete /></el-icon>删除好友</button>
           </div>
-          <div class="set-item" @click="toggleBlacklist" v-if="!isBlockedByThem">
-            <el-icon><WarningFilled /></el-icon>
-            <span>{{ isBlacklisted ? '移出黑名单' : '加入黑名单' }}</span>
-          </div>
-          <div class="set-item disabled" v-else>
-            <el-icon><WarningFilled /></el-icon>
-            <span>对方已将你拉黑</span>
-          </div>
-          <div class="set-divider"></div>
-          <div class="set-item danger" @click="deleteFriend">
-            <el-icon><Delete /></el-icon>
-            <span>删除好友</span>
-          </div>
-        </div>
-        <template #reference>
-          <el-icon class="left-icon" size="25">
-            <MoreFilled />
-          </el-icon>
-        </template>
-      </el-popover>
-      <div class="accountInfo">
-        <img :src="friendBaseInfo?.avatar" alt="">
-        <div class="accountInfo-info">
-          <p>用户名: {{ friendBaseInfo?.username }}</p>
-          <span>账号: {{ friendBaseInfo?.account }} </span>
-          <div v-show="userOnlineStatus" class="online-status">在线</div>
-          <div v-show="!userOnlineStatus" class="offline-status">离线</div>
-        </div>
-      </div>
-      <div class="baseInfo">
-        <div>备注: {{ friendBaseInfo?.remark || '暂无备注' }}
-        </div>
-        <div>性别:
-          <span v-if="friendBaseInfo?.gender === 1">
-            男 <el-icon
-              style="color: #409eff; font-size: 16px; filter: drop-shadow(0 0 2px #409eff); vertical-align: middle; margin-left: 4px;">
-              <Male />
-            </el-icon>
-          </span>
-          <span v-else-if="friendBaseInfo?.gender === 0">
-            女 <el-icon
-              style="color: #ff8acc; font-size: 16px; filter: drop-shadow(0 0 2px #ff8acc); vertical-align: middle; margin-left: 4px;">
-              <Female />
-            </el-icon>
-          </span>
-        </div>
-        <div>手机号: {{ friendBaseInfo?.phone }}</div>
-        <div>邮箱: {{ friendBaseInfo?.email }}</div>
-        <div>地址: {{ friendBaseInfo?.address }}</div>
-        <div>生日: {{ friendBaseInfo?.birthday }}</div>
-      </div>
-      <FriendMomentsPreview :user-id="friendBaseInfo ? String(friendBaseInfo.friendId) : undefined" :profile="friendBaseInfo" />
-      <div class="button">
-        <el-button @click="sendMessage">发消息</el-button>
-        <el-button>语音聊天</el-button>
-        <el-button>视频聊天</el-button>
-      </div>
-    </div>
-  </div>
+          <template #reference><button type="button" class="left-icon" aria-label="联系人更多操作"><el-icon><MoreFilled /></el-icon></button></template>
+        </el-popover>
+      </header>
+      <dl class="baseInfo">
+        <div><dt>备注</dt><dd>{{ friendBaseInfo.remark || '暂无备注' }}</dd></div>
+        <div><dt>性别</dt><dd>{{ Number(friendBaseInfo.gender) === 1 ? '男' : Number(friendBaseInfo.gender) === 0 && friendBaseInfo.gender != null ? '女' : '未填写' }}</dd></div>
+        <div><dt>手机号</dt><dd>{{ friendBaseInfo.phone || '未填写' }}</dd></div>
+        <div><dt>邮箱</dt><dd>{{ friendBaseInfo.email || '未填写' }}</dd></div>
+        <div><dt>地址</dt><dd>{{ friendBaseInfo.address || '未填写' }}</dd></div>
+        <div><dt>生日</dt><dd>{{ friendBaseInfo.birthday || '未填写' }}</dd></div>
+      </dl>
+      <FriendMomentsPreview :user-id="String(friendBaseInfo.friendId)" :profile="friendBaseInfo" />
+      <footer class="button"><el-button type="primary" @click="sendMessage">发消息</el-button><el-button @click="setRemark">设置备注</el-button><el-button disabled title="暂未支持">语音聊天</el-button><el-button disabled title="暂未支持">视频聊天</el-button></footer>
+    </article>
+  </main>
 </template>
 
 <script lang="ts" setup>
 import { watch, ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Edit, WarningFilled, Delete, MoreFilled, Male, Female } from '@element-plus/icons-vue'
+import { Edit, WarningFilled, Delete, MoreFilled } from '@element-plus/icons-vue'
 import { friendInfo } from '@/stores/modules/ContactListStore'
 import { conversationInfo } from '@/stores/modules/ConversationStore'
 import { messageInfo } from '@/stores/modules/MessageStore'
@@ -91,6 +53,8 @@ const friendInfoStore = friendInfo()
 const conversationStore = conversationInfo()
 const messageStore = messageInfo()
 const friendBaseInfo = ref<Friend>()
+const loadingProfile = ref(false)
+const profileError = ref('')
 
 // 判断是否在黑名单中（我拉黑了对方，status = 2）
 const isBlacklisted = computed(() => {
@@ -271,10 +235,19 @@ const sendMessage = async () => {
 }
 
 const loadFriendInfo = async (friendId: any) => {
-  // 获得好友的信息
   friendBaseInfo.value = undefined
-  const info = await getFriendInfoById(friendId)
-  if (String(route.query.friendId) === String(friendId)) friendBaseInfo.value = info
+  loadingProfile.value = true
+  profileError.value = ''
+  try {
+    const info = await getFriendInfoById(friendId)
+    if (String(route.query.friendId) !== String(friendId)) return
+    if (!info) throw new Error('没有找到此联系人的资料')
+    friendBaseInfo.value = info
+  } catch (error) {
+    if (String(route.query.friendId) === String(friendId)) profileError.value = error instanceof Error ? error.message : '资料加载失败，请重试'
+  } finally {
+    if (String(route.query.friendId) === String(friendId)) loadingProfile.value = false
+  }
 }
 
 // 好友是否在线
@@ -293,425 +266,32 @@ watch(
 </script>
 
 <style scoped>
-.friendInfo-count {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-
-.userInfo {
-  width: 660px;
-  height: 580px;
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  background: rgba(70, 100, 130, 0.2);
-  backdrop-filter: blur(12px);
-  border-radius: 15px;
-  border: 1px solid var(--color-border-subtle);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-  gap: 8px;
-  -webkit-app-region: no-drag;
-}
-
-.left-icon {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  -webkit-app-region: no-drag;
-  width: 30px;
-  height: 30px;
-  margin: 0;
-  font-size: 20px;
-  background-color: transparent;
-  border: none;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.left-icon:hover {
-  color: var(--color-text-primary);
-  text-shadow: 0 0 6px rgba(255, 255, 255, 0.25);
-}
-
-.accountInfo {
-  width: 100%;
-  height: 120px;
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  padding: 10px 20px;
-  background: rgba(var(--color-surface-rgb), 0.4);
-  border-radius: 8px;
-  align-items: center;
-}
-
-img {
-  width: 100px;
-  height: 100px;
-  border-radius: 8px;
-  border: 2px solid var(--color-border-subtle);
-}
-
-.accountInfo-info {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 8px;
-}
-
-.accountInfo-info p,
-.accountInfo-info span,
-.online-status {
-  color: var(--color-text-primary);
-  font-size: 14px;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-.accountInfo-info p {
-  font-size: 18px;
-  font-weight: 600;
-}
-
-.online-status {
-  color: rgba(102, 217, 102, 0.9);
-  font-weight: 500;
-  position: relative;
-  padding-left: 16px;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-.online-status::before {
-  content: '';
-  background-color: rgba(102, 217, 102, 0.95);
-  border-radius: 50%;
-  width: 10px;
-  height: 10px;
-  position: absolute;
-  top: 50%;
-  left: 0;
-  transform: translateY(-50%);
-  box-shadow: 0 0 4px rgba(102, 217, 102, 0.6);
-  border: 1px solid var(--color-border-subtle);
-}
-
-.offline-status {
-  color: rgba(150, 150, 150, 0.9);
-  font-weight: 500;
-  position: relative;
-  padding-left: 16px;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-.offline-status::before {
-  content: '';
-  background-color: rgba(150, 150, 150, 0.95);
-  border-radius: 50%;
-  width: 10px;
-  height: 10px;
-  position: absolute;
-  top: 50%;
-  left: 0;
-  transform: translateY(-50%);
-  border: 1px solid var(--color-border-subtle);
-}
-
-.baseInfo {
-  width: 100%;
-  height: 220px;
-  padding: 15px 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  background: rgba(var(--color-surface-rgb), 0.4);
-  border-radius: 8px;
-}
-
-.baseInfo div {
-  color: var(--color-text-secondary);
-  font-size: 14px;
-  line-height: 1.5;
-}
-
-.baseInfo div::before {
-  content: "• ";
-  color: var(--color-text-muted);
-}
-
-.button {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 15px;
-  padding: 0 10px;
-}
-
-.el-button {
-  background: rgba(var(--color-surface-rgb), 0.4);
-  border: 1px solid var(--color-border-subtle);
-  color: var(--color-text-primary);
-  border-radius: 6px;
-  transition: all 0.2s ease;
-}
-
-.el-button:hover {
-  background: rgba(var(--color-surface-rgb), 0.4);
-  border-color: var(--color-border-subtle);
-}
-
-/* Popover 内部菜单样式 */
-.setButton {
-  padding: 4px 0;
-}
-
-.set-divider {
-  height: 1px;
-  background: rgba(0, 0, 0, 0.08);
-  margin: 4px 8px;
-}
-
-.set-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 13px;
-  color: #333;
-  transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
-}
-
-.set-item:hover {
-  background: rgba(52, 119, 217, 0.12);
-  color: #3477d9;
-  transform: translateX(2px);
-}
-
-.set-item.danger {
-  color: #ff4757;
-}
-
-.set-item.danger:hover {
-  background: rgba(255, 71, 87, 0.1);
-  color: #ff4757;
-  transform: translateX(2px);
-}
-
-.set-item.disabled {
-  color: rgba(255, 71, 87, 0.5);
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-/* ===== 全局弹窗样式（通过 :global 穿透 scoped） ===== */
-
-/* Popover 弹出动画 */
-:global(.friend-pop-transition-enter-active) {
-  transition:
-    transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275),
-    opacity 0.2s ease;
-}
-:global(.friend-pop-transition-leave-active) {
-  transition:
-    transform 0.15s cubic-bezier(0.6, -0.28, 0.735, 0.045),
-    opacity 0.15s ease;
-}
-:global(.friend-pop-transition-enter-from) {
-  opacity: 0;
-  transform: scale(0.92) translateY(-4px);
-}
-:global(.friend-pop-transition-enter-to) {
-  opacity: 1;
-  transform: scale(1) translateY(0);
-}
-:global(.friend-pop-transition-leave-from) {
-  opacity: 1;
-  transform: scale(1) translateY(0);
-}
-:global(.friend-pop-transition-leave-to) {
-  opacity: 0;
-  transform: scale(0.95) translateY(-2px);
-}
-
-/* 好友备注弹窗 */
-:global(.friend-remark-dialog) {
-  background: var(--color-bg-deep) !important;
-  border: 1px solid rgba(var(--color-accent-rgb), 0.25) !important;
-  border-radius: 14px !important;
-  backdrop-filter: blur(20px) !important;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35) !important;
-  padding: 0 !important;
-  overflow: hidden;
-}
-
-:global(.friend-remark-dialog .el-message-box__header) {
-  padding: 20px 24px 12px !important;
-  border-bottom: 1px solid rgba(var(--color-accent-rgb), 0.1) !important;
-}
-
-:global(.friend-remark-dialog .el-message-box__title) {
-  color: var(--color-text-primary) !important;
-  font-size: 16px !important;
-  font-weight: 600 !important;
-}
-
-:global(.friend-remark-dialog .el-message-box__headerbtn .el-message-box__close) {
-  color: var(--color-text-muted) !important;
-}
-
-:global(.friend-remark-dialog .el-message-box__headerbtn:hover .el-message-box__close) {
-  color: var(--color-accent) !important;
-}
-
-:global(.friend-remark-dialog .el-message-box__content) {
-  padding: 16px 24px 20px !important;
-  color: var(--color-text-secondary) !important;
-}
-
-:global(.friend-remark-dialog .el-message-box__message p) {
-  color: var(--color-text-secondary) !important;
-  font-size: 14px !important;
-}
-
-:global(.friend-remark-dialog .el-message-box__input .el-input__wrapper) {
-  background: rgba(var(--color-surface-rgb), 0.8) !important;
-  border: 1px solid rgba(var(--color-accent-rgb), 0.25) !important;
-  border-radius: 8px !important;
-  box-shadow: none !important;
-}
-
-:global(.friend-remark-dialog .el-message-box__input .el-input__wrapper.is-focus) {
-  border-color: var(--color-accent) !important;
-  box-shadow: 0 0 8px rgba(var(--color-accent-rgb), 0.2) !important;
-}
-
-:global(.friend-remark-dialog .el-message-box__input .el-input__inner) {
-  color: var(--color-text-primary) !important;
-}
-
-:global(.friend-remark-dialog .el-message-box__btns) {
-  padding: 12px 24px 20px !important;
-  display: flex !important;
-  gap: 12px !important;
-  justify-content: flex-end !important;
-}
-
-:global(.friend-remark-dialog .el-message-box__btns .el-button) {
-  border-radius: 8px !important;
-  padding: 8px 20px !important;
-  font-size: 14px !important;
-  transition: all 0.2s ease !important;
-}
-
-:global(.friend-remark-dialog .el-message-box__btns .el-button--default) {
-  background: rgba(var(--color-surface-rgb), 0.8) !important;
-  border: 1px solid rgba(var(--color-accent-rgb), 0.25) !important;
-  color: var(--color-text-secondary) !important;
-}
-
-:global(.friend-remark-dialog .el-message-box__btns .el-button--default:hover) {
-  background: rgba(var(--color-accent-rgb), 0.1) !important;
-  border-color: rgba(var(--color-accent-rgb), 0.4) !important;
-  color: var(--color-accent) !important;
-}
-
-:global(.friend-remark-dialog .el-message-box__btns .el-button--primary) {
-  background: rgba(var(--color-accent-rgb), 0.2) !important;
-  border: 1px solid rgba(var(--color-accent-rgb), 0.5) !important;
-  color: var(--color-accent) !important;
-}
-
-:global(.friend-remark-dialog .el-message-box__btns .el-button--primary:hover) {
-  background: rgba(var(--color-accent-rgb), 0.35) !important;
-  border-color: rgba(var(--color-accent-rgb), 0.7) !important;
-  box-shadow: 0 0 12px rgba(var(--color-accent-rgb), 0.25) !important;
-}
-
-/* 好友操作确认弹窗 */
-:global(.friend-action-dialog) {
-  background: var(--color-bg-deep) !important;
-  border: 1px solid rgba(var(--color-accent-rgb), 0.25) !important;
-  border-radius: 14px !important;
-  backdrop-filter: blur(20px) !important;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35) !important;
-  padding: 0 !important;
-  overflow: hidden;
-}
-
-:global(.friend-action-dialog .el-message-box__header) {
-  padding: 20px 24px 12px !important;
-  border-bottom: 1px solid rgba(var(--color-accent-rgb), 0.1) !important;
-}
-
-:global(.friend-action-dialog .el-message-box__title) {
-  color: var(--color-text-primary) !important;
-  font-size: 16px !important;
-  font-weight: 600 !important;
-}
-
-:global(.friend-action-dialog .el-message-box__headerbtn .el-message-box__close) {
-  color: var(--color-text-muted) !important;
-}
-
-:global(.friend-action-dialog .el-message-box__headerbtn:hover .el-message-box__close) {
-  color: var(--color-accent) !important;
-}
-
-:global(.friend-action-dialog .el-message-box__content) {
-  padding: 16px 24px 20px !important;
-  color: var(--color-text-secondary) !important;
-}
-
-:global(.friend-action-dialog .el-message-box__message p) {
-  color: var(--color-text-secondary) !important;
-  font-size: 14px !important;
-}
-
-:global(.friend-action-dialog .el-message-box__status .el-icon) {
-  color: #ff884d !important;
-}
-
-:global(.friend-action-dialog .el-message-box__btns) {
-  padding: 12px 24px 20px !important;
-  display: flex !important;
-  gap: 12px !important;
-  justify-content: flex-end !important;
-}
-
-:global(.friend-action-dialog .el-message-box__btns .el-button) {
-  border-radius: 8px !important;
-  padding: 8px 20px !important;
-  font-size: 14px !important;
-  transition: all 0.2s ease !important;
-}
-
-:global(.friend-action-dialog .el-message-box__btns .el-button--default) {
-  background: rgba(var(--color-surface-rgb), 0.8) !important;
-  border: 1px solid rgba(var(--color-accent-rgb), 0.25) !important;
-  color: var(--color-text-secondary) !important;
-}
-
-:global(.friend-action-dialog .el-message-box__btns .el-button--default:hover) {
-  background: rgba(var(--color-accent-rgb), 0.1) !important;
-  border-color: rgba(var(--color-accent-rgb), 0.4) !important;
-  color: var(--color-accent) !important;
-}
-
-:global(.friend-action-dialog .el-message-box__btns .el-button--primary) {
-  background: rgba(var(--color-accent-rgb), 0.2) !important;
-  border: 1px solid rgba(var(--color-accent-rgb), 0.5) !important;
-  color: var(--color-accent) !important;
-}
-
-:global(.friend-action-dialog .el-message-box__btns .el-button--primary:hover) {
-  background: rgba(var(--color-accent-rgb), 0.35) !important;
-  border-color: rgba(var(--color-accent-rgb), 0.7) !important;
-  box-shadow: 0 0 12px rgba(var(--color-accent-rgb), 0.25) !important;
-}
+.friendInfo-count { width: 100%; height: 100%; overflow-y: auto; padding: 56px 32px 24px; background: var(--color-chat-surface); -webkit-app-region: no-drag; }
+.userInfo { width: min(680px, 100%); margin: 0 auto; padding: 24px; display: flex; flex-direction: column; gap: 20px; border: 1px solid var(--color-border-subtle); border-radius: var(--radius-xl); background: var(--color-bg-deep); }
+.profile-kicker { color: var(--color-text-muted); font-size: 10px; letter-spacing: 1.5px; }
+.accountInfo { position: relative; display: flex; align-items: center; gap: 20px; padding-right: 32px; }
+.profile-avatar { width: 80px; height: 80px; border-radius: var(--radius-lg); object-fit: cover; border: 1px solid var(--color-border-subtle); flex-shrink: 0; }
+.accountInfo-info { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+h1 { font-size: 25px; line-height: 1.3; font-weight: 650; color: var(--color-text-strong); overflow-wrap: anywhere; }
+.profile-username, .profile-account { color: var(--color-text-secondary); font-size: 12px; overflow-wrap: anywhere; }
+.profile-status { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--color-text-muted); }
+.profile-status i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.profile-status.online { color: var(--color-success); }
+.left-icon { position: absolute; top: 0; right: 0; display: grid; place-items: center; width: 32px; height: 32px; font-size: 21px; color: var(--color-text-secondary); border-radius: var(--radius-sm); cursor: var(--cursor-pointer, pointer); }
+.left-icon:hover { background: var(--color-surface-2); color: var(--color-text-primary); }
+.baseInfo { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 24px; padding: 20px 0; border-top: 1px solid var(--color-border-subtle); border-bottom: 1px solid var(--color-border-subtle); }
+.baseInfo > div { min-width: 0; }
+dt { margin-bottom: 6px; color: var(--color-text-muted); font-size: 11px; }
+dd { color: var(--color-text-primary); font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; user-select: text; }
+:deep(.friend-moments) { background: var(--color-surface-1); border-radius: var(--radius-md); }
+.button { display: flex; flex-wrap: wrap; gap: 10px; padding-top: 4px; }
+.button .el-button { min-width: 88px; margin: 0; }
+.setButton { display: flex; flex-direction: column; gap: 4px; }
+.set-item { display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px; color: var(--color-text-primary); font: inherit; font-size: 13px; border-radius: var(--radius-sm); cursor: var(--cursor-pointer, pointer); }
+.set-item:hover { background: var(--color-surface-2); }
+.set-item.danger { color: var(--color-danger); }
+.set-item:disabled { color: var(--color-text-muted); cursor: var(--cursor-not-allowed, not-allowed); }
+.set-divider { height: 1px; background: var(--color-border-subtle); margin: 4px 0; }
+.profile-state { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 80px 24px; color: var(--color-text-secondary); font-size: 13px; }
+@media (max-width: 900px) { .friendInfo-count { padding: 52px 24px 24px; } .userInfo { padding: 20px; } .profile-avatar { width: 64px; height: 64px; } h1 { font-size: 22px; } }
 </style>

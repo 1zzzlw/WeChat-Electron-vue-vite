@@ -2,7 +2,7 @@
     <div class="collect-list">
         <div class="collect-list-left">
             <div class="collect-top">
-                <AutocompleteSearch />
+                <AutocompleteSearch @select-contact="openContact" @select-conversation="openConversation" @select-message="openMessage" />
             </div>
             <div class="collect-mid">
                 <el-button @click="createNote">新建笔记</el-button>
@@ -20,7 +20,7 @@
             <div class="collect-bottom">
                 <el-collapse :expand-icon-position="'left'">
                     <el-collapse-item title="标签">
-                        <div class="left-list"></div>
+                        <p class="tags-empty">暂无标签</p>
                     </el-collapse-item>
                 </el-collapse>
             </div>
@@ -35,14 +35,39 @@
 </template>
 <script setup lang="ts">
 import ChatWelcome from '@/components/ChatWelcome.vue'
+import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
+import { conversationInfo } from '@/stores/modules/ConversationStore'
+import { getConversationInfoById, updateConversation } from '@/db/dualDB'
+import { formatMessageTime } from '@/utils/utils'
+import type { Conversation } from '@/types/conversation'
+import type { Friend } from '@/types/friend'
+import type { LocalMessageMatch } from '@/types/localSearch'
 import AutocompleteSearch from '@/components/AutocompleteSearch.vue';
 
+const router = useRouter()
+const conversationStore = conversationInfo()
+const openContact = (friend: Friend) => router.push({ path: '/friendInfo', query: { friendId: String(friend.friendId) } })
+const openConversation = (conversation: Conversation, messageId?: string) => {
+    conversationStore.setConversationMap(conversation.id, { ...conversation, status: 1, latestMsgTime: formatMessageTime(conversation.latestMsgTime) })
+    updateConversation({ id: conversation.id }, { status: 1 })
+    router.push({ path: '/chat', query: { conversationId: conversation.id, ...(messageId ? { messageId } : {}) } })
+}
+const openMessage = async (message: LocalMessageMatch) => {
+    try {
+        const conversation = await getConversationInfoById(message.conversationId)
+        if (!conversation) throw new Error('会话不存在')
+        openConversation(conversation, message.id)
+    } catch { ElMessage.error('暂时无法打开此会话，请重试') }
+}
 const createNote = () => {
     (window as any).windowToolApi.createNewWindow('createNote')
 }
 </script>
 <style scoped>
 @import "@/css/layout.css";
+
+.tags-empty { padding: 12px; color: var(--color-text-muted); font-size: 12px; cursor: default; }
 
 .collect-mid {
     border-bottom: 1px solid var(--color-border-subtle) !important;

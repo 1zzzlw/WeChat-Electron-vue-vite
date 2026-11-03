@@ -39,14 +39,16 @@ function createWindow(options) {
 }
 
 app.whenReady().then(async () => {
-    const data = new Map([['wallpaperPath', pathToFileURL(path.join(root, 'public/wallpaper/1.jpg')).href]])
+    const data = new Map()
     ipcMain.on('theme:initial', event => { event.returnValue = 'light' })
+    ipcMain.on('style:initial', event => { event.returnValue = 'ai-native' })
+    ipcMain.handle('style:get', () => 'ai-native')
     ipcMain.handle('theme:get', () => 'light')
     ipcMain.handle('window:getUserInfo', (_event, key) => data.get(key))
     ipcMain.handle('window:setUserInfo', (_event, key, value) => data.set(key, value))
     ipcMain.handle('query:conversation', () => [])
     ipcMain.handle('query:friend', () => [])
-    main = createWindow({ width: 300, height: 370 })
+    main = createWindow({ width: 400, height: 580 })
     let visible = true
     let frame = null
     main.show = () => {

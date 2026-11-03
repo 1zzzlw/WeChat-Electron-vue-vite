@@ -3,15 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>正在准备 · EasyChat</title>
+  <title>正在准备 · Lumina</title>
   <link rel="stylesheet" href="theme.css">
   <style>
     * { margin: 0; box-sizing: border-box; }
     body { height: 100vh; overflow: hidden; color: var(--color-text-primary); background: var(--color-loading-background); font: 14px var(--font-family); user-select: none; }
-    .container { height: 100%; display: flex; flex-direction: column; align-items: center; background: radial-gradient(ellipse at 50% 38%, var(--color-loading-glow), transparent 65%); border: 1px solid #ffffff99; backdrop-filter: blur(20px); }
+    .container { height: 100%; display: flex; flex-direction: column; align-items: center; background: radial-gradient(ellipse at 50% 38%, var(--color-loading-glow), transparent 65%); border: 1px solid var(--color-border-subtle); }
     header { align-self: stretch; padding: 22px 28px; color: var(--color-text-secondary); font-size: 12px; letter-spacing: 2px; -webkit-app-region: drag; }
     header span { color: var(--color-accent); margin-right: 8px; }
     canvas { width: min(360px, 80vw); height: 240px; }
+    header small { float: right; font-size: 10px; letter-spacing: 1px; }
+    :root[data-ui-style="swiss"] h1 { font-weight: 800; letter-spacing: -1px; }
     h1 { margin-top: 4px; font-size: 23px; font-weight: 600; letter-spacing: 1px; }
     .description { margin-top: 12px; color: var(--color-text-muted); font-size: 13px; }
     .status { min-height: 56px; margin-top: 25px; display: grid; place-items: center; }
@@ -21,10 +23,10 @@
     .working i:nth-child(2) { animation-delay: .2s; }
     .working i:nth-child(3) { animation-delay: .4s; }
     button { padding: 10px 30px; border-radius: var(--radius-md); border: 1px solid var(--color-border-primary); color: var(--color-accent); background: var(--color-accent-soft); font: inherit; cursor: var(--cursor-pointer, pointer); transition: background var(--transition-fast); }
-    button:hover { background: #a4d4f144; }
+    button:hover { background: var(--color-surface-3); }
     button:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; }
     button:disabled { opacity: .5; cursor: var(--cursor-wait, wait); }
-    footer { margin-top: auto; padding: 20px; font-size: 11px; letter-spacing: 1px; color: var(--color-text-muted); }
+    footer { margin-top: auto; padding: 20px; font-size: 12px; letter-spacing: 1px; color: var(--color-text-muted); }
     [hidden] { display: none !important; }
     @keyframes breathe { 0%,100% { opacity: .25; transform: translateY(0); } 50% { opacity: 1; transform: translateY(-4px); } }
     @media (prefers-reduced-motion: reduce) { .working i { animation: none; opacity: .7; } }
@@ -32,7 +34,7 @@
 </head>
 <body>
   <main class="container">
-    <header><span>◈</span> EASYCHAT</header>
+    <header><span>im</span> LUMINA <small>/ CONNECTING</small></header>
     <canvas aria-hidden="true"></canvas>
     <h1>让连接，即刻发生</h1>
     <p class="description" role="status" aria-live="polite">正在同步你的会话与联系人…</p>

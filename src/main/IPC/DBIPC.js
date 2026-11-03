@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron'
 import { store } from '../shared.js'
-import { queryConversation, queryFriend, loadMessage, getFriendInfoById, getConversationInfoById, getImageUrlList, getVideoUrlList, getFavorites, getFavoritesAll, getNodeCount } from '../DB/select'
+import { searchLocal, queryConversation, queryFriend, loadMessage, getFriendInfoById, getConversationInfoById, getImageUrlList, getVideoUrlList, getFavorites, getFavoritesAll, getNodeCount } from '../DB/select'
 import { saveSentMessage, saveLoadMessage, addConversation, addFriendRelation, uploadNoteContent, addFavorites } from '../DB/insert'
 import { updateConversation, updateMessage, updateOldNoteContent, updateFriendRelation } from '../DB/update'
 import { clearHistoryMessage, deleteMessage, deleteFriend, deleteConversation, deleteFavorite } from '../DB/delete'
@@ -48,6 +48,11 @@ safeHandle('query:conversation', () => {
   return queryConversation(userId)
 })
 
+safeHandle('search:local', (_event, request) => {
+  const userId = store.get('userId')
+  return searchLocal(userId, request?.query, request?.scope === 'contacts' ? 'contacts' : 'all')
+})
+
 safeHandle('query:friend', () => {
   const userId = store.get('userId')
   console.log('用户', userId, '查询好友')
@@ -56,7 +61,7 @@ safeHandle('query:friend', () => {
 
 safeHandle('load:message', (_event, conversationId, messagePageInfo) => {
   console.log(`查询会话${conversationId}的分页信息`, messagePageInfo)
-  return loadMessage(conversationId, messagePageInfo)
+  return loadMessage(conversationId, messagePageInfo, store.get('userId'))
 })
 
 safeHandle('query:friendInfo', (_event, friendId) => {

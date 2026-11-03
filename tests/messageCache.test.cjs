@@ -98,6 +98,8 @@ async function run() {
         })
         const api = evaluate(viewCode.code, {
             messageStore: store, effectiveConvId: vue.computed(() => currentId.value),
+            searchMessageId: vue.ref(''), locatingSearch: vue.ref(false),
+            focusLoadedMessages: () => { scrollCount++ },
             props, noMore, fileInfoList: vue.ref([]), quoteMessage: vue.ref(null), voiceVisible: vue.ref(false),
             getMessageList: dbApi.getMessageList, saveLoadMessage() {},
             getGroupMemberList: async () => {}, nextTick: vue.nextTick,

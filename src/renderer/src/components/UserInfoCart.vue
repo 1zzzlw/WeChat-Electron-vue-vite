@@ -6,7 +6,7 @@
       <div class="avatar-container">
         <img :src="avatarUrl" alt="用户头像" class="cart-top-img" />
         <!-- 在线状态标识 -->
-        <div class="online-status"></div>
+        <div class="online-status" :class="{ connected: isConnected }" role="status" :aria-label="connectionLabel" :title="connectionLabel"></div>
       </div>
 
       <!-- 用户名和账号等核心信息 -->
@@ -52,12 +52,15 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, computed } from 'vue'
+import { onMounted, onUnmounted, ref, computed } from 'vue'
 import { Male, Female, Iphone } from '@element-plus/icons-vue'
 import { friendInfo } from '@/stores/modules/ContactListStore'
 import { conversationInfo } from '@/stores/modules/ConversationStore'
 import '@/assets/iconfont/iconfont.css'
 import { getNodeCount } from '@/db/dualDB'
+import { useConnectionStatus } from '@/composables/useConnectionStatus'
+
+const { isConnected, connectionLabel } = useConnectionStatus()
 
 const friendInfoStore = friendInfo()
 const conversationStore = conversationInfo()
@@ -68,6 +71,7 @@ const account = ref('')          // 用户账号
 const phone = ref('')            // 手机号
 const gender = ref(-1)           // 性别 1-男 0-女 -1-未知
 const noteCount = ref(0)         // 笔记数量
+let stopProfileListener: (() => void) | undefined
 
 // 加载用户信息
 const loadUserInfo = async () => {
@@ -88,9 +92,14 @@ const loadCountInfo = async () => {
 
 // 组件挂载时加载数据
 onMounted(() => {
+  stopProfileListener = (window as any).userInfoApi.onProfileChanged(({ key, value }: { key: string; value: any }) => {
+    const fields = { avatar: avatarUrl, username: userName, account, phone, gender }
+    if (key in fields) fields[key as keyof typeof fields].value = value
+  })
   loadUserInfo()
   loadCountInfo()
 })
+onUnmounted(() => stopProfileListener?.())
 </script>
 
 <style scoped>
@@ -143,10 +152,10 @@ onMounted(() => {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: #4cd964;
-  border: 2px solid rgba(25, 30, 40, 0.7);
-  box-shadow: 0 0 4px rgba(76, 217, 100, 0.4);
+  background: var(--color-text-muted);
+  border: 2px solid var(--color-bg-deep);
 }
+.online-status.connected { background: var(--color-success); }
 
 .cart-top-mid {
   flex: 1;

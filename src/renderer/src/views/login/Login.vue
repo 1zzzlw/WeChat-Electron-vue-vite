@@ -1,13 +1,14 @@
 <template>
   <div class="login-count">
-    <span></span>
+    <div class="auth-brand"><b>im</b><span>LUMINA / CONNECT</span></div>
     <div class="login-top">
-      <h1 class="title">登录</h1>
+      <h1 class="title">欢迎回来</h1>
+      <p class="auth-subtitle">登录 Lumina，让对话继续。</p>
     </div>
     <div class="login-mid">
-      <el-form class="login-form" :model="loginForm" ref="ruleFormRef" :rules="rules" @keyup.enter="handleEnterLogin">
-        <el-form-item prop="username">
-          <el-input placeholder="请输入账号" v-model="loginForm.account" spellcheck="false" clearable>
+      <el-form label-position="top" class="login-form" :model="loginForm" ref="ruleFormRef" :rules="rules" @keyup.enter="handleEnterLogin">
+        <el-form-item prop="account" label="账号">
+          <el-input autocomplete="username" placeholder="请输入账号" v-model="loginForm.account" spellcheck="false" clearable>
             <template #prepend>
               <el-icon>
                 <User />
@@ -16,8 +17,8 @@
           </el-input>
         </el-form-item>
 
-        <el-form-item prop="password">
-          <el-input placeholder="请输入密码" type="password" v-model="loginForm.password" spellcheck="false" clearable>
+        <el-form-item prop="password" label="密码">
+          <el-input autocomplete="current-password" placeholder="请输入密码" type="password" v-model="loginForm.password" spellcheck="false" clearable>
             <template #prepend>
               <el-icon>
                 <Lock />
@@ -26,18 +27,18 @@
           </el-input>
         </el-form-item>
 
-        <el-form-item prop="verifyCode" class="login-verify">
+        <el-form-item label="验证码" prop="verifyCode" class="login-verify">
           <el-input placeholder="请输入验证码" v-model="loginForm.verifyCode" spellcheck="false" clearable />
-          <img :src="verifyCodeImg" alt="验证码" class="login-verifyImg" @click="refreshVerifyCode" />
+          <button type="button" class="verify-refresh" aria-label="刷新验证码" @click="refreshVerifyCode"><img :src="verifyCodeImg" alt="验证码" class="login-verifyImg" /></button>
         </el-form-item>
         <div class="login-form-button">
           <el-button type="primary" @click="Login(ruleFormRef)" :loading="isLoading">登录</el-button>
-          <el-button type="primary" @click="Register">注册</el-button>
+          <el-button @click="Register">注册账号</el-button>
         </div>
       </el-form>
     </div>
     <div class="login-bottom">
-      <router-link to="" class="login-bottom-reset">重置密码</router-link>
+      欢迎回来，继续你的对话。
     </div>
   </div>
   <WindowControls :showSetTop="false" :showSetMiniSize="false" :showSetFullScreen="false" windowType="mainWindow" />
@@ -142,40 +143,8 @@ const Register = () => {
 
 <style scoped>
 @import '@/css/account.css';
-
-
-
-.login-mid {
-  -webkit-app-region: no-drag;
-}
-
-.login-verify {
-  display: flex;
-  flex-wrap: nowrap;
-  width: 100%;
-}
-
-.login-verify .el-input {
-  /* 让输入框占据剩余空间 */
-  flex: 1;
-  /* 增加输入框和图片之间的间距 */
-  margin-right: 10px;
-}
-
-.login-verifyImg {
-  width: auto;
-  height: 40px;
-}
-
-.login-bottom {
-  display: flex;
-  justify-content: end;
-  margin-top: 20px;
-  font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
-  font-style: italic;
-  text-align: center;
-  color: #ffffff;
-  text-decoration: underline;
-  -webkit-app-region: no-drag;
-}
+.login-verify :deep(.el-form-item__content) { flex-wrap: nowrap; gap: 10px; }
+.login-verify .el-input { flex: 1; min-width: 0; }
+.verify-refresh { display: grid; place-items: center; width: 96px; height: 42px; overflow: hidden; border-radius: var(--radius-sm); background: var(--color-surface-2); cursor: var(--cursor-pointer, pointer); }
+.login-verifyImg { width: 96px; height: 40px; object-fit: contain; }
 </style>

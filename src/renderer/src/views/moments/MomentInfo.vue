@@ -667,7 +667,7 @@ onUnmounted(() => {
 
 .empty-nav {
     text-align: center;
-    color: rgba(var(--color-accent-rgb), 0.3);
+    color: var(--color-text-accent);
     font-size: 12px;
     margin-top: 20px;
 }
@@ -868,7 +868,7 @@ onUnmounted(() => {
 
 .likes-label {
     font-size: 13px;
-    color: rgba(var(--color-accent-rgb), 0.8);
+    color: var(--color-text-accent);
     font-weight: 500;
 }
 
@@ -994,7 +994,7 @@ onUnmounted(() => {
 
 .comment-time {
     font-size: 11px;
-    color: rgba(var(--color-accent-rgb), 0.6);
+    color: var(--color-text-accent);
 }
 
 .comment-actions {
@@ -1009,7 +1009,7 @@ onUnmounted(() => {
     padding: 4px 8px;
     border-radius: 4px;
     font-size: 12px;
-    color: rgba(var(--color-accent-rgb), 0.7);
+    color: var(--color-text-accent);
     cursor: pointer;
     transition: all 0.3s ease;
     background: rgba(var(--color-accent-rgb), 0.08);
@@ -1052,7 +1052,7 @@ onUnmounted(() => {
 }
 
 .reply-to {
-    color: rgba(var(--color-accent-rgb), 0.7);
+    color: var(--color-text-accent);
     margin: 0 4px;
 }
 
@@ -1064,7 +1064,7 @@ onUnmounted(() => {
     margin-top: 8px;
     padding: 6px 12px;
     font-size: 12px;
-    color: rgba(var(--color-accent-rgb), 0.7);
+    color: var(--color-text-accent);
     background: rgba(var(--color-accent-rgb), 0.08);
     border-radius: 4px;
     cursor: pointer;
@@ -1181,7 +1181,7 @@ onUnmounted(() => {
     padding: 10px 0;
     text-align: center;
     font-size: 13px;
-    color: rgba(var(--color-accent-rgb), 0.7);
+    color: var(--color-text-accent);
     background: rgba(var(--color-accent-rgb), 0.08);
     border-radius: 6px;
     cursor: pointer;
@@ -1268,7 +1268,7 @@ onUnmounted(() => {
 
 .tip-text {
     font-size: 12px;
-    color: rgba(var(--color-accent-rgb), 0.5);
+    color: var(--color-text-accent);
 }
 
 .send-btn {

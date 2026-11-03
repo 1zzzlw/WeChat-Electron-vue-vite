@@ -1,3 +1,4 @@
+import { refs, getTrayIcon, getIconPath } from './shared.js'
 import {
   app,
   shell,
@@ -11,21 +12,19 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { loadDeferredIPC } from './IPC/index.js'
 import { initTable, initTableColumnsMap, close as closeDB } from './DB/mainDB.js'
 import websocket from './websocket.js'
-import { refs, getTrayIcon } from './shared.js'
 import { initializeTheme, applyWindowTheme } from './Util/theme.js'
+import { logout } from './Util/logout.js'
 
 // 向后兼容：重导出供未迁移的模块使用
 export { store, refs, getIconPath, getTrayIcon, getEmptyTrayIcon } from './shared.js'
 
-const login_width = 300
-const login_height = 370
+const login_width = 400
+const login_height = 580
 
-app.setAppUserModelId('com.easychat.im')
+app.setAppUserModelId('com.lumina.agent')
 
 function createMainWindow() {
-  const iconPath = app.isPackaged
-    ? join(process.resourcesPath, 'icon.png')
-    : join(__dirname, '../../resources/icon.png')
+  const iconPath = getIconPath()
 
   const win = new BrowserWindow({
     icon: iconPath,
@@ -54,7 +53,7 @@ function createMainWindow() {
 
   win.on('ready-to-show', () => {
     win.show()
-    win.setTitle('EasyChat')
+    win.setTitle('Lumina · 微光')
 
     const { session } = win.webContents
     session.webRequest.onBeforeSendHeaders((details, callback) => {
@@ -82,7 +81,7 @@ function createMainWindow() {
 
 function createTray() {
   const template = [
-    { label: '退出登录' },
+    { label: '退出登录', click: () => { void logout().catch(error => console.error('退出登录失败', error)) } },
     {
       label: '退出应用',
       click: () => {
@@ -93,7 +92,7 @@ function createTray() {
   ]
   const menu = Menu.buildFromTemplate(template)
   const trayInstance = new Tray(getTrayIcon())
-  trayInstance.setToolTip('IM 客户端')
+  trayInstance.setToolTip('Lumina · 微光')
   trayInstance.setContextMenu(menu)
   trayInstance.on('click', () => {
     refs.mainWindow?.show()
@@ -104,10 +103,12 @@ function createTray() {
 
 app.whenReady().then(() => {
   initializeTheme()
-  electronApp.setAppUserModelId('com.easychat.im')
+  electronApp.setAppUserModelId('com.lumina.agent')
 
   app.on('browser-window-created', (_, window) => {
     applyWindowTheme(window)
+    window.setIcon(getIconPath())
+    if (process.platform === 'win32') window.setAppDetails({ appId: 'com.lumina.agent', appIconPath: getIconPath(), appIconIndex: 0 })
     optimizer.watchWindowShortcuts(window)
   })
 

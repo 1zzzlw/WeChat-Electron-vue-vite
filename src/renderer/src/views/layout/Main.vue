@@ -24,9 +24,9 @@
             <UserFilled />
           </el-icon>
         </router-link>
-        <router-link to="/aiWorkspace" class="left-icon" title="AI 工作台">
+        <router-link to="/aiWorkspace" class="left-icon" title="AI 伙伴" aria-label="AI 伙伴">
           <el-icon size="30">
-            <MagicStick />
+            <CompanionIcon />
           </el-icon>
         </router-link>
         <router-link to="/collectList" class="left-icon">
@@ -62,8 +62,9 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue'
-import { ChatRound, UserFilled, Star, MoreFilled, Wallet, MagicStick } from '@element-plus/icons-vue'
+import { ref, onMounted, onUnmounted } from 'vue'
+import { ChatRound, UserFilled, Star, MoreFilled, Wallet } from '@element-plus/icons-vue'
+import CompanionIcon from '@/components/CompanionIcon.vue'
 import WindowControls from '@/components/WindowControls.vue'
 import UserOnlineStatus from '@/components/UserOnlineStatus.vue'
 import UserInfoCart from '@/components/UserInfoCart.vue'
@@ -74,6 +75,7 @@ import { conversationInfo } from '@/stores/modules/ConversationStore'
 const avatarUrl = ref('')
 const conversationStore = conversationInfo()
 const containerRef = ref(null)
+let stopProfileListener: (() => void) | undefined
 
 const openSettingView = () => {
   console.info('openSettingView');
@@ -81,12 +83,14 @@ const openSettingView = () => {
 }
 
 onMounted(async () => {
+  stopProfileListener = (window as any).userInfoApi.onProfileChanged(({ key, value }: { key: string; value: string }) => { if (key === 'avatar') avatarUrl.value = value })
   // 从本地存储中获取头像
   avatarUrl.value = await (window as any).userInfoApi.storeGetUserInfo('avatar');
 
   // 进入main界面开始注册快捷键
   (window as any).windowToolApi.registerGlobalShortcut()
 })
+onUnmounted(() => stopProfileListener?.())
 </script>
 
 <style scoped>
@@ -103,7 +107,7 @@ onMounted(async () => {
   justify-content: space-between;
   width: 80px;
   background: var(--color-nav-surface);
-  backdrop-filter: blur(12px);
+  backdrop-filter: var(--surface-filter);
   border-right: 1px solid var(--color-border-subtle);
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
 }
@@ -126,7 +130,7 @@ onMounted(async () => {
 .main-count-left-top-img {
   width: 50px;
   height: 50px;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   margin: 15px;
   box-shadow: var(--shadow-sm);
   transition: all 0.3s ease;
@@ -157,7 +161,7 @@ onMounted(async () => {
 }
 
 .message-nav { position: relative; }
-.message-nav-badge { position: absolute; top: -3px; right: -6px; min-width: 18px; height: 18px; padding: 0 4px; box-sizing: border-box; display: grid; place-items: center; border: 2px solid var(--color-nav-surface); border-radius: 12px; background: #ef5267; color: #fff; font-size: 10px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; box-shadow: 0 2px 7px rgba(213, 57, 83, .2); }
+.message-nav-badge { position: absolute; top: -3px; right: -6px; min-width: 18px; height: 18px; padding: 0 4px; box-sizing: border-box; display: grid; place-items: center; border: 2px solid var(--color-nav-surface); border-radius: var(--radius-lg); background: #ef5267; color: #fff; font-size: 10px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; box-shadow: 0 2px 7px rgba(213, 57, 83, .2); }
 
 .iconfont {
   font-size: 30px;
@@ -168,7 +172,7 @@ onMounted(async () => {
 
 .left-icon:hover {
   opacity: 1;
-  color: rgba(var(--color-accent-rgb), 0.9);
+  color: var(--color-text-accent);
   background: var(--color-accent-soft);
   text-shadow: 0 0 8px rgba(var(--color-accent-rgb), 0.4);
 }
@@ -238,8 +242,8 @@ onMounted(async () => {
 /* 优化popover容器样式，贴合整体界面风格 */
 :global(.user-card-popover) {
   background: rgba(var(--color-surface-rgb), 0.65) !important;
-  backdrop-filter: blur(20px) !important;
-  -webkit-backdrop-filter: blur(20px) !important;
+  backdrop-filter: var(--surface-filter) !important;
+  -webkit-backdrop-filter: var(--surface-filter) !important;
   border: 1px solid var(--color-border-subtle) !important;
   box-shadow: 0 8px 40px rgba(0, 0, 0, 0.3) !important;
   border-radius: 12px !important;
@@ -253,8 +257,8 @@ onMounted(async () => {
   background: rgba(var(--color-surface-rgb), 0.65) !important;
   border: 1px solid var(--color-border-subtle) !important;
   /* 【优化9】给箭头增加轻微模糊，和容器风格统一 */
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: var(--surface-filter);
+  -webkit-backdrop-filter: var(--surface-filter);
 }
 
 /* 增加popover的hover效果，强化交互 */

@@ -1,21 +1,19 @@
 <template>
   <div class="uploadAvatar-count">
-    <span></span>
+    <div class="auth-brand"><b>im</b><span>LUMINA / CONNECT</span></div>
     <div class="register-top">
-      <h1 class="title">注册</h1>
-    </div>
-    <div class="uploadAvatar-top">
-      <div class="title">上传头像</div>
+      <h1 class="title">给对话一张面孔</h1>
+      <p class="auth-subtitle">03 / 上传头像，完成注册。</p>
     </div>
     <div class="uploadAvatar-mid">
-      <img v-if="imageUrl" :src="imageUrl" class="avatar" alt="头像" />
-      <el-icon v-else class="avatar-uploader-icon" @click="handleClick">
-        <Plus />
-      </el-icon>
+      <button type="button" class="avatar-picker" aria-label="选择或更换头像" @click="handleClick">
+        <img v-if="imageUrl" :src="imageUrl" class="avatar" alt="已选择的头像" />
+        <el-icon v-else class="avatar-uploader-icon" aria-hidden="true"><Plus /></el-icon>
+      </button>
       <input ref="fileInput" style="display: none" type="file" accept="image/*" @change="handleFileChange">
     </div>
     <div class="uploadAvatar-bottom">
-      <el-button type="primary" @click="returnStep">返回</el-button>
+      <el-button @click="returnStep">上一步</el-button>
       <el-button type="primary" @click="submitForm">完成</el-button>
     </div>
   </div>
@@ -130,70 +128,8 @@ onMounted(() => {
 
 <style scoped>
 @import '@/css/account.css';
-
-.title {
-  text-align: center;
-  color: #fff;
-  /* 适配深色背景的白色文字 */
-}
-
-/* 上传区域：调整尺寸+hover效果 */
-.uploadAvatar-mid {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  -webkit-app-region: no-drag;
-  width: 180px;
-  /* 适配头像显示尺寸 */
-  height: 180px;
-  margin: 30px auto;
-}
-
-/* 已上传头像：加圆角+hover放大 */
-.avatar {
-  width: 100%;
-  height: 100%;
-  border-radius: 8px;
-  /* 轻微圆角更精致 */
-  transition: transform 0.2s ease;
-}
-
-.avatar:hover {
-  transform: scale(1.03);
-  /* 头像hover轻微放大 */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  /* 增强阴影 */
-}
-
-/* 上传图标：调整样式+hover效果 */
-.avatar-uploader-icon {
-  font-size: 40px;
-  color: rgba(255, 255, 255, 0.7);
-  /* 浅白图标适配背景 */
-  cursor: pointer;
-  transition: color 0.2s ease;
-}
-
-.avatar-uploader-icon:hover {
-  color: #ff76e0;
-  /* 注册页粉紫调hover色 */
-}
-
-/* 底部按钮：hover效果 */
-.uploadAvatar-bottom {
-  display: flex;
-  margin-top: 30px;
-  -webkit-app-region: no-drag;
-  justify-content: space-around;
-}
-
-/* 给el-button加hover效果 */
-:deep(.el-button) {
-  transition: all 0.2s ease;
-}
-
-:deep(.el-button:hover) {
-  transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
-}
+.uploadAvatar-mid { display: grid; place-items: center; padding: 24px 0; }
+.avatar-picker { display: grid; place-items: center; width: 144px; height: 144px; border: 1px dashed var(--color-border-primary); border-radius: var(--radius-lg); background: var(--color-surface-1); cursor: var(--cursor-pointer, pointer); overflow: hidden; }
+.avatar { width: 100%; height: 100%; object-fit: cover; }
+.avatar-uploader-icon { font-size: 32px; color: var(--color-accent); }
 </style>
