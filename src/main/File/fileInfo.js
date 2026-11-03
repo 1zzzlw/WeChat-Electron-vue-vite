@@ -351,7 +351,7 @@ function formatCommandOutput(stdout, stderr) {
 
 /**
  * 在工作区根目录执行白名单内的命令。
- * 用 spawn + 参数数组，不拼接 shell 字符串。
+ * 原生程序使用参数数组；Windows 批处理通过 cmd.exe 启动并校验、引用参数。
  */
 async function runWorkspaceCommand(request) {
     const { workspaceName, command, args, timeoutSeconds } = request ?? {}
@@ -360,7 +360,7 @@ async function runWorkspaceCommand(request) {
 
     const program = (command || '').trim()
     const argumentList = Array.isArray(args) ? args.map(String) : []
-    if (!COMMAND_RULES[program]) {
+    if (!Object.hasOwn(COMMAND_RULES, program)) {
         throw new Error(`命令不在允许范围内：${program || '空'}`)
     }
     if (argumentList.length > 20) throw new Error('命令参数过多')
@@ -378,19 +378,26 @@ async function runWorkspaceCommand(request) {
         }
     }
 
-    // Windows 下 npm/pnpm 需要走 .cmd
-    const executable = process.platform === 'win32' && !program.includes('.')
-        ? `${program}.cmd`
-        : program
+    const isWindows = process.platform === 'win32'
+    const isBatch = isWindows && ['npm', 'pnpm', 'yarn', 'npx'].includes(program)
+    let executable = isWindows ? `${program}.exe` : program
+    let launchArgs = argumentList
+    if (isBatch) {
+        // .cmd 不能直接交给 CreateProcess；仅这一分支进入命令解释器。
+        // 引号、变量替换和控制符不允许进入 cmd，防止参数被重新解释为命令。
+        if (argumentList.some((arg) => /["&|<>^()%!]/.test(arg)
+            || Array.from(arg).some((char) => char.charCodeAt(0) < 32))) {
+            throw new Error('Windows 命令参数包含不支持的控制符，请拆成普通参数')
+        }
+        const quotedArgs = argumentList.map((arg) => `"${arg.replace(/(\\+)$/, '$1$1')}"`)
+        executable = process.env?.ComSpec || 'cmd.exe'
+        launchArgs = ['/d', '/v:off', '/s', '/c', `"${program}.cmd ${quotedArgs.join(' ')}"`]
+    }
     const limitMs = Math.max(5, Math.min(Number(timeoutSeconds) || 60, 110)) * 1000
 
     return await new Promise((resolve) => {
         let settled = false
-        const child = spawn(executable, argumentList, {
-            cwd: rootDir,
-            shell: false,
-            windowsHide: true
-        })
+        let timer = null
         let stdout = ''
         let stderr = ''
 
@@ -400,14 +407,26 @@ async function runWorkspaceCommand(request) {
             clearTimeout(timer)
             resolve(result)
         }
-        const timer = setTimeout(() => {
+        let child
+        try {
+            child = spawn(executable, launchArgs, {
+                cwd: rootDir,
+                shell: false,
+                windowsHide: true,
+                windowsVerbatimArguments: isBatch
+            })
+        } catch (error) {
+            finish({ success: false, error: `无法启动 ${program}：${error.message}` })
+            return
+        }
+        timer = setTimeout(() => {
             child.kill('SIGKILL')
             finish({ success: false, error: `命令执行超过 ${limitMs / 1000} 秒已终止` })
         }, limitMs)
 
         child.stdout.on('data', (chunk) => { stdout += chunk.toString() })
         child.stderr.on('data', (chunk) => { stderr += chunk.toString() })
-        child.on('error', (error) => finish({ success: false, error: error.message }))
+        child.on('error', (error) => finish({ success: false, error: `无法启动 ${program}：${error.message}` }))
         child.on('close', (code) => {
             // 退出码非 0 也把输出交给模型看，编译错误本身就是有效信息
             finish({

@@ -50,7 +50,11 @@
       </div>
     </div>
     <div class="main-count-right">
-      <router-view></router-view>
+      <router-view v-slot="{ Component }">
+        <KeepAlive include="AgentWorkspacePage">
+          <component :is="Component" />
+        </KeepAlive>
+      </router-view>
     </div>
   </div>
   <WindowControls windowType="mainWindow" />

@@ -343,6 +343,9 @@ export const messageInfo = defineStore('messageInfo', {
     },
     // 删除一条消息
     deleteMessage(conversationId: string, messageId: string) {
+      // 显式删除同时释放待确认引用；清理界面缓存则仍保留 ACK 跟踪。
+      this.pendingMessages.delete(messageId)
+      if (this.pendingMessages.size === 0) this.stopTimeoutChecker()
       if (this.messageMap[conversationId]) {
         this.messageMap[conversationId] = this.messageMap[conversationId].filter(
           (msg) => msg.id !== messageId

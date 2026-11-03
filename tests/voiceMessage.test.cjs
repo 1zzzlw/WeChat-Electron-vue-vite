@@ -44,8 +44,10 @@ async function transferHarness() {
     const uploads = new Map()
     const callbacks = {}
     const sent = []
+    const failures = []
     const store = {
         getFileMessage: id => messages.get(id), removeFileMessage: id => messages.delete(id),
+        markMessageFailed: (id, error) => failures.push({ id, error }),
         sendFileMessage: (message, conversationId, receivers) => sent.push({ ...message, conversationId, receivers })
     }
     const state = {
@@ -65,7 +67,7 @@ async function transferHarness() {
     const message = { id: '7520640156303511552', fileId: 'voice', msgType: 4, conversationId: 'g_test', receiverIds: ['200'], remoteUrl: '' }
     messages.set('voice', message)
     uploads.set('voice', { uploadStatus: 'uploading' })
-    return { message, sent, messages, ready: () => sendUploadedFileIfReady('voice'),
+    return { message, sent, messages, failures, ready: () => sendUploadedFileIfReady('voice'),
         finish: status => callbacks.finish({}, { fileId: 'voice', status }) }
 }
 
@@ -93,6 +95,7 @@ test('REST finishing first also waits for upload, and failed upload never sends'
     h.ready()
     assert.equal(h.sent.length, 0)
     assert.equal(h.message.sendStatus, 2)
+    assert.ok(h.failures.some((failure) => failure.id === h.message.id && failure.error === '文件上传失败'))
     await h.finish(1)
     assert.equal(h.sent.length, 1)
 })
@@ -134,8 +137,8 @@ test('a failed audio chunk reports failure to its source and stops the file work
             setImmediate(() => onChunk({ task: { fileId, currentFileIndex: 0, chunkHash: 'hash', blob: new Blob(['audio']) } }))
             return { stop: () => { stopped = true } }
         },
-        verifyFileUpload: async () => ({ data: { verify: 'ticket', minioFilePath: 'voice/test' } }),
-        checkUploaded: async () => ({ data: [] }),
+        verifyFileUpload: async () => ({ code: 1, data: { verify: 'ticket', minioFilePath: 'voice/test' } }),
+        checkUploaded: async () => ({ code: 1, data: [] }),
         uploadFileChunk: async () => { throw new Error('offline') },
         AbortController, FormData, Blob, console: { log() {}, error() {} }
     })

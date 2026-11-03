@@ -33,7 +33,7 @@ async function run() {
     const component = parse(fs.readFileSync(path.join(root, 'src/renderer/src/views/chat/ChatBase.vue'), 'utf8')).descriptor
     const script = component.scriptSetup.content
     const ast = babelParse(script, { sourceType: 'module', plugins: ['typescript'] })
-    const variables = new Set(['messagePageInfo', 'messageLoadVersion', 'retainedConversationId'])
+    const variables = new Set(['messagePageInfo', 'messageLoadVersion', 'retainedConversationId', 'refreshInitializedMessages'])
     // 提取组件真实的缓存生命周期、分页函数和监听器，隔离模板及无关聊天功能。
     const selected = ast.program.body.filter(node => {
         if (node.type === 'VariableDeclaration') return node.declarations.some(item => variables.has(item.id.name))
@@ -41,6 +41,8 @@ async function run() {
         if (node.type !== 'ExpressionStatement' || node.expression.type !== 'CallExpression') return false
         const call = node.expression
         return call.callee.name === 'onUnmounted' ||
+            (call.callee.type === 'MemberExpression' && call.callee.object.name === 'emitter' &&
+                call.callee.property.name === 'on' && call.arguments[0]?.value === 'data:initialized') ||
             (call.callee.name === 'watch' && (
                 call.arguments[0].name === 'effectiveConvId' || call.arguments[0].type === 'ArrayExpression'
             ))
@@ -77,8 +79,9 @@ async function run() {
         const serverRequests = []
         const stops = []
         const unmounts = []
+        const listeners = new Map()
         const currentId = vue.ref('a')
-        const props = vue.reactive({ conversation: { id: 'a', type: 0 } })
+        const props = vue.reactive({ userId: 'A', conversation: { id: 'a', type: 0 } })
         const noMore = vue.ref(false)
         let scrollCount = 0
         const dbApi = evaluate(dbSource + '\nmodule.exports = { getMessageList };', {
@@ -100,6 +103,12 @@ async function run() {
             getGroupMemberList: async () => {}, nextTick: vue.nextTick,
             scrollToBottom: () => { scrollCount++ },
             removeCaptureListener() {},
+            emitter: {
+                on: (name, handler) => listeners.set(name, handler),
+                off: (name, handler) => {
+                    if (listeners.get(name) === handler) listeners.delete(name)
+                }
+            },
             watch: (...args) => { const stop = vue.watch(...args); stops.push(stop); return stop },
             onUnmounted: callback => unmounts.push(callback)
         })
@@ -118,6 +127,7 @@ async function run() {
             dispose() {
                 stops.forEach(stop => stop())
                 unmounts.forEach(callback => callback())
+                assert.equal(listeners.size, 0)
             }
         }
     }

@@ -5,6 +5,8 @@ import type {
   AgentConversation,
   AgentMessage,
   AgentMode,
+  AgentPlanStep,
+  AgentPlanStepStatus,
   AgentToolStep
 } from '@/types/agentWorkspace'
 
@@ -139,6 +141,29 @@ export const useAgentWorkspaceStore = defineStore('agentWorkspace', {
 
       if (message) message.reasoningContent = content
     },
+    setAssistantPlan(conversationId: string, messageId: string, steps: AgentPlanStep[]) {
+      const conversation = this.conversations.find((item) => item.id === conversationId)
+      const message = conversation?.messages.find((item) => item.id === messageId)
+      if (!conversation || !message || message.status !== 'streaming') return
+
+      message.planSteps = steps.map((step) => ({ ...step }))
+      conversation.updatedAt = Date.now()
+    },
+    updatePlanStep(
+      conversationId: string,
+      messageId: string,
+      stepId: string,
+      status: AgentPlanStepStatus
+    ) {
+      const conversation = this.conversations.find((item) => item.id === conversationId)
+      const message = conversation?.messages.find((item) => item.id === messageId)
+      const step = message?.planSteps?.find((item) => item.id === stepId)
+      if (!conversation || !message || !step || message.status !== 'streaming') return
+
+      // 只根据对应的后端事件更新，整条消息结束时不批量打勾。
+      step.status = status
+      conversation.updatedAt = Date.now()
+    },
     startToolStep(conversationId: string, messageId: string, toolStep: AgentToolStep) {
       const conversation = this.conversations.find((item) => item.id === conversationId)
       const message = conversation?.messages.find((item) => item.id === messageId)
@@ -197,6 +222,9 @@ export const useAgentWorkspaceStore = defineStore('agentWorkspace', {
 
       message.content = errorMessage
       message.status = 'failed'
+      message.planSteps?.forEach((step) => {
+        if (step.status === 'running') step.status = 'failed'
+      })
       message.toolSteps?.forEach((step) => {
         if (step.status === 'running' || step.status === 'pending') {
           step.status = 'failed'
@@ -215,6 +243,9 @@ export const useAgentWorkspaceStore = defineStore('agentWorkspace', {
         : conversation?.messages.at(-1)
       if (message?.status === 'streaming') {
         message.status = 'completed'
+        message.planSteps?.forEach((step) => {
+          if (step.status === 'running' || step.status === 'pending') step.status = 'cancelled'
+        })
         message.toolSteps?.forEach((step) => {
           if (step.status === 'running' || step.status === 'pending') {
             step.status = 'failed'

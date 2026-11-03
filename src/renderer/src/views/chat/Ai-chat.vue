@@ -184,6 +184,8 @@
         </div>
 
         <div class="composer-area">
+          <AgentPlanPanel v-if="currentPlanMessage?.planSteps?.length" :key="currentPlanMessage.id"
+            :steps="currentPlanMessage.planSteps" />
           <div class="composer-shell" @dragover.prevent @drop.prevent="handleFileDrop">
             <div v-if="attachments.length > 0" class="attachment-list">
               <div v-for="attachment in attachments" :key="attachment.id" class="attachment-chip">
@@ -370,12 +372,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { computed, nextTick, onActivated, onBeforeUnmount, onDeactivated, onMounted, reactive, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import AgentActionDialog from '@/components/AgentActionDialog.vue'
 import AgentDropdown from '@/components/AgentDropdown.vue'
 import AgentModelConfigDialog from '@/components/AgentModelConfigDialog.vue'
+import AgentPlanPanel from '@/components/AgentPlanPanel.vue'
 import {
   DEFAULT_MODEL,
   type AIWorkspaceToolCompletedData,
@@ -432,6 +435,9 @@ import {
 } from '@/api/AIMessage'
 import { streamAIMessage } from '@/api/AIMessageStream'
 
+// 与主界面的 KeepAlive include 对应，路由切换保留当前请求和页面状态。
+defineOptions({ name: 'AgentWorkspacePage' })
+
 const agentWorkspaceStore = useAgentWorkspaceStore()
 const {
   activeConversationId,
@@ -446,9 +452,17 @@ const {
   selectedWorkspace
 } = storeToRefs(agentWorkspaceStore)
 
+// 任务栏只展示当前会话最近一轮回复的计划，避免沿用上一轮任务的进度。
+const currentPlanMessage = computed(() => {
+  const latestReply = [...messages.value].reverse().find((message) => message.role === 'assistant')
+  return latestReply?.planSteps?.length ? latestReply : undefined
+})
+
 const searchInputRef = ref<HTMLInputElement | null>(null)
 const composerInputRef = ref<HTMLTextAreaElement | null>(null)
 const messageThreadRef = ref<HTMLElement | null>(null)
+let isWorkspaceActive = false
+let scrollOnActivate = false
 const searchQuery = ref('')
 const isSearchOpen = ref(false)
 const isSidebarCollapsed = ref(false)
@@ -485,10 +499,17 @@ const branchOptions = ['main', 'develop', 'feature/agent-ui']
 const modelOptions = ref<ModelOption[]>([{ ...DEFAULT_MODEL }])
 
 const modeOptions: AgentModeOption[] = [
-  { value: 'Agent', label: 'Agent', description: '规划并执行多步骤任务' },
+  { value: 'Agent', label: 'Agent', description: '自主调用工具完成任务' },
   { value: '提问', label: '提问', description: '只分析和回答，不执行操作' },
-  { value: '规划', label: '规划', description: '仅生成可审查的实施计划' }
+  { value: '规划', label: '规划', description: '先生成计划，再立即执行任务' }
 ]
+
+// 界面名称与后端状态值分开，发送时使用统一的小写模式。
+const requestModeBySelection: Record<AgentMode, SendAIMessageRequest['mode']> = {
+  Agent: 'agent',
+  提问: 'chat',
+  规划: 'plan'
+}
 
 const historyMenuItems: AgentDropdownItem[] = [
   { value: 'refresh', label: '刷新消息', icon: Operation }
@@ -762,8 +783,17 @@ const focusComposer = async () => {
 }
 
 const scrollToBottom = async () => {
+  if (!isWorkspaceActive) {
+    scrollOnActivate = true
+    return
+  }
   await nextTick()
+  if (!isWorkspaceActive) {
+    scrollOnActivate = true
+    return
+  }
   if (messageThreadRef.value) messageThreadRef.value.scrollTop = messageThreadRef.value.scrollHeight
+  scrollOnActivate = false
 }
 
 const stopActiveSimulation = () => {
@@ -1235,6 +1265,7 @@ const handleWorkspaceToolRequest = async (
 const handleSubmit = async () => {
   if (!canSubmit.value || isGenerating.value) return
 
+  const mode = requestModeBySelection[selectedMode.value]
   const attachmentNames = attachments.value.map((attachment) => attachment.name).join('、')
   const content = [draft.value.trim(), attachmentNames ? `附件：${attachmentNames}` : '']
     .filter(Boolean)
@@ -1243,7 +1274,7 @@ const handleSubmit = async () => {
   agentWorkspaceStore.addUserMessage(conversationId, content)
   const messageId = agentWorkspaceStore.addAssistantPlaceholder(
     conversationId,
-    mockSettings.showToolSteps
+    mockSettings.showToolSteps && mode !== 'plan'
   )
 
   if (!messageId) return
@@ -1266,6 +1297,7 @@ const handleSubmit = async () => {
       role: 'user',
       messageType: 1,
       content,
+      mode,
       workspaceName: selectedWorkspace.value ?? undefined,
       config: {
         providerName: selectedModelOption.value.providerName,
@@ -1340,6 +1372,14 @@ const handleSubmit = async () => {
           conversationId,
           messageId
         ),
+        onPlanCreated: ({ steps }) => {
+          agentWorkspaceStore.setAssistantPlan(conversationId, messageId, steps)
+          void scrollToBottom()
+        },
+        onPlanStepUpdated: ({ stepId, status }) => {
+          agentWorkspaceStore.updatePlanStep(conversationId, messageId, stepId, status)
+          void scrollToBottom()
+        },
         onDone: () => {
           void scrollToBottom()
         }
@@ -1396,10 +1436,21 @@ onMounted(() => {
   void loadLocalWorkspaces()
   void loadModelConfigs()
   void loadMessageHistory()
+})
+
+onActivated(() => {
+  isWorkspaceActive = true
   window.addEventListener('keydown', handleGlobalShortcut)
+  if (scrollOnActivate) void scrollToBottom()
+})
+
+onDeactivated(() => {
+  isWorkspaceActive = false
+  window.removeEventListener('keydown', handleGlobalShortcut)
 })
 
 onBeforeUnmount(() => {
+  isWorkspaceActive = false
   window.removeEventListener('keydown', handleGlobalShortcut)
   stopActiveSimulation()
 })

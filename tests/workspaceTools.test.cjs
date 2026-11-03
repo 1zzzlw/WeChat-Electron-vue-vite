@@ -16,6 +16,9 @@ async function run() {
     let activeReads = 0
     let peakReads = 0
     const records = new Map()
+    const spawnCalls = []
+    const commandProcess = { platform: 'win32', env: { ComSpec: 'C:\\Windows\\System32\\cmd.exe' } }
+    let spawnError = null
     const trackedFs = {
         ...fsPromises,
         async readFile(...args) {
@@ -32,12 +35,18 @@ async function run() {
     const api = vm.runInNewContext(source + '\n({ registerWorkspace, executeWorkspaceTool, formatCommandOutput });', {
         fs: trackedFs, path, console, setTimeout, clearTimeout,
         shell: {},
-        process: { platform: 'win32' },
+        process: commandProcess,
         saveWorkspace: record => { records.set(record.name, record); return 1 },
         getWorkspaceByName: name => records.get(name),
         queryWorkspaceList: () => [...records.values()],
         // 这里只隔离子进程，验证真实 close 回调能处理非零退出及非空输出。
-        spawn: () => {
+        spawn: (executable, args, options) => {
+            spawnCalls.push({ executable, args: Array.from(args), options: { ...options } })
+            if (spawnError) {
+                const error = spawnError
+                spawnError = null
+                throw error
+            }
             const child = new EventEmitter()
             child.stdout = new EventEmitter()
             child.stderr = new EventEmitter()
@@ -129,6 +138,62 @@ async function run() {
             })
             assert.equal(result.success, true)
             assert.equal(result.content, '退出码 1\ncommand output\ncommand error')
+            assert.equal(spawnCalls.at(-1).executable, 'git.exe')
+            assert.deepEqual(spawnCalls.at(-1).args, ['status'])
+            assert.equal(spawnCalls.at(-1).options.shell, false)
+        })
+        await check('Windows 包管理工具通过 cmd.exe 启动并保留空格参数', async () => {
+            for (const program of ['npm', 'pnpm', 'yarn', 'npx']) {
+                const args = program === 'npx' ? ['tsc', '--noEmit'] : ['run', 'build', '--', 'src/中文 dir']
+                await api.executeWorkspaceTool({
+                    workspaceName: 'fixture', operation: 'command', command: program, args
+                })
+                const call = spawnCalls.at(-1)
+                assert.equal(call.executable, commandProcess.env.ComSpec)
+                assert.deepEqual(call.args.slice(0, 4), ['/d', '/v:off', '/s', '/c'])
+                assert.equal(call.args[4], `"${program}.cmd ${args.map(arg => `"${arg}"`).join(' ')}"`)
+                assert.equal(call.options.cwd, dir)
+                assert.equal(call.options.shell, false)
+                assert.equal(call.options.windowsHide, true)
+                assert.equal(call.options.windowsVerbatimArguments, true)
+            }
+        })
+        await check('Windows pytest 使用原生程序而不是不存在的 cmd 文件', async () => {
+            await api.executeWorkspaceTool({
+                workspaceName: 'fixture', operation: 'command', command: 'pytest', args: ['-q']
+            })
+            assert.equal(spawnCalls.at(-1).executable, 'pytest.exe')
+            assert.deepEqual(spawnCalls.at(-1).args, ['-q'])
+        })
+        await check('Windows 批处理参数拒绝控制符及变量展开', async () => {
+            const count = spawnCalls.length
+            for (const value of ['x&whoami', 'x|more', 'x>file', '%PATH%', '!PATH!', '"arg"', 'x\ny']) {
+                await assert.rejects(api.executeWorkspaceTool({
+                    workspaceName: 'fixture', operation: 'command', command: 'npm', args: ['test', value]
+                }), /不支持的控制符/)
+            }
+            assert.equal(spawnCalls.length, count)
+        })
+        await check('同步启动失败作为工具失败返回，不抛出 IPC 异常', async () => {
+            spawnError = new Error('spawn EINVAL')
+            const result = await api.executeWorkspaceTool({
+                workspaceName: 'fixture', operation: 'command', command: 'npm', args: ['test']
+            })
+            assert.equal(result.success, false)
+            assert.match(result.error, /无法启动 npm.*spawn EINVAL/)
+        })
+        await check('非 Windows 仍以独立参数直接启动程序', async () => {
+            commandProcess.platform = 'linux'
+            try {
+                await api.executeWorkspaceTool({
+                    workspaceName: 'fixture', operation: 'command', command: 'npm', args: ['test']
+                })
+                assert.equal(spawnCalls.at(-1).executable, 'npm')
+                assert.deepEqual(spawnCalls.at(-1).args, ['test'])
+                assert.equal(spawnCalls.at(-1).options.windowsVerbatimArguments, false)
+            } finally {
+                commandProcess.platform = 'win32'
+            }
         })
     } finally {
         assert.ok(path.resolve(dir).startsWith(path.resolve(os.tmpdir(), 'im-workspace-test-')))

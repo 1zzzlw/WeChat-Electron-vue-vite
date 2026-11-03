@@ -1,5 +1,7 @@
 export type {
   AgentModelRequestConfig,
+  AIPlanCreatedData,
+  AIPlanStepUpdatedData,
   AIWorkspaceToolCompletedData,
   AIWorkspaceToolExecutionResult,
   AIWorkspaceToolOperation,
@@ -26,6 +28,8 @@ export type {
   AgentMessageRole,
   AgentMessageStatus,
   AgentMode,
+  AgentPlanStep,
+  AgentPlanStepStatus,
   AgentToolStep,
   AgentToolStepStatus
 } from '@/types/agentWorkspace'

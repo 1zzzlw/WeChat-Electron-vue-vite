@@ -25,6 +25,7 @@ async function run() {
         const module = { exports: {} }
         const timers = new Map()
         const saved = []
+        const updated = []
         let now = 1000
         let timerId = 0
         const quiet = { log() {}, info() {}, warn() {} }
@@ -40,7 +41,9 @@ async function run() {
         store.addMessageMap('chat', message('old', '旧消息'))
         store.sendMessage(message('temporary', '新消息', 0), 'chat')
         const handleAck = vm.runInNewContext(handlerCode + '\nhandleAckMessage;', {
-            console: quiet, messageInfo: () => store, saveSentMessage: value => saved.push({ ...value })
+            console: quiet, messageInfo: () => store,
+            saveSentMessage: value => saved.push({ ...value }),
+            updateMessage: (condition, data) => updated.push({ condition: { ...condition }, data: { ...data } })
         })
         const ack = () => handleAck({ status: 0, tempId: 'temporary', messageId: 'server-id' })
         const timeout = () => { now = 7001; [...timers.values()].forEach(callback => callback()) }
@@ -56,7 +59,7 @@ async function run() {
             assert.equal(store.pendingMessages.has('temporary'), false)
         }
         try {
-            await scenario({ store, saved, timers, ack, timeout, verify, message })
+            await scenario({ store, saved, updated, timers, ack, timeout, verify, message })
             results.push({ name, status: 'PASS' })
         } catch (error) {
             results.push({ name, status: 'FAIL', error: error.stack })
@@ -79,14 +82,31 @@ async function run() {
         assert.equal(store.messageMap.chat.find(item => item.id === 'temporary').sendStatus, 2)
         ack(); verify()
     })
-    await check('服务端ID替换后重复ACK不重复保存', ({ timeout, ack, verify }) => {
+    await check('服务端ID替换后重复ACK不重复保存', ({ timeout, ack, verify, updated }) => {
         timeout(); ack(); ack(); verify()
+        assert.equal(updated.length, 1)
+        assert.equal(updated[0].condition.id, 'temporary')
+        assert.equal(updated[0].data.id, 'server-id')
+        assert.equal(updated[0].data.sendStatus, 1)
     })
     await check('消息已删除时ACK不写入其他消息', ({ store, ack, saved, timers }) => {
         store.deleteMessage('chat', 'temporary')
+        assert.equal(store.pendingMessages.has('temporary'), false)
+        assert.equal(timers.size, 0)
         ack()
         assert.equal(saved.length, 0)
         assert.equal(store.messageMap.chat[0].id, 'old')
+        assert.equal(timers.size, 0)
+    })
+    await check('仅清理会话缓存后ACK仍保存原待确认消息', ({ store, ack, saved, timers }) => {
+        store.clearConversationMessages('chat')
+        ack()
+        assert.equal(store.messageMap.chat, undefined)
+        assert.equal(saved.length, 1)
+        assert.equal(saved[0].id, 'server-id')
+        assert.equal(saved[0].content, '新消息')
+        assert.equal(saved[0].sendStatus, 1)
+        assert.equal(store.pendingMessages.size, 0)
         assert.equal(timers.size, 0)
     })
     await check('确认一条消息时保留其他待确认消息的计时器', ({ store, ack, timers, message }) => {

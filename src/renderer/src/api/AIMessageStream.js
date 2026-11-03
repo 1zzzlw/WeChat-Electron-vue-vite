@@ -77,6 +77,16 @@ async function dispatchStreamEvent(event, handlers, streamState) {
     return
   }
 
+  if (event.event === 'plan.created') {
+    handlers.onPlanCreated?.(eventData)
+    return
+  }
+
+  if (event.event === 'plan.step.updated') {
+    handlers.onPlanStepUpdated?.(eventData)
+    return
+  }
+
   if (event.event === 'run.failed') {
     throw new Error(eventData.message || '模型调用失败')
   }

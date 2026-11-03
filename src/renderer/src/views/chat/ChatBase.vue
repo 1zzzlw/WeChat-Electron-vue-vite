@@ -768,7 +768,11 @@ const getGroupMemberList = async () => {
 }
 
 // 用户提前跳过加载后，同步落库时补齐当前会话，不清除已经收到或正在发送的消息。
-const refreshInitializedMessages = async ({ userId }: { userId: string }) => {
+const refreshInitializedMessages = async (payload: unknown) => {
+  // 本地事件和跨窗口 IPC 共用入口，先校验数据再读取用户标识。
+  if (typeof payload !== 'object' || payload === null || !('userId' in payload)
+    || typeof payload.userId !== 'string') return
+  const { userId } = payload
   const conversationId = effectiveConvId.value
   if (!conversationId || userId !== String(props.userId)) return
   const version = ++messageLoadVersion

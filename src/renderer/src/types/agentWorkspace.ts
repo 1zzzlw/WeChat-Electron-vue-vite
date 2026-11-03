@@ -2,6 +2,13 @@ export type AgentMessageRole = 'user' | 'assistant'
 export type AgentMessageStatus = 'pending' | 'streaming' | 'completed' | 'failed'
 export type AgentToolStepStatus = 'pending' | 'running' | 'completed' | 'failed'
 export type AgentMode = 'Agent' | '提问' | '规划'
+export type AgentPlanStepStatus = AgentToolStepStatus | 'cancelled'
+
+export interface AgentPlanStep {
+  id: string
+  title: string
+  status: AgentPlanStepStatus
+}
 
 export interface AgentToolStep {
   id: string
@@ -18,6 +25,7 @@ export interface AgentMessage {
   status: AgentMessageStatus
   createdAt: number
   toolSteps?: AgentToolStep[]
+  planSteps?: AgentPlanStep[]
 }
 
 export interface AgentConversation {

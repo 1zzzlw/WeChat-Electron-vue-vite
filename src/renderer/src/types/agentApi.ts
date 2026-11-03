@@ -1,3 +1,5 @@
+import type { AgentPlanStep, AgentPlanStepStatus } from '@/types/agentWorkspace'
+
 export interface AgentModelRequestConfig {
   providerName: string
   modelName?: string
@@ -15,6 +17,7 @@ export interface SendAIMessageRequest {
   role: 'user'
   messageType: number
   content: string
+  mode: 'agent' | 'plan' | 'chat'
   imageUrl?: string
   personalityId?: string
   workspaceName?: string
@@ -109,6 +112,15 @@ export interface AIStreamDoneData {
   conversationId: string
 }
 
+export interface AIPlanCreatedData {
+  steps: AgentPlanStep[]
+}
+
+export interface AIPlanStepUpdatedData {
+  stepId: string
+  status: AgentPlanStepStatus
+}
+
 export interface AIStreamHandlers {
   onStarted?: (data: AIStreamStartedData) => void
   onReasoningDelta?: (delta: string, data: AIStreamReasoningDeltaData) => void
@@ -116,5 +128,7 @@ export interface AIStreamHandlers {
   onCompleted?: (data: AIStreamCompletedData) => void
   onToolRequest?: (data: AIWorkspaceToolRequest) => void | Promise<void>
   onToolCompleted?: (data: AIWorkspaceToolCompletedData) => void
+  onPlanCreated?: (data: AIPlanCreatedData) => void
+  onPlanStepUpdated?: (data: AIPlanStepUpdatedData) => void
   onDone?: (data: AIStreamDoneData) => void
 }
