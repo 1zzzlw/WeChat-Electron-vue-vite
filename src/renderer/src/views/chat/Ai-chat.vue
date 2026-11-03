@@ -468,7 +468,7 @@ const loadPage = async () => {
       service.value = null
     }
     const [statusResult, modelResult, historyResult] = await Promise.allSettled([
-      getAgentStatus(),
+      getAgentStatus(userId),
       getModelConfigs(userId),
       loadMessage(userId)
     ])
@@ -578,8 +578,11 @@ const sendMessage = async () => {
     const contentResult = await streamAIMessage(
       payload,
       {
-        onStarted: () => {
-          if (isCurrent()) markAccepted()
+        onStarted: ({ conversationId }) => {
+          if (isCurrent()) {
+            chat.conversationId = conversationId
+            markAccepted()
+          }
         },
         onDelta: (delta) => {
           if (isCurrent()) {
@@ -649,12 +652,20 @@ const openModelDialog = async (model?: ModelOption) => {
   }
   modelDialogOpen.value = true
 }
+const refreshServiceStatus = async () => {
+  try {
+    service.value = await getAgentStatus(chat.userId)
+  } catch {
+    service.value = null
+  }
+}
 const selectModel = async (model: ModelOption) => {
   if (modelBusy.value || isSending.value || selectedModel.value === model.id) return
   modelBusy.value = true
   try {
     await switchModelConfig({ userId: chat.userId, configId: model.isDefault ? null : model.id })
     chat.selectedModel = model.id
+    await refreshServiceStatus()
   } catch (error) {
     ElMessage.error(errorText(error, '模型切换失败'))
   } finally {
@@ -681,11 +692,12 @@ const saveModel = async (config: AgentModelConfig) => {
     const index = modelOptions.value.findIndex((model) => model.id === updated.id)
     if (index < 0) modelOptions.value.push(updated)
     else modelOptions.value[index] = updated
-    modelDialogOpen.value = false
     // 密钥不放入模型列表和 Pinia，发送时从已有运行期凭据入口读取。
     modelOptions.value.forEach((model) => {
       delete model.apiKey
     })
+    await refreshServiceStatus()
+    modelDialogOpen.value = false
     ElMessage.success('模型配置已保存')
   } catch (error) {
     ElMessage.error(errorText(error, '模型配置保存失败'))
@@ -776,6 +788,8 @@ textarea:focus-visible {
   align-items: center;
   gap: 10px;
   padding: 0 8px;
+  -webkit-app-region: drag;
+  user-select: none;
 }
 .brand-mark {
   display: grid;
@@ -906,6 +920,8 @@ textarea:focus-visible {
   padding: 18px 36px;
   border-bottom: 1px solid var(--color-border-subtle);
   box-sizing: border-box;
+  -webkit-app-region: drag;
+  user-select: none;
 }
 .section-caption {
   display: block;
@@ -924,6 +940,7 @@ textarea:focus-visible {
   align-items: center;
   gap: 8px;
   padding-right: 90px;
+  -webkit-app-region: no-drag;
 }
 .connection-status {
   display: flex;

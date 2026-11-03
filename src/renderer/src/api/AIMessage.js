@@ -1,7 +1,7 @@
 import request from '@/utils/axios/request'
 
 /** @returns {Promise<import('@/types/agentChat').AgentServiceStatus>} */
-export const getAgentStatus = () => request.get('/ai-message/status')
+export const getAgentStatus = (userId) => request.get('/ai-message/status', { params: { userId } })
 
 /** @returns {Promise<import('@/types/agentApi').SavedAIMessage[]>} */
 export const loadMessage = (userId, limit = 500) =>
