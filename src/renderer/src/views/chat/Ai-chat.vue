@@ -2,41 +2,35 @@
   <div class="agent-workbench">
     <aside class="agent-sidebar" aria-label="AI 伙伴导航">
       <div class="sidebar-brand">
-        <span class="brand-mark"
-          ><el-icon><CompanionIcon /></el-icon
-        ></span>
+        <span class="brand-mark"><el-icon>
+            <CompanionIcon />
+          </el-icon></span>
         <div><strong>IM Agent</strong><small>把日常留在对话里</small></div>
       </div>
       <div class="companion-card">
         <span class="companion-avatar" aria-hidden="true">AI</span>
-        <strong>你的 AI 伙伴</strong>
-        <span>从相识，慢慢了解彼此</span>
+        <strong>{{ person?.name || '你的 AI 伙伴' }}</strong>
+        <span>{{ person?.status || '从相识，慢慢了解彼此' }}</span>
       </div>
       <nav class="companion-nav">
-        <button
-          v-for="item in navigation"
-          :key="item.id"
-          type="button"
-          :aria-label="item.label"
-          :class="{ 'is-active': activeTab === item.id }"
-          :aria-current="activeTab === item.id ? 'page' : undefined"
-          @click="activeTab = item.id"
-        >
-          <el-icon><component :is="item.icon" /></el-icon><span>{{ item.label }}</span
-          ><span v-if="item.id === 'chat'" class="nav-marker" aria-hidden="true"></span>
+        <button v-for="item in navigation" :key="item.id" type="button" :aria-label="item.label"
+          :class="{ 'is-active': activeTab === item.id }" :aria-current="activeTab === item.id ? 'page' : undefined"
+          @click="activeTab = item.id">
+          <el-icon>
+            <component :is="item.icon" />
+          </el-icon><span>{{ item.label }}</span><span v-if="item.id === 'chat'" class="nav-marker"
+            aria-hidden="true"></span>
         </button>
       </nav>
       <div class="sidebar-note">
         <span class="note-line"></span>
         <p>一个聊天窗口，<br />一段持续发生的相处。</p>
       </div>
-      <button
-        class="sidebar-settings"
-        type="button"
-        :aria-pressed="activeTab === 'settings'"
-        @click="activeTab = 'settings'"
-      >
-        <el-icon><Setting /></el-icon>连接与设置
+      <button class="sidebar-settings" type="button" :aria-pressed="activeTab === 'settings'"
+        @click="activeTab = 'settings'">
+        <el-icon>
+          <Setting />
+        </el-icon>连接与设置
       </button>
     </aside>
 
@@ -49,7 +43,7 @@
           <h1>
             {{
               activeTab === 'chat'
-                ? '你的 AI 伙伴'
+                ? person?.name || '你的 AI 伙伴'
                 : activeTab === 'moments'
                   ? '朋友圈'
                   : '连接与设置'
@@ -57,72 +51,53 @@
           </h1>
         </div>
         <div v-if="activeTab === 'chat'" class="header-actions">
-          <span class="connection-status" role="status"
-            ><i :class="{ 'is-available': service?.available }"></i>{{ connectionLabel }}</span
-          >
-          <button
-            type="button"
-            class="icon-button"
-            :aria-pressed="searchOpen"
-            aria-label="搜索已加载的消息"
-            title="搜索已加载的消息"
-            @click="toggleSearch"
-          >
-            <el-icon><Search /></el-icon>
+          <span class="connection-status" role="status"><i :class="{ 'is-available': service?.available }"></i>{{
+            connectionLabel }}</span>
+          <button type="button" class="icon-button" :aria-pressed="searchOpen" aria-label="搜索已加载的消息" title="搜索已加载的消息"
+            @click="toggleSearch">
+            <el-icon>
+              <Search />
+            </el-icon>
           </button>
-          <button
-            type="button"
-            class="icon-button"
-            disabled
-            aria-label="语音通话暂未开放"
-            title="语音通话暂未开放"
-          >
-            <el-icon><Phone /></el-icon>
+          <button type="button" class="icon-button" :disabled="!person?.exists || person?.requiresCreation"
+            aria-label="语音通话" title="给伙伴打电话" @click="callOpen = true">
+            <el-icon>
+              <Phone />
+            </el-icon>
           </button>
         </div>
       </header>
 
       <template v-if="activeTab === 'chat'">
         <div v-if="searchOpen" class="chat-search">
-          <el-icon><Search /></el-icon
-          ><input
-            ref="searchInput"
-            v-model="searchQuery"
-            aria-label="搜索已加载的消息"
-            placeholder="搜索已加载的消息"
-            @keydown.esc="closeSearch"
-          />
-          <span>{{ filteredMessages.length }} 条</span
-          ><button
-            class="icon-button"
-            type="button"
-            aria-label="关闭搜索"
-            @click="closeSearch"
-          >
-            <el-icon><Close /></el-icon>
+          <el-icon>
+            <Search />
+          </el-icon><input ref="searchInput" v-model="searchQuery" aria-label="搜索已加载的消息" placeholder="搜索已加载的消息"
+            @keydown.esc="closeSearch" />
+          <span>{{ filteredMessages.length }} 条</span><button class="icon-button" type="button" aria-label="关闭搜索"
+            @click="closeSearch">
+            <el-icon>
+              <Close />
+            </el-icon>
           </button>
         </div>
-        <main
-          ref="thread"
-          class="chat-content"
-          :aria-busy="loading"
-          aria-label="与 AI 伙伴的聊天记录"
-        >
-          <div v-if="messages.length === 0" class="conversation-welcome">
+        <main ref="thread" class="chat-content" :aria-busy="loading" aria-label="与 AI 伙伴的聊天记录">
+          <AgentCharacterCreate v-if="person && (!person.exists || person.requiresCreation)" :user-id="chat.userId"
+            :config-id="selectedModelOption.isDefault ? undefined : selectedModelOption.id" @created="loadPage" />
+          <div v-else-if="messages.length === 0" class="conversation-welcome">
             <div class="welcome-symbol" aria-hidden="true">
-              <el-icon><CompanionIcon /></el-icon><span></span>
+              <el-icon>
+                <CompanionIcon />
+              </el-icon><span></span>
             </div>
             <span class="section-caption">每一次了解，都从一句话开始</span>
             <h2>今天，有什么想聊的吗？</h2>
             <p>聊聊刚发生的小事，分享一个念头，<br />或者，只是来打声招呼。</p>
             <div class="conversation-starters">
-              <button
-                v-for="prompt in starters"
-                :key="prompt"
-                type="button"
-                @click="chooseStarter(prompt)"
-              >
-                {{ prompt }}<el-icon><ArrowRight /></el-icon>
+              <button v-for="prompt in starters" :key="prompt" type="button" @click="chooseStarter(prompt)">
+                {{ prompt }}<el-icon>
+                  <ArrowRight />
+                </el-icon>
               </button>
             </div>
           </div>
@@ -141,26 +116,23 @@
                 <div class="message-column">
                   <div class="message-bubble">
                     {{ message.content
-                    }}<span
-                      v-if="message.status === 'streaming'"
-                      class="streaming-cursor"
-                      aria-hidden="true"
-                    ></span>
+                    }}<span v-if="message.status === 'streaming'" class="streaming-cursor" aria-hidden="true"></span>
+                    <AgentMedia v-for="part in mediaParts(message.parts)" :key="part.assetId" :user-id="chat.userId"
+                      :asset-id="part.assetId" :kind="part.type" />
                   </div>
-                  <span class="message-time"
-                    >{{ formatTime(message.createdAt)
-                    }}<span v-if="message.status === 'failed'" class="send-failed"> · 未发送</span
-                    ><span v-else-if="message.status === 'sending'"> · 发送中</span></span
-                  >
+                  <span class="message-time">{{ formatTime(message.createdAt)
+                    }}<span v-if="message.status === 'failed'" class="send-failed"> · 未发送</span><span
+                      v-else-if="message.status === 'sending'"> · 发送中</span></span>
                 </div>
               </article>
             </template>
           </div>
         </main>
-        <div class="composer-area">
+        <div v-if="person?.exists && !person?.requiresCreation" class="composer-area">
           <div v-if="notice || service?.available === false" class="service-notice" role="status">
-            <el-icon><InfoFilled /></el-icon
-            ><span>{{ notice || '聊天服务暂未开放，你可以先设置模型连接，或留下想说的话。' }}</span>
+            <el-icon>
+              <InfoFilled />
+            </el-icon><span>{{ notice || '聊天服务暂未开放，你可以先设置模型连接，或留下想说的话。' }}</span>
             <button type="button" :disabled="loading || isSending" @click="loadPage">
               重新连接
             </button>
@@ -168,49 +140,44 @@
           <form class="composer-shell" @submit.prevent="sendMessage">
             <div class="composer-toolbar">
               <div>
-                <button
-                  type="button"
-                  class="icon-button"
-                  disabled
-                  aria-label="图片消息暂未开放"
-                  title="图片消息暂未开放"
-                >
-                  <el-icon><Picture /></el-icon></button
-                ><button
-                  type="button"
-                  class="icon-button"
-                  disabled
-                  aria-label="短语音暂未开放"
-                  title="短语音暂未开放"
-                >
-                  <el-icon><Microphone /></el-icon>
+                <button type="button" class="icon-button" :disabled="mediaBusy || !person?.exists" aria-label="发送图片"
+                  title="发送图片" @click="fileInput?.click()">
+                  <el-icon>
+                    <Picture />
+                  </el-icon></button><button type="button" class="icon-button" :disabled="mediaBusy || !person?.exists"
+                  :aria-label="recording ? '结束录音' : '录制短语音'" :title="recording ? '点击结束录音' : '录制短语音'"
+                  @click="toggleRecording">
+                  <el-icon>
+                    <Microphone />
+                  </el-icon>
                 </button>
               </div>
               <button class="model-shortcut" type="button" @click="activeTab = 'settings'">
-                <el-icon><Connection /></el-icon><span>{{ selectedModelOption.configName }}</span
-                ><el-icon><ArrowRight /></el-icon>
+                <el-icon>
+                  <Connection />
+                </el-icon><span>{{ selectedModelOption.configName }}</span><el-icon>
+                  <ArrowRight />
+                </el-icon>
+              </button>
+            </div>
+            <input ref="fileInput" class="sr-only" type="file" accept="image/png,image/jpeg,image/webp"
+              @change="selectImage" />
+            <div v-if="mediaBusy || recording || attachments.length" class="attachment-strip" role="status">
+              <span v-if="mediaBusy">正在理解媒体…</span><span v-if="recording">正在录音，点击麦克风结束</span>
+              <button v-for="asset in attachments" :key="asset.id" type="button"
+                @click="attachments = attachments.filter((a) => a.id !== asset.id)">
+                {{ asset.kind === 'image' ? '图片' : '语音' }} · 移除
               </button>
             </div>
             <label class="sr-only" for="companion-draft">发送给 AI 伙伴的消息</label>
-            <textarea
-              id="companion-draft"
-              ref="composerInput"
-              v-model="draft"
-              rows="3"
-              maxlength="10000"
-              placeholder="想说的话，慢慢说…"
-              @keydown="onComposerKeydown"
-            ></textarea>
+            <textarea id="companion-draft" ref="composerInput" v-model="draft" rows="3" maxlength="10000"
+              placeholder="想说的话，慢慢说…" @keydown="onComposerKeydown"></textarea>
             <div class="composer-footer">
-              <span>Enter 发送 <span class="shortcut-divider">/</span> Shift + Enter 换行</span
-              ><button
-                class="send-button"
-                type="submit"
-                :disabled="!canSend"
-                :title="service?.available ? '发送消息' : '聊天服务暂不可用'"
-              >
-                <span>{{ isSending ? '发送中' : '发送' }}</span
-                ><el-icon><ArrowUp /></el-icon>
+              <span>Enter 发送 <span class="shortcut-divider">/</span> Shift + Enter 换行</span><button class="send-button"
+                type="submit" :disabled="!canSend" :title="service?.available ? '发送消息' : '聊天服务暂不可用'">
+                <span>{{ isSending ? '发送中' : '发送' }}</span><el-icon>
+                  <ArrowUp />
+                </el-icon>
               </button>
             </div>
           </form>
@@ -222,13 +189,11 @@
           <span class="section-caption">一些想分享的时刻</span>
           <h2>生活在聊天之外，<br />也会继续。</h2>
           <p>这里会留下伙伴愿意与你分享的日常。</p>
-          <el-icon aria-hidden="true"><Picture /></el-icon>
+          <el-icon aria-hidden="true">
+            <Picture />
+          </el-icon>
         </div>
-        <div class="section-empty">
-          <el-icon aria-hidden="true"><Picture /></el-icon>
-          <h3>朋友圈尚未开放</h3>
-          <p>开放后，可以在这里看看动态，留下点赞和评论。</p>
-        </div>
+        <AgentMoments v-if="chat.userId" :key="chat.userId" :user-id="chat.userId" />
       </main>
 
       <main v-else class="settings-content">
@@ -239,13 +204,10 @@
               <h2>选择聊天使用的模型</h2>
               <p>切换模型不会重置人物、记忆或相处经历。</p>
             </div>
-            <button
-              class="secondary-button"
-              type="button"
-              :disabled="modelBusy"
-              @click="openModelDialog()"
-            >
-              <el-icon><Plus /></el-icon>添加模型
+            <button class="secondary-button" type="button" :disabled="modelBusy" @click="openModelDialog()">
+              <el-icon>
+                <Plus />
+              </el-icon>添加模型
             </button>
           </div>
           <p v-if="modelNotice" class="settings-error" role="status">
@@ -253,56 +215,42 @@
             }}<button type="button" :disabled="loading" @click="loadPage">重试</button>
           </p>
           <div class="model-list" :aria-busy="modelBusy">
-            <div
-              v-for="model in modelOptions"
-              :key="model.id"
-              :class="['model-row', { 'is-selected': selectedModel === model.id }]"
-            >
-              <button
-                class="model-choice"
-                type="button"
-                :disabled="modelBusy"
-                :aria-pressed="selectedModel === model.id"
-                @click="selectModel(model)"
-              >
-                <span class="model-icon"
-                  ><el-icon><Connection /></el-icon></span
-                ><span
-                  ><strong>{{ model.configName }}</strong
-                  ><small>{{
+            <div v-for="model in modelOptions" :key="model.id"
+              :class="['model-row', { 'is-selected': selectedModel === model.id }]">
+              <button class="model-choice" type="button" :disabled="modelBusy"
+                :aria-pressed="selectedModel === model.id" @click="selectModel(model)">
+                <span class="model-icon"><el-icon>
+                    <Connection />
+                  </el-icon></span><span><strong>{{ model.configName }}</strong><small>{{
                     model.isDefault
                       ? '使用管理员提供的默认配置'
                       : model.modelName + ' · ' + model.providerName
-                  }}</small></span
-                ><el-icon v-if="selectedModel === model.id" class="selected-check"
-                  ><Check
-                /></el-icon>
+                  }}</small></span><el-icon v-if="selectedModel === model.id" class="selected-check">
+                  <Check />
+                </el-icon>
               </button>
               <div v-if="!model.isDefault && !model.isPublic" class="model-actions">
-                <button
-                  type="button"
-                  class="icon-button"
-                  :disabled="modelBusy"
-                  :aria-label="'编辑' + model.configName"
-                  @click="openModelDialog(model)"
-                >
-                  <el-icon><EditPen /></el-icon></button
-                ><button
-                  type="button"
-                  class="icon-button"
+                <button type="button" class="icon-button" :disabled="modelBusy" :aria-label="'编辑' + model.configName"
+                  @click="openModelDialog(model)">
+                  <el-icon>
+                    <EditPen />
+                  </el-icon></button><button type="button" class="icon-button"
                   :disabled="modelBusy || selectedModel === model.id"
-                  :title="selectedModel === model.id ? '切换模型后可删除' : '删除模型配置'"
-                  :aria-label="'删除' + model.configName"
-                  @click="removeModel(model)"
-                >
-                  <el-icon><Delete /></el-icon>
+                  :title="selectedModel === model.id ? '切换模型后可删除' : '删除模型配置'" :aria-label="'删除' + model.configName"
+                  @click="removeModel(model)">
+                  <el-icon>
+                    <Delete />
+                  </el-icon>
                 </button>
               </div>
             </div>
           </div>
         </section>
+        <AgentPersonSettings v-if="chat.userId" :key="chat.userId" :user-id="chat.userId" />
         <section class="settings-section settings-about">
-          <el-icon><Lock /></el-icon>
+          <el-icon>
+            <Lock />
+          </el-icon>
           <div>
             <h3>相处中的变化，留在相处中</h3>
             <p>这里可以管理模型连接。人物设定、记忆干预、历史清理和角色重置由管理员处理。</p>
@@ -310,12 +258,9 @@
         </section>
       </main>
     </section>
-    <AgentModelConfigDialog
-      v-model="modelDialogOpen"
-      :config="editingModelConfig"
-      :saving="modelBusy"
-      @submit="saveModel"
-    />
+    <AgentCall v-model="callOpen" :user-id="chat.userId" :name="person?.name || '伙伴'" />
+    <AgentModelConfigDialog v-model="modelDialogOpen" :config="editingModelConfig" :saving="modelBusy"
+      @submit="saveModel" />
   </div>
 </template>
 
@@ -343,6 +288,18 @@ import {
 } from '@element-plus/icons-vue'
 import AgentModelConfigDialog from '@/components/AgentModelConfigDialog.vue'
 import CompanionIcon from '@/components/CompanionIcon.vue'
+import AgentCharacterCreate from '@/components/AgentCharacterCreate.vue'
+import AgentMoments from '@/components/AgentMoments.vue'
+import AgentPersonSettings from '@/components/AgentPersonSettings.vue'
+import AgentMedia from '@/components/AgentMedia.vue'
+import AgentCall from '@/components/AgentCall.vue'
+import {
+  getCharacter,
+  saveServerCredential,
+  uploadAgentMedia,
+  sendPresence,
+  markAgentRead
+} from '@/api/AgentPerson'
 import { useAgentChatStore } from '@/stores/modules/AgentChatStore'
 import {
   DEFAULT_MODEL,
@@ -389,7 +346,19 @@ const modelBusy = ref(false)
 const modelDialogOpen = ref(false)
 const editingModelId = ref<string | null>(null)
 const editingModelConfig = ref<AgentModelConfig | null>(null)
+const person = ref<any>(null)
+const attachments = ref<Array<{ id: string; kind: string }>>([])
+const fileInput = ref<HTMLInputElement | null>(null)
+const mediaBusy = ref(false)
+const recording = ref(false)
+const callOpen = ref(false)
+let recorder: MediaRecorder | null = null
+let microphoneStream: MediaStream | null = null
+let recordingTimer: ReturnType<typeof setTimeout> | undefined
+let syncTimer: ReturnType<typeof setInterval>
+const mediaParts = (parts: any) => (parts?.parts || []).filter((p: any) => p.assetId)
 let requestController: AbortController | null = null
+// 页面卸载后，避免继续更新状态。
 let disposed = false
 
 const selectedModelOption = computed(
@@ -412,8 +381,11 @@ const connectionLabel = computed(() =>
 )
 const canSend = computed(
   () =>
-    Boolean(draft.value.trim()) &&
-    !isSending.value &&
+    Boolean(draft.value.trim() || attachments.value.length) &&
+    !mediaBusy.value &&
+    !recording.value &&
+    person.value?.exists &&
+    !person.value?.requiresCreation &&
     !loading.value &&
     service.value?.available === true
 )
@@ -426,16 +398,19 @@ const formatDay = (timestamp: number) =>
 const isNewDay = (index: number) =>
   index === 0 ||
   new Date(filteredMessages.value[index].createdAt).toDateString() !==
-    new Date(filteredMessages.value[index - 1].createdAt).toDateString()
+  new Date(filteredMessages.value[index - 1].createdAt).toDateString()
 const scrollToBottom = async () => {
   await nextTick()
   if (thread.value) thread.value.scrollTop = thread.value.scrollHeight
 }
+
+// 获取用户 ID，若未登录则抛出错误提示。
 const currentUserId = async () => {
   const value = await (window as any).userInfoApi.storeGetUserInfo('userId')
   if (!value) throw new Error('请先登录后再聊天')
   return String(value)
 }
+
 const credential = async (configId: string, apiKey?: string) => {
   const scope = { userId: chat.userId, configId }
   return apiKey === undefined
@@ -467,12 +442,16 @@ const loadPage = async () => {
       modelOptions.value = [{ ...DEFAULT_MODEL }]
       service.value = null
     }
-    const [statusResult, modelResult, historyResult] = await Promise.allSettled([
+
+    const [statusResult, modelResult, historyResult, characterResult] = await Promise.allSettled([
       getAgentStatus(userId),
       getModelConfigs(userId),
-      loadMessage(userId)
+      loadMessage(userId),
+      getCharacter(userId)
     ])
+
     if (disposed || chat.userId !== userId) return
+    if (characterResult.status === 'fulfilled') person.value = characterResult.value
     if (statusResult.status === 'fulfilled' && typeof statusResult.value.available === 'boolean')
       service.value = statusResult.value
     else {
@@ -496,6 +475,7 @@ const loadPage = async () => {
             id: message.id,
             role: message.role,
             content: message.content,
+            parts: message.parts,
             status: 'completed',
             createdAt: Date.parse(message.createdAt) || Date.now()
           })),
@@ -516,6 +496,60 @@ const chooseStarter = async (text: string) => {
   await nextTick()
   composerInput.value?.focus()
 }
+const attach = async (file: File) => {
+  if (file.size > 20 * 1024 * 1024) {
+    notice.value = '媒体不能超过 20 MB'
+    return
+  }
+  mediaBusy.value = true
+  try {
+    const asset = await uploadAgentMedia(chat.userId, file)
+    if (disposed) return
+    attachments.value.push({ id: asset.id, kind: asset.kind })
+    if (asset.kind === 'audio' && !asset.analysis?.emotion)
+      notice.value = '语音已识别；尚未配置可用的声音情绪感知能力。'
+  } catch (error: any) {
+    notice.value = error?.response?.data?.detail?.message || '媒体暂时无法识别，请检查能力模型'
+  } finally {
+    mediaBusy.value = false
+  }
+}
+const selectImage = async (event: Event) => {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = ''
+  if (file) await attach(file)
+}
+const toggleRecording = async () => {
+  if (recording.value) {
+    clearTimeout(recordingTimer)
+    recorder?.stop()
+    return
+  }
+  try {
+    microphoneStream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: true, noiseSuppression: true }
+    })
+    const chunks: Blob[] = []
+    recorder = new MediaRecorder(microphoneStream)
+    const active = recorder
+    recorder.ondataavailable = (event) => {
+      if (event.data.size) chunks.push(event.data)
+    }
+    recorder.onstop = () => {
+      recording.value = false
+      microphoneStream?.getTracks().forEach((t) => t.stop())
+      if (!disposed) void attach(new File(chunks, 'voice.webm', { type: active.mimeType }))
+    }
+    recorder.start()
+    recording.value = true
+    recordingTimer = setTimeout(() => {
+      if (active.state === 'recording') active.stop()
+    }, 60000)
+  } catch {
+    notice.value = '无法使用麦克风，请检查系统权限'
+  }
+}
 const closeSearch = () => {
   searchOpen.value = false
   searchQuery.value = ''
@@ -535,11 +569,15 @@ const onComposerKeydown = (event: KeyboardEvent) => {
 const sendMessage = async () => {
   if (!canSend.value) return
   const userId = chat.userId
-  const content = draft.value.trim()
+  const content =
+    draft.value.trim() || (attachments.value.some((a) => a.kind === 'audio') ? '[语音]' : '[图片]')
+  const media = [...attachments.value]
+  attachments.value = []
   const userMessageId = crypto.randomUUID()
   const replyId = crypto.randomUUID()
   const model = selectedModelOption.value
   const controller = new AbortController()
+  requestController?.abort()
   requestController = controller
   chat.isSending = true
   notice.value = ''
@@ -548,6 +586,7 @@ const sendMessage = async () => {
     id: userMessageId,
     role: 'user',
     content,
+    parts: { parts: media.map((a) => ({ type: a.kind, assetId: a.id })) },
     status: 'sending',
     createdAt: Date.now()
   })
@@ -566,6 +605,7 @@ const sendMessage = async () => {
       role: 'user',
       messageType: 1,
       content,
+      assetIds: media.map((a) => a.id),
       config: {
         providerName: model.providerName,
         modelName: model.modelName || undefined,
@@ -591,12 +631,27 @@ const sendMessage = async () => {
             void scrollToBottom()
           }
         },
-        onCompleted: ({ content: replyContent }) => {
+        onCompleted: ({ content: replyContent, messageId, parts }) => {
           if (!isCurrent()) return
           markAccepted()
-          const message = chat.messages.find((item) => item.id === replyId)
-          if (message) message.content = replyContent
-          else if (replyContent) chat.appendReply(replyId, replyContent)
+          const message =
+            chat.messages.find((item) => item.id === messageId) ||
+            chat.messages.find((item) => item.id === replyId && item.status === 'streaming')
+          if (message) {
+            message.id = messageId
+            message.content = replyContent
+            message.parts = parts
+            message.status = 'completed'
+          } else if (replyContent)
+            chat.messages.push({
+              id: messageId,
+              role: 'assistant',
+              content: replyContent,
+              parts,
+              status: 'completed',
+              createdAt: Date.now()
+            })
+          void scrollToBottom()
         }
       },
       controller.signal
@@ -688,6 +743,8 @@ const saveModel = async (config: AgentModelConfig) => {
     const configId = id ?? (await addModelConfig(data)).configId
     if (id) await updateModelConfig({ ...data, configId })
     await credential(String(configId), config.apiKey)
+    if (config.apiKey)
+      await saveServerCredential({ userId: chat.userId, configId, apiKey: config.apiKey })
     const updated = { ...config, id: String(configId), description: config.configName }
     const index = modelOptions.value.findIndex((model) => model.id === updated.id)
     if (index < 0) modelOptions.value.push(updated)
@@ -731,12 +788,51 @@ const removeModel = async (model: ModelOption) => {
 
 onMounted(() => {
   void loadPage()
+
+  syncTimer = setInterval(async () => {
+    if (!chat.userId || disposed || loading.value) return
+    try {
+      await sendPresence(chat.userId, activeTab.value === 'chat', Boolean(draft.value.trim()))
+      const character = await getCharacter(chat.userId)
+      if (!disposed) person.value = character
+      if (!isSending.value && activeTab.value === 'chat') {
+        const history = await loadMessage(chat.userId)
+        const lastSeq = history.at(-1)?.seq
+        if (lastSeq) await markAgentRead(chat.userId, lastSeq)
+        if (
+          !disposed &&
+          !isSending.value &&
+          history.length &&
+          history.at(-1)?.id !== chat.messages.at(-1)?.id
+        ) {
+          chat.loadHistory(
+            history.map((m: any) => ({
+              id: m.id,
+              role: m.role,
+              content: m.content,
+              parts: m.parts,
+              status: 'completed',
+              createdAt: Date.parse(m.createdAt)
+            })),
+            history.at(-1)!.conversationId
+          )
+          void scrollToBottom()
+        }
+      }
+    } catch {
+      /* 下一次同步继续尝试，保留已有内容。 */
+    }
+  }, 6000)
 })
 onActivated(() => {
   void loadPage()
 })
 onBeforeUnmount(() => {
   disposed = true
+  clearInterval(syncTimer)
+  clearTimeout(recordingTimer)
+  microphoneStream?.getTracks().forEach((t) => t.stop())
+  if (recorder?.state === 'recording') recorder.stop()
   requestController?.abort()
   chat.isSending = false
 })
@@ -753,25 +849,30 @@ onBeforeUnmount(() => {
   background: var(--color-app-bg);
   -webkit-app-region: no-drag;
 }
+
 button,
 input,
 textarea {
   font: inherit;
 }
+
 button {
   color: inherit;
   cursor: pointer;
 }
+
 button:disabled {
   cursor: not-allowed;
   opacity: 0.45;
 }
+
 button:focus-visible,
 input:focus-visible,
 textarea:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 3px;
 }
+
 .agent-sidebar {
   display: flex;
   flex: 0 0 224px;
@@ -783,6 +884,7 @@ textarea:focus-visible {
   border-right: 1px solid var(--color-border-subtle);
   backdrop-filter: var(--surface-filter);
 }
+
 .sidebar-brand {
   display: flex;
   align-items: center;
@@ -791,6 +893,7 @@ textarea:focus-visible {
   -webkit-app-region: drag;
   user-select: none;
 }
+
 .brand-mark {
   display: grid;
   place-items: center;
@@ -801,17 +904,20 @@ textarea:focus-visible {
   border-radius: var(--radius-md);
   font-size: 22px;
 }
+
 .sidebar-brand strong {
   display: block;
   font-size: 16px;
   letter-spacing: -0.02em;
 }
+
 .sidebar-brand small {
   display: block;
   margin-top: 4px;
   color: var(--color-text-secondary);
   font-size: 11px;
 }
+
 .companion-card {
   display: flex;
   flex-direction: column;
@@ -821,6 +927,7 @@ textarea:focus-visible {
   border-top: 1px solid var(--color-border-subtle);
   border-bottom: 1px solid var(--color-border-subtle);
 }
+
 .companion-avatar {
   display: grid;
   place-items: center;
@@ -833,20 +940,24 @@ textarea:focus-visible {
   letter-spacing: -0.05em;
   font-weight: 600;
 }
+
 .companion-card strong {
   margin-top: 16px;
   font-size: 15px;
 }
-.companion-card > span:last-child {
+
+.companion-card>span:last-child {
   margin-top: 8px;
   color: var(--color-text-secondary);
   font-size: 11px;
 }
+
 .companion-nav {
   display: flex;
   flex-direction: column;
   gap: 7px;
 }
+
 .companion-nav button,
 .sidebar-settings {
   display: flex;
@@ -861,20 +972,24 @@ textarea:focus-visible {
   font-size: 13px;
   text-align: left;
 }
+
 .companion-nav .el-icon,
 .sidebar-settings .el-icon {
   font-size: 19px;
 }
+
 .companion-nav button:hover,
 .sidebar-settings:hover {
   background: var(--color-surface-2);
   color: var(--color-text-primary);
 }
+
 .companion-nav .is-active {
   color: var(--color-text-accent);
   background: var(--color-accent-soft);
   font-weight: 600;
 }
+
 .nav-marker {
   width: 5px;
   height: 5px;
@@ -882,10 +997,12 @@ textarea:focus-visible {
   border-radius: 50%;
   background: currentColor;
 }
+
 .sidebar-note {
   margin-top: auto;
   padding: 48px 14px 24px;
 }
+
 .note-line {
   display: block;
   width: 20px;
@@ -893,16 +1010,19 @@ textarea:focus-visible {
   margin-bottom: 12px;
   background: var(--color-border-subtle);
 }
+
 .sidebar-note p {
   margin: 0;
   color: var(--color-text-secondary);
   font-size: 11px;
   line-height: 1.9;
 }
+
 .sidebar-settings {
   border-top: 1px solid var(--color-border-subtle);
   border-radius: 0;
 }
+
 .companion-main {
   flex: 1;
   display: flex;
@@ -910,6 +1030,7 @@ textarea:focus-visible {
   min-width: 0;
   min-height: 0;
 }
+
 .companion-header {
   display: flex;
   min-height: 96px;
@@ -923,6 +1044,7 @@ textarea:focus-visible {
   -webkit-app-region: drag;
   user-select: none;
 }
+
 .section-caption {
   display: block;
   color: var(--color-text-secondary);
@@ -930,11 +1052,13 @@ textarea:focus-visible {
   line-height: 1.6;
   letter-spacing: 0.04em;
 }
+
 .companion-header h1 {
   margin: 5px 0 0;
   font-size: 20px;
   font-weight: 600;
 }
+
 .header-actions {
   display: flex;
   align-items: center;
@@ -942,6 +1066,7 @@ textarea:focus-visible {
   padding-right: 90px;
   -webkit-app-region: no-drag;
 }
+
 .connection-status {
   display: flex;
   align-items: center;
@@ -951,15 +1076,18 @@ textarea:focus-visible {
   font-size: 11px;
   white-space: nowrap;
 }
+
 .connection-status i {
   width: 6px;
   height: 6px;
   border-radius: 50%;
   background: var(--color-text-muted);
 }
+
 .connection-status .is-available {
   background: var(--color-accent);
 }
+
 .icon-button {
   display: inline-grid;
   width: 34px;
@@ -972,10 +1100,12 @@ textarea:focus-visible {
   color: var(--color-text-secondary);
   font-size: 18px;
 }
+
 .icon-button:hover:not(:disabled) {
   background: var(--color-surface-2);
   color: var(--color-text-primary);
 }
+
 .chat-content {
   flex: 1;
   min-height: 0;
@@ -983,6 +1113,7 @@ textarea:focus-visible {
   padding: 24px 36px;
   scrollbar-gutter: stable;
 }
+
 .conversation-welcome {
   display: flex;
   min-height: 100%;
@@ -993,6 +1124,7 @@ textarea:focus-visible {
   padding: 28px 0 36px;
   text-align: center;
 }
+
 .welcome-symbol {
   display: grid;
   position: relative;
@@ -1007,7 +1139,8 @@ textarea:focus-visible {
   font-size: 36px;
   box-shadow: var(--shadow-sm);
 }
-.welcome-symbol > span {
+
+.welcome-symbol>span {
   position: absolute;
   right: -5px;
   top: 9px;
@@ -1017,18 +1150,21 @@ textarea:focus-visible {
   border-radius: 50%;
   background: var(--color-accent);
 }
+
 .conversation-welcome h2 {
   margin: 13px 0;
   font-size: clamp(22px, 2.4vw, 30px);
   font-weight: 550;
   letter-spacing: -0.04em;
 }
+
 .conversation-welcome p {
   margin: 0;
   color: var(--color-text-secondary);
   font-size: 13px;
   line-height: 1.9;
 }
+
 .conversation-starters {
   display: flex;
   justify-content: center;
@@ -1036,6 +1172,7 @@ textarea:focus-visible {
   gap: 8px;
   margin-top: 28px;
 }
+
 .conversation-starters button {
   display: flex;
   align-items: center;
@@ -1048,29 +1185,35 @@ textarea:focus-visible {
   background: var(--color-surface-1);
   font-size: 11px;
 }
+
 .conversation-starters button:hover {
   color: var(--color-text-accent);
   border-color: var(--color-accent);
 }
+
 .message-thread {
   max-width: 860px;
   margin: 0 auto;
 }
+
 .day-divider {
   margin: 8px 0 28px;
   text-align: center;
   color: var(--color-text-secondary);
   font-size: 11px;
 }
+
 .chat-message {
   display: flex;
   gap: 12px;
   align-items: flex-start;
   margin: 20px 0;
 }
+
 .chat-message.is-user {
   flex-direction: row-reverse;
 }
+
 .message-avatar {
   display: grid;
   place-items: center;
@@ -1082,10 +1225,12 @@ textarea:focus-visible {
   color: var(--color-text-secondary);
   font-size: 11px;
 }
+
 .message-column {
   min-width: 0;
   max-width: 76%;
 }
+
 .message-bubble {
   padding: 12px 16px;
   border: 1px solid var(--color-border-subtle);
@@ -1097,23 +1242,28 @@ textarea:focus-visible {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+
 .is-user .message-bubble {
   background: var(--color-accent-soft);
   border-color: transparent;
   border-radius: 14px 0 14px 14px;
 }
+
 .message-time {
   display: block;
   margin-top: 6px;
   color: var(--color-text-secondary);
   font-size: 10px;
 }
+
 .is-user .message-time {
   text-align: right;
 }
+
 .send-failed {
   color: var(--el-color-danger);
 }
+
 .streaming-cursor {
   display: inline-block;
   width: 2px;
@@ -1123,6 +1273,7 @@ textarea:focus-visible {
   background: var(--color-accent);
   animation: cursor-blink 1s steps(2, start) infinite;
 }
+
 .composer-area {
   flex-shrink: 0;
   width: min(940px, 100%);
@@ -1130,6 +1281,7 @@ textarea:focus-visible {
   padding: 0 36px 24px;
   box-sizing: border-box;
 }
+
 .service-notice {
   display: flex;
   align-items: flex-start;
@@ -1139,13 +1291,16 @@ textarea:focus-visible {
   font-size: 11px;
   line-height: 1.7;
 }
-.service-notice > .el-icon {
+
+.service-notice>.el-icon {
   flex-shrink: 0;
   margin-top: 3px;
 }
-.service-notice > span {
+
+.service-notice>span {
   flex: 1;
 }
+
 .service-notice button,
 .settings-error button {
   flex-shrink: 0;
@@ -1155,6 +1310,7 @@ textarea:focus-visible {
   color: var(--color-text-accent);
   font-size: inherit;
 }
+
 .composer-shell {
   border: 1px solid var(--color-border-subtle);
   border-radius: 16px;
@@ -1162,19 +1318,40 @@ textarea:focus-visible {
   box-shadow: var(--shadow-sm);
   padding: 9px 14px 12px;
 }
+
 .composer-shell:focus-within {
   border-color: var(--color-accent);
 }
+
 .composer-toolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
 }
-.composer-toolbar > div {
+
+.composer-toolbar>div {
   display: flex;
   gap: 3px;
 }
+
+.attachment-strip {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 8px;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}
+
+.attachment-strip button {
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 6px;
+  padding: 5px 9px;
+  color: inherit;
+  background: transparent;
+}
+
 .model-shortcut {
   display: flex;
   align-items: center;
@@ -1189,14 +1366,17 @@ textarea:focus-visible {
   color: var(--color-text-secondary);
   font-size: 11px;
 }
+
 .model-shortcut span {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
+
 .model-shortcut:hover {
   background: var(--color-surface-2);
 }
+
 .composer-shell textarea {
   display: block;
   box-sizing: border-box;
@@ -1212,12 +1392,15 @@ textarea:focus-visible {
   font-size: 14px;
   line-height: 1.8;
 }
+
 .composer-shell textarea:focus-visible {
   outline: none;
 }
+
 .composer-shell textarea::placeholder {
   color: var(--color-text-secondary);
 }
+
 .composer-footer {
   display: flex;
   justify-content: space-between;
@@ -1225,14 +1408,17 @@ textarea:focus-visible {
   gap: 12px;
   padding-left: 6px;
 }
-.composer-footer > span {
+
+.composer-footer>span {
   color: var(--color-text-secondary);
   font-size: 10px;
 }
+
 .shortcut-divider {
   margin: 0 8px;
   opacity: 0.6;
 }
+
 .send-button {
   display: inline-flex;
   align-items: center;
@@ -1245,9 +1431,11 @@ textarea:focus-visible {
   color: var(--color-on-accent);
   font-size: 12px;
 }
+
 .send-button:hover:not(:disabled) {
   filter: brightness(1.06);
 }
+
 .chat-search {
   display: flex;
   align-items: center;
@@ -1256,6 +1444,7 @@ textarea:focus-visible {
   border-bottom: 1px solid var(--color-border-subtle);
   color: var(--color-text-secondary);
 }
+
 .chat-search input {
   flex: 1;
   min-width: 0;
@@ -1265,15 +1454,18 @@ textarea:focus-visible {
   color: var(--color-text-primary);
   font-size: 13px;
 }
-.chat-search > span {
+
+.chat-search>span {
   font-size: 11px;
 }
+
 .empty-search {
   text-align: center;
   padding-top: 60px;
   color: var(--color-text-secondary);
   font-size: 13px;
 }
+
 .moments-content,
 .settings-content {
   flex: 1;
@@ -1281,6 +1473,7 @@ textarea:focus-visible {
   overflow-y: auto;
   padding: 36px;
 }
+
 .moments-cover {
   position: relative;
   max-width: 820px;
@@ -1291,6 +1484,7 @@ textarea:focus-visible {
   border-radius: 20px;
   background: var(--color-accent-soft);
 }
+
 .moments-cover h2 {
   position: relative;
   margin: 16px 0;
@@ -1299,13 +1493,15 @@ textarea:focus-visible {
   line-height: 1.5;
   letter-spacing: -0.03em;
 }
+
 .moments-cover p {
   position: relative;
   margin: 0;
   color: var(--color-text-secondary);
   font-size: 12px;
 }
-.moments-cover > .el-icon {
+
+.moments-cover>.el-icon {
   position: absolute;
   right: 40px;
   top: 46px;
@@ -1313,29 +1509,35 @@ textarea:focus-visible {
   opacity: 0.07;
   transform: rotate(-12deg);
 }
+
 .section-empty {
   max-width: 820px;
   margin: 68px auto 0;
   text-align: center;
 }
-.section-empty > .el-icon {
+
+.section-empty>.el-icon {
   font-size: 30px;
   color: var(--color-text-secondary);
 }
+
 .section-empty h3 {
   margin: 20px 0 10px;
   font-size: 15px;
   font-weight: 500;
 }
+
 .section-empty p {
   color: var(--color-text-secondary);
   font-size: 12px;
   line-height: 1.8;
 }
+
 .settings-section {
   max-width: 820px;
   margin: 0 auto 32px;
 }
+
 .settings-heading {
   display: flex;
   justify-content: space-between;
@@ -1343,17 +1545,20 @@ textarea:focus-visible {
   gap: 20px;
   margin: 8px 0 24px;
 }
+
 .settings-heading h2 {
   margin: 9px 0;
   font-size: 20px;
   font-weight: 550;
 }
+
 .settings-heading p {
   margin: 0;
   color: var(--color-text-secondary);
   font-size: 12px;
   line-height: 1.8;
 }
+
 .secondary-button {
   display: inline-flex;
   align-items: center;
@@ -1367,11 +1572,13 @@ textarea:focus-visible {
   background: var(--color-surface-1);
   font-size: 12px;
 }
+
 .model-list {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
+
 .model-row {
   display: flex;
   align-items: center;
@@ -1380,9 +1587,11 @@ textarea:focus-visible {
   border-radius: 12px;
   background: var(--color-surface-1);
 }
+
 .model-row.is-selected {
   border-color: var(--color-accent);
 }
+
 .model-choice {
   display: flex;
   min-width: 0;
@@ -1395,16 +1604,19 @@ textarea:focus-visible {
   background: transparent;
   text-align: left;
 }
-.model-choice > span:nth-child(2) {
+
+.model-choice>span:nth-child(2) {
   min-width: 0;
   flex: 1;
   overflow-wrap: anywhere;
 }
+
 .model-choice strong {
   display: block;
   font-size: 13px;
   font-weight: 550;
 }
+
 .model-choice small {
   display: block;
   margin-top: 6px;
@@ -1412,6 +1624,7 @@ textarea:focus-visible {
   font-size: 11px;
   line-height: 1.7;
 }
+
 .model-icon {
   display: grid;
   place-items: center;
@@ -1422,16 +1635,19 @@ textarea:focus-visible {
   color: var(--color-text-secondary);
   font-size: 20px;
 }
+
 .selected-check {
   flex-shrink: 0;
   color: var(--color-accent);
   font-size: 20px;
 }
+
 .model-actions {
   display: flex;
   flex-shrink: 0;
   padding-right: 10px;
 }
+
 .settings-error {
   display: flex;
   gap: 12px;
@@ -1439,6 +1655,7 @@ textarea:focus-visible {
   color: var(--el-color-danger);
   font-size: 12px;
 }
+
 .settings-about {
   display: flex;
   align-items: flex-start;
@@ -1446,17 +1663,20 @@ textarea:focus-visible {
   padding: 24px 0;
   border-top: 1px solid var(--color-border-subtle);
 }
-.settings-about > .el-icon {
+
+.settings-about>.el-icon {
   flex-shrink: 0;
   margin-top: 4px;
   color: var(--color-text-secondary);
   font-size: 20px;
 }
+
 .settings-about h3 {
   margin: 0 0 10px;
   font-size: 13px;
   font-weight: 550;
 }
+
 .settings-about p {
   max-width: 560px;
   margin: 0;
@@ -1464,6 +1684,7 @@ textarea:focus-visible {
   font-size: 12px;
   line-height: 1.9;
 }
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -1473,110 +1694,140 @@ textarea:focus-visible {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
 }
+
 @keyframes cursor-blink {
   to {
     visibility: hidden;
   }
 }
+
 @media (max-width: 1000px) {
   .agent-sidebar {
     flex-basis: 192px;
     padding-inline: 12px;
   }
+
   .header-actions {
     padding-right: 80px;
   }
+
   .connection-status {
     display: none;
   }
+
   .companion-header {
     padding-inline: 24px;
   }
+
   .chat-content {
     padding-inline: 24px;
   }
+
   .composer-area {
     padding-inline: 24px;
   }
+
   .conversation-starters {
     max-width: 380px;
   }
+
   .moments-content,
   .settings-content {
     padding: 24px;
   }
 }
+
 @media (max-width: 700px) {
   .agent-sidebar {
     flex-basis: 64px;
     padding: 24px 8px 12px;
   }
+
   .sidebar-brand {
     padding: 0 6px;
   }
-  .sidebar-brand > div,
+
+  .sidebar-brand>div,
   .companion-card,
   .sidebar-note,
   .sidebar-settings {
     display: none;
   }
+
   .companion-nav {
     margin-top: 30px;
   }
+
   .companion-nav button {
     justify-content: center;
     padding: 0;
     min-height: 44px;
   }
+
   .companion-nav span,
   .companion-nav .nav-marker {
     display: none;
   }
+
   .companion-header {
     padding: 18px 16px;
   }
+
   .companion-header h1 {
     font-size: 17px;
   }
+
   .header-actions {
     padding-right: 0;
     gap: 2px;
   }
+
   .chat-content {
     padding: 18px 14px;
   }
+
   .composer-area {
     padding: 0 14px 14px;
   }
+
   .conversation-welcome h2 {
     font-size: 22px;
   }
+
   .message-column {
     max-width: 82%;
   }
+
   .settings-heading {
     align-items: flex-start;
     flex-direction: column;
   }
+
   .model-choice {
     padding: 12px;
     gap: 9px;
   }
+
   .model-actions {
     flex-direction: column;
     padding: 0 6px 0 0;
   }
+
   .moments-cover {
     padding: 24px;
   }
+
   .moments-cover h2 {
     font-size: 22px;
   }
-  .composer-footer > span {
+
+  .composer-footer>span {
     font-size: 9px;
   }
 }
+
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {

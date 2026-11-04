@@ -13,6 +13,7 @@ let theme = 'light'
 let style = 'ai-native'
 let available = true
 let failSend = false
+let hasCharacter = true
 const requests = []
 const sent = []
 const modelWrites = []
@@ -111,6 +112,56 @@ app
       const url = new URL(request.url)
       requests.push(url.pathname)
       if (url.pathname.endsWith('/ai-message/status')) return json({ available })
+      if (url.pathname.endsWith('/ai-message/person'))
+        return json({
+          exists: hasCharacter,
+          name: hasCharacter ? '林夏' : undefined,
+          status: '在线',
+          worldId: 'current-chat'
+        })
+      if (url.pathname.endsWith('/person/candidates'))
+        return json({
+          candidates: [
+            {
+              id: 'candidate-1',
+              name: '林夏',
+              introduction: '住在海边城市的学生',
+              appearance: '短发，常带着一本速写本'
+            },
+            {
+              id: 'candidate-2',
+              name: '南栀',
+              introduction: '刚来到这座城市的插画师',
+              appearance: '喜欢穿浅色外套'
+            }
+          ]
+        })
+      if (url.pathname.endsWith('/person/select')) {
+        hasCharacter = true
+        return json({ worldId: 'current-chat' })
+      }
+      if (url.pathname.endsWith('/person/settings'))
+        return json({
+          lifeWindowMinutes: 30,
+          presenceVisibility: { online: true, read: true, typing: true },
+          notifications: { muted: false }
+        })
+      if (url.pathname.endsWith('/person/bindings')) return json({})
+      if (url.pathname.endsWith('/person/credential')) return json({ success: true })
+      if (url.pathname.endsWith('/person/moments'))
+        return json([
+          {
+            id: 'post-1',
+            name: '林夏',
+            publishedAt: '2026-11-03T10:00:00Z',
+            parts: { parts: [{ type: 'text', text: '今天画完了海边的云。' }] },
+            liked: false,
+            interactions: [
+              { id: 'npc-comment', name: '阿宁', kind: 'comment', content: '下次一起去！' }
+            ]
+          }
+        ])
+      if (url.pathname.includes('/interactions')) return json({ success: true })
       if (url.pathname.endsWith('/config/getConfig'))
         return json(
           configs.map((config) => ({ ...config, isActive: config.id === selectedConfigId }))
@@ -261,10 +312,10 @@ app
     await until("document.documentElement.dataset.theme === 'dark'")
     await screenshot(output, 'chat-dark.png')
     await evaluate("document.querySelector('.companion-nav button:nth-child(2)').click()")
-    await until("document.body.innerText.includes('朋友圈尚未开放')")
+    await until("document.body.innerText.includes('今天画完了海边的云。')")
     await screenshot(output, 'moments-dark.png')
-    assert.equal(await evaluate("!!document.querySelector('.moments-content .moment-post')"), false)
-    checks.push('朋友圈未接入时明确显示尚未开放，不造假动态')
+    assert.equal(await evaluate("document.body.innerText.includes('下次一起去！')"), true)
+    checks.push('朋友圈展示服务端可见动态和伙伴评论，提供点赞评论入口')
 
     await evaluate("document.querySelector('.sidebar-settings').click()")
     await until("document.body.innerText.includes('选择聊天使用的模型')")
@@ -304,6 +355,26 @@ app
     }
     await screenshot(output, 'settings-narrow.png')
     checks.push('明暗主题与窄窗口无横向溢出，模型设置不提供人格修改')
+
+    hasCharacter = false
+    failSend = false
+    win.setContentSize(1200, 800)
+    await win.reload()
+    await until("!!document.querySelector('.creation textarea')")
+    await evaluate(
+      "const wish=document.querySelector('.creation textarea');wish.value='一个有自己生活的人';wish.dispatchEvent(new Event('input',{bubbles:true}))"
+    )
+    await until("document.querySelector('.creation > button').disabled === false")
+    await evaluate("document.querySelector('.creation > button').click()")
+    await until("document.querySelectorAll('.candidate-list article').length === 2")
+    await screenshot(output, 'character-candidates.png')
+    assert.equal(
+      await evaluate("document.querySelector('.creation').innerText.includes('性格')"),
+      false
+    )
+    await evaluate("document.querySelector('.candidate-list article button').click()")
+    await until("!document.querySelector('.creation') && document.body.innerText.includes('林夏')")
+    checks.push('首次创建展示表面候选，确认后进入同一人物长期窗口')
 
     assert.deepEqual(errors, [])
     console.log(JSON.stringify({ passed: checks, screenshots: output }, null, 2))

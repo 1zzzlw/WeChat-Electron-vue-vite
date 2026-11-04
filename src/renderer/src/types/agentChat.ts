@@ -4,6 +4,7 @@ export interface AgentMessage {
   id: string
   role: 'user' | 'assistant'
   content: string
+  parts?: { parts: Array<{ type: string; text?: string; assetId?: string }> }
   status: AgentMessageStatus
   createdAt: number
 }

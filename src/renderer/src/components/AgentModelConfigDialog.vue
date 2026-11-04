@@ -33,7 +33,7 @@
 
           <form class="model-config-form" @submit.prevent="handleSubmit">
             <p class="model-form-description">
-              配置聊天使用的模型。模型信息保存到服务端，API Key 由本机系统加密保存。
+              模型配置和加密凭据保存在服务端，供双端聊天与后台生活使用；本机也保留加密缓存。
             </p>
 
             <label class="model-form-field">

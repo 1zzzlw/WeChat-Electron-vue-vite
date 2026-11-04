@@ -14,16 +14,19 @@ export interface SendAIMessageRequest {
   role: 'user'
   messageType: 1
   content: string
+  assetIds?: string[]
   config: AgentModelRequestConfig
 }
 
 export interface SavedAIMessage {
   id: string
+  seq?: string
   conversationId: string
   userId: string
   role: 'user' | 'assistant'
   messageType: number
   content: string
+  parts?: { parts: Array<{ type: string; text?: string; assetId?: string }> }
   imageUrl: string | null
   personalityId: string | null
   configId: string | null
@@ -38,6 +41,7 @@ export interface AIStreamStartedData {
 export interface AIStreamCompletedData {
   messageId: string
   content: string
+  parts?: { parts: Array<{ type: string; text?: string; assetId?: string }> }
 }
 
 export interface AIStreamHandlers {

@@ -51,9 +51,14 @@ export async function streamAIMessage(data, handlers = {}, signal) {
   for await (const event of readSSE(response)) {
     // 不解析不需要的内部事件，避免把推理或工具载荷交给 UI。
     if (
-      !['run.started', 'message.delta', 'message.completed', 'run.failed', 'done'].includes(
-        event.event
-      )
+      ![
+        'run.started',
+        'message.delta',
+        'message.completed',
+        'run.failed',
+        'run.interrupted',
+        'done'
+      ].includes(event.event)
     )
       continue
     let payload
@@ -70,7 +75,11 @@ export async function streamAIMessage(data, handlers = {}, signal) {
     }
     if (event.event === 'message.completed') {
       fullContent = payload.content ?? fullContent
-      handlers.onCompleted?.({ messageId: payload.messageId, content: fullContent })
+      handlers.onCompleted?.({
+        messageId: payload.messageId,
+        content: fullContent,
+        parts: payload.parts
+      })
     }
     if (event.event === 'run.failed') throw new Error(payload.message || '聊天服务暂时无法回复')
     if (event.event === 'done') doneReceived = true
