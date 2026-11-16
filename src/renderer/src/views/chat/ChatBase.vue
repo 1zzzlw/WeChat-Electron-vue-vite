@@ -36,7 +36,7 @@
                 <div v-if="message.sendStatus === 0 && mediaUploadLabel(message)" class="media-upload-status">
                   {{ mediaUploadLabel(message) }}
                 </div>
-                <div class="icon send-load" v-if="message.sendStatus === 0 && !mediaUploadLabel(message)" title="等待服务器确认消息">
+                <div class="icon send-load" v-if="message.sendStatus === 0 && message.msgType !== 5 && !mediaUploadLabel(message)" title="等待服务器确认消息">
                   <el-icon>
                     <Loading />
                   </el-icon>

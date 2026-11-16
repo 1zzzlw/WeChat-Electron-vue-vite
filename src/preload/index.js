@@ -68,6 +68,20 @@ const userInfoApi = {
   }
 }
 
+const accountApi = {
+  listAccounts: () => ipcRenderer.invoke('account:list'),
+  capabilities: () => ipcRenderer.invoke('account:capabilities'),
+  getSession: () => ipcRenderer.invoke('account:session'),
+  activateSession: (snapshot, profile, tokens) => ipcRenderer.invoke('account:activate', snapshot, profile, tokens),
+  login: data => ipcRenderer.invoke('account:login', data),
+  quickLogin: userId => ipcRenderer.invoke('account:quick-login', userId),
+  refreshSession: snapshot => ipcRenderer.invoke('account:refresh', snapshot),
+  updateTokens: (snapshot, tokens) => ipcRenderer.invoke('account:update-tokens', snapshot, tokens),
+  expireSession: snapshot => ipcRenderer.invoke('account:expire', snapshot),
+  switchAccount: () => ipcRenderer.invoke('account:switch'),
+  removeAccount: userId => ipcRenderer.invoke('account:remove', userId)
+}
+
 const loadApi = {
   // 判断是否需要进行初始化
   isNeedInitData: () => {
@@ -352,6 +366,7 @@ if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('electron', electronAPI)
     contextBridge.exposeInMainWorld('userInfoApi', userInfoApi)
+    contextBridge.exposeInMainWorld('accountApi', accountApi)
     contextBridge.exposeInMainWorld('loadApi', loadApi)
     contextBridge.exposeInMainWorld('dbApi', dbApi)
     contextBridge.exposeInMainWorld('uploadFileApi', uploadFileApi)
@@ -368,6 +383,7 @@ if (process.contextIsolated) {
 } else {
   window.electron = electronAPI
   window.userInfoApi = userInfoApi
+  window.accountApi = accountApi
   window.loadApi = loadApi
   window.dbApi = dbApi
   window.uploadFileApi = uploadFileApi

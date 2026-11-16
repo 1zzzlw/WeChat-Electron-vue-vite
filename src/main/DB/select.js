@@ -6,7 +6,7 @@ import { computedOffset } from './utils'
  * @returns -- true 存在，false 不存在
  */
 const isExistUserRecord = (userId) => {
-    const sql = 'select 1 from device_user_record where user_id = ?'
+    const sql = 'select 1 from device_user_record where user_id = ? and data_initialized = 1'
     const result = queryAll(sql, userId)
     if (result.length > 0) {
         // 存在登录记录

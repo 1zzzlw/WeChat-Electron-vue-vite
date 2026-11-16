@@ -14,6 +14,7 @@ import { initTable, initTableColumnsMap, close as closeDB } from './DB/mainDB.js
 import websocket from './websocket.js'
 import { initializeTheme, applyWindowTheme } from './Util/theme.js'
 import { logout } from './Util/logout.js'
+import { accountSession } from './auth/session.js'
 
 // 向后兼容：重导出供未迁移的模块使用
 export { store, refs, getIconPath, getTrayIcon, getEmptyTrayIcon } from './shared.js'
@@ -81,6 +82,7 @@ function createMainWindow() {
 
 function createTray() {
   const template = [
+    { label: '切换账号', click: () => { void logout({ keepCredentials: true }).catch(error => console.error('切换账号失败', error)) } },
     { label: '退出登录', click: () => { void logout().catch(error => console.error('退出登录失败', error)) } },
     {
       label: '退出应用',
@@ -114,12 +116,14 @@ app.whenReady().then(() => {
 
   Menu.setApplicationMenu(null)
 
+  initTable()
+  initTableColumnsMap()
+  accountSession.migrateLegacy()
+
   createMainWindow()
   createTray()
 
   setImmediate(() => {
-    initTable()
-    initTableColumnsMap()
     loadDeferredIPC()
   })
 

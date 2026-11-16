@@ -5,133 +5,105 @@ const vm = require('node:vm')
 const axios = require('axios')
 
 async function run() {
-    const root = path.join(__dirname, '..')
-    const refreshSource = fs.readFileSync(path.join(root, 'src/renderer/src/utils/axios/refreshToken.js'), 'utf8')
-        .replace(/^import[^\n]*\n/gm, '').replace(/export /g, '')
-    const requestSource = fs.readFileSync(path.join(root, 'src/renderer/src/utils/axios/request.js'), 'utf8')
-        .replace(/^import[^\n]*\n/gm, '').replace('import.meta.env.DEV', 'true').replace('export default server', '')
-    const results = []
-    const check = async (name, plan, scenario) => {
-        const values = { accessToken: 'old-access', token: 'valid-refresh', userId: 'A' }
-        const localValues = { token: 'old-access' }
-        const location = { href: '#/chat' }
-        let refreshCalls = 0
-        let ordinaryCalls = 0
-        let server
-        const quiet = { log() {}, info() {}, error() {} }
-        const api = vm.runInNewContext(refreshSource + '\n({ refreshToken, isRefreshToken });', {
-            console: quiet,
-            request: { post: (...args) => server.post(...args) },
-            getRefreshToken: async () => {
-                if (plan.ipcFailure) { plan.ipcFailure = false; throw new Error('模拟IPC读取失败') }
-                return values.token
-            }
-        })
-        const response = (config, status, data, headers = {}) => ({
-            config, status, data, headers, statusText: String(status)
-        })
-        const adapter = async config => {
-            if (config.url.startsWith('/user/refreshToken/')) {
-                refreshCalls++
-                assert.equal(config.__isRefreshToken, true)
-                assert.equal(config.headers.Authorization, 'valid-refresh')
-                const outcome = plan.responses.shift() || 'success'
-                if (outcome === 'network') throw new axios.AxiosError('模拟断网', 'ERR_NETWORK', config)
-                if (['400', '401', '500'].includes(outcome)) {
-                    throw new axios.AxiosError('模拟HTTP异常', 'ERR_BAD_RESPONSE', config, {}, response(config, Number(outcome), {}))
-                }
-                return response(config, 200, { code: outcome === 'businessFailure' ? 0 : 1 },
-                    outcome === 'businessFailure' ? {} : {
-                        authorization: 'Bearer new-access', refreshtoken: 'new-refresh'
-                    })
-            }
-            ordinaryCalls++
-            if (config.headers.Authorization === 'new-access') return response(config, 200, { code: 1 })
-            throw new axios.AxiosError('短期Token失效', 'ERR_BAD_REQUEST', config, {}, response(config, 401, {}))
-        }
-        server = vm.runInNewContext(requestSource + '\nserver;', {
-            axios: { create: options => axios.create({ ...options, adapter }) },
-            getAccessToken: () => localValues.token,
-            refreshToken: (...args) => api.refreshToken(...args),
-            isRefreshToken: api.isRefreshToken, console: quiet,
-            window: {
-                location,
-                userInfoApi: {
-                    storeGetUserInfo: async key => values[key],
-                    storeSetUserInfo: async (key, value) => { values[key] = value }
-                }
-            },
-            localStorage: {
-                getItem: key => localValues[key],
-                setItem: (key, value) => { localValues[key] = value }
-            }
-        })
-        try {
-            await scenario({ server, values, location, counts: () => ({ refreshCalls, ordinaryCalls }) })
-            results.push({ name, status: 'PASS' })
-        } catch (error) {
-            results.push({ name, status: 'FAIL', error: error.stack })
-        }
+  const root = path.join(__dirname, '..')
+  const refreshCode = fs.readFileSync(path.join(root, 'src/renderer/src/utils/axios/refreshToken.js'), 'utf8').replace(/export /g, '')
+  const requestCode = fs.readFileSync(path.join(root, 'src/renderer/src/utils/axios/request.js'), 'utf8').replace(/^import[^\n]*\n/gm, '').replace('import.meta.env.DEV', 'true').replace('export default server', '')
+  const results = []
+  const check = async (name, scenario) => {
+    try { await scenario(); results.push({ name, status: 'PASS' }) }
+    catch (error) { results.push({ name, status: 'FAIL', error: error.stack }) }
+  }
+  function fixture(outcomes = ['success']) {
+    let session = { userId: 'A', revision: 1, accessToken: 'old-access' }
+    let refreshCalls = 0, ordinaryCalls = 0, expired = 0
+    let resolveLate
+    let rejectLate
+    const local = { token: 'old-access' }
+    const same = snapshot => snapshot.userId === session.userId && snapshot.revision === session.revision
+    const accountApi = {
+      getSession: async () => ({ ...session }),
+      refreshSession: async snapshot => {
+        refreshCalls++
+        await new Promise(resolve => setTimeout(resolve, 5))
+        const outcome = outcomes.shift() || 'success'
+        if (outcome === 'network') throw new Error('network unavailable')
+        if (!same(snapshot)) return false
+        if (outcome === 'expired') return false
+        session.accessToken = 'new-access'
+        return true
+      },
+      updateTokens: async (snapshot, tokens) => {
+        if (!same(snapshot)) return false
+        if (tokens.accessToken) session.accessToken = tokens.accessToken
+        return true
+      },
+      expireSession: async snapshot => {
+        if (!same(snapshot)) return false
+        expired++
+        session = { userId: '', revision: session.revision + 1, accessToken: '' }
+        return true
+      }
     }
-    await check('网络失败后结束原请求，恢复网络后重新刷新成功',
-        { responses: ['network', 'success'] }, async ({ server, values, location, counts }) => {
-            await assert.rejects(server.get('/protected'), error => error.code === 'ERR_NETWORK')
-            assert.equal(values.token, 'valid-refresh')
-            assert.equal(location.href, '#/chat')
-            assert.equal((await server.get('/protected')).code, 1)
-            assert.equal(counts().refreshCalls, 2)
-        })
-    await check('多个401共享一次刷新并重放各自请求',
-        { responses: ['success'] }, async ({ server, counts }) => {
-            await Promise.all([server.get('/protected'), server.get('/protected'), server.get('/protected')])
-            assert.equal(counts().refreshCalls, 1)
-            assert.equal(counts().ordinaryCalls, 6)
-        })
-    await check('并发刷新失败时全部结束，后续可重新刷新',
-        { responses: ['network', 'success'] }, async ({ server, counts }) => {
-            const outcomes = await Promise.allSettled([
-                server.get('/protected'), server.get('/protected'), server.get('/protected')
-            ])
-            assert.equal(outcomes.filter(item => item.status === 'rejected').length, 3)
-            assert.equal(counts().refreshCalls, 1)
-            assert.equal((await server.get('/protected')).code, 1)
-            assert.equal(counts().refreshCalls, 2)
-        })
-    for (const status of ['400', '401']) {
-        await check('刷新HTTP' + status + '清理登录状态且不递归刷新',
-            { responses: [status] }, async ({ server, values, location, counts }) => {
-                await assert.rejects(server.get('/protected'))
-                assert.equal(values.token, '')
-                assert.equal(values.accessToken, '')
-                assert.equal(location.href, '#/login')
-                assert.equal(counts().refreshCalls, 1)
-            })
+    const refresh = vm.runInNewContext(refreshCode + '\n({ refreshToken, isRefreshToken })', { window: { accountApi } })
+    const makeResponse = (config, status = 200, headers = {}) => ({ config, status, headers, data: { code: 1 } })
+    const adapter = async config => {
+      if (config.url === '/late') return new Promise((resolve, reject) => { resolveLate = () => resolve(makeResponse(config, 200, { authorization: 'Bearer stale-access', refreshtoken: 'stale-refresh' })); rejectLate = () => reject(new axios.AxiosError('expired', 'ERR_BAD_REQUEST', config, {}, makeResponse(config, 401))) })
+      ordinaryCalls++
+      if (config.headers.Authorization === 'new-access') return makeResponse(config)
+      throw new axios.AxiosError('expired', 'ERR_BAD_REQUEST', config, {}, makeResponse(config, 401))
     }
-    await check('刷新HTTP500保留登录状态，后续刷新可恢复',
-        { responses: ['500', 'success'] }, async ({ server, location, counts }) => {
-            await assert.rejects(server.get('/protected'), error => error.response?.status === 500)
-            assert.equal(location.href, '#/chat')
-            assert.equal((await server.get('/protected')).code, 1)
-            assert.equal(counts().refreshCalls, 2)
-        })
-    await check('业务失败正常返回并进入原有登录流程',
-        { responses: ['businessFailure'] }, async ({ server, location }) => {
-            await assert.rejects(server.get('/protected'))
-            assert.equal(location.href, '#/login')
-        })
-    await check('读取本地Token异常后仍可再次刷新',
-        { responses: ['success'], ipcFailure: true }, async ({ server, counts }) => {
-            await assert.rejects(server.get('/protected'), /模拟IPC读取失败/)
-            assert.equal((await server.get('/protected')).code, 1)
-            assert.equal(counts().refreshCalls, 1)
-        })
-    const failures = results.filter(result => result.status === 'FAIL')
-    if (failures.length) { const error = new Error('Token刷新回归失败'); error.results = results; throw error }
-    return results
+    const server = vm.runInNewContext(requestCode + '\nserver', {
+      axios: { ...axios, create: options => axios.create({ ...options, adapter }) },
+      getAccessToken: () => local.token, getBackendUrl: () => 'http://unused.test',
+      ...refresh, window: { accountApi }, console: { log() {}, info() {}, error() {} },
+      localStorage: { setItem: (key, value) => { local[key] = value }, removeItem: key => { delete local[key] } }
+    })
+    return { server, local, state: () => ({ ...session }), counts: () => ({ refreshCalls, ordinaryCalls, expired }),
+      switchAccount: () => { session = { userId: 'B', revision: 2, accessToken: 'b-access' } },
+      late: () => resolveLate(), lateError: () => rejectLate() }
+  }
+  await check('网络刷新失败保留登录，后续可恢复', async () => {
+    const f = fixture(['network', 'success'])
+    await assert.rejects(f.server.get('/protected'), /network/)
+    assert.equal(f.state().userId, 'A')
+    assert.equal((await f.server.get('/protected')).code, 1)
+    assert.equal(f.counts().refreshCalls, 2)
+  })
+  await check('多个401共享一次刷新并分别重放', async () => {
+    const f = fixture()
+    await Promise.all([f.server.get('/protected'), f.server.get('/protected'), f.server.get('/protected')])
+    assert.equal(f.counts().refreshCalls, 1)
+    assert.equal(f.counts().ordinaryCalls, 6)
+  })
+  await check('无效长期凭据使当前会话退出', async () => {
+    const f = fixture(['expired'])
+    await assert.rejects(f.server.get('/protected'))
+    assert.equal(f.state().userId, '')
+    assert.equal(f.counts().expired, 1)
+    assert.equal(f.local.token, undefined)
+  })
+  await check('切换账号后迟到的成功响应不能更新Token', async () => {
+    const f = fixture()
+    const pending = f.server.get('/late')
+    const rejected = assert.rejects(pending, error => axios.isCancel(error))
+    await new Promise(resolve => setTimeout(resolve, 1))
+    f.switchAccount(); f.late()
+    await rejected
+    assert.equal(f.state().accessToken, 'b-access')
+  })
+  await check('切换账号后迟到的401不能刷新或退出新账号', async () => {
+    const f = fixture()
+    const pending = f.server.get('/late')
+    const rejected = assert.rejects(pending, error => axios.isCancel(error))
+    await new Promise(resolve => setTimeout(resolve, 1))
+    f.switchAccount(); f.lateError()
+    await rejected
+    assert.equal(f.counts().refreshCalls, 0)
+    assert.equal(f.counts().expired, 0)
+    assert.equal(f.state().userId, 'B')
+  })
+  if (results.some(r => r.status === 'FAIL')) { const error = new Error('Token刷新回归失败'); error.results = results; throw error }
+  return results
 }
-
 module.exports = { run }
-if (require.main === module) {
-    run().then(results => console.log('Token刷新回归：' + results.length + '项通过'))
-        .catch(error => { console.error(error.results || error); process.exitCode = 1 })
-}
+if (require.main === module) run().then(r => console.log('Token刷新回归：' + r.length + '项通过')).catch(e => { console.error(e.results || e); process.exitCode = 1 })

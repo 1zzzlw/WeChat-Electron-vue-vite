@@ -1,5 +1,7 @@
 import { store } from '../shared.js'
 import { ipcMain, safeStorage, BrowserWindow } from 'electron'
+import { accountSession } from '../auth/session.js'
+import { accounts } from '../DB/mainDB.js'
 
 const MODEL_API_KEYS_STORE_KEY = 'modelApiKeys'
 
@@ -51,11 +53,13 @@ const getModelApiKey = (modelConfig) => {
 
 // 存储用户信息
 ipcMain.handle('window:setUserInfo', (e, userInfoType, userInfo) => {
-  console.log(userInfoType)
-  console.info('设置用户信息', userInfoType, userInfoType === 'modelApiKey' ? '[REDACTED]' : userInfo)
   switch (userInfoType) {
     case 'token':
-      store.set('token', userInfo)
+      if (userInfo) accountSession.updateTokens(accountSession.snapshot(), null, userInfo)
+      else {
+        accountSession.saveToken(accountSession.snapshot().userId, '', false)
+        accountSession.refreshToken = ''
+      }
       break
     case 'accessToken':
       store.set('accessToken', userInfo)
@@ -97,6 +101,8 @@ ipcMain.handle('window:setUserInfo', (e, userInfoType, userInfo) => {
       break
   }
   if (['username', 'avatar', 'account', 'phone', 'email', 'birthday', 'gender', 'address'].includes(userInfoType)) {
+    const id = store.get('userId')
+    if (id) accounts.cacheProfile({ id, account: store.get('account'), username: store.get('username'), avatar: store.get('avatar') })
     for (const window of BrowserWindow.getAllWindows()) {
       if (!window.isDestroyed()) window.webContents.send('user:profile-changed', { key: userInfoType, value: userInfo })
     }
@@ -110,7 +116,7 @@ ipcMain.handle('window:getUserInfo', (e, userInfoType, userInfo) => {
   const result = (() => {
     switch (userInfoType) {
       case 'token':
-        return store.get('token')
+        return accountSession.getRefreshToken()
       case 'accessToken':
         return store.get('accessToken')
       case 'avatar':
@@ -139,6 +145,5 @@ ipcMain.handle('window:getUserInfo', (e, userInfoType, userInfo) => {
         return null
     }
   })()
-  console.log('获取到的值:', userInfoType === 'modelApiKey' ? '[REDACTED]' : result)
   return result
 })

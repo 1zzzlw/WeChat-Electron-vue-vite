@@ -1,3 +1,5 @@
+import accountRecords from './accountRecords.cjs'
+
 const init_table = [
   // 消息表
   `
@@ -30,15 +32,7 @@ const init_table = [
   );
   `,
   // 设备登录记录表
-  `
-    CREATE TABLE IF NOT EXISTS device_user_record (
-    user_id     INTEGER  NOT NULL PRIMARY KEY,  -- 用户ID
-    first_login_time  TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- 首次登录时间
-    last_login_time   TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- 最后登录时间
-    device_tag        TEXT,  -- 设备标识
-    app_version       TEXT   -- 首次登录时的App版本
-  );
-  `,
+  accountRecords.DEVICE_USER_TABLE_SQL,
   // 会话表
   `
     CREATE TABLE IF NOT EXISTS conversation (

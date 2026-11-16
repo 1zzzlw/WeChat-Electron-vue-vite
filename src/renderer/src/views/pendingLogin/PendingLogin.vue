@@ -17,34 +17,34 @@
 
 <script setup>
 import { ElMessage } from 'element-plus'
-import { onMounted, ref, nextTick } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { PendingLoginApi } from '@/api/User'
+import { enterAccount } from '@/utils/enterAccount'
 
 const router = useRouter()
 const isLoading = ref(false)
 const avatarUrl = ref('')
 
-const returnLogin = () => {
-  router.push('/login')
+const returnLogin = async () => {
+  await window.accountApi.switchAccount()
 }
 
 const confirmLogin = async () => {
+  if (isLoading.value) return
   isLoading.value = true
-  const token = await window.userInfoApi.storeGetUserInfo('token')
-  const userId = await window.userInfoApi.storeGetUserInfo('userId')
-  const res = await PendingLoginApi(token, userId)
-  if (res.code === 1) {
-    // 等待更新成功的通知
-    console.info('响应成功')
-    await window.dbApi.updateDBData()
-    await router.push('/main')
-    await nextTick()
-    await window.windowToolApi.resizeWindow('main')
-  } else {
-    ElMessage.error('登录过期，重新登录', res.msg)
-    await router.push('/login')
-    await window.windowToolApi.resizeWindow('login')
+  try {
+    const userId = await window.userInfoApi.storeGetUserInfo('userId')
+    const res = await PendingLoginApi(userId)
+    if (res.code === 1) await enterAccount(router)
+    else {
+      ElMessage.warning(res.msg || '登录过期，请重新登录')
+      if (res.requiresPassword) await returnLogin()
+    }
+  } catch {
+    ElMessage.error('连接服务失败，请稍后重试')
+  } finally {
+    isLoading.value = false
   }
 }
 
@@ -56,6 +56,16 @@ onMounted(async () => {
 
 <style scoped>
 @import '@/css/account.css';
-.pending-login-mid { display: grid; place-items: center; padding: 24px 0; }
-.avatar { width: 104px; height: 104px; object-fit: cover; border-radius: var(--radius-lg); border: 1px solid var(--color-border-subtle); }
+.pending-login-mid {
+  display: grid;
+  place-items: center;
+  padding: 24px 0;
+}
+.avatar {
+  width: 104px;
+  height: 104px;
+  object-fit: cover;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border-subtle);
+}
 </style>

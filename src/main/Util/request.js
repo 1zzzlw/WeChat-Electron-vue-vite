@@ -1,9 +1,11 @@
 import axios from "axios";
-import { store } from '../shared.js'
+import { accountSession } from '../auth/session.js'
+import { is } from '@electron-toolkit/utils'
+import { getBackendUrl } from '../../shared/backend.js'
 
 const server = axios.create(
     {
-        baseURL: 'http://127.0.0.1:81',
+        baseURL: getBackendUrl(is.dev),
         // 超时时间
         timeout: 600000
     }
@@ -35,7 +37,7 @@ server.interceptors.response.use(
 // 注意：主进程调用的 /message/verifyUploadToken、/message/merge 等路径在 Gateway 的
 // refreshPaths 中，必须使用长期 token（fresh-secret 签发），不能用短期 accessToken。
 server.interceptors.request.use(config => {
-    const token = store.get('token')
+    const token = accountSession.getRefreshToken()
     if (token) {
         config.headers.Authorization = token
     }

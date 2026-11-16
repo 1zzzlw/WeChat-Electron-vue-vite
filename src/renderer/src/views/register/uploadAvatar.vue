@@ -22,10 +22,11 @@
 <script lang="ts" setup>
 import { Plus } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { onMounted, reactive, ref, nextTick } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { registerApi } from '@/api/User'
 import { useRegisterInfoStore } from '@/stores/modules/RegisterInfoStore'
+import { enterAccount } from '@/utils/enterAccount'
 
 interface UserInfo {
   username: string
@@ -77,34 +78,13 @@ const submitForm = async () => {
   // 调用注册接口
   registerApi(formData).then(async (res: any) => {
     if (res.code === 1) {
-      console.info('注册成功:', res)
       ElMessage.success('注册成功');
-      const userBaseInfo: any = res.data;
-      // 注册成功后，将用户id保存到本地
-      (window as any).userInfoApi.storeSetUserInfo('userId', userBaseInfo.userId);
-      (window as any).userInfoApi.storeSetUserInfo('avatar', userBaseInfo.avatar);
-      (window as any).userInfoApi.storeSetUserInfo('username', userBaseInfo.username);
-      (window as any).userInfoApi.storeSetUserInfo('phone', userBaseInfo.phone);
-      (window as any).userInfoApi.storeSetUserInfo('account', userBaseInfo.account);
-      (window as any).userInfoApi.storeSetUserInfo('gender', userBaseInfo.gender);
 
 
       // 清空缓存的注册信息
       registerInfoStore.$reset()
 
-      let removeInitListener: (() => void) | undefined
-      const enterRequested = new Promise(resolve => {
-        removeInitListener = (window as any).loadApi.onDataInitComplete(resolve)
-      })
-      try {
-        const isNeed = await (window as any).loadApi.isNeedInitData()
-        if (isNeed) await enterRequested
-        await router.push('/main')
-        await nextTick()
-        await (window as any).windowToolApi.resizeWindow('main')
-      } finally {
-        removeInitListener?.()
-      }
+      await enterAccount(router)
     } else {
       ElMessage.error(res.msg)
     }

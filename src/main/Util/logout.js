@@ -4,14 +4,16 @@ import { join } from 'path'
 import { store, refs } from '../shared.js'
 import websocket from '../websocket.js'
 import { finishLoadingWindow } from '../IPC/initDataIPC.js'
+import { accountSession } from '../auth/session.js'
 
 let loggingOut = false
 
-export async function logout() {
+export async function logout({ keepCredentials = false } = {}) {
     const window = refs.mainWindow
     if (loggingOut || !window || window.isDestroyed()) return
     loggingOut = true
     try {
+        accountSession.clearCurrent(keepCredentials)
         for (const key of ['token', 'accessToken', 'userId']) store.delete(key)
         websocket.disconnect()
         finishLoadingWindow()

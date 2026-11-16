@@ -6,6 +6,7 @@
 
 // 关键模块 - 启动时立即加载
 import './userInfoStoreIPC.js'
+import './accountIPC.js'
 import './windowToolIPC.js'
 import './websocketIPC.js'
 import './DBIPC.js'

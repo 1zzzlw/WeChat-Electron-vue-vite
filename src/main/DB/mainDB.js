@@ -4,6 +4,7 @@ const Database = require('better-sqlite3')
 import { init_table, table_index } from './tableInfo'
 import { toCamelCase, convertDBObjToCamelCase } from './utils'
 import { join } from 'path'
+import accountRecords from './accountRecords.cjs'
 
 const userDataDir = app.getPath('userData')
 const dbPath = join(userDataDir, 'local.db')
@@ -12,6 +13,7 @@ console.log(dbPath)
 
 // 把 SQLite 内部执行的每一条 SQL 语句和相关信息输出到控制台，便于开发阶段调试。
 const db = new Database(dbPath, is.dev ? { verbose: console.log } : {})
+const accounts = accountRecords.createAccountRepository(db)
 
 // 全局的所有表结构的字段映射关系
 let globalColumnsMap = []
@@ -35,6 +37,8 @@ const initTable = () => {
             return
         }
     }
+
+    accountRecords.migrateDeviceUserRecords(db)
 
     // 初始化索引
     for (const index of table_index) {
@@ -74,10 +78,7 @@ const initTableColumnsMap = () => {
  * @param userId -- 用户id
  */
 const initAndUpdateUserLoginRecord = (id) => {
-    const data = {
-        userId: id
-    }
-    insert('device_user_record', data)
+    accounts.markInitialized(id)
 }
 
 /**
@@ -264,6 +265,7 @@ const close = () => {
 
 export {
     db,
+    accounts,
     globalColumnsMap,
     initTable,
     initTableColumnsMap,

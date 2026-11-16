@@ -1,74 +1,80 @@
 <template>
-  <div class="chat-file file-downloading">
-    <img class="file-icon" src="../assets/wenjian.svg" alt="" />
+  <div class="chat-file">
+    <div class="file-icon" aria-hidden="true">
+      <el-icon><Document /></el-icon>
+    </div>
     <div class="file">
-      <div class="file-content">
-        <span class="file-name">{{ fileName }}</span>
-        <span class="file-size">{{ formatFileSize(fileSize) }}</span>
-      </div>
-      <!-- 下载 -->
-      <div v-if="!isUpload">
-        <div v-if="downloadStatus === 0 && nowDownloadStatus === statusMap.downloading.value">
-          <div class="file-process">
-            <el-progress class="download-progress" :percentage="downloadProgress > 100 ? 100 : downloadProgress" />
-          </div>
-          <div class="upload-speed">
-            <span>下载进度 {{ downloadSpeed }} MB/s</span>
-          </div>
+      <span class="file-name" :title="fileName">{{ fileName }}</span>
+      <span class="file-size">{{ formatFileSize(fileSize) }}</span>
+      <el-progress
+        v-if="transferring && !transferFailed"
+        class="file-progress"
+        :class="{ 'is-paused': transferPaused }"
+        :percentage="transferProgress"
+        :show-text="false"
+        :stroke-width="4"
+        :aria-label="isUpload ? '文件上传进度' : '文件下载进度'"
+      />
+      <div class="file-footer">
+        <div
+          class="file-status"
+          :class="{
+            fail: transferFailed,
+            complete: transferFinished && (!isUpload || sendStatus === 1) && !transferFailed
+          }"
+        >
+          <template v-if="transferFailed"
+            ><el-icon><CloseBold /></el-icon>{{ isUpload ? '发送失败' : '下载失败' }}</template
+          >
+          <template v-else-if="transferring">
+            <span>{{
+              transferPaused
+                ? '已暂停'
+                : isUpload && transferProgress === 100
+                  ? '正在处理'
+                  : `${isUpload ? '上传中' : '下载中'} ${transferProgress}%`
+            }}</span>
+            <span v-if="!transferPaused && transferProgress < 100" class="file-speed"
+              >{{ transferSpeed }} MB/s</span
+            >
+          </template>
+          <template v-else-if="transferFinished">
+            <el-icon v-if="!isUpload || sendStatus === 1"><Select /></el-icon>
+            <span>{{ isUpload ? (sendStatus === 1 ? '已发送' : '等待消息确认') : '已下载' }}</span>
+          </template>
+          <span v-else>{{ isUpload ? '准备上传' : '待下载' }}</span>
         </div>
-        <div class="file-status complete"
-          v-else-if="downloadStatus === 1 || nowDownloadStatus === statusMap.download_finish.value">
-          <el-icon><Select /></el-icon>
-        </div>
-        <div class="file-status fail" v-else-if="downloadStatus === 2 || nowDownloadStatus === statusMap.fail.value">
-          <el-icon>
-            <CloseBold />
-          </el-icon>
-        </div>
-      </div>
-      <!-- 上传 -->
-      <div v-else>
-        <div v-if="sendStatus === 0 && uploadStatus === statusMap.uploading.value">
-          <div class="file-process">
-            <el-progress :percentage="uploadProgress > 100 ? 100 : uploadProgress" />
-          </div>
-          <div class="upload-speed">
-            <span>上传进度 {{ uploadSpeed }} MB/s</span>
-          </div>
-        </div>
-        <div class="file-status complete"
-          v-else-if="sendStatus === 1 || uploadStatus === statusMap.upload_finish.value">
-          <el-icon><Select /></el-icon>
-        </div>
-        <div class="file-status fail" v-else-if="sendStatus === 2 || uploadStatus === statusMap.fail.value">
-          <el-icon>
-            <CloseBold />
-          </el-icon>
-        </div>
+        <el-button
+          v-if="!isUpload && downloadStatus === 0 && nowDownloadStatus === statusMap.preview.value"
+          class="file-action"
+          size="small"
+          @click="downloadFile"
+          >下载</el-button
+        >
+        <el-button
+          v-else-if="transferring && !transferFailed && transferProgress < 100"
+          class="file-action"
+          size="small"
+          @click="
+            isUpload
+              ? pause
+                ? startUpload()
+                : pauseUpload()
+              : downloadPause
+                ? startDownload()
+                : pauseDownload()
+          "
+        >
+          {{ transferPaused ? '继续' : '暂停' }}
+        </el-button>
       </div>
     </div>
-
-    <!-- 下载按钮（右下角） -->
-    <el-button v-if="!isUpload && downloadStatus === 0 && nowDownloadStatus === statusMap.preview.value"
-      class="action-btn-float" @click="downloadFile">下载</el-button>
-
-    <!-- 下载暂停/开始按钮（右下角） -->
-    <el-button v-if="!isUpload && downloadStatus === 0 && nowDownloadStatus === statusMap.downloading.value && !downloadPause"
-      class="action-btn-float" @click="pauseDownload">暂停</el-button>
-    <el-button v-if="!isUpload && downloadStatus === 0 && nowDownloadStatus === statusMap.downloading.value && downloadPause"
-      class="action-btn-float" @click="startDownload">开始</el-button>
-
-    <!-- 上传暂停/开始按钮（右下角） -->
-    <el-button v-if="isUpload && sendStatus === 0 && uploadStatus === statusMap.uploading.value && !pause"
-      class="action-btn-float" @click="pauseUpload">暂停</el-button>
-    <el-button v-if="isUpload && sendStatus === 0 && uploadStatus === statusMap.uploading.value && pause"
-      class="action-btn-float" @click="startUpload">开始</el-button>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch, nextTick } from 'vue';
-import { Select, CloseBold } from '@element-plus/icons-vue';
+import { Document, Select, CloseBold } from '@element-plus/icons-vue';
 import { useRoute } from 'vue-router'
 import { FileUploadStatusInfo, FileDownloadStatusInfo } from '@/types/fileBaseInfo';
 import { statusMap } from '@/utils/constants';
@@ -148,6 +154,32 @@ const downloadPause = computed(() =>
   fileStatusListInfoStore.getFileDownloadInfo(props.fileId)?.pause || false
 )
 
+const transferring = computed(() =>
+  props.isUpload
+    ? props.sendStatus === 0 && uploadStatus.value === statusMap.uploading.value
+    : props.downloadStatus === 0 && nowDownloadStatus.value === statusMap.downloading.value
+)
+const transferProgress = computed(() =>
+  Math.min(
+    100,
+    Math.max(0, Math.round(props.isUpload ? uploadProgress.value : downloadProgress.value))
+  )
+)
+const transferPaused = computed(() => (props.isUpload ? pause.value : downloadPause.value))
+const transferSpeed = computed(() =>
+  (props.isUpload ? uploadSpeed.value : downloadSpeed.value).toFixed(2)
+)
+const transferFailed = computed(() =>
+  props.isUpload
+    ? props.sendStatus === 2 || uploadStatus.value === statusMap.fail.value
+    : props.downloadStatus === 2 || nowDownloadStatus.value === statusMap.fail.value
+)
+const transferFinished = computed(() =>
+  props.isUpload
+    ? props.sendStatus === 1 || uploadStatus.value === statusMap.upload_finish.value
+    : props.downloadStatus === 1 || nowDownloadStatus.value === statusMap.download_finish.value
+)
+
 const downloadFile = () => {
   const fileId = props.fileId
   fileStatusListInfoStore.addFileDownloadInfo(fileId, {
@@ -215,264 +247,104 @@ watch(
 <style scoped>
 .chat-file {
   display: flex;
-  gap: 20px;
-  border-radius: 12px;
-  padding: 16px;
-  background: rgba(var(--color-surface-rgb), 0.4);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  align-items: flex-start;
+  gap: 12px;
+  width: 320px;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 14px;
   border: 1px solid var(--color-border-subtle);
-  transition: all 0.2s ease;
-  position: relative;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-1);
+  color: var(--color-text-primary);
 }
-
-.chat-file:hover {
-  background: rgba(var(--color-surface-rgb), 0.4);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
-}
-
-/* 文件图标区域 */
 .file-icon {
-  width: 80px;
-  height: 80px;
-  background: rgba(var(--color-surface-rgb), 0.4);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
+  display: grid;
+  place-items: center;
+  flex: 0 0 44px;
+  height: 52px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-deep);
+  color: var(--color-text-secondary);
 }
-
-.file-icon img {
-  width: 40px;
-  height: 40px;
-  opacity: 0.85;
-  transition: opacity 0.2s ease;
+.file-icon .el-icon {
+  font-size: 28px;
 }
-
-.file-icon:hover {
-  background: rgba(var(--color-surface-rgb), 0.4);
-}
-
-.file-icon:hover img {
-  opacity: 1;
-}
-
-
 .file {
   display: flex;
-  flex-direction: column;
   flex: 1;
-  gap: 8px;
-  color: var(--color-text-primary);
-  font-size: 13px;
-  line-height: 1.5;
+  flex-direction: column;
+  min-width: 0;
+  gap: 5px;
 }
-
-.file-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 20px;
-}
-
 .file-name {
-  font-weight: 500;
-  color: var(--color-text-primary);
-  max-width: 200px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  color: var(--color-text-strong);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 20px;
 }
-
-.file-size {
+.file-size,
+.file-speed {
+  color: var(--color-text-muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.file-progress {
+  margin-top: 5px;
+}
+.file-progress :deep(.el-progress-bar__outer) {
+  background: var(--color-surface-3);
+}
+.file-progress :deep(.el-progress-bar__inner) {
+  background: var(--color-accent);
+}
+.file-progress.is-paused :deep(.el-progress-bar__inner) {
+  background: var(--color-text-muted);
+}
+.file-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 24px;
+  margin-top: 3px;
+}
+.file-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  min-width: 0;
   color: var(--color-text-secondary);
-  font-size: 12px;
+  font-size: 11px;
+  line-height: 18px;
 }
-
-.file-process {
-  margin-top: 4px;
-  position: relative;
-}
-
-.el-progress {
-  height: 8px;
-  border-radius: 4px;
-  background-color: rgba(var(--color-surface-rgb), 0.4);
-  position: relative;
-}
-
-:deep(.el-progress__text) {
-  color: var(--color-text-primary);
-  font-size: 8px;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 2;
-}
-
-:deep(.el-progress-bar__outer) {
-  background-color: rgba(var(--color-surface-rgb), 0.4);
-  border-radius: 4px;
-  height: 8px;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-:deep(.el-progress-bar__inner) {
-  background: linear-gradient(90deg, #4a90e2 0%, #5c9ef0 100%);
-  border-radius: 4px;
-  height: 8px;
-  box-shadow: 0 1px 2px rgba(74, 144, 226, 0.3);
-  transition: width 0.3s ease;
-  position: relative;
-}
-
-/* 添加进度条动画效果 */
-:deep(.el-progress-bar__inner::before) {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent 0%, rgba(var(--color-surface-rgb), 0.4) 50%, transparent 100%);
-  animation: progress-shine 1.5s infinite;
-}
-
-@keyframes progress-shine {
-  to {
-    left: 100%;
-  }
-}
-
-.upload-speed {
-  color: var(--color-text-secondary);
-  font-size: 12px;
-  margin-top: 4px;
-}
-
-/* 下载/暂停/开始操作按钮（右下角） */
-.download-progress :deep(.el-progress-bar__inner) {
-  transition: none;
-}
-
-.action-btn-float {
-  position: absolute;
-  right: 12px;
-  bottom: 12px;
-  height: 26px;
-  padding: 2px 14px;
-  font-size: 12px;
-  border-radius: 8px;
-  background: rgba(var(--color-surface-rgb), 0.4);
-  border: 1px solid var(--color-border-subtle);
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  transition: all 0.25s ease;
-  z-index: 2;
-}
-.action-btn-float:hover {
-  background: rgba(74, 144, 226, 0.25);
-  border-color: rgba(74, 144, 226, 0.45);
-  color: #4a90e2;
-  box-shadow: 0 2px 8px rgba(74, 144, 226, 0.2);
-  transform: translateY(-1px);
-}
-
-/* 为不同状态添加样式 */
-.file-downloading {
-  animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(74, 144, 226, 0.3);
-  }
-
-  70% {
-    box-shadow: 0 0 0 8px rgba(74, 144, 226, 0.05);
-  }
-
-  100% {
-    box-shadow: 0 0 0 0 rgba(74, 144, 226, 0);
-  }
-}
-
-.download-button,
-.pause-button {
-  height: 25px;
-  padding: 4px 12px;
-  font-size: 12px;
-  border-radius: 6px;
-  background: rgba(var(--color-surface-rgb), 0.4);
-  border: 1px solid var(--color-border-subtle);
-  color: var(--color-text-primary);
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
-}
-
-.download-button:hover,
-.pause-button:hover {
-  background: rgba(74, 144, 226, 0.25);
-  border-color: rgba(74, 144, 226, 0.4);
-  color: #4a90e2;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(74, 144, 226, 0.15);
-}
-
-.download-button:active .pause-button:active {
-  background: rgba(74, 144, 226, 0.35);
-  border-color: rgba(74, 144, 226, 0.5);
-  transform: translateY(0);
-  box-shadow: 0 1px 2px rgba(74, 144, 226, 0.1);
-}
-
-/* 上传完成样式 - 右下角定位 */
 .file-status.complete {
-  position: absolute;
-  right: 12px;
-  bottom: 12px;
-  color: #4ade80;
-  font-size: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  background: rgba(74, 222, 128, 0.15);
-  border-radius: 50%;
-  padding: 0;
+  color: var(--color-success);
 }
-
-/* 上传失败样式 - 右下角定位 */
 .file-status.fail {
-  position: absolute;
-  right: 12px;
-  bottom: 12px;
-  color: #f87171;
-  font-size: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
+  color: var(--color-danger);
+}
+.file-action.el-button {
+  flex-shrink: 0;
+  width: auto;
   height: 24px;
-  background: rgba(248, 113, 113, 0.15);
-  border-radius: 50%;
-  padding: 0;
+  margin: 0;
+  padding: 0 9px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 11px;
 }
-
-.file-status.complete:hover {
-  background: rgba(74, 222, 128, 0.25);
-  transform: scale(1.1);
-  transition: all 0.2s ease;
-}
-
-.file-status.fail:hover {
-  background: rgba(248, 113, 113, 0.25);
-  transform: scale(1.1);
-  transition: all 0.2s ease;
+.file-action.el-button:hover,
+.file-action.el-button:focus-visible {
+  border-color: var(--color-border-hover);
+  background: var(--color-surface-2);
+  color: var(--color-text-strong);
 }
 </style>

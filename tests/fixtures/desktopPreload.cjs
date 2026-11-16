@@ -50,6 +50,11 @@ contextBridge.exposeInMainWorld('userInfoApi', {
     storeGetUserInfo: async key => ({ token: 'fixture-only', userId: location.hash.startsWith('#/friendAdd') ? '200' : 'fixture-user', username: '天空', avatar })[key],
     storeSetUserInfo: async (key, value) => ipcRenderer.send('fixture:profile:set', key, value)
 })
+contextBridge.exposeInMainWorld('accountApi', {
+    getSession: async () => ({ userId: 'fixture-user', revision: 0, accessToken: 'fixture-only' }),
+    listAccounts: async () => [], capabilities: async () => ({ canRememberLogin: true }),
+    updateTokens: async () => true, refreshSession: async () => false, expireSession: async () => false
+})
 contextBridge.exposeInMainWorld('windowToolApi', {
     registerGlobalShortcut() {}, windowControls() {}, resizeWindow() {},
     getPendingData: async () => location.hash.startsWith('#/updateMomentView') ? { id: 'fixture-post', content: '<p>已有动态内容</p>' } : ({ conversation: location.search.includes('group=1') ? { ...conversation, id: 'fixture-group', type: 1, name: '设计讨论组' } : conversation }), sendWindowInfo() {},

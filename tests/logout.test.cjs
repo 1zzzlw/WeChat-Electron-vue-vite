@@ -18,6 +18,7 @@ test('退出登录结束旧页面、清除凭证并保留历史和外观配置�
         .replace(/^import .*\r?\n/gm, '').replace('export async function', 'async function')
         .replace("import('../File/fileUpload.js')", 'Promise.resolve({ cancelAllUploads: cancelUploadsMock })')
     const context = { refs: { mainWindow: main }, store: { delete: key => { delete saved[key] } },
+        accountSession: { clearCurrent: keep => events.push(['clear-session', keep]) },
         BrowserWindow: { getAllWindows: () => [main, child] }, websocket: { disconnect: () => events.push('disconnect') },
         finishLoadingWindow: () => events.push('finish-loading'), cancelUploadsMock: () => events.push('cancel-uploads'),
         is: { dev: false }, process: { env: {} }, join: path.join, __dirname }
@@ -36,5 +37,6 @@ test('退出登录结束旧页面、清除凭证并保留历史和外观配置�
     assert.equal(events.filter(event => event === 'cancel-uploads').length, 1)
     assert.ok(events.indexOf('about:blank') < events.indexOf('/login'))
     assert.ok(events.indexOf('disconnect') < events.indexOf('about:blank'))
-    assert.deepEqual(events.find(event => Array.isArray(event)), ['size', 400, 580])
+    assert.deepEqual(events.find(event => Array.isArray(event) && event[0] === 'size'), ['size', 400, 580])
+    assert.deepEqual(events.find(event => Array.isArray(event) && event[0] === 'clear-session'), ['clear-session', false])
 })
