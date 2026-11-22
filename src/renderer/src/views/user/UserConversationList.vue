@@ -2,7 +2,8 @@
   <div class="user-message-list">
     <div class="user-message-list-left">
       <div class="message-list-top">
-        <AutocompleteSearch @select-contact="openContact" @select-conversation="starCall" @select-message="openMessage" />
+        <AutocompleteSearch @select-contact="openContact" @select-conversation="starCall"
+          @select-message="openMessage" />
         <el-dropdown trigger="click">
           <el-button style="background-color: var(--color-surface-1); border-color: var(--color-border-subtle);"
             :icon="Plus" square></el-button>
@@ -17,44 +18,54 @@
 
       <div class="message-list-bottom">
         <el-scrollbar>
-          <div v-for="conversation in conversationListArr" :key="conversation.id" :class="{
-            'left-list-bg': active === conversation.id,
-            'top-bg': conversation.isTop === 1
-          }" @click="starCall(conversation)">
-            <ContextMenu :menu="[
-              conversation.isTop === 1 ? { label: '取消置顶' } : { label: '置顶聊天' },
-              Number(conversation.unreadCount) > 0 ? { label: '标为已读' } : { label: '标为未读' },
-              { divider: true },
-              conversation.isMute === 1 ? { label: '取消消息免打扰' } : { label: '消息免打扰' },
-              { label: '独立窗口显示' },
-              { divider: true },
-              { label: '删除' },
-            ]" @select="(item) => handleChoice(item, conversation.id)">
-              <div class="left-list">
-                <div class="left-image">
-                  <UnreadCounts class="avatar-unread" :unreadCounts="Number(conversation.unreadCount) || 0" />
-                  <div v-if="conversation.type === 2 && conversation.avatar === null" class="iconfont icon-ai-chat">
+          <TransitionGroup name="conversation" tag="div" @dragover="onDragOver" @drop.prevent>
+            <div class="conversation-item" draggable="true" @dragstart="onDragStart($event, index)"
+              @dragenter="onDragEnter($event, index)" @dragend="onDragEnd"
+              v-for="(conversation, index) in conversationListArr" :key="conversation.id"
+              :data-conversation-id="conversation.id" :class="{
+                'left-list-bg': active === conversation.id,
+                'top-bg': conversation.isTop === 1
+              }" @click="starCall(conversation)">
+              <ContextMenu :menu="[
+                conversation.isTop === 1 ? { label: '取消置顶' } : { label: '置顶聊天' },
+                Number(conversation.unreadCount) > 0 ? { label: '标为已读' } : { label: '标为未读' },
+                { divider: true },
+                conversation.isMute === 1 ? { label: '取消消息免打扰' } : { label: '消息免打扰' },
+                { label: '独立窗口显示' },
+                { divider: true },
+                { label: '删除' },
+              ]" @select="(item) => handleChoice(item, conversation.id)">
+                <div class="left-list">
+                  <div class="left-image">
+                    <UnreadCounts class="avatar-unread" :unreadCounts="Number(conversation.unreadCount) || 0" />
+                    <div v-if="conversation.type === 2 && conversation.avatar === null" class="iconfont icon-ai-chat">
+                    </div>
+                    <img v-else :src="conversation.avatar" alt="头像" class="left-list-img"
+                      :draggable="false" />
                   </div>
-                  <img v-else :src="conversation.avatar + '?t=' + Date.now()" alt="头像" class="left-list-img" />
-                </div>
-                <div class="mid-message">
-                  <h1 class="friend-name">{{ conversation.remark || friendInfoStore.friendInfoMap[conversation.targetId
-                    ||
-                    '']?.remark || conversation.name }}</h1>
-                  <div class="friend-message">{{ conversation.latestMsg }}</div>
-                </div>
-                <div class="right-count">
-                  <div class="left-list-time" v-if="conversation.latestMsgTime !== 'Invalid Date'">
-                    {{ conversation.latestMsgTime }}
+                  <div class="mid-message">
+                    <h1 class="friend-name">{{ conversation.remark || friendInfoStore.friendInfoMap[conversation.targetId
+                      ||
+                      '']?.remark || conversation.name }}</h1>
+                    <div class="friend-message">{{ conversation.latestMsg }}</div>
                   </div>
-                  <div v-if="conversation.isMute === 1 || conversation.isTop === 1" class="conversation-status">
-                    <el-icon v-if="conversation.isTop === 1" title="已置顶" aria-label="已置顶"><Top /></el-icon>
-                    <el-icon v-if="conversation.isMute === 1" title="消息免打扰" aria-label="消息免打扰"><MuteNotification /></el-icon>
+                  <div class="right-count">
+                    <div class="left-list-time" v-if="conversation.latestMsgTime !== 'Invalid Date'">
+                      {{ conversation.latestMsgTime }}
+                    </div>
+                    <div v-if="conversation.isMute === 1 || conversation.isTop === 1" class="conversation-status">
+                      <el-icon v-if="conversation.isTop === 1" title="已置顶" aria-label="已置顶">
+                        <Top />
+                      </el-icon>
+                      <el-icon v-if="conversation.isMute === 1" title="消息免打扰" aria-label="消息免打扰">
+                        <MuteNotification />
+                      </el-icon>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </ContextMenu>
-          </div>
+              </ContextMenu>
+            </div>
+          </TransitionGroup>
         </el-scrollbar>
       </div>
     </div>
@@ -62,8 +73,8 @@
     <div class="user-chat-list-right">
       <router-view v-slot="{ Component }">
         <component :is="Component" v-if="Component" />
-        <ChatWelcome v-else :userName="userName" :conversations="conversationListArr"
-          @open="starCall" @add-friend="addFriend" @create-group="createGroupChat" />
+        <ChatWelcome v-else :userName="userName" :conversations="conversationListArr" @open="starCall"
+          @add-friend="addFriend" @create-group="createGroupChat" />
       </router-view>
     </div>
   </div>
@@ -95,6 +106,59 @@ const userId = ref()
 const userName = ref('')
 const conversationStore = conversationInfo()
 const friendInfoStore = friendInfo()
+// 只保存当前页面的手动顺序，会话内容仍然从 store 实时读取。
+const conversationOrder = ref<string[]>([])
+
+let sourceNode: HTMLElement | null = null
+let sourceIndex: number | null = null
+
+const onDragStart = (e: DragEvent, index: number) => {
+  const target = e.currentTarget as HTMLElement
+  sourceNode = target
+  sourceIndex = index
+
+  if (e.dataTransfer) {
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', conversationListArr.value[index].id)
+  }
+
+  // 等浏览器生成拖拽缩略图后，再改变原位置的样式。
+  setTimeout(() => {
+    if (sourceNode === target) target.classList.add('moving')
+  }, 0)
+}
+
+const onDragEnter = (e: DragEvent, index: number) => {
+  e.preventDefault()
+  const current = e.currentTarget as HTMLElement
+  if (!sourceNode || current === sourceNode) return
+  // 在同一行的头像、文字之间移动时，不重复排序。
+  if (e.relatedTarget instanceof Node && current.contains(e.relatedTarget)) return
+
+  const list = [...conversationListArr.value]
+  const sourceId = sourceNode.dataset.conversationId
+  sourceIndex = list.findIndex(conversation => conversation.id === sourceId)
+  if (sourceIndex === -1 || sourceIndex === index) return
+  // 保留置顶分组，只允许在同一分组内调整顺序。
+  if ((list[sourceIndex].isTop === 1) !== (list[index].isTop === 1)) return
+
+  // 向下拖时插到目标后面，向上拖时插到目标前面。
+  const [conversation] = list.splice(sourceIndex, 1)
+  list.splice(index, 0, conversation)
+  conversationOrder.value = list.map(item => item.id)
+  sourceIndex = index
+}
+
+const onDragOver = (e: DragEvent) => {
+  e.preventDefault()
+  if (sourceNode && e.dataTransfer) e.dataTransfer.dropEffect = 'move'
+}
+
+const onDragEnd = () => {
+  sourceNode?.classList.remove('moving')
+  sourceNode = null
+  sourceIndex = null
+}
 
 const starCall = async (conversation: Conversation, messageId?: string) => {
   if (conversation.status === 0 || !conversationStore.conversationMap[conversation.id]) {
@@ -221,13 +285,18 @@ const conversationListArr = computed(() => {
   // AI 工作台使用 Main 的独立导航，普通会话列表只保留单聊和群聊
   const list = Object.values(conversationStore.conversationMap)
     .filter((conversation) => conversation.type !== 2 && conversation.status !== 0)
+  const order = new Map(conversationOrder.value.map((id, index) => [id, index]))
 
-  // 按置顶和时间排序
+  // 先按置顶分组；拖拽后按手动顺序，否则沿用时间排序。
   return list.sort((a: any, b: any) => {
     // 置顶的排前面
     if (a.isTop !== b.isTop) {
       return b.isTop - a.isTop
     }
+
+    // 新会话没有手动索引，放在所属分组的前面。
+    const orderDiff = (order.get(a.id) ?? -1) - (order.get(b.id) ?? -1)
+    if (orderDiff !== 0) return orderDiff
 
     if (!a.latestMsgTime) return 1
     if (!b.latestMsgTime) return -1
@@ -339,6 +408,22 @@ onMounted(async () => {
   color: var(--color-text-muted);
   font-size: 13px;
   line-height: 1;
+}
+
+.conversation-move {
+  transition: transform 0.2s ease;
+}
+
+.conversation-item.moving .left-list {
+  background-color: var(--color-surface-2);
+  box-shadow: inset 0 0 10px rgba(var(--color-accent-rgb), 0.1);
+  opacity: 0.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .conversation-move {
+    transition: none;
+  }
 }
 
 /* 固定头像尺寸；角标脱离普通文档流，不挤压头像、昵称或时间。 */
