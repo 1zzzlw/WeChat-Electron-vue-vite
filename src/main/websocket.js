@@ -82,6 +82,7 @@ class WebSocketManager {
         this.lastMessageAt = 0
         this.presenceReady = false
         this.presencePending = false
+        this.mobileOnline = false
         // 当前是否正在连接
         this.isConnect = false
         // 当前的重连次数
@@ -172,6 +173,10 @@ class WebSocketManager {
             const { messageType, data } = decodeMessage(event.data)
             this.lastMessageAt = Date.now()
             if (messageType === 0) return
+            if (messageType === 20) {
+                this.setMobileOnline(data.appOnline === true)
+                return
+            }
             if (messageType === 10) this.presencePending = false
             console.info(`收到WS消息-类型${messageType}:`, data);
 
@@ -308,8 +313,17 @@ class WebSocketManager {
 
     setStatus(status) {
         this.ws.status = status
+        if (status !== WebSocket.OPEN) this.setMobileOnline(false)
         for (const window of BrowserWindow.getAllWindows()) {
             if (!window.isDestroyed()) window.webContents.send('ws:status', status)
+        }
+    }
+
+    setMobileOnline(online) {
+        if (this.mobileOnline === online) return
+        this.mobileOnline = online
+        for (const window of BrowserWindow.getAllWindows()) {
+            if (!window.isDestroyed()) window.webContents.send('ws:mobile-online', online)
         }
     }
 

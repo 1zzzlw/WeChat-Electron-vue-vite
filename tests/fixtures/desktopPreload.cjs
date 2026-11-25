@@ -67,6 +67,12 @@ contextBridge.exposeInMainWorld('wsApi', {
         ipcRenderer.on('fixture:ws-status', handler)
         return () => ipcRenderer.removeListener('fixture:ws-status', handler)
     },
+    getMobileOnline: async () => false,
+    onMobileOnline: callback => {
+        const handler = (_event, online) => callback(online)
+        ipcRenderer.on('fixture:mobile-online', handler)
+        return () => ipcRenderer.removeListener('fixture:mobile-online', handler)
+    },
     onMessage: callback => ipcRenderer.on('fixture:voice-frame', (_event, type, data) => callback(type, data)),
     sendMessage: (type, sequence, message) => ipcRenderer.send('fixture:voice-ws', type, message)
 })

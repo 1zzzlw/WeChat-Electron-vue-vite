@@ -51,11 +51,18 @@ test('WebSocket 弱网恢复', async t => {
             close() { this.readyState = 3; this.onclose?.() }
             send(buffer) { this.sent.push(protocol.decodeMessage(buffer)) }
             snapshot(ids) { this.onmessage({ data: protocol.encodeMessage(10, 0, { friendIdList: ids }) }) }
+            devices(appOnline, handler = this.onmessage) {
+                handler({ data: protocol.encodeMessage(20, 0, { appOnline }) })
+            }
             pong() { this.onmessage({ data: protocol.encodeMessage(0, 0, {}) }) }
         }
         const module = { exports: {} }
         const dependencies = {
             './shared.js': { store: { get: () => token }, refs: {} },
+            './auth/session.js': {
+                accountSession: { snapshot: () => ({ userId: '100' }), isCurrent: () => true },
+                refreshSession: () => { throw new Error('Refresh unavailable in this fixture') }
+            },
             'electron': { BrowserWindow: { getAllWindows: () => [{
                 isDestroyed: () => false,
                 webContents: { send: (...args) => received.push(args) }
@@ -90,6 +97,29 @@ test('WebSocket 弱网恢复', async t => {
         assert.equal(received.at(-1)[1], 1)
         manager.disconnect()
         assert.equal(received.at(-1)[1], 3)
+    })
+    await t.test('手机端状态实时同步，重连后忽略旧连接的状态', () => {
+        const { manager, sockets, received, tick } = create()
+        const updates = () => received.filter(([channel]) => channel === 'ws:mobile-online')
+            .map(([, online]) => online)
+        manager.connect()
+        sockets[0].open()
+        sockets[0].devices(true)
+        sockets[0].devices(true)
+        sockets[0].devices(false)
+        assert.deepEqual(updates(), [true, false])
+        sockets[0].devices(true)
+        const staleMessage = sockets[0].onmessage
+        manager.onError()
+        assert.equal(manager.mobileOnline, false)
+        tick(2000)
+        sockets[1].open()
+        sockets[0].devices(true, staleMessage)
+        assert.equal(manager.mobileOnline, false)
+        sockets[1].devices(true)
+        assert.equal(manager.mobileOnline, true)
+        manager.disconnect()
+        assert.deepEqual(updates(), [true, false, true, false, true, false])
     })
     await t.test('主动退出取消心跳和重连，旧回调无效，重新登录可再次连接', () => {
         const { manager, sockets, tick, setToken } = create()

@@ -314,6 +314,12 @@ const wsApi = {
     ipcRenderer.on('ws:status', handler)
     return () => ipcRenderer.removeListener('ws:status', handler)
   },
+  getMobileOnline: () => ipcRenderer.invoke('ws:mobile-online:get'),
+  onMobileOnline: callback => {
+    const handler = (_event, online) => callback(online)
+    ipcRenderer.on('ws:mobile-online', handler)
+    return () => ipcRenderer.removeListener('ws:mobile-online', handler)
+  },
   // 发送消息
   sendMessage: (messageType, sequenceId, data) => {
     ipcRenderer.send('ws:send', {

@@ -2,8 +2,8 @@
   <Teleport to="body">
     <Transition name="rp-fade">
       <div v-if="visible" class="rp-overlay" @click.self="handleClose">
-        <div class="rp-dialog">
-          <button class="rp-close" @click="handleClose">
+        <div class="rp-dialog" role="dialog" aria-modal="true" aria-label="红包">
+          <button type="button" class="rp-close" aria-label="关闭红包" @click="handleClose">
             <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none">
               <path d="M18 6L6 18M6 6l12 12" />
             </svg>
@@ -11,18 +11,17 @@
 
           <!-- 加载中 -->
           <div v-if="loading" class="rp-cover">
-            <div class="rp-loading">加载中...</div>
+            <div class="rp-loading" role="status">加载中...</div>
           </div>
 
           <!-- 未打开（封面） -->
           <div v-else-if="!isOpened" class="rp-cover">
-            <div class="rp-cover-glow"></div>
-            <div class="rp-cover-icon">
-              <svg viewBox="0 0 24 24" width="56" height="56" fill="none">
+            <div class="rp-cover-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="32" height="32" fill="none">
                 <rect x="2" y="4" width="20" height="16" rx="2.5" stroke="currentColor" stroke-width="1.5" />
                 <path d="M2 11h20" stroke="currentColor" stroke-width="1.5" />
-                <circle cx="12" cy="12" r="3.2" fill="currentColor" opacity="0.85" />
-                <circle cx="12" cy="12" r="1.6" fill="#ff5a5f" />
+                <circle cx="12" cy="12" r="3.2" fill="currentColor" />
+                <circle cx="12" cy="12" r="1.6" fill="var(--color-bg-deep)" />
               </svg>
             </div>
             <div class="rp-cover-sender">{{ detail?.senderName || '好友' }} 的红包</div>
@@ -37,9 +36,8 @@
 
           <!-- 已打开结果 -->
           <div v-else class="rp-result">
-            <div class="rp-result-glow" :class="amount > 0 ? 'glow-gold' : 'glow-gray'"></div>
-            <div class="rp-result-icon" :class="amount > 0 ? 'icon-gold' : 'icon-gray'">
-              {{ amount > 0 ? '🎉' : '😢' }}
+            <div class="rp-result-icon" :class="{ 'is-success': amount > 0 }" aria-hidden="true">
+              <component :is="amount > 0 ? CircleCheck : InfoFilled" />
             </div>
             <div class="rp-result-header">{{ amount > 0 ? '红包已打开' : '手慢了' }}</div>
             <div class="rp-result-amount" v-if="amount > 0">
@@ -49,7 +47,7 @@
             <div class="rp-result-sub">{{ amount > 0 ? `来自 ${detail?.senderName || '好友'}，已存入钱包` : '红包已被抢完' }}</div>
 
             <!-- 查看领取记录按钮 -->
-            <button class="rp-detail-btn" @click="loadDetail" :class="{ loading: detailLoading }">
+            <button type="button" class="rp-detail-btn" :aria-expanded="showDetail" :disabled="detailLoading" @click="loadDetail">
               {{ detailLoading ? '加载中...' : showDetail ? '收起记录' : '查看领取记录' }}
             </button>
 
@@ -67,7 +65,7 @@
                 </div>
                 <div class="rp-detail-list">
                   <div class="rp-detail-item" v-for="r in records" :key="r.userId">
-                    <img v-if="r.avatar" :src="r.avatar" class="rp-detail-avatar" />
+                    <img v-if="r.avatar" :src="r.avatar" alt="" class="rp-detail-avatar" />
                     <div v-else class="rp-detail-avatar-placeholder">{{ (r.username || '?')[0] }}</div>
                     <div class="rp-detail-user">
                       <span class="rp-detail-name">{{ r.username || '用户' }}</span>
@@ -90,6 +88,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import { CircleCheck, InfoFilled } from '@element-plus/icons-vue'
 import { grabRedPacketApi, getRedPacketDetailApi } from '@/api/RedPacket'
 import dayjs from 'dayjs'
 
@@ -145,6 +144,7 @@ async function loadRedPacketDetail() {
 }
 
 function spawnCoins(el: HTMLElement) {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
   const rect = el.getBoundingClientRect()
   const cx = rect.left + rect.width / 2
   const cy = rect.top + rect.height / 2
@@ -231,306 +231,207 @@ watch(() => props.visible, (val) => {
 .rp-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
+  padding: var(--spacing-lg);
+  box-sizing: border-box;
+  background: rgb(0 0 0 / 48%);
   z-index: 10000;
-}
-
-.rp-fade-enter-active,
-.rp-fade-leave-active {
-  transition: opacity 0.25s ease;
-}
-
-.rp-fade-enter-from,
-.rp-fade-leave-to {
-  opacity: 0;
 }
 
 .rp-dialog {
   position: relative;
-  width: 320px;
-  max-height: 80vh;
-  border-radius: 18px;
+  width: min(360px, 100%);
+  max-height: calc(100vh - 2 * var(--spacing-lg));
   overflow-y: auto;
-  overflow-x: hidden;
-  background: rgba(150, 30, 35, 0.3);
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
-  border: 1px solid rgba(255, 140, 140, 0.3);
-  box-shadow: 0 24px 64px rgba(150, 20, 20, 0.35);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  scrollbar-width: none;
-}
-
-.rp-dialog::-webkit-scrollbar {
-  display: none;
+  box-sizing: border-box;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-deep);
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-lg);
 }
 
 .rp-close {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(255, 255, 255, 0.12);
-  color: rgba(240, 242, 245, 0.6);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-  z-index: 2;
+  inset-block-start: var(--spacing-md);
+  inset-inline-end: var(--spacing-md);
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-1);
+  color: var(--color-text-secondary);
 }
 
 .rp-close:hover {
-  background: rgba(255, 255, 255, 0.2);
-  color: #f0f2f5;
+  background: var(--color-surface-2);
+  color: var(--color-text-strong);
 }
 
-.rp-loading {
-  padding: 60px 0;
-  color: rgba(240, 242, 245, 0.5);
-  font-size: 14px;
-}
-
-/* ---- 封面 ---- */
-.rp-cover {
-  position: relative;
+.rp-cover,
+.rp-result {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
-  padding: 44px 30px 36px;
-  width: 100%;
-  box-sizing: border-box;
+  gap: var(--spacing-sm);
+  padding: 44px var(--spacing-xl) var(--spacing-xl);
+  text-align: center;
 }
 
-.rp-cover-glow {
-  position: absolute;
-  top: -20px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 200px;
-  height: 200px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 120, 80, 0.15) 0%, transparent 70%);
-  pointer-events: none;
+.rp-loading,
+.rp-cover-blessing,
+.rp-result-sub {
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.rp-cover-icon,
+.rp-result-icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  margin-bottom: var(--spacing-xs);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-1);
+  color: var(--color-text-secondary);
 }
 
 .rp-cover-icon {
-  color: #ffd700;
-  animation: rp-float 2.2s ease-in-out infinite;
+  background: color-mix(in srgb, var(--color-danger) 8%, var(--color-bg-deep));
+  color: var(--color-danger);
 }
 
-@keyframes rp-float {
-
-  0%,
-  100% {
-    transform: translateY(0)
-  }
-
-  50% {
-    transform: translateY(-8px)
-  }
+.rp-result-icon.is-success {
+  background: color-mix(in srgb, var(--color-success) 10%, var(--color-bg-deep));
+  color: var(--color-success);
 }
 
-.rp-cover-sender {
-  font-size: 17px;
-  font-weight: 700;
-  color: #f0f2f5;
+.rp-result-icon svg {
+  width: 27px;
+  height: 27px;
 }
 
-.rp-cover-blessing {
-  font-size: 13px;
-  color: rgba(240, 242, 245, 0.5);
-}
-
-.rp-open-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 10px;
-  padding: 11px 40px;
-  border: none;
-  border-radius: 26px;
-  background: linear-gradient(135deg, #ffd700, #ffaa00);
-  color: #6b2100;
-  font-size: 16px;
-  font-weight: 800;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 4px 18px rgba(255, 180, 0, 0.4);
-}
-
-.rp-open-btn:hover:not(:disabled) {
-  transform: scale(1.07);
-  box-shadow: 0 6px 24px rgba(255, 180, 0, 0.55);
-}
-
-.rp-open-btn:active:not(:disabled) {
-  transform: scale(0.96);
-}
-
-.rp-open-btn:disabled {
-  opacity: 0.65;
-  cursor: not-allowed;
-}
-
-.rp-spinner {
-  width: 18px;
-  height: 18px;
-  border: 2px solid rgba(107, 33, 0, 0.3);
-  border-top-color: #6b2100;
-  border-radius: 50%;
-  animation: rp-spin 0.6s linear infinite;
-  display: inline-block;
-}
-
-@keyframes rp-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* ---- 结果 ---- */
-.rp-result {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  padding: 36px 24px 24px;
-  width: 100%;
-  box-sizing: border-box;
-  animation: rp-pop 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
-}
-
-@keyframes rp-pop {
-  from {
-    transform: scale(0.7);
-    opacity: 0
-  }
-
-  to {
-    transform: scale(1);
-    opacity: 1
-  }
-}
-
-.rp-result-glow {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 160px;
-  height: 160px;
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-.glow-gold {
-  background: radial-gradient(circle, rgba(255, 200, 0, 0.12) 0%, transparent 70%);
-}
-
-.glow-gray {
-  background: radial-gradient(circle, rgba(150, 150, 150, 0.08) 0%, transparent 70%);
-}
-
-.rp-result-icon {
-  font-size: 40px;
-  position: relative;
-  z-index: 1;
-}
-
+.rp-cover-sender,
 .rp-result-header {
-  font-size: 14px;
-  color: rgba(240, 242, 245, 0.55);
+  color: var(--color-text-strong);
+  font-size: 16px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.rp-result-sub,
+.rp-cover-blessing {
+  overflow-wrap: anywhere;
 }
 
 .rp-result-amount {
   display: flex;
   align-items: baseline;
-  font-weight: 800;
-  color: #ffd700;
+  gap: var(--spacing-xs);
+  color: var(--color-text-strong);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  line-height: 1.1;
 }
 
 .rp-result-unit {
-  font-size: 22px;
-  margin-right: 2px;
+  font-size: 20px;
 }
 
 .rp-result-value {
   font-size: 42px;
-  text-shadow: 0 0 20px rgba(255, 200, 0, 0.4);
 }
 
-.rp-result-sub {
-  font-size: 12px;
-  color: rgba(240, 242, 245, 0.4);
+.rp-open-btn,
+.rp-result-btn,
+.rp-detail-btn {
+  padding: 8px 16px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 20px;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.rp-open-btn,
+.rp-result-btn {
+  min-width: 128px;
+  margin-top: var(--spacing-sm);
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+.rp-open-btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.rp-open-btn:enabled:hover,
+.rp-result-btn:hover {
+  border-color: var(--color-border-hover);
 }
 
 .rp-detail-btn {
-  margin-top: 4px;
-  padding: 7px 20px;
-  border-radius: 20px;
-  border: 1px solid rgba(255, 140, 140, 0.25);
-  background: rgba(255, 255, 255, 0.06);
-  color: rgba(240, 242, 245, 0.6);
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.2s;
+  margin-top: var(--spacing-xs);
+  background: var(--color-surface-1);
+  color: var(--color-text-primary);
 }
 
-.rp-detail-btn:hover:not(.loading) {
-  border-color: rgba(255, 140, 140, 0.45);
-  color: #f0f2f5;
+.rp-detail-btn:enabled:hover {
+  background: var(--color-surface-2);
+  border-color: var(--color-border-hover);
 }
 
-.rp-detail-btn.loading {
-  opacity: 0.5;
-  cursor: not-allowed;
+.rp-open-btn:disabled,
+.rp-detail-btn:disabled {
+  background: var(--color-surface-2);
+  border-color: var(--color-border-subtle);
+  color: var(--color-text-muted);
 }
 
-/* 领取记录 */
-.detail-slide-enter-active,
-.detail-slide-leave-active {
-  transition: all 0.3s ease;
+.rp-spinner {
+  width: 14px;
+  height: 14px;
+  box-sizing: border-box;
+  border: 2px solid var(--color-border-subtle);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: rp-spin 0.6s linear infinite;
 }
 
-.detail-slide-enter-from,
-.detail-slide-leave-to {
-  opacity: 0;
-  transform: translateY(-6px);
+@keyframes rp-spin {
+  to { transform: rotate(360deg); }
 }
 
 .rp-detail {
   width: 100%;
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 12px;
-  border: 1px solid rgba(255, 140, 140, 0.15);
+  box-sizing: border-box;
   overflow: hidden;
+  text-align: start;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-1);
 }
 
 .rp-detail-header {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
-  align-items: center;
-  padding: 10px 14px;
+  gap: var(--spacing-xs) var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-bottom: 1px solid var(--color-border-subtle);
+  color: var(--color-text-secondary);
   font-size: 12px;
-  color: rgba(240, 242, 245, 0.5);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.rp-detail-remain {
-  color: rgba(255, 200, 80, 0.6);
 }
 
 .rp-detail-list {
@@ -538,94 +439,95 @@ watch(() => props.visible, (val) => {
   overflow-y: auto;
 }
 
-.rp-detail-list::-webkit-scrollbar {
-  width: 3px;
-}
-
-.rp-detail-list::-webkit-scrollbar-thumb {
-  background: rgba(255, 140, 140, 0.2);
-  border-radius: 2px;
-}
-
 .rp-detail-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 9px 14px;
-  transition: background 0.15s;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
 }
 
-.rp-detail-item:hover {
-  background: rgba(255, 255, 255, 0.04);
+.rp-detail-item + .rp-detail-item {
+  border-top: 1px solid var(--color-border-subtle);
 }
 
-.rp-detail-avatar {
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  object-fit: cover;
-  flex-shrink: 0;
-  border: 1px solid rgba(255, 140, 140, 0.2);
-}
-
+.rp-detail-avatar,
 .rp-detail-avatar-placeholder {
   width: 30px;
   height: 30px;
-  border-radius: 8px;
-  background: rgba(255, 90, 95, 0.2);
-  color: #ff8a80;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+}
+
+.rp-detail-avatar {
+  object-fit: cover;
+}
+
+.rp-detail-avatar-placeholder {
+  display: grid;
+  place-items: center;
+  background: var(--color-accent-soft);
+  color: var(--color-text-accent);
   font-size: 13px;
   font-weight: 600;
-  flex-shrink: 0;
 }
 
 .rp-detail-user {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
 }
 
 .rp-detail-name {
-  font-size: 12px;
-  color: rgba(240, 242, 245, 0.8);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text-primary);
+  font-size: 13px;
 }
 
-.rp-detail-time {
-  font-size: 10px;
-  color: rgba(240, 242, 245, 0.3);
+.rp-detail-time,
+.rp-detail-empty {
+  color: var(--color-text-muted);
+  font-size: 12px;
 }
 
 .rp-detail-amount {
-  font-size: 14px;
+  color: var(--color-text-strong);
+  font-size: 13px;
   font-weight: 600;
-  color: #ffd700;
-  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
 }
 
 .rp-detail-empty {
-  padding: 16px;
+  padding: var(--spacing-lg);
   text-align: center;
-  font-size: 12px;
-  color: rgba(240, 242, 245, 0.3);
 }
 
-.rp-result-btn {
-  margin-top: 8px;
-  padding: 9px 32px;
-  border-radius: 22px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.07);
-  color: #f0f2f5;
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.2s;
+.rp-fade-enter-active,
+.rp-fade-leave-active,
+.detail-slide-enter-active,
+.detail-slide-leave-active {
+  transition: opacity var(--transition-fast);
 }
 
-.rp-result-btn:hover {
-  background: rgba(255, 255, 255, 0.14);
+.rp-fade-enter-from,
+.rp-fade-leave-to,
+.detail-slide-enter-from,
+.detail-slide-leave-to {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rp-overlay,
+  .rp-detail,
+  .rp-open-btn,
+  .rp-result-btn,
+  .rp-detail-btn {
+    transition: none;
+  }
+  .rp-spinner {
+    animation: none;
+  }
 }
 </style>
