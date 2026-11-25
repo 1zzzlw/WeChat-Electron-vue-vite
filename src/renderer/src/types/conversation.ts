@@ -35,7 +35,7 @@ export function initConversation(defaultId: string = ''): Conversation {
         unreadCount: 0,
         latestMsg: '',
         latestMsgTime: '',
-        status: 0, // 0=显示，1=隐藏
+        status: 0, // 0=隐藏，1=显示
         createTime: 0,
         updateTime: 0
     }

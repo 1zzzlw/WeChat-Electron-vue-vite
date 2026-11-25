@@ -14,19 +14,19 @@
       <!-- 搜索框 -->
       <div class="toolbar-center">
         <div class="search-box">
-          <div class="search-group">
-            <el-input v-model="searchKeyword" placeholder="搜索动态、用户、标签..." spellcheck="false" clearable
-              @keyup.enter="handleSearch">
+          <form class="search-group" @submit.prevent="handleSearch">
+            <el-input v-model="searchKeyword" placeholder="搜索帖子内容" aria-label="搜索帖子内容"
+              spellcheck="false" clearable @clear="handleSearch">
               <template #prefix>
                 <el-icon>
                   <Search />
                 </el-icon>
               </template>
               <template #append>
-                <el-button @click="handleSearch">搜索</el-button>
+                <el-button native-type="submit">搜索</el-button>
               </template>
             </el-input>
-          </div>
+          </form>
         </div>
       </div>
 
@@ -53,7 +53,7 @@
       <el-scrollbar ref="scrollbarRef" style="height: 100%; width: 100%">
         <div class="post-list" ref="postListRef" @load.capture="onImageSettled" @error.capture="onImageSettled">
           <div v-if="postList.length === 0" class="empty-state" role="status">
-            <p>{{ loading ? '正在加载动态…' : loadError || '还没有动态，快来发布第一条吧！' }}</p>
+            <p>{{ loading ? '正在加载动态…' : loadError || (activeKeyword ? '没有找到匹配的帖子' : '还没有动态，快来发布第一条吧！') }}</p>
             <el-button v-if="loadError" @click="changeSortWay">重新加载</el-button>
           </div>
 
@@ -141,7 +141,7 @@
 <script setup lang="ts">
 import { ChatLineRound, Coin, Plus, Search, Loading } from '@element-plus/icons-vue'
 import { onMounted, ref, onUnmounted, nextTick, watch } from 'vue'
-import { listByNewApi, listByHot } from '@/api/Moments'
+import { listByNewApi, listByHot, searchMomentsApi } from '@/api/Moments'
 import { MomentsItem } from '@/types/moments'
 import type { ScrollbarDirection } from 'element-plus'
 import { ElMessage } from 'element-plus'
@@ -155,6 +155,7 @@ import { useMomentAuthorActions } from '@/composables/useMomentAuthorActions'
 import { useMomentLikes } from '@/composables/useMomentLikes'
 
 const searchKeyword = ref('')
+const activeKeyword = ref('')
 const activeTag = ref('all')
 const label = ref('0')
 const pageDTO = ref({
@@ -231,15 +232,19 @@ async function fetchPosts(reset: boolean) {
   const version = reset ? ++listVersion : listVersion
   const nextPage = reset ? 1 : pageDTO.value.page + 1
   const sort = label.value
+  const keyword = activeKeyword.value
+  const pageSize = pageDTO.value.pageSize
   loading.value = true
   loadError.value = ''
   if (reset) { scrollAnchor = null; postList.value = []; pageDTO.value.page = 0; noMore.value = false; scrollbarRef.value?.setScrollTop(0) }
   try {
-    const response = sort === '0'
-      ? await listByHot(nextPage, pageDTO.value.pageSize)
-      : await listByNewApi(reset ? 0 : postList.value.at(-1)?.id || 0)
+    const response = keyword
+      ? await searchMomentsApi(keyword, nextPage, pageSize, sort === '0')
+      : sort === '0'
+        ? await listByHot(nextPage, pageSize)
+        : await listByNewApi(reset ? 0 : postList.value.at(-1)?.id || 0)
     if (disposed || version !== listVersion) return
-    const incoming = sort === '0' ? response.data?.data : response.data
+    const incoming = keyword || sort === '0' ? response.data?.data : response.data
     if (!Array.isArray(incoming)) throw new Error('动态加载失败，请重试')
     const existing = new Set(postList.value.map(post => post.id))
     const additions = processIncomingPosts(incoming).filter(post => {
@@ -248,7 +253,7 @@ async function fetchPosts(reset: boolean) {
       return true
     })
     // 页面末尾不再重复请求空结果；分页游标只在请求成功后推进。
-    noMore.value = incoming.length === 0 || additions.length === 0
+    noMore.value = additions.length === 0 || (!!keyword && nextPage * pageSize >= response.data.total)
     pageDTO.value.page = nextPage
     const merged = [...postList.value, ...additions]
     if (merged.length > MAX_POSTS && postListRef.value) {
@@ -262,15 +267,18 @@ async function fetchPosts(reset: boolean) {
     }
     postList.value = merged.slice(-MAX_POSTS)
   } catch {
-    if (!disposed && version === listVersion) loadError.value = '动态加载失败，请重试'
+    if (!disposed && version === listVersion) loadError.value = keyword ? '搜索失败，请重试' : '动态加载失败，请重试'
   } finally { if (!disposed && version === listVersion) loading.value = false }
 }
 const loadMore = (direction: ScrollbarDirection | string) => { if (direction === 'bottom') return fetchPosts(false) }
 const changeSortWay = () => fetchPosts(true)
 
-// 搜索事件
 const handleSearch = () => {
-  // TODO: 实现搜索逻辑
+  const keyword = searchKeyword.value.trim()
+  if (!keyword && !activeKeyword.value) return
+  if (keyword === activeKeyword.value && loading.value) return
+  activeKeyword.value = keyword
+  return fetchPosts(true)
 }
 
 const goMyPosts = () => {

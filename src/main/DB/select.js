@@ -18,12 +18,12 @@ const isExistUserRecord = (userId) => {
 }
 
 /**
- * 查询当前登录用户的所有会话列表
+ * 查询显示的会话，保留联系人列表所需的隐藏群聊。
  * @param userId -- 用户id
  * @returns -- 返回查询结果
  */
 const queryConversation = (userId) => {
-    const sql = `select * from conversation where user_id = ? and status = 1`
+    const sql = `select * from conversation where user_id = ? and (status = 1 or (type = 1 and status = 0))`
     const result = queryAll(sql, userId)
     console.log(result)
     return result

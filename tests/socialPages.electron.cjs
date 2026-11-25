@@ -10,6 +10,7 @@ const windows = [],
   errors = [],
   results = [],
   pages = [],
+  searches = [],
   opened = []
 const profile = {
   id: 'fixture-user',
@@ -236,6 +237,32 @@ app
                         })
                 }
               }
+      }
+      if (url.pathname === '/moments/search') {
+        const keyword = url.searchParams.get('keyword')
+        const page = Number(url.searchParams.get('page'))
+        searches.push({ keyword, page, hot: url.searchParams.get('hot') })
+        if (keyword === '旧搜索') await delay(350)
+        const total = keyword === '帖子正文' ? 21 : keyword === '旧搜索' ? 1 : 0
+        const count = Math.max(0, Math.min(20, total - (page - 1) * 20))
+        response = {
+          code: 1,
+          data: {
+            total,
+            data: Array.from({ length: count }, (_, index) => ({
+              id: 10000 + (page - 1) * 20 + index,
+              userId: '100',
+              username: '频道作者',
+              avatar: '',
+              content: '<p>' + keyword + '</p>',
+              publishTime: '2026-11-03T10:00:00',
+              liked: false,
+              likeCount: 0,
+              commentCount: 0,
+              rewardAmount: 0
+            }))
+          }
+        }
       }
       if (url.pathname === '/moments/list/new')
         response = {
@@ -562,6 +589,44 @@ app
     )
     chat.webContents.debugger.detach()
     results.push('排序切换保持新结果，减少动态效果设置关闭入场动画')
+    const searchPosts = async (keyword) => {
+      await evaluate(chat, `(() => {
+        const form = document.querySelector('.search-group')
+        const input = form.querySelector('input')
+        input.focus()
+        input.value = ${JSON.stringify(keyword)}
+        input.dispatchEvent(new Event('input', { bubbles: true }))
+        form.querySelector('button[type=submit]').click()
+      })()`)
+    }
+    await searchPosts('旧搜索')
+    await searchPosts('  帖子正文  ')
+    await waitFor(chat, "document.querySelector('.post-text-wrapper')?.textContent === '帖子正文'")
+    await evaluate(chat, bottom)
+    await waitFor(chat, "document.querySelectorAll('.post-item').length === 21")
+    await delay(400)
+    assert.deepEqual(searches, [
+      { keyword: '旧搜索', page: 1, hot: 'false' },
+      { keyword: '帖子正文', page: 1, hot: 'false' },
+      { keyword: '帖子正文', page: 2, hot: 'false' }
+    ])
+    assert.equal(
+      await evaluate(chat, "document.querySelector('.post-text-wrapper').textContent"),
+      '帖子正文'
+    )
+    await searchPosts('找不到的帖子')
+    await waitFor(
+      chat,
+      "document.querySelector('.empty-state')?.textContent.includes('没有找到匹配的帖子')"
+    )
+    await evaluate(
+      chat,
+      "document.querySelector('.search-group .el-input').dispatchEvent(new MouseEvent('mouseenter'))"
+    )
+    await waitFor(chat, "!!document.querySelector('.search-group .el-input__clear')")
+    await evaluate(chat, "document.querySelector('.search-group .el-input__clear').click()")
+    await waitFor(chat, "document.querySelector('.post-item')?.dataset.postId === '9001'")
+    results.push('正文搜索：筛选分页、忽略迟到结果、无结果反馈和清空后恢复列表通过')
     assert.deepEqual(
       errors.filter((message) => /TypeError|ReferenceError/.test(message)),
       []

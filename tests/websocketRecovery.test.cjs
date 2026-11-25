@@ -24,6 +24,7 @@ test('WebSocket 弱网恢复', async t => {
         const tasks = new Map()
         const sockets = []
         const received = []
+        const saved = []
         const schedule = (fn, delay, repeat = false) => {
             const id = ++taskId
             tasks.set(id, { fn, at: now + delay, delay: repeat ? delay : 0 })
@@ -58,7 +59,7 @@ test('WebSocket 弱网恢复', async t => {
         }
         const module = { exports: {} }
         const dependencies = {
-            './shared.js': { store: { get: () => token }, refs: {} },
+            './shared.js': { store: { get: key => key === 'userId' ? '100' : token }, refs: {} },
             './auth/session.js': {
                 accountSession: { snapshot: () => ({ userId: '100' }), isCurrent: () => true },
                 refreshSession: () => { throw new Error('Refresh unavailable in this fixture') }
@@ -67,7 +68,12 @@ test('WebSocket 弱网恢复', async t => {
                 isDestroyed: () => false,
                 webContents: { send: (...args) => received.push(args) }
             }] } },
-            './protocol.js': protocol
+            './protocol.js': protocol,
+            './DB/insert': { saveSentMessage: data => saved.push({ ...data }) },
+            './DB/mainDB': { queryAll: () => [] },
+            './DB/select': { getConversationInfoById: () => [] },
+            './DB/update': { updateConversation() {} },
+            './Util/conversationState': { broadcastConversationUpdate() {}, isConversationVisible: () => true }
         }
         vm.runInNewContext(managerCode, {
             module, exports: module.exports, WebSocket: Socket,
@@ -76,8 +82,28 @@ test('WebSocket 弱网恢复', async t => {
             setInterval: (fn, delay) => schedule(fn, delay, true), clearInterval: id => tasks.delete(id),
             require: name => dependencies[name] ?? {}
         })
-        return { manager: module.exports.default, sockets, received, tick, setToken: value => { token = value } }
+        return { manager: module.exports.default, sockets, received, saved, tick, setToken: value => { token = value } }
     }
+
+    await t.test('同账号手机发出的私聊和群聊消息入库并广播为已发送', () => {
+        const { manager, sockets, received, saved } = create()
+        manager.connect()
+        sockets[0].open()
+        for (const messageType of [2, 4]) {
+            const data = {
+                id: String(messageType), senderId: '100', receiverId: '200',
+                conversationId: messageType === 2 ? 'private-chat' : 'group-chat',
+                msgType: 1, content: '手机发出的消息', sendStatus: 0
+            }
+            sockets[0].onmessage({ data: protocol.encodeMessage(messageType, 0, data) })
+            assert.equal(saved.at(-1).id, data.id)
+            assert.equal(saved.at(-1).sendStatus, 1)
+            const frame = received.at(-1)
+            assert.equal(frame[0], 'ws:receive')
+            assert.equal(frame[1], messageType)
+            assert.equal(frame[2].sendStatus, 1)
+        }
+    })
 
     await t.test('连接、断开和重连向窗口广播真实连接状态', () => {
         const { manager, sockets, received, tick } = create()

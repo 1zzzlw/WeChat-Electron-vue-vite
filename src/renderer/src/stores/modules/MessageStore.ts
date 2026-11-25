@@ -77,8 +77,10 @@ export const messageInfo = defineStore('messageInfo', {
       if (!this.messageMap[conversationId]) {
         this.messageMap[conversationId] = []
       }
-      // ID 去重：避免 WS 推送和 REST 拉取并发时产生重复消息
-      if (message.id && this.messageMap[conversationId].some(m => m.id === message.id)) {
+      // 先从历史加载的同一条消息，收到确认后的推送时同步状态。
+      const existing = message.id && this.messageMap[conversationId].find(m => m.id === message.id)
+      if (existing) {
+        if (message.sendStatus === 1) existing.sendStatus = 1
         return
       }
       // 再添加消息，需要在尾部拼接消息

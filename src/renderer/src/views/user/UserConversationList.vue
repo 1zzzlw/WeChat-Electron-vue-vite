@@ -253,7 +253,7 @@ const handleChoice = async (item: any, conversationId: string) => {
         const condition = { id: conversationId }
         const data = { status: 0 }
         updateConversation(condition, data)
-        conversationStore.removeConversation(conversationId)
+        conversationStore.hideConversation(conversationId)
         router.push('/messageList')
         break
       }

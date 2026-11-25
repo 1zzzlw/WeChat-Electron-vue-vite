@@ -181,6 +181,8 @@ class WebSocketManager {
             console.info(`收到WS消息-类型${messageType}:`, data);
 
             if (messageType === 2 || messageType === 4) {
+                // 服务端推送的是已接收的消息，兼容旧推送中发起端的待确认状态。
+                data.sendStatus = 1
                 const duplicate = queryAll('select id from message where id = ?', [String(data.id)]).length > 0
                 const userId = String(store.get('userId'))
                 const conversation = getConversationInfoById(userId, data.conversationId)[0]

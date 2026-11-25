@@ -75,6 +75,8 @@ import { CollapseModelValue } from 'element-plus'
 import { userApplyListInfo } from '@/stores/modules/UserApplyListStore'
 import { friendInfo } from '@/stores/modules/ContactListStore'
 import { conversationInfo } from '@/stores/modules/ConversationStore'
+import { getConversationList } from '@/db/dualDB'
+import { formatMessageTime } from '@/utils/utils'
 import AutocompleteSearch from '@/components/AutocompleteSearch.vue'
 
 const userId = ref()
@@ -179,6 +181,16 @@ onMounted(async () => {
   fetchGroupApplyList()
 
   fetchApplyList()
+
+  const conversations = await getConversationList()
+  for (const conversation of conversations) {
+    if (conversation.type !== 1) continue
+    const cached = conversationStore.conversationMap[conversation.id]
+    if (cached?.type === 1) continue
+    conversationStore.setConversationMap(conversation.id, {
+      ...conversation, latestMsgTime: formatMessageTime(conversation.latestMsgTime), ...cached
+    })
+  }
 })
 </script>
 

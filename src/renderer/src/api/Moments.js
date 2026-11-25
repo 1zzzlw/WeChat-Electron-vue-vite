@@ -13,6 +13,10 @@ export const listByHot = (page, pageSize) => request.get('moments/list/hot', {
     params: { page: page, pageSize: pageSize }
 })
 
+export const searchMomentsApi = (keyword, page, pageSize, hot) => request.get('/moments/search', {
+    params: { keyword, page, pageSize, hot }
+})
+
 /** @returns {Promise<{code: number, msg?: string}>} */
 export const likedApi = (momentId) => request.post(`/moments/like/${momentId}`)
 

@@ -90,9 +90,9 @@ export const conversationInfo = defineStore('conversationMap', {
         unreadCount: currentUnreadCount + 1
       })
     },
-    removeConversation(conversationId: string) {
+    hideConversation(conversationId: string) {
       if (this.conversationMap[conversationId]) {
-        delete this.conversationMap[conversationId]
+        this.conversationMap[conversationId].status = 0
       }
     },
     updateConversationAvatar(conversationId: string, avatar: string) {

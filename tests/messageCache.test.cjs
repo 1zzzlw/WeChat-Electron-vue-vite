@@ -155,6 +155,12 @@ async function run() {
         assert.equal(store.messageMap.a.length, 500)
         assert.equal(store.messageMap.a[0].id, '201')
     }))
+    await check('跨端推送将已加载的待确认消息更新为已发送且不重复插入', () => withStore(store => {
+        store.loadMessageMap('a', message('synced', 'a', 0))
+        store.addMessageMap('a', message('synced'))
+        assert.equal(store.messageMap.a.length, 1)
+        assert.equal(store.messageMap.a[0].sendStatus, 1)
+    }))
     await check('离开会话时回收到最新500条', () => withStore(store => {
         store.retainConversation('a')
         store.messageMap.a = messages(1, 700)

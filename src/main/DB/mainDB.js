@@ -40,6 +40,11 @@ const initTable = () => {
 
     accountRecords.migrateDeviceUserRecords(db)
 
+    // 本机的待确认文本和红包只在内存中，修正旧版已落库的跨端消息。
+    db.exec(`update message set send_status = 1
+        where send_status = 0 and msg_type in (1, 6)
+          and coalesce(file_id, '') = '' and coalesce(local_path, '') = ''`)
+
     // 初始化索引
     for (const index of table_index) {
         try {

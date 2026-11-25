@@ -324,7 +324,7 @@ const sendMessage = async () => {
       ? dayjs(conversationInfo.latestMsgTime).format('HH:mm:ss')
       : undefined
   // 将信息添加到会话缓存中
-  conversationStore.setConversationMap(conversationId, conversationInfo)
+  conversationStore.setConversationMap(conversationId, { ...conversationInfo, status: 1 })
   // 修改会话的显示状态为1
   const condition = {
     id: conversationId
