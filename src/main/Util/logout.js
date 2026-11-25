@@ -4,15 +4,24 @@ import { join } from 'path'
 import { store, refs } from '../shared.js'
 import websocket from '../websocket.js'
 import { finishLoadingWindow } from '../IPC/initDataIPC.js'
-import { accountSession } from '../auth/session.js'
+import { accountSession, revokeSession } from '../auth/session.js'
 
 let loggingOut = false
 
-export async function logout({ keepCredentials = false } = {}) {
+export async function logout({ keepCredentials = false, revoke = !keepCredentials } = {}) {
     const window = refs.mainWindow
     if (loggingOut || !window || window.isDestroyed()) return
     loggingOut = true
     try {
+        const snapshot = accountSession.snapshot()
+        if (revoke && snapshot.userId) {
+            await revokeSession(snapshot).catch(error => {
+                if (![400, 401].includes(error.response?.status)) {
+                    console.warn('服务端会话撤销失败', error.code)
+                }
+            })
+        }
+        if (!accountSession.isCurrent(snapshot)) return
         accountSession.clearCurrent(keepCredentials)
         for (const key of ['token', 'accessToken', 'userId']) store.delete(key)
         websocket.disconnect()

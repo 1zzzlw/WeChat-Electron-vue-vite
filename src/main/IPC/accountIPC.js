@@ -1,22 +1,7 @@
 import { ipcMain, BrowserWindow } from 'electron'
-import { is } from '@electron-toolkit/utils'
-import axios from 'axios'
-import { accountSession } from '../auth/session.js'
+import { accountSession, getDeviceId, requestLogin, refreshSession } from '../auth/session.js'
 import { logout } from '../Util/logout.js'
-import { getBackendUrl } from '../../shared/backend.js'
 
-const auth = axios.create({ baseURL: getBackendUrl(is.dev), timeout: 30000 })
-let refreshing = null
-
-async function requestLogin(path, data, token) {
-  const response = await auth.post(path, data, token ? { headers: { Authorization: token } } : {})
-  if (response.data?.code !== 1) throw new Error(response.data?.msg || '登录失败，请重试')
-  return {
-    profile: response.data.data,
-    accessToken: (response.headers.authorization || '').replace(/^Bearer\s+/i, ''),
-    refreshToken: response.headers.refreshtoken || ''
-  }
-}
 
 const failure = (error) => ({
   code: 0,
@@ -30,7 +15,7 @@ const failure = (error) => ({
 })
 
 ipcMain.handle('account:list', () => accountSession.list())
-ipcMain.handle('account:capabilities', () => ({ canRememberLogin: accountSession.canRemember() }))
+ipcMain.handle('account:capabilities', () => ({ canRememberLogin: accountSession.canRemember(), deviceId: getDeviceId() }))
 ipcMain.handle('account:session', () => accountSession.snapshot())
 ipcMain.handle('account:activate', (_event, snapshot, profile, tokens) => {
   if (!accountSession.isCurrent(snapshot)) throw new Error('本次登录已取消')
@@ -73,42 +58,14 @@ ipcMain.handle('account:quick-login', async (_event, value) => {
   }
 })
 
-ipcMain.handle('account:refresh', async (_event, snapshot) => {
-  if (!accountSession.isCurrent(snapshot) || !snapshot.userId) return false
-  const key = `${snapshot.userId}:${snapshot.revision}`
-  if (refreshing?.key === key) return refreshing.promise
-  const promise = (async () => {
-    const token = accountSession.getRefreshToken()
-    if (!token) return false
-    try {
-      const response = await auth.post(
-        `/user/refreshToken/${snapshot.userId}`,
-        {},
-        { headers: { Authorization: token } }
-      )
-      if (response.data?.code !== 1) return false
-      return accountSession.updateTokens(
-        snapshot,
-        (response.headers.authorization || '').replace(/^Bearer\s+/i, ''),
-        response.headers.refreshtoken
-      )
-    } catch (error) {
-      if ([400, 401, 403].includes(error.response?.status)) return false
-      throw new Error('暂时无法刷新登录状态，请稍后重试')
-    }
-  })().finally(() => {
-    if (refreshing?.key === key) refreshing = null
-  })
-  refreshing = { key, promise }
-  return promise
-})
+ipcMain.handle('account:refresh', (_event, snapshot) => refreshSession(snapshot))
 
 ipcMain.handle('account:update-tokens', (_event, snapshot, tokens) =>
   accountSession.updateTokens(snapshot, tokens?.accessToken, tokens?.refreshToken)
 )
 ipcMain.handle('account:expire', async (_event, snapshot) => {
   if (!accountSession.isCurrent(snapshot)) return false
-  await logout()
+  await logout({ revoke: false })
   return true
 })
 ipcMain.handle('account:switch', () => logout({ keepCredentials: true }))

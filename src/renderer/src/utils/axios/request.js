@@ -112,6 +112,9 @@ server.interceptors.request.use(
     const snapshot = await window.accountApi.getSession()
     config.__accountSession = snapshot
     config.headers.Authorization = snapshot.accessToken || ''
+    if (config.url === '/user/register') {
+      config.headers['X-Device-Id'] = (await window.accountApi.capabilities()).deviceId
+    }
     return config
   },
   (error) => {

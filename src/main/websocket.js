@@ -7,6 +7,7 @@ import { getConversationInfoById } from './DB/select'
 import { queryAll } from './DB/mainDB'
 import { broadcastConversationUpdate, isConversationVisible } from './Util/conversationState'
 import { encodeMessage, decodeMessage, bufferToHexString } from './protocol.js'
+import { accountSession, refreshSession } from './auth/session.js'
 
 // ===== 托盘闪动相关 =====
 let flashInterval = null
@@ -356,13 +357,20 @@ class WebSocketManager {
         this.clearReconnectTimer()
 
         const delay = [2000, 4000, 8000, 15000, 30000][Math.min(this.reconnectCount, 4)]
-        this.reconnectTimer = setTimeout(() => {
+        const snapshot = accountSession.snapshot()
+        const timer = setTimeout(async () => {
             console.log('尝试重连...')
             this.reconnectCount++
+            try {
+                await refreshSession(snapshot)
+            } catch {
+                // 刷新接口暂不可用时，仍用当前凭据尝试恢复连接。
+            }
+            if (this.reconnectTimer !== timer) return
             this.lockReconnect = false
-            // 重连时重新读取 token，避免沿用计时开始时的过期凭证。
-            this.connect()
+            if (accountSession.isCurrent(snapshot)) this.connect()
         }, delay)
+        this.reconnectTimer = timer
     }
 
     // 清除重连计时器
