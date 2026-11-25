@@ -2,6 +2,9 @@ import request from '@/utils/axios/request'
 
 export const getFriendListApi = () => request.get('/friend/list')
 
+/** @returns {Promise<{code: number, msg?: string, data: string[]}>} */
+export const getFriendIdsApi = () => request.get('/friend/ids')
+
 export const deleteFriendApi = (friendId) => request.delete('/friend/delete', {
   params: { friendId }
 })

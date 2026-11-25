@@ -5,7 +5,7 @@
         windowType="standaloneChat" />
     </div>
     <div class="standalone-body" v-if="conversation.id">
-      <component :is="chatComponent" :conversation="conversation" :userId="userId" :avatarUrl="avatarUrl"
+      <component :is="chatComponent" :key="conversation.id" :conversation="conversation" :userId="userId" :avatarUrl="avatarUrl"
         :convId="conversation.id" />
     </div>
     <div v-else class="standalone-loading">
@@ -15,7 +15,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import WindowControls from '@/components/WindowControls.vue'
 import PrivateChat from '@/views/chat/PrivateChat.vue'
 import GroupChat from '@/views/chat/GroupChat.vue'
@@ -33,11 +33,9 @@ const chatComponent = computed(() => {
 })
 
 // 接收窗口数据
-let dataReceived = false
-const handleWindowData = (data: any) => {
-  if (!data || dataReceived) return
-  dataReceived = true
-  if (data.conversation) {
+let removeWindowListener: (() => void) | undefined
+const handleWindowData = (data: { conversation?: Conversation } | null) => {
+  if (data?.conversation?.id) {
     conversation.value = data.conversation
   }
 }
@@ -52,16 +50,16 @@ onMounted(async () => {
   avatarUrl.value = await (window as any).userInfoApi.storeGetUserInfo('avatar')
   userId.value = await (window as any).userInfoApi.storeGetUserInfo('userId')
 
-  // 先尝试主动拉取缓存数据（解决路由懒加载导致组件挂载晚于 show 事件的问题）
-  const pendingData = await (window as any).windowToolApi.getPendingData()
-  if (pendingData) {
-    handleWindowData(pendingData)
-  }
-  // 如果 show 事件在组件挂载后才触发，仍能通过监听器接收
-  (window as any).windowToolApi.sendWindowInfo((_e: any, data: any) => {
+  const windowTool = (window as any).windowToolApi
+  let receivedLiveData = false
+  removeWindowListener = windowTool.sendWindowInfo((_event: unknown, data: { conversation?: Conversation }) => {
+    receivedLiveData = true
     handleWindowData(data)
   })
+  const pendingData = await windowTool.getPendingData()
+  if (!receivedLiveData) handleWindowData(pendingData)
 })
+onUnmounted(() => removeWindowListener?.())
 
 </script>
 

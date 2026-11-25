@@ -13,6 +13,7 @@ export const listByHot = (page, pageSize) => request.get('moments/list/hot', {
     params: { page: page, pageSize: pageSize }
 })
 
+/** @returns {Promise<{code: number, msg?: string}>} */
 export const likedApi = (momentId) => request.post(`/moments/like/${momentId}`)
 
 /** @returns {Promise<{code: number, msg?: string, data: import('@/types/moments').MomentsItem}>} */
@@ -51,4 +52,5 @@ export const deleteMomentApi = (momentId) => request.delete(`/moments/delete/${m
 /** @returns {Promise<{code: number, msg?: string}>} */
 export const updateMomentApi = (data) => request.put('/moments/update', data)
 
+/** @returns {Promise<{code: number, msg?: string}>} */
 export const rewardApi = (momentId, amount) => request.post('/moments/reward', null, { params: { momentId, amount } })

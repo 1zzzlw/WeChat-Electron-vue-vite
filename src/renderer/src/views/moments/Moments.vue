@@ -69,18 +69,9 @@
                   <div class="post-time">{{ formatMomentsTime(post.publishTime) }}</div>
                 </div>
               </div>
-              <div class="follow-btn" v-if="!post.isFollowed" @click="handleFollow(post.id)">
-                <el-icon>
-                  <Plus />
-                </el-icon>
-                关注
-              </div>
-              <div class="followed-btn" v-else>
-                <el-icon>
-                  <Check />
-                </el-icon>
-                已关注
-              </div>
+              <el-button v-if="labelFor(post.userId)" class="author-action" size="small"
+                :loading="pendingAuthors.has(String(post.userId))" :disabled="labelFor(post.userId) === '已申请'"
+                @click="activateAuthor(post)">{{ labelFor(post.userId) }}</el-button>
             </div>
 
             <!-- 动态内容 -->
@@ -90,24 +81,27 @@
 
             <!-- 互动区域 -->
             <div class="post-actions">
-              <div class="action-item" :class="{ active: post.liked }" @click="handleLike(post.id)">
+              <button type="button" class="action-item" :class="{ active: post.liked }"
+                aria-label="点赞" :aria-pressed="!!post.liked" :disabled="liking.has(String(post.id))"
+                @click="toggleLike(post)">
                 <el-icon>
                   <i class="iconfont icon-xihuan" :class="{ 'is-liked': post.liked }" />
                 </el-icon>
                 <span>{{ post.likeCount > 0 ? post.likeCount : '点赞' }}</span>
-              </div>
+              </button>
               <div class="action-item" :class="{ active: post.showComments }" @click="openInfo(post.id)">
                 <el-icon>
                   <ChatLineRound />
                 </el-icon>
                 <span>{{ post.commentCount > 0 ? post.commentCount : '评论' }}</span>
               </div>
-              <div class="action-item" @click="handleReward(post.id)">
+              <button v-if="ownUserId && String(post.userId) !== ownUserId" type="button" class="action-item"
+                @click="rewardPostId = post.id; rewardDialogVisible = true">
                 <el-icon>
                   <Coin />
                 </el-icon>
                 <span>{{ post.rewardAmount > 0 ? '¥' + post.rewardAmount : '打赏' }}</span>
-              </div>
+              </button>
             </div>
             </div>
           </div>
@@ -132,37 +126,8 @@
       </el-scrollbar>
     </div>
 
-    <!-- 打赏弹窗 -->
-    <div v-if="rewardDialogVisible" class="reward-overlay" @click.self="rewardDialogVisible = false">
-      <div class="reward-dialog">
-        <div class="reward-title">打赏</div>
-        <div class="reward-presets">
-          <button
-            v-for="preset in rewardPresets"
-            :key="preset"
-            class="preset-btn"
-            :class="{ active: rewardAmount === preset }"
-            @click="rewardAmount = preset"
-          >¥{{ preset }}</button>
-        </div>
-        <div class="reward-custom">
-          <el-input
-            v-model="rewardCustomInput"
-            placeholder="自定义金额"
-            type="number"
-            @input="rewardAmount = rewardCustomInput ? Number(rewardCustomInput) : null"
-          >
-            <template #prefix>¥</template>
-          </el-input>
-        </div>
-        <div class="reward-actions">
-          <button class="reward-cancel-btn" @click="rewardDialogVisible = false">取消</button>
-          <button class="reward-confirm-btn" :disabled="rewardSubmitting" @click="submitReward">
-            {{ rewardSubmitting ? '处理中...' : '确认打赏' }}
-          </button>
-        </div>
-      </div>
-    </div>
+    <MomentRewardDialog v-if="rewardPostId !== null" :key="rewardPostId"
+      v-model="rewardDialogVisible" :post-id="rewardPostId" />
 
     <!-- 右下角悬浮发布按钮 -->
     <div class="fab-button" @click="openPublishWindow">
@@ -174,9 +139,9 @@
 </template>
 
 <script setup lang="ts">
-import { ChatLineRound, Check, Coin, Plus, Search, Loading } from '@element-plus/icons-vue'
+import { ChatLineRound, Coin, Plus, Search, Loading } from '@element-plus/icons-vue'
 import { onMounted, ref, onUnmounted, nextTick, watch } from 'vue'
-import { listByNewApi, likedApi, listByHot, rewardApi } from '@/api/Moments'
+import { listByNewApi, listByHot } from '@/api/Moments'
 import { MomentsItem } from '@/types/moments'
 import type { ScrollbarDirection } from 'element-plus'
 import { ElMessage } from 'element-plus'
@@ -185,6 +150,9 @@ import emitter from '@/utils/mitt';
 import { formatMomentsTime } from '@/utils/utils'
 import { useMomentsImageLazy } from '@/composables/useMomentsImageLazy'
 import { openUserMoments } from '@/utils/momentWindows'
+import MomentRewardDialog from '@/components/MomentRewardDialog.vue'
+import { useMomentAuthorActions } from '@/composables/useMomentAuthorActions'
+import { useMomentLikes } from '@/composables/useMomentLikes'
 
 const searchKeyword = ref('')
 const activeTag = ref('all')
@@ -198,11 +166,9 @@ const hotTags = ref([])
 
 // 打赏弹窗状态
 const rewardDialogVisible = ref(false)
-const currentRewardPostId = ref<number | null>(null)
-const rewardAmount = ref<number | null>(null)
-const rewardCustomInput = ref('')
-const rewardSubmitting = ref(false)
-const rewardPresets = [1, 5, 10, 20, 50]
+const rewardPostId = ref<string | number | null>(null)
+const { ownUserId, labelFor, pending: pendingAuthors, activate: activateAuthor } = useMomentAuthorActions()
+const { liking, toggleLike } = useMomentLikes()
 
 const loadMoreRef = ref<HTMLElement>()
 const postListRef = ref<HTMLElement | null>(null)
@@ -317,66 +283,12 @@ const handleTagClick = (tagId: string) => {
   // TODO: 实现标签筛选逻辑
 }
 
-const openInfo = (id: number) => {
+const openInfo = (id: string | number) => {
   (window as any).windowToolApi.createNewWindow('momentInfoView', id)
 }
 
 const openPublishWindow = () => {
   (window as any).windowToolApi.createNewWindow('createMomentView', null)
-}
-
-const handleLike = async (postId: number) => {
-  const post = postList.value.find((p) => p.id === postId)
-  if (!post) return
-  // 乐观更新
-  const prevLiked = post.liked
-  const prevCount = post.likeCount
-  post.liked = !post.liked
-  post.likeCount += post.liked ? 1 : -1
-  try {
-    await likedApi(postId)
-  } catch {
-    // 请求失败，回滚
-    post.liked = prevLiked
-    post.likeCount = prevCount
-    ElMessage.error('操作失败，请重试')
-  }
-}
-
-const handleFollow = (postId: number) => {
-  const post = postList.value.find((p) => p.id === postId)
-  if (!post) return
-  // TODO: 对接关注用户的 API
-  console.warn('关注功能暂未对接后端 API，仅前端状态变更')
-  post.isFollowed = true
-}
-
-const handleReward = (postId: number) => {
-  currentRewardPostId.value = postId
-  rewardAmount.value = null
-  rewardCustomInput.value = ''
-  rewardDialogVisible.value = true
-}
-
-const submitReward = async () => {
-  if (!rewardAmount.value || rewardAmount.value < 0.01) {
-    ElMessage.warning('请选择或输入打赏金额')
-    return
-  }
-  if (rewardAmount.value > 200) {
-    ElMessage.warning('打赏金额不能超过 ¥200')
-    return
-  }
-  rewardSubmitting.value = true
-  try {
-    await rewardApi(currentRewardPostId.value, rewardAmount.value)
-    ElMessage.success('打赏成功，感谢支持！')
-    rewardDialogVisible.value = false
-  } catch (e) {
-    ElMessage.error('打赏失败，请稍后重试')
-  } finally {
-    rewardSubmitting.value = false
-  }
 }
 
 const handleNewPostPublished = () => { void fetchPosts(true) }
@@ -827,37 +739,6 @@ onUnmounted(() => {
   color: var(--color-text-muted);
 }
 
-.follow-btn,
-.followed-btn {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 5px 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.follow-btn {
-  background: rgba(var(--color-accent-rgb), 0.1);
-  color: var(--color-accent);
-  border: 1px solid rgba(var(--color-accent-rgb), 0.3);
-}
-
-.follow-btn:hover {
-  background: rgba(var(--color-accent-rgb), 0.2);
-  border-color: rgba(var(--color-accent-rgb), 0.5);
-  transform: scale(1.05);
-}
-
-.followed-btn {
-  background: rgba(var(--color-surface-rgb), 0.4);
-  color: var(--color-text-muted);
-  border: 1px solid var(--color-border-subtle);
-  cursor: default;
-}
-
 .post-content {
   margin-bottom: 12px;
   max-height: 400px;
@@ -965,28 +846,26 @@ onUnmounted(() => {
   gap: 6px;
   font-size: 13px;
   color: var(--color-text-muted);
+  background: transparent;
+  border: 0;
   cursor: pointer;
   transition: all 0.3s ease;
   padding: 4px 8px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 
-.action-item:hover {
+.action-item:not(:disabled):hover {
   color: var(--color-accent);
   background: rgba(var(--color-accent-rgb), 0.05);
 }
 
-.action-item.active {
-  color: #ff4757;
-}
-
+.action-item.active,
 .action-item.active .iconfont.icon-xihuan {
-  color: #ff4757;
-  filter: drop-shadow(0 0 5px rgba(255, 71, 87, 0.4));
+  color: var(--color-danger);
 }
 
-.action-item.active:hover {
-  background: rgba(255, 71, 87, 0.1);
+.action-item.active:not(:disabled):hover {
+  background: var(--color-surface-2);
 }
 
 :deep(.el-scrollbar__thumb) {
@@ -998,121 +877,6 @@ onUnmounted(() => {
   transform: scale(0.95);
 }
 
-.follow-btn:active {
-  transform: scale(0.95);
-}
-
-/* 打赏弹窗 */
-.reward-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.55);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
-}
-
-.reward-dialog {
-  width: 320px;
-  background: var(--color-bg-deep);
-  border: 1px solid rgba(var(--color-accent-rgb), 0.35);
-  border-radius: var(--radius-md);
-  padding: 24px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-}
-
-.reward-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--color-accent);
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.reward-presets {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
-}
-
-.preset-btn {
-  padding: 7px 16px;
-  border-radius: 20px;
-  border: 1px solid rgba(var(--color-accent-rgb), 0.3);
-  background: rgba(var(--color-accent-rgb), 0.07);
-  color: var(--color-text-secondary);
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.preset-btn:hover,
-.preset-btn.active {
-  background: rgba(var(--color-accent-rgb), 0.2);
-  border-color: var(--color-accent);
-  color: var(--color-accent);
-}
-
-.reward-custom {
-  margin-bottom: 20px;
-}
-
-:deep(.reward-custom .el-input__wrapper) {
-  background: rgba(var(--color-surface-rgb), 0.4) !important;
-  border: 1px solid var(--color-border-subtle) !important;
-  box-shadow: none !important;
-}
-
-:deep(.reward-custom .el-input__inner) {
-  color: var(--color-text-primary);
-}
-
-:deep(.reward-custom .el-input__prefix) {
-  color: var(--color-text-muted);
-}
-
-.reward-actions {
-  display: flex;
-  gap: 12px;
-}
-
-.reward-cancel-btn,
-.reward-confirm-btn {
-  flex: 1;
-  padding: 10px 0;
-  border-radius: var(--radius-md);
-  font-size: 14px;
-  cursor: pointer;
-  border: none;
-  transition: all 0.2s;
-}
-
-.reward-cancel-btn {
-  background: rgba(var(--color-surface-rgb), 0.4);
-  color: var(--color-text-muted);
-}
-
-.reward-cancel-btn:hover {
-  background: rgba(var(--color-surface-rgb), 0.4);
-}
-
-.reward-confirm-btn {
-  background: rgba(var(--color-accent-rgb), 0.8);
-  color: #000;
-  font-weight: 600;
-}
-
-.reward-confirm-btn:hover:not(:disabled) {
-  background: rgba(var(--color-accent-rgb), 1);
-}
-
-.reward-confirm-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
 @media (prefers-reduced-motion: reduce) { .post-card { animation: none; transition: none; } }
 </style>
 

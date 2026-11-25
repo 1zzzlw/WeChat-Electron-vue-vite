@@ -1,5 +1,6 @@
 import request from '@/utils/axios/request'
 
+/** @returns {Promise<{code: number, msg?: string, data: string | number}>} */
 export const sendApplyApi = (applyInfo) => request.post('/apply/send', applyInfo)
 
 export const getApplyListApi = () => request.get('/apply/list')

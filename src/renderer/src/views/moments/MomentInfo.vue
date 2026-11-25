@@ -34,17 +34,10 @@
                     </div>
                 </div>
                 <div class="header-actions">
-                    <el-button v-if="!momentInfo?.isFollowed" class="follow-btn" @click="handleFollow">
-                        <el-icon>
-                            <Plus />
-                        </el-icon>
-                        关注
-                    </el-button>
-                    <el-button v-else class="followed-btn" disabled>
-                        <el-icon>
-                            <Check />
-                        </el-icon>
-                        已关注
+                    <el-button v-if="momentInfo && authorLabel" class="author-action"
+                        :loading="pendingAuthors.has(String(momentInfo.userId))" :disabled="authorLabel === '已申请'"
+                        @click="activateAuthor(momentInfo)">
+                        {{ authorLabel }}
                     </el-button>
                 </div>
             </div>
@@ -67,17 +60,19 @@
                         </div>
                     </div>
                     <div class="actions-bar">
-                        <div class="action-item" :class="{ active: momentInfo?.liked }" @click="handleLike">
+                        <button type="button" class="action-item" :class="{ active: momentInfo?.liked }"
+                            :aria-pressed="!!momentInfo?.liked" :disabled="!momentInfo || liking.has(String(momentInfo.id))"
+                            @click="momentInfo && toggleLike(momentInfo)">
                             <el-icon><i class="iconfont icon-xihuan"
                                     :class="{ 'is-liked': momentInfo?.liked }" /></el-icon>
                             <span>{{ momentInfo?.liked ? '已点赞' : '点赞' }}</span>
-                        </div>
-                        <div class="action-item" @click="handleReward">
+                        </button>
+                        <button v-if="canReward" type="button" class="action-item" @click="rewardVisible = true">
                             <el-icon>
                                 <Coin />
                             </el-icon>
                             <span>打赏</span>
-                        </div>
+                        </button>
                     </div>
                 </div>
 
@@ -165,17 +160,22 @@
 
         <!-- 窗口控制器 -->
         <WindowControls windowType="momentInfoView" />
+        <MomentRewardDialog v-if="momentInfo && canReward" :key="momentInfo.id"
+            v-model="rewardVisible" :post-id="momentInfo.id" />
     </div>
 </template>
 
 <script lang="ts" setup>
-import { ChatLineRound, Check, Coin, Expand, Fold, Plus } from '@element-plus/icons-vue'
+import { ChatLineRound, Coin, Expand, Fold } from '@element-plus/icons-vue'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import WindowControls from '@/components/WindowControls.vue'
+import MomentRewardDialog from '@/components/MomentRewardDialog.vue'
 import { momentDetail, publishComment, comments, commentReplies, publishCommentReply, likeComment } from '@/api/Moments'
 import { MomentsItem } from '@/types/moments'
 import { ElMessage } from 'element-plus'
 import { formatMomentsTime } from '@/utils/utils'
+import { useMomentAuthorActions } from '@/composables/useMomentAuthorActions'
+import { useMomentLikes } from '@/composables/useMomentLikes'
 
 const isSidebarCollapsed = ref(false)
 const contentMainRef = ref<HTMLElement | null>(null)
@@ -183,9 +183,15 @@ const activeHeadingIndex = ref(-1)
 const userAvatar = ref()
 const momentInfo = ref<MomentsItem>()
 const commentContent = ref('')
+const rewardVisible = ref(false)
+const { ownUserId, labelFor, pending: pendingAuthors, activate: activateAuthor } = useMomentAuthorActions()
+const { liking, toggleLike } = useMomentLikes()
+const authorLabel = computed(() => labelFor(momentInfo.value?.userId))
+const canReward = computed(() => !!momentInfo.value && !!ownUserId.value
+    && String(momentInfo.value.userId) !== ownUserId.value)
 
 // 一级评论分页状态
-const commentPageDTO = ref({
+const commentPageDTO = ref<{ momentId: string | number; page: number; pageSize: number }>({
     momentId: 0,
     page: 1,
     pageSize: 10
@@ -252,19 +258,6 @@ const scrollToHeading = (index: number) => {
         activeHeadingIndex.value = index
         headingElements[index].scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
-}
-
-// 事件处理方法
-const handleFollow = () => {
-    console.log('关注用户')
-}
-
-const handleLike = () => {
-    console.log('点赞/取消点赞')
-}
-
-const handleReward = () => {
-    console.log('打赏')
 }
 
 const handleCommentLike = async (commentId: number) => {
@@ -403,6 +396,7 @@ const windowIPC = async () => {
         requestedMomentId = String(data)
         const version = ++momentRequestVersion
         momentInfo.value = undefined
+        rewardVisible.value = false
         commentPageDTO.value = { momentId: 0, page: 1, pageSize: 10 }
         totalCommentCount.value = 0
         replyPageMap.value.clear()
@@ -729,31 +723,8 @@ onUnmounted(() => {
     margin-right: 110px;
 }
 
-.follow-btn,
-.followed-btn {
-    background: rgba(var(--color-accent-rgb), 0.2) !important;
-    border: 1px solid rgba(var(--color-accent-rgb), 0.4) !important;
-    color: var(--color-accent) !important;
-    border-radius: 6px;
-    padding: 6px 18px;
-    height: 32px;
-    font-weight: 600;
-    font-size: 13px;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
-}
-
-.follow-btn:hover {
-    background: rgba(var(--color-accent-rgb), 0.35) !important;
-    transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(var(--color-accent-rgb), 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
-}
-
-.followed-btn {
-    background: rgba(var(--color-surface-rgb), 0.4) !important;
-    border-color: var(--color-border-subtle) !important;
-    color: var(--color-text-muted) !important;
-    cursor: default;
+.author-action {
+    min-width: 76px;
 }
 
 /* 内容滚动区 */
@@ -904,24 +875,21 @@ onUnmounted(() => {
     gap: 6px;
     font-size: 13px;
     color: var(--color-text-muted);
-    cursor: pointer;
-    transition: all 0.3s ease;
+    background: transparent;
+    border: 0;
+    transition: background-color var(--transition-fast), color var(--transition-fast);
     padding: 6px 12px;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
 }
 
-.action-item:hover {
+.action-item:enabled:hover {
     color: var(--color-accent);
     background: rgba(var(--color-accent-rgb), 0.05);
 }
 
-.action-item.active {
-    color: #ff4757;
-}
-
+.action-item.active,
 .action-item.active .iconfont.icon-xihuan {
-    color: #ff4757;
-    filter: drop-shadow(0 0 5px rgba(255, 71, 87, 0.4));
+    color: var(--color-danger);
 }
 
 /* 评论区 */

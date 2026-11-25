@@ -1,7 +1,7 @@
 // 朋友圈单条数据
 export interface MomentsItem {
-    id: number
-    userId: number
+    id: string | number
+    userId: string | number
     username: string
     avatar: string
     publishTime: string
@@ -9,7 +9,6 @@ export interface MomentsItem {
     liked: boolean
     likeCount: number
     commentCount: number
-    isFollowed: boolean
     showComments: boolean
     comments: Comment[]
     rewardAmount: number
